@@ -18,26 +18,11 @@ import nl.knaw.huc.api.ResourcePaths;
 @Path(ResourcePaths.ABOUT)
 @Produces(MediaType.APPLICATION_JSON)
 public class AboutResource {
-  private static final String PROPERTIES_FILE = "about.properties";
-
   private final AboutInfo about = new AboutInfo();
 
   public AboutResource(AnnoRepoConfiguration configuration, String appName) {
-    //        PropertiesConfiguration properties = new PropertiesConfiguration(PROPERTIES_FILE,
-    // true);
     about.setAppName(appName);
     about.setStartedAt(Instant.now().toString());
-    //            about.setBuildDate(
-    //                properties.getProperty("buildDate").orElse("no buildDate set in
-    // about.properties"));
-    //            about.setCommitId(
-    //                properties.getProperty("commitId").orElse("no commitId set in
-    // about.properties"));
-    //            about..setScmBranch(
-    //                properties.getProperty("scmBranch").orElse("no scmBranch set in
-    // about.properties"))
-    //            about.setVersion(properties.getProperty("version").orElse("no version set in
-    // about.properties"));
   }
 
   @GET
