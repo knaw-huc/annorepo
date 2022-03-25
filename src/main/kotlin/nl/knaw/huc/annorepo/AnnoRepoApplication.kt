@@ -43,7 +43,19 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
 
         environment.healthChecks().register("server", ServerHealthCheck())
 
+        doHealthChecks(environment)
 
+        LOG.info(
+            """
+
+************************************************************
+** Starting $name at ${configuration.getBaseURI()} **
+************************************************************
+"""
+        )
+    }
+
+    private fun doHealthChecks(environment: Environment) {
         val results = environment.healthChecks().runHealthChecks()
         val healthy = AtomicBoolean(true)
         LOG.info("Health checks:")
@@ -59,13 +71,6 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         if (!healthy.get()) {
             throw RuntimeException("Failing health check(s)")
         }
-        LOG.info(
-            java.lang.String.format(
-                "\n\n************************************************************\n** Starting %s at %s **\n************************************************************\n",
-                name,
-                configuration.getBaseURI()
-            )
-        )
     }
 
     companion object {
