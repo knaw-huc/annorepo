@@ -16,13 +16,12 @@ import javax.ws.rs.core.MediaType
 @Path(ResourcePaths.ABOUT)
 @Produces(MediaType.APPLICATION_JSON)
 class AboutResource(configuration: AnnoRepoConfiguration, appName: String) {
-    @get:ApiOperation(value = "Get some info about the server", response = AboutInfo::class)
-    @get:Timed
-    @get:GET
-    val about = AboutInfo()
 
-    init {
-        about.appName = appName
-        about.startedAt = Instant.now().toString()
-    }
+    private val about = AboutInfo(appName = appName, startedAt = Instant.now().toString())
+
+    @ApiOperation(value = "Get some info about the server", response = AboutInfo::class)
+    @Timed
+    @GET
+    fun getAboutInfo() = about
+
 }

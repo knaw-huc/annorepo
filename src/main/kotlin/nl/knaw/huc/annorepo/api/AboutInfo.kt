@@ -1,6 +1,6 @@
 package nl.knaw.huc.annorepo.api
 
-class AboutInfo {
-    var appName: String? = null
-    var startedAt: String? = null
-}
+data class AboutInfo(
+    val appName: String,
+    val startedAt: String
+)
