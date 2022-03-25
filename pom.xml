@@ -19,7 +19,7 @@
         <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ss'Z'</maven.build.timestamp.format>
 
         <kotlin.version>1.6.20-RC2</kotlin.version>
-        <java.version>1.8</java.version>
+        <java.version>11</java.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -274,52 +274,6 @@
                     </execution>
                 </executions>
             </plugin>
-
-            <!--            <plugin>-->
-            <!--                <groupId>org.jetbrains.kotlin</groupId>-->
-            <!--                <artifactId>kotlin-maven-plugin</artifactId>-->
-            <!--                <version>${kotlin.version}</version>-->
-            <!--                <executions>-->
-            <!--                    <execution>-->
-            <!--                        <id>compile</id>-->
-            <!--                        <phase>compile</phase>-->
-            <!--                        <goals>-->
-            <!--                            <goal>compile</goal>-->
-            <!--                        </goals>-->
-            <!--                    </execution>-->
-            <!--                    <execution>-->
-            <!--                        <id>test-compile</id>-->
-            <!--                        <phase>test-compile</phase>-->
-            <!--                        <goals>-->
-            <!--                            <goal>test-compile</goal>-->
-            <!--                        </goals>-->
-            <!--                    </execution>-->
-            <!--                </executions>-->
-            <!--                <configuration>-->
-            <!--                    <jvmTarget>1.8</jvmTarget>-->
-            <!--                </configuration>-->
-            <!--            </plugin>-->
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>compile</id>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>testCompile</id>
-                        <phase>test-compile</phase>
-                        <goals>
-                            <goal>testCompile</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 
@@ -339,6 +293,7 @@
             </plugin>
         </plugins>
     </reporting>
+
     <profiles>
         <profile>
             <id>java11+</id>

@@ -8,10 +8,12 @@ import io.dropwizard.setup.Environment
 import io.federecio.dropwizard.swagger.SwaggerBundle
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
 import nl.knaw.huc.resources.AboutResource
+import nl.knaw.huc.resources.HomePageResource
 import org.slf4j.LoggerFactory
 
 class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
     private val LOG = LoggerFactory.getLogger(javaClass)
+
     override fun getName(): String {
         return "AnnoRepo"
     }
@@ -32,6 +34,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
 
     override fun run(configuration: AnnoRepoConfiguration?, environment: Environment) {
         environment.jersey().register(AboutResource(configuration!!, name))
+        environment.jersey().register(HomePageResource())
     }
 
     companion object {
