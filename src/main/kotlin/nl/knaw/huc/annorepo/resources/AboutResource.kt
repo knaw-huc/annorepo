@@ -1,11 +1,11 @@
-package nl.knaw.huc.resources
+package nl.knaw.huc.annorepo.resources
 
 import com.codahale.metrics.annotation.Timed
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
-import nl.knaw.huc.AnnoRepoConfiguration
-import nl.knaw.huc.api.AboutInfo
-import nl.knaw.huc.api.ResourcePaths
+import nl.knaw.huc.annorepo.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.api.AboutInfo
+import nl.knaw.huc.annorepo.api.ResourcePaths
 import java.time.Instant
 import javax.ws.rs.GET
 import javax.ws.rs.Path

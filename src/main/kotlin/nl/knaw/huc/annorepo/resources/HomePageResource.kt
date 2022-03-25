@@ -1,4 +1,4 @@
-package nl.knaw.huc.resources
+package nl.knaw.huc.annorepo.resources
 
 import com.codahale.metrics.annotation.Timed
 import io.swagger.annotations.Api

@@ -1,4 +1,4 @@
-package nl.knaw.huc
+package nl.knaw.huc.annorepo.annorepo
 
 import io.dropwizard.Application
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor
@@ -7,8 +7,9 @@ import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
 import io.federecio.dropwizard.swagger.SwaggerBundle
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
-import nl.knaw.huc.resources.AboutResource
-import nl.knaw.huc.resources.HomePageResource
+import nl.knaw.huc.annorepo.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.resources.AboutResource
+import nl.knaw.huc.annorepo.resources.HomePageResource
 import org.slf4j.LoggerFactory
 
 class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {

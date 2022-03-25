@@ -1,9 +1,9 @@
-package nl.knaw.huc
+package nl.knaw.huc.annorepo
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.dropwizard.Configuration
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
-import nl.knaw.huc.resources.AboutResource
+import nl.knaw.huc.annorepo.resources.AboutResource
 
 class AnnoRepoConfiguration internal constructor() : Configuration() {
     @JsonProperty("swagger")

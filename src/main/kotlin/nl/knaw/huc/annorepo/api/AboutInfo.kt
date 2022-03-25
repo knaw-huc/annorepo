@@ -1,4 +1,4 @@
-package nl.knaw.huc.api
+package nl.knaw.huc.annorepo.api
 
 class AboutInfo {
     var appName: String? = null
