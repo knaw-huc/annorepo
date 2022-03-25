@@ -5,7 +5,8 @@ import io.dropwizard.Configuration
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
 import nl.knaw.huc.annorepo.resources.AboutResource
 
-class AnnoRepoConfiguration internal constructor() : Configuration() {
+class AnnoRepoConfiguration() : Configuration() {
+
     @JsonProperty("swagger")
     val swaggerBundleConfiguration = SwaggerBundleConfiguration()
 
@@ -14,7 +15,8 @@ class AnnoRepoConfiguration internal constructor() : Configuration() {
     }
 
     private fun setDefaults() {
-        val name = AboutResource::class.java.getPackage().name
-        swaggerBundleConfiguration.resourcePackage = name
+        swaggerBundleConfiguration.resourcePackage = AboutResource::class.java.getPackage().name
     }
+
+    fun getBaseURI(): String = ""
 }

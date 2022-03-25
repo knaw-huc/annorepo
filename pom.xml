@@ -14,7 +14,7 @@
     <name>AnnoRepo</name>
 
     <properties>
-        <mainClass>nl.knaw.huc.AnnoRepoApplication</mainClass>
+        <mainClass>nl.knaw.huc.annorepo.AnnoRepoApplication</mainClass>
         <!-- Timestamp settings for use in properties file -->
         <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ss'Z'</maven.build.timestamp.format>
 
