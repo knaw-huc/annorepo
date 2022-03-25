@@ -1,5 +1,11 @@
 # AnnoRepo
 
+A repository for [W3C Web Annotations](https://www.w3.org/TR/annotation-model/).
+
+Implements the [W3C Web Annotation Protocol](https://www.w3.org/TR/annotation-protocol/)
+
+Inspired by [elucidate](https://github.com/dlcs/elucidate-server).
+
 How to start the AnnoRepo application
 ---
 

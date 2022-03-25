@@ -6,6 +6,8 @@
 *.kt		text eol=lf
 *.java		text eol=lf
 *.yml		text eol=lf
+*.txt		text eol=lf
+*.md		text eol=lf
 
 # These are explicitly windows files and should use crlf
 *.bat       text eol=crlf
