@@ -10,6 +10,7 @@ import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
 import nl.knaw.huc.annorepo.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.resources.AboutResource
 import nl.knaw.huc.annorepo.resources.HomePageResource
+import nl.knaw.huc.annorepo.resources.RuntimeExceptionMapper
 import org.slf4j.LoggerFactory
 
 class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
@@ -36,6 +37,8 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
     override fun run(configuration: AnnoRepoConfiguration?, environment: Environment) {
         environment.jersey().register(AboutResource(configuration!!, name))
         environment.jersey().register(HomePageResource())
+        environment.jersey().register(RuntimeExceptionMapper())
+
     }
 
     companion object {
