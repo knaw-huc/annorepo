@@ -1,23 +1,20 @@
-package nl.knaw.huc;
+package nl.knaw.huc
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import io.dropwizard.Configuration;
-import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.dropwizard.Configuration
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
+import nl.knaw.huc.resources.AboutResource
 
-import nl.knaw.huc.resources.AboutResource;
+class AnnoRepoConfiguration internal constructor() : Configuration() {
+    @JsonProperty("swagger")
+    val swaggerBundleConfiguration = SwaggerBundleConfiguration()
 
-public class AnnoRepoConfiguration extends Configuration {
-  @JsonProperty("swagger")
-  public final SwaggerBundleConfiguration swaggerBundleConfiguration =
-      new SwaggerBundleConfiguration();
+    init {
+        setDefaults()
+    }
 
-  AnnoRepoConfiguration() {
-    super();
-    setDefaults();
-  }
-
-  private void setDefaults() {
-    String name = AboutResource.class.getPackage().getName();
-    swaggerBundleConfiguration.setResourcePackage(name);
-  }
+    private fun setDefaults() {
+        val name = AboutResource::class.java.getPackage().name
+        swaggerBundleConfiguration.resourcePackage = name
+    }
 }
