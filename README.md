@@ -1,5 +1,10 @@
 # AnnoRepo
 
+[![GitHub Actions](https://github.com/HuygensING/hyper-collate/workflows/tests/badge.svg)](https://github.com/brambg/annorepo/actions)
+![Snyk Vulnerabilities for GitHub Repo](https://img.shields.io/snyk/vulnerabilities/github/brambg/annorepo)
+![GitHub language count](https://img.shields.io/github/languages/count/brambg/annorepo)
+[![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+
 A repository for [W3C Web Annotations](https://www.w3.org/TR/annotation-model/).
 
 Implements the [W3C Web Annotation Protocol](https://www.w3.org/TR/annotation-protocol/)
