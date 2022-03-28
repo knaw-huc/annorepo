@@ -17,7 +17,8 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 class AboutResource(configuration: AnnoRepoConfiguration, appName: String) {
 
-    private val about = AboutInfo(appName = appName, startedAt = Instant.now().toString())
+    private val about =
+        AboutInfo(appName = appName, startedAt = Instant.now().toString(), baseURI = configuration.baseUri)
 
     @ApiOperation(value = "Get some info about the server", response = AboutInfo::class)
     @Timed

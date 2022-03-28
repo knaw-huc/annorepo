@@ -17,22 +17,17 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
 class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
-    private val LOG = LoggerFactory.getLogger(javaClass)
+    private val log = LoggerFactory.getLogger(javaClass)
 
-    override fun getName(): String {
-        return "AnnoRepo"
-    }
+    override fun getName(): String = "AnnoRepo"
 
     override fun initialize(bootstrap: Bootstrap<AnnoRepoConfiguration?>) {
         bootstrap.configurationSourceProvider = SubstitutingSourceProvider(
             bootstrap.configurationSourceProvider, EnvironmentVariableSubstitutor()
         )
         bootstrap.addBundle(object : SwaggerBundle<AnnoRepoConfiguration>() {
-            override fun getSwaggerBundleConfiguration(
-                configuration: AnnoRepoConfiguration
-            ): SwaggerBundleConfiguration {
-                return configuration.swaggerBundleConfiguration
-            }
+            override fun getSwaggerBundleConfiguration(configuration: AnnoRepoConfiguration): SwaggerBundleConfiguration =
+                configuration.swaggerBundleConfiguration
         })
     }
 
@@ -45,11 +40,11 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
 
         doHealthChecks(environment)
 
-        LOG.info(
+        log.info(
             """
 
 ************************************************************
-** Starting $name at ${configuration.getBaseURI()} **
+** Starting $name at ${configuration.baseUri} **
 ************************************************************
 """
         )
@@ -58,9 +53,9 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
     private fun doHealthChecks(environment: Environment) {
         val results = environment.healthChecks().runHealthChecks()
         val healthy = AtomicBoolean(true)
-        LOG.info("Health checks:")
+        log.info("Health checks:")
         results.forEach { (name: String?, result: HealthCheck.Result) ->
-            LOG.info(
+            log.info(
                 "{}: {}, message='{}'",
                 name,
                 if (result.isHealthy) "healthy" else "unhealthy",

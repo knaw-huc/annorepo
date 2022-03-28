@@ -18,10 +18,10 @@ class HomePageResource {
      *
      * @return HTML representation of the homepage
      */
+    @GET
     @ApiOperation(value = "Show the server homepage")
     @Produces(MediaType.TEXT_HTML)
     @Timed
-    @GET
     fun getHomePage(): Response {
         val resourceAsStream = Thread.currentThread().contextClassLoader.getResourceAsStream("index.html")
         return Response.ok(resourceAsStream)
@@ -30,16 +30,14 @@ class HomePageResource {
             .build()
     }
 
-    @ApiOperation(value = "Placeholder for favicon.ico")
-    @Path("favicon.ico")
     @GET
+    @Path("favicon.ico")
+    @ApiOperation(value = "Placeholder for favicon.ico")
     fun getFavIcon(): Response = Response.noContent().build()
 
     @GET
     @Path("robots.txt")
     @Produces(MediaType.TEXT_PLAIN)
     @ApiOperation(value = "Placeholder for robots.txt")
-    fun noRobots(): String {
-        return "User-agent: *\nDisallow: /\n"
-    }
+    fun noRobots(): String = "User-agent: *\nDisallow: /\n"
 }
