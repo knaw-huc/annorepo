@@ -1,0 +1,100 @@
+{
+  "swagger": "2.0",
+  "info": {},
+  "tags": [
+    {
+      "name": "about"
+    }
+  ],
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+    "/about": {
+      "get": {
+        "tags": [
+          "about"
+        ],
+        "summary": "Get some info about the server",
+        "description": "",
+        "operationId": "getAboutInfo",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/AboutInfo"
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Show the server homepage",
+        "description": "",
+        "operationId": "getHomePage",
+        "produces": [
+          "text/html"
+        ],
+        "parameters": [],
+        "responses": {
+          "default": {
+            "description": "successful operation"
+          }
+        }
+      }
+    },
+    "/robots.txt": {
+      "get": {
+        "summary": "Placeholder for robots.txt",
+        "description": "",
+        "operationId": "noRobots",
+        "produces": [
+          "text/plain"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "/favicon.ico": {
+      "get": {
+        "summary": "Placeholder for favicon.ico",
+        "description": "",
+        "operationId": "getFavIcon",
+        "parameters": [],
+        "responses": {
+          "default": {
+            "description": "successful operation"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "AboutInfo": {
+      "type": "object",
+      "properties": {
+        "appName": {
+          "type": "string"
+        },
+        "startedAt": {
+          "type": "string"
+        },
+        "baseURI": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
