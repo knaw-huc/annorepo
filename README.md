@@ -1,7 +1,9 @@
 [![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
-[![GitHub Actions](https://github.com/HuygensING/hyper-collate/workflows/tests/badge.svg)](https://github.com/brambg/annorepo/actions)
-![Snyk Vulnerabilities for GitHub Repo](https://img.shields.io/snyk/vulnerabilities/github/brambg/annorepo)
+[![Stability: Experimental](https://masterminds.github.io/stability/experimental.svg)](https://masterminds.github.io/stability/experimental.html)
+[![Build Status](https://github.com/HuygensING/hyper-collate/workflows/tests/badge.svg)](https://github.com/brambg/annorepo/actions)
 ![GitHub language count](https://img.shields.io/github/languages/count/brambg/annorepo)
+![GitHub](https://img.shields.io/github/license/brambg/annorepo)
+[![Known Vulnerabilities](https://snyk.io/test/github/brambg/annorepo/badge.svg)](https://snyk.io/test/github/brambg/annorepo)
 
 [//]: # (![Swagger Validator]&#40;https://img.shields.io/swagger/valid/3.0?specUrl=https%3A%2F%2Fraw.githubusercontent.com%2Fbrambg%2Fannorepo%2Fmain%2Fdocs%2Fswagger.json&#41;)
 

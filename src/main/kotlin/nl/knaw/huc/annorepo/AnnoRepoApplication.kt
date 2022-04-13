@@ -4,6 +4,7 @@ import com.codahale.metrics.health.HealthCheck
 import io.dropwizard.Application
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor
 import io.dropwizard.configuration.SubstitutingSourceProvider
+import io.dropwizard.jdbi3.JdbiFactory
 import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
 import io.federecio.dropwizard.swagger.SwaggerBundle
@@ -12,9 +13,12 @@ import nl.knaw.huc.annorepo.health.ServerHealthCheck
 import nl.knaw.huc.annorepo.resources.AboutResource
 import nl.knaw.huc.annorepo.resources.HomePageResource
 import nl.knaw.huc.annorepo.resources.RuntimeExceptionMapper
+import nl.knaw.huc.annorepo.resources.W3CResource
 import org.apache.commons.lang3.StringUtils
+import org.jdbi.v3.sqlobject.SqlObjectPlugin
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
+
 
 class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -32,19 +36,27 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
     }
 
     override fun run(configuration: AnnoRepoConfiguration?, environment: Environment) {
-        environment.jersey().register(AboutResource(configuration!!, name))
+        log.info("db.url = {}", configuration!!.database.url)
+        log.info("db.user = {}", configuration.database.user)
+        log.info("db.password = {}", configuration.database.password)
+
+        val factory = JdbiFactory()
+        val jdbi = factory.build(environment, configuration.database, "postgresql")
+        jdbi.installPlugin(SqlObjectPlugin())
+
+        environment.jersey().register(AboutResource(configuration, name))
         environment.jersey().register(HomePageResource())
+        environment.jersey().register(W3CResource(jdbi))
         environment.jersey().register(RuntimeExceptionMapper())
 
         environment.healthChecks().register("server", ServerHealthCheck())
-
         doHealthChecks(environment)
 
         log.info(
             """
 
 ************************************************************
-** Starting $name at ${configuration.baseUri} **
+** Starting $name, externally accessable at ${configuration.externalBaseUrl} **
 ************************************************************
 """
         )
@@ -56,7 +68,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         log.info("Health checks:")
         results.forEach { (name: String?, result: HealthCheck.Result) ->
             log.info(
-                "{}: {}, message='{}'",
+                "  {}: {}, message='{}'",
                 name,
                 if (result.isHealthy) "healthy" else "unhealthy",
                 StringUtils.defaultIfBlank(result.message, "")

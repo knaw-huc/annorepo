@@ -1,4 +1,51 @@
+server:
+  applicationConnectors:
+    - type: http
+      port: ${SERVER_PORT:-8080}
+
+externalBaseUrl: ${EXTERNAL_BASE_URL:-http://localhost:8080}
+
 logging:
   level: INFO
   loggers:
     nl.knaw.huc: DEBUG
+
+database:
+  driverClass: org.postgresql.Driver
+
+  # the username
+  user: ${DB_USER:-postgres}
+
+  # the password
+  password: ${DB_PASSWD:-elucidate}
+
+  # the JDBC URL
+  url: jdbc:postgresql://${DB_HOST:-localhost}:${DB_PORT:-5432}/${DB_NAME:-annorepo}
+
+  # any properties specific to your JDBC driver:
+  properties:
+    charSet: UTF-8
+
+  # the maximum amount of time to wait on an empty pool before throwing an exception
+  maxWaitForConnection: 1s
+
+  # the SQL query to run when validating a connection's liveness
+  validationQuery: "/* MyService Health Check */ SELECT 1"
+
+  # the timeout before a connection validation queries fail
+  validationQueryTimeout: 3s
+
+  # the minimum number of connections to keep open
+  minSize: 8
+
+  # the maximum number of connections to keep open
+  maxSize: 32
+
+  # whether or not idle connections should be validated
+  checkConnectionWhileIdle: false
+
+  # the amount of time to sleep between runs of the idle connection validation, abandoned cleaner and idle pool resizing
+  evictionInterval: 10s
+
+  # the minimum amount of time an connection must sit idle in the pool before it is eligible for eviction
+  minIdleTime: 1 minute
