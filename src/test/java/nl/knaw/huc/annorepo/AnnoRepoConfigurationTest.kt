@@ -1,10 +1,11 @@
 package nl.knaw.huc.annorepo
 
 import org.junit.jupiter.api.Test
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class AnnoRepoConfigurationTest {
-    val log = LoggerFactory.getLogger(javaClass)
+    private val log: Logger = LoggerFactory.getLogger(javaClass)
 
     @Test
     fun getBaseUri() {
@@ -18,9 +19,4 @@ class AnnoRepoConfigurationTest {
         log.info(c.baseUri)
     }
 
-    @Test
-    fun getJdbcUri() {
-        val c = AnnoRepoConfiguration()
-        log.info(c.jdbcUri)
-    }
 }
