@@ -16,7 +16,9 @@ create table sequencer (
 drop table if exists containers cascade;
 create table containers (
   id serial primary key,
-  name text
+  name text,
+  created timestamp without time zone NOT NULL,
+  modified timestamp without time zone
 );
 
 drop table if exists annotations cascade;
@@ -24,5 +26,8 @@ create table annotations (
   id serial primary key,
   name text,
   container_id int,
-  content jsonb
+  content jsonb,
+  created timestamp without time zone NOT NULL,
+  modified timestamp without time zone
 );
+alter table annotations add foreign key (container_id) references containers (id);

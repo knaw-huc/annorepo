@@ -19,7 +19,6 @@ import org.jdbi.v3.sqlobject.SqlObjectPlugin
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
-
 class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
     private val log = LoggerFactory.getLogger(javaClass)
 

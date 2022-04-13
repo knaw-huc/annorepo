@@ -5,7 +5,6 @@ import io.dropwizard.Configuration
 import io.dropwizard.db.DataSourceFactory
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
 import nl.knaw.huc.annorepo.resources.AboutResource
-
 import org.slf4j.LoggerFactory
 
 class AnnoRepoConfiguration : Configuration() {
