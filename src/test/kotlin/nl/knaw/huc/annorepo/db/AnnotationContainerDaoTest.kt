@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory
 
 class AnnotationContainerDaoTest {
     @RegisterExtension
-    val h2Extension = JdbiExtension.h2()
+    val h2Extension: JdbiExtension = JdbiExtension.h2()
         .withPlugin(SqlObjectPlugin())
         .withPlugin(KotlinPlugin())
         .withPlugin(KotlinSqlObjectPlugin())
