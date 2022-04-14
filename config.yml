@@ -1,9 +1,9 @@
 server:
   applicationConnectors:
     - type: http
-      port: ${SERVER_PORT:-8080}
+      port: ${AR_SERVER_PORT:-8080}
 
-externalBaseUrl: ${EXTERNAL_BASE_URL:-http://localhost:8080}
+externalBaseUrl: ${AR_EXTERNAL_BASE_URL:-http://localhost:8080}
 
 logging:
   level: INFO
@@ -14,13 +14,13 @@ database:
   driverClass: org.postgresql.Driver
 
   # the username
-  user: ${DB_USER:-postgres}
+  user: ${AR_DB_USER:-postgres}
 
   # the password
-  password: ${DB_PASSWD:-elucidate}
+  password: ${AR_DB_PASSWD:-elucidate}
 
   # the JDBC URL
-  url: jdbc:postgresql://${DB_HOST:-localhost}:${DB_PORT:-5432}/${DB_NAME:-annorepo}
+  url: jdbc:postgresql://${AR_DB_HOST:-localhost}:${AR_DB_PORT:-5432}/${AR_DB_NAME:-annorepo}
 
   # any properties specific to your JDBC driver:
   properties:
