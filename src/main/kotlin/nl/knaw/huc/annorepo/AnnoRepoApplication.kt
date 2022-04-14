@@ -27,20 +27,22 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
 
     override fun initialize(bootstrap: Bootstrap<AnnoRepoConfiguration?>) {
         bootstrap.configurationSourceProvider = SubstitutingSourceProvider(
-            bootstrap.configurationSourceProvider, EnvironmentVariableSubstitutor()
+                bootstrap.configurationSourceProvider, EnvironmentVariableSubstitutor()
         )
         bootstrap.addBundle(object : SwaggerBundle<AnnoRepoConfiguration>() {
             override fun getSwaggerBundleConfiguration(configuration: AnnoRepoConfiguration): SwaggerBundleConfiguration =
-                configuration.swaggerBundleConfiguration
+                    configuration.swaggerBundleConfiguration
         })
     }
 
     override fun run(configuration: AnnoRepoConfiguration?, environment: Environment) {
         log.info(
-            "AR_ environment variables:\n\n" +
-                    ARConst.EnvironmentVariable.values()
-                        .joinToString("\n") { e -> "  ${e.name}:\t${System.getenv(e.name) ?: "(not set, using default)"}" } +
-                    "\n"
+                "AR_ environment variables:\n\n" +
+                        ARConst.EnvironmentVariable.values()
+                                .joinToString("\n") { e ->
+                                    "  ${e.name}:\t${System.getenv(e.name) ?: "(not set, using default)"}"
+                                } +
+                        "\n"
         )
         log.info("db.url = {}", configuration!!.database.url)
         log.info("db.user = {}", configuration.database.user)
@@ -51,7 +53,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         jdbi.installPlugin(SqlObjectPlugin())
 
         environment.jersey().apply {
-            register(AboutResource(configuration, name))
+            register(AboutResource(configuration, name, javaClass.getPackage().implementationVersion))
             register(HomePageResource())
             register(W3CResource(configuration, jdbi))
             register(RuntimeExceptionMapper())
@@ -63,7 +65,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         doHealthChecks(environment)
 
         log.info(
-            "\n\n  Starting $name, externally accessible at ${configuration.externalBaseUrl}\n"
+                "\n\n  Starting $name, externally accessible at ${configuration.externalBaseUrl}\n"
         )
     }
 
@@ -73,10 +75,10 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         log.info("Health checks:")
         results.forEach { (name: String?, result: HealthCheck.Result) ->
             log.info(
-                "  {}: {}, message='{}'",
-                name,
-                if (result.isHealthy) "healthy" else "unhealthy",
-                StringUtils.defaultIfBlank(result.message, "")
+                    "  {}: {}, message='{}'",
+                    name,
+                    if (result.isHealthy) "healthy" else "unhealthy",
+                    StringUtils.defaultIfBlank(result.message, "")
             )
             healthy.set(healthy.get() && result.isHealthy)
         }

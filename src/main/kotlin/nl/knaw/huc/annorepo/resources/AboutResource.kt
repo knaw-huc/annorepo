@@ -13,20 +13,24 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
+@Suppress("unused", "unused", "unused", "unused", "unused", "unused", "unused")
 @Api(ResourcePaths.ABOUT)
 @Path(ResourcePaths.ABOUT)
 @Produces(MediaType.APPLICATION_JSON)
-class AboutResource(configuration: AnnoRepoConfiguration, appName: String) {
+class AboutResource(configuration: AnnoRepoConfiguration, appName: String, version: String) {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    private val about =
-            AboutInfo(appName = appName, version = getVersion(), startedAt = Instant.now().toString(), baseURI = configuration.externalBaseUrl)
+    private val about = AboutInfo(
+            appName = appName,
+            version = version,
+            startedAt = Instant.now().toString(),
+            baseURI = configuration.externalBaseUrl
+    )
 
     @ApiOperation(value = "Get some info about the server", response = AboutInfo::class)
     @Timed
     @GET
     fun getAboutInfo(): AboutInfo = about
 
-    private fun getVersion(): String = javaClass.getPackage().implementationVersion
 }

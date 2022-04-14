@@ -17,8 +17,8 @@ interface AnnotationContainerDao {
     fun insert(@Bind("id") id: Int, @Bind("name") name: String)
 
     class IdCreationTime {
-        var id: Long = 0
-        var time: Date = Date.from(Instant.now())
+        private var id: Long = 0
+        private var time: Date = Date.from(Instant.now())
 
         override fun toString(): String = "id:$id, time:$time"
     }

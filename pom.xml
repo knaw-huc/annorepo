@@ -18,16 +18,17 @@
         <!-- Timestamp settings for use in properties file -->
         <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ss'Z'</maven.build.timestamp.format>
 
-        <kotlin.version>1.6.10</kotlin.version>
+        <kotlin.version>1.6.20</kotlin.version>
         <java.version>11</java.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <assertj-core.version>1.7.1</assertj-core.version><!-- 2.0.0 = jdk1.7 -->
+        <assertj-core.version>3.22.0</assertj-core.version><!-- 2.0.0 = jdk1.7 -->
         <dropwizard-swagger.version>2.0.12-1</dropwizard-swagger.version>
         <dropwizard.version>2.0.28</dropwizard.version>
         <h2.version>2.1.210</h2.version>
+        <json-path.version>2.7.0</json-path.version>
         <postgresql.version>42.3.3</postgresql.version>
         <problem.version>0.27.1</problem.version>
 
@@ -127,6 +128,17 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>io.dropwizard</groupId>
+            <artifactId>dropwizard-testing</artifactId>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>junit</groupId>
+                    <artifactId>junit</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
@@ -146,6 +158,12 @@
         <dependency>
             <groupId>org.jdbi</groupId>
             <artifactId>jdbi3-testing</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.jayway.jsonpath</groupId>
+            <artifactId>json-path</artifactId>
+            <version>${json-path.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
