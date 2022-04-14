@@ -9,6 +9,7 @@ import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
 import io.federecio.dropwizard.swagger.SwaggerBundle
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
+import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.health.ServerHealthCheck
 import nl.knaw.huc.annorepo.resources.AboutResource
 import nl.knaw.huc.annorepo.resources.HomePageResource
@@ -35,6 +36,12 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
     }
 
     override fun run(configuration: AnnoRepoConfiguration?, environment: Environment) {
+        log.info(
+            "AR_ environment variables:\n\n" +
+                    ARConst.EnvironmentVariable.values()
+                        .joinToString("\n") { e -> "  ${e.name}:\t${System.getenv(e.name) ?: "(not set, using default)"}" } +
+                    "\n"
+        )
         log.info("db.url = {}", configuration!!.database.url)
         log.info("db.user = {}", configuration.database.user)
         log.info("db.password = {}", configuration.database.password)
@@ -43,23 +50,23 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         val jdbi = factory.build(environment, configuration.database, "postgresql")
         jdbi.installPlugin(SqlObjectPlugin())
 
-        environment.jersey().register(AboutResource(configuration, name))
-        environment.jersey().register(HomePageResource())
-        environment.jersey().register(W3CResource(jdbi))
-        environment.jersey().register(RuntimeExceptionMapper())
+        environment.jersey().apply {
+            register(AboutResource(configuration, name))
+            register(HomePageResource())
+            register(W3CResource(configuration, jdbi))
+            register(RuntimeExceptionMapper())
+        }
+        environment.healthChecks().apply {
+            register("server", ServerHealthCheck())
+        }
 
-        environment.healthChecks().register("server", ServerHealthCheck())
         doHealthChecks(environment)
 
         log.info(
-            """
-
-************************************************************
-** Starting $name, externally accessable at ${configuration.externalBaseUrl} **
-************************************************************
-"""
+            "\n\n  Starting $name, externally accessible at ${configuration.externalBaseUrl}\n"
         )
     }
+
 
     private fun doHealthChecks(environment: Environment) {
         val results = environment.healthChecks().runHealthChecks()
