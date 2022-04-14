@@ -6,27 +6,25 @@ import io.dropwizard.db.DataSourceFactory
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
 import nl.knaw.huc.annorepo.resources.AboutResource
 import org.slf4j.LoggerFactory
+import javax.validation.Valid
+import javax.validation.constraints.NotNull
 
 class AnnoRepoConfiguration : Configuration() {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
+    @Valid
+    @NotNull
     @JsonProperty
     var externalBaseUrl = ""
 
+    @Valid
+    @NotNull
     @JsonProperty
     val database = DataSourceFactory()
 
-//    @JsonProperty("database")
-//    fun setDataSourceFactory(factory: DataSourceFactory) {
-//        database = factory
-//    }
-//
-//    @JsonProperty("database")
-//    fun getDataSourceFactory(): DataSourceFactory {
-//        return database
-//    }
-
+    @Valid
+    @NotNull
     @JsonProperty("swagger")
     val swaggerBundleConfiguration = SwaggerBundleConfiguration()
 
