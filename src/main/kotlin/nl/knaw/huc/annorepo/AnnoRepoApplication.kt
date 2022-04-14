@@ -67,7 +67,6 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         )
     }
 
-
     private fun doHealthChecks(environment: Environment) {
         val results = environment.healthChecks().runHealthChecks()
         val healthy = AtomicBoolean(true)

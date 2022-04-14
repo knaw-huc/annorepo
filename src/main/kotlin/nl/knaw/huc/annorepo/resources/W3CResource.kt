@@ -18,7 +18,7 @@ import javax.ws.rs.core.UriBuilder
 @Produces(MediaType.APPLICATION_JSON)
 class W3CResource(private val configuration: AnnoRepoConfiguration, val jdbi: Jdbi) {
 
-    val log = LoggerFactory.getLogger(javaClass)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     @ApiOperation(value = "Show link to the W3C Web Annotation Protocol")
     @Timed
@@ -30,8 +30,10 @@ class W3CResource(private val configuration: AnnoRepoConfiguration, val jdbi: Jd
     @ApiOperation(value = "Create an Annotation Container")
     @Timed
     @POST
-    fun createContainer(): Response {
-        val name = UUID.randomUUID().toString()
+    fun createContainer(
+        @HeaderParam("slug") slug: String?,
+    ): Response {
+        val name = slug ?: UUID.randomUUID().toString()
         log.info("create Container $name")
         val uri = UriBuilder.fromUri(configuration.externalBaseUrl)
             .path(ResourcePaths.W3C)
@@ -61,10 +63,11 @@ class W3CResource(private val configuration: AnnoRepoConfiguration, val jdbi: Jd
     @POST
     @Path("{containerName}")
     fun createAnnotation(
+        @HeaderParam("slug") slug: String?,
         @PathParam("containerName") containerName: String,
         annotationJson: String
     ): Response {
-        val name = UUID.randomUUID().toString()
+        val name = slug ?: UUID.randomUUID().toString()
         log.info("create annotation $name in container $containerName")
         log.info("annotation=\n$annotationJson")
         val uri =
