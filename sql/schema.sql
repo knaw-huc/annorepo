@@ -16,10 +16,11 @@ create table sequencer (
 drop table if exists containers cascade;
 create table containers (
   id serial primary key,
-  name text,
+  name text unique not null,
   created timestamp without time zone NOT NULL,
   modified timestamp without time zone
 );
+create unique index container_name_idx on containers (name);
 
 drop table if exists annotations cascade;
 create table annotations (
@@ -31,3 +32,4 @@ create table annotations (
   modified timestamp without time zone
 );
 alter table annotations add foreign key (container_id) references containers (id);
+create index annotation_name_idx on annotations (name);
