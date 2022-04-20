@@ -19,9 +19,12 @@ interface AnnotationContainerDao {
     @SqlQuery("select name from containers order by name")
     fun getNames(): List<String>
 
-    @SqlQuery("select id,name from containers where name = :name limit 1")
+    @SqlQuery("select id,name,created,modified from containers where name = :name limit 1")
     @RegisterBeanMapper(ContainerData::class)
     fun findByName(@Bind("name") name: String): ContainerData
+
+    @SqlQuery("select count(*)>0 from containers where name = :name")
+    fun existsWithName(@Bind("name") name: String): Boolean
 
     @SqlUpdate("delete from containers where name = :name")
     fun deleteByName(@Bind("name") name: String)
