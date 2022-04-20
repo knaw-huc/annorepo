@@ -1,36 +1,29 @@
 package nl.knaw.huc.annorepo.db
 
+import nl.knaw.huc.annorepo.api.ContainerData
 import org.jdbi.v3.sqlobject.config.RegisterBeanMapper
 import org.jdbi.v3.sqlobject.customizer.Bind
 import org.jdbi.v3.sqlobject.statement.GetGeneratedKeys
 import org.jdbi.v3.sqlobject.statement.SqlQuery
 import org.jdbi.v3.sqlobject.statement.SqlUpdate
-import java.time.Instant
-import java.util.*
 
 interface AnnotationContainerDao {
 
-    @SqlUpdate("create table annotation_containers (id serial primary key, name varchar(100), created_on timestamp)")
-    fun createTable()
+    @SqlUpdate("insert into containers (name,created,modified) values (:name,now(),now())")
+    @GetGeneratedKeys("id")
+    fun add(@Bind("name") name: String): Long
 
-    @SqlUpdate("insert into annotation_containers (id, name) values (:id, :name)")
-    fun insert(@Bind("id") id: Int, @Bind("name") name: String)
-
-    class IdCreationTime {
-        private var id: Long = 0
-        private var time: Date = Date.from(Instant.now())
-
-        override fun toString(): String = "id:$id, time:$time"
-    }
-
-    @SqlUpdate("insert into annotation_containers (name,created_on) values (:name,now())")
-    @GetGeneratedKeys("id", "created_on")
-    @RegisterBeanMapper(IdCreationTime::class)
-    fun add(@Bind("name") name: String): IdCreationTime
-
-    @SqlQuery("select name from annotation_containers where id = :id")
+    @SqlQuery("select name from containers where id = :id")
     fun findNameById(@Bind("id") id: Int): String
 
-    @SqlQuery("select name from annotation_containers order by name")
+    @SqlQuery("select name from containers order by name")
     fun getNames(): List<String>
+
+    @SqlQuery("select id,name from containers where name = :name limit 1")
+    @RegisterBeanMapper(ContainerData::class)
+    fun findByName(@Bind("name") name: String): ContainerData
+
+    @SqlUpdate("delete from containers where name = :name")
+    fun deleteByName(@Bind("name") name: String)
+
 }

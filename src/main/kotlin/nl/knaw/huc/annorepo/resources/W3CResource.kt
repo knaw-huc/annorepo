@@ -4,7 +4,9 @@ import com.codahale.metrics.annotation.Timed
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import nl.knaw.huc.annorepo.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.api.ContainerData
 import nl.knaw.huc.annorepo.api.ResourcePaths
+import nl.knaw.huc.annorepo.db.AnnotationContainerDao
 import org.jdbi.v3.core.Jdbi
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -41,6 +43,10 @@ class W3CResource(private val configuration: AnnoRepoConfiguration, val jdbi: Jd
     ): Response {
         val name = slug ?: UUID.randomUUID().toString()
         log.info("create Container $name")
+        jdbi.open().use { handle ->
+            val dao: AnnotationContainerDao = handle.attach(AnnotationContainerDao::class.java)
+            dao.add(name)
+        }
         val uri = UriBuilder.fromUri(configuration.externalBaseUrl)
             .path(ResourcePaths.W3C)
             .path(name)
@@ -52,8 +58,14 @@ class W3CResource(private val configuration: AnnoRepoConfiguration, val jdbi: Jd
     @Timed
     @GET
     @Path("{containerName}")
-    fun readContainer(@PathParam("containerName") containerName: String) {
+    fun readContainer(@PathParam("containerName") containerName: String): ContainerData {
         log.info("read Container $containerName")
+        jdbi.open().use { handle ->
+            val dao: AnnotationContainerDao = handle.attach(AnnotationContainerDao::class.java)
+            val container = dao.findByName(containerName)
+            log.info("container=$container")
+            return container
+        }
     }
 
     @ApiOperation(value = "Delete an empty Annotation Container")
@@ -62,6 +74,10 @@ class W3CResource(private val configuration: AnnoRepoConfiguration, val jdbi: Jd
     @Path("{containerName}")
     fun deleteContainer(@PathParam("containerName") containerName: String) {
         log.info("delete Container $containerName")
+        jdbi.open().use { handle ->
+            val dao: AnnotationContainerDao = handle.attach(AnnotationContainerDao::class.java)
+            return dao.deleteByName(containerName)
+        }
     }
 
     @ApiOperation(value = "Create an Annotation")
