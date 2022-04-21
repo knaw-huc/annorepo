@@ -21,12 +21,22 @@ interface AnnotationContainerDao {
 
     @SqlQuery("select id,name,created,modified from containers where name = :name limit 1")
     @RegisterBeanMapper(ContainerData::class)
-    fun findByName(@Bind("name") name: String): ContainerData
+    fun findByName(@Bind("name") name: String): ContainerData?
+
+    @SqlQuery("select id,name,created,modified from containers where id = :id")
+    @RegisterBeanMapper(ContainerData::class)
+    fun findById(@Bind("id") id: Long): ContainerData
 
     @SqlQuery("select count(*)>0 from containers where name = :name")
     fun existsWithName(@Bind("name") name: String): Boolean
 
     @SqlUpdate("delete from containers where name = :name")
     fun deleteByName(@Bind("name") name: String)
+
+    @SqlQuery("select count(*)=0 from annotations where container_id=(select id from containers where name = :name limit 1)")
+    fun isEmpty(@Bind("name") name: String): Boolean
+
+    @SqlQuery("select id from containers where name = :name limit 1")
+    fun findIdByName(@Bind("name") containerName: String): Long?
 
 }

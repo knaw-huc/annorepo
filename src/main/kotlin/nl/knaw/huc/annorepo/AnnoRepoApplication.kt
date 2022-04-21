@@ -78,7 +78,9 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         doHealthChecks(environment)
 
         log.info(
-            "\n\n  Starting $name (v$appVersion), externally accessible at ${configuration.externalBaseUrl}\n"
+            "\n\n  Starting $name (v$appVersion)\n" +
+                    "    locally accessible at    http://localhost:${System.getenv(ARConst.EnvironmentVariable.AR_SERVER_PORT.name) ?: 8080}\n" +
+                    "    externally accessible at ${configuration.externalBaseUrl}\n"
         )
     }
 

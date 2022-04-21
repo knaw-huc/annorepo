@@ -114,6 +114,10 @@
         </dependency>
         <dependency>
             <groupId>org.jdbi</groupId>
+            <artifactId>jdbi3-json</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jdbi</groupId>
             <artifactId>jdbi3-kotlin-sqlobject</artifactId>
         </dependency>
         <dependency>
@@ -264,9 +268,18 @@
                         <filter>
                             <artifact>*:*</artifact>
                             <excludes>
-                                <exclude>META-INF/*.SF</exclude>
                                 <exclude>META-INF/*.DSA</exclude>
+                                <exclude>META-INF/*.MF</exclude>
                                 <exclude>META-INF/*.RSA</exclude>
+                                <exclude>META-INF/*.SF</exclude>
+                                <exclude>META-INF/*.markdown</exclude>
+                                <exclude>META-INF/*.md</exclude>
+                                <exclude>META-INF/*.txt</exclude>
+                                <exclude>META-INF/LICENSE</exclude>
+                                <exclude>META-INF/NOTICE</exclude>
+                                <exclude>META-INF/versions/*/*.class</exclude>
+                                <exclude>about.html</exclude>
+                                <exclude>module-info.class</exclude>
                             </excludes>
                         </filter>
                     </filters>
