@@ -6,7 +6,6 @@ import co.elastic.clients.json.JsonData
 import com.codahale.metrics.annotation.Timed
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
-import nl.knaw.huc.annorepo.api.ARConst.ES_INDEX_NAME
 import nl.knaw.huc.annorepo.api.AnnotationData
 import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
@@ -141,9 +140,10 @@ class W3CResource(
                 |"annotation_name":"$name",
                 |"annotation":$annotationJson
                 |}""".trimMargin()
-//        log.info("index_source=$wrapperJson")
         val request = IndexRequest.of { i: IndexRequest.Builder<JsonData> ->
-            i.index(ES_INDEX_NAME).id(dbId.toString()).withJson(StringReader(wrapperJson))
+            i.index(containerName)
+                .id(dbId.toString())
+                .withJson(StringReader(wrapperJson))
         }
         val result = esClient.index(request).result()
         log.info("result = $result")
@@ -196,13 +196,13 @@ class W3CResource(
             val containerId = containerDao.findIdByName(containerName)!!
             val annotationDao: AnnotationDao = handle.attach(AnnotationDao::class.java)
             val annotationId = annotationDao.findIdByContainerIdAndName(containerId, annotationName)
-            deindexAnnotation(annotationId)
+            deindexAnnotation(containerName, annotationId)
             annotationDao.deleteByContainerIdAndName(containerId, annotationName)
         }
     }
 
-    private fun deindexAnnotation(annotationId: Long) {
-        val result = esClient.delete { r -> r.index(ES_INDEX_NAME).id(annotationId.toString()) }.result()
+    private fun deindexAnnotation(containerName: String, annotationId: Long) {
+        val result = esClient.delete { r -> r.index(containerName).id(annotationId.toString()) }.result()
         log.debug("result=$result")
     }
 
