@@ -4,13 +4,18 @@ import nl.knaw.huc.annorepo.api.AnnotationData
 import org.jdbi.v3.json.EncodedJson
 import org.jdbi.v3.sqlobject.config.RegisterBeanMapper
 import org.jdbi.v3.sqlobject.customizer.Bind
+import org.jdbi.v3.sqlobject.customizer.BindList
 import org.jdbi.v3.sqlobject.statement.GetGeneratedKeys
 import org.jdbi.v3.sqlobject.statement.SqlQuery
 import org.jdbi.v3.sqlobject.statement.SqlUpdate
 
 interface AnnotationDao {
 
-    @SqlUpdate("insert into annotations (container_id,name,content,created,modified) values (:container_id,:name,:content,now(),now())")
+    @SqlUpdate(
+        "insert into annotations" +
+                " (container_id,name,content,created,modified)" +
+                " values (:container_id,:name,:content,now(),now())"
+    )
     @GetGeneratedKeys("id")
     fun add(
         @Bind("container_id") containerId: Long,
@@ -21,7 +26,13 @@ interface AnnotationDao {
     @SqlQuery("select name from annotations where id = :id")
     fun findNameById(@Bind("id") id: Long): String
 
-    @SqlQuery("select id,name,content,created,modified from annotations where container_id = :container_id and name = :name limit 1")
+    @SqlQuery(
+        "select id,name,content,created,modified" +
+                " from annotations" +
+                " where container_id = :container_id" +
+                " and name = :name" +
+                " limit 1"
+    )
     @RegisterBeanMapper(AnnotationData::class)
     fun findByContainerIdAndName(
         @Bind("container_id") containerId: Long,
@@ -38,10 +49,31 @@ interface AnnotationDao {
     @SqlUpdate("delete from annotations where name = :name and container_id = :container_id")
     fun deleteByContainerIdAndName(@Bind("container_id") containerId: Long, @Bind("name") name: String)
 
-    @SqlQuery("select c.name as containerName, a.name as annotationName from annotations a join containers c on a.container_id=c.id order by containerName,annotationName")
+    @SqlQuery(
+        "select c.name as containerName, a.name as annotationName" +
+                " from annotations a" +
+                " join containers c" +
+                " on a.container_id=c.id" +
+                " order by containerName,annotationName"
+    )
     @RegisterBeanMapper(AnnotationRecord::class)
     fun allAnnotations(): List<AnnotationRecord>
 
-    @SqlQuery("select id from annotations where name = :name and container_id = :container_id")
+    @SqlQuery(
+        "select id from annotations" +
+                " where name = :name" +
+                " and container_id = :container_id"
+    )
     fun findIdByContainerIdAndName(@Bind("container_id") containerId: Long, @Bind("name") name: String): Long
+
+    @SqlQuery(
+        "select c.name as containerName, a.name as annotationName" +
+                " from annotations a" +
+                " join containers c" +
+                " on a.container_id=c.id" +
+                " where a.id in (<annotationIds>)" +
+                " order by containerName,annotationName"
+    )
+    @RegisterBeanMapper(AnnotationRecord::class)
+    fun annotationsById(@BindList("annotationIds") hitIds: List<Long>): List<AnnotationRecord>
 }

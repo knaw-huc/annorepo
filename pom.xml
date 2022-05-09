@@ -288,6 +288,7 @@
                                 <exclude>META-INF/*.markdown</exclude>
                                 <exclude>META-INF/*.md</exclude>
                                 <exclude>META-INF/*.txt</exclude>
+                                <exclude>META-INF/DEPENDENCIES</exclude>
                                 <exclude>META-INF/LICENSE</exclude>
                                 <exclude>META-INF/NOTICE</exclude>
                                 <exclude>META-INF/versions/*/*.class</exclude>

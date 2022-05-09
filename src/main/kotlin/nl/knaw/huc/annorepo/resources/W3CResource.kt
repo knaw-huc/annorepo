@@ -78,8 +78,6 @@ class W3CResource(
                 return Response.ok(container).build()
             } else {
                 return Response.status(Response.Status.NOT_FOUND).entity("Container '$containerName' not found").build()
-//                throw NotFoundException("Container '$containerName' not found")
-//                throw WebApplicationException("Container '$containerName' not found", Response.Status.NOT_FOUND)
             }
         }
     }
