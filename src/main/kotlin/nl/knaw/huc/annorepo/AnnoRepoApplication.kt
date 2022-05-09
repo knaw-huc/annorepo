@@ -88,7 +88,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             register("server", ServerHealthCheck())
         }
 
-        customizeObjectMaper(environment)
+        customizeObjectMapper(environment)
 
         doHealthChecks(environment)
 
@@ -110,7 +110,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         return ElasticsearchClient(transport)
     }
 
-    private fun customizeObjectMaper(environment: Environment) {
+    private fun customizeObjectMapper(environment: Environment) {
         val objectMapper = environment.objectMapper
         objectMapper.dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
         val module = SimpleModule()
