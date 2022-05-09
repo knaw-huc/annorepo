@@ -1,14 +1,22 @@
 package nl.knaw.huc.annorepo.resources
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient
+import co.elastic.clients.elasticsearch.core.IndexRequest
+import co.elastic.clients.json.JsonData
 import com.codahale.metrics.annotation.Timed
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
-import nl.knaw.huc.annorepo.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.api.ARConst.ES_INDEX_NAME
+import nl.knaw.huc.annorepo.api.AnnotationData
 import nl.knaw.huc.annorepo.api.ResourcePaths
+import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.db.AnnotationContainerDao
 import nl.knaw.huc.annorepo.db.AnnotationDao
+import nl.knaw.huc.annorepo.service.UriFactory
+import org.eclipse.jetty.util.ajax.JSON
 import org.jdbi.v3.core.Jdbi
 import org.slf4j.LoggerFactory
+import java.io.StringReader
 import java.util.*
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -19,14 +27,16 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
-import javax.ws.rs.core.UriBuilder
 
 @Api(ResourcePaths.W3C)
 @Path(ResourcePaths.W3C)
 @Produces(MediaType.APPLICATION_JSON)
-class W3CResource(private val configuration: AnnoRepoConfiguration, private val jdbi: Jdbi) {
+class W3CResource(
+    configuration: AnnoRepoConfiguration, private val jdbi: Jdbi, private val esClient: ElasticsearchClient
+) {
 
     private val log = LoggerFactory.getLogger(javaClass)
+    private val uriFactory = UriFactory(configuration)
 
     @ApiOperation(value = "Show link to the W3C Web Annotation Protocol")
     @Timed
@@ -51,7 +61,7 @@ class W3CResource(private val configuration: AnnoRepoConfiguration, private val 
             log.debug("create Container $name")
             val id = dao.add(name)
             val containerData = dao.findById(id)
-            val uri = UriBuilder.fromUri(configuration.externalBaseUrl).path(ResourcePaths.W3C).path(name).build()
+            val uri = uriFactory.containerURL(name)
             return Response.created(uri).entity(containerData).build()
         }
     }
@@ -68,9 +78,7 @@ class W3CResource(private val configuration: AnnoRepoConfiguration, private val 
             if (container != null) {
                 return Response.ok(container).build()
             } else {
-                return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Container '$containerName' not found")
-                    .build()
+                return Response.status(Response.Status.NOT_FOUND).entity("Container '$containerName' not found").build()
 //                throw NotFoundException("Container '$containerName' not found")
 //                throw WebApplicationException("Container '$containerName' not found", Response.Status.NOT_FOUND)
             }
@@ -105,6 +113,7 @@ class W3CResource(private val configuration: AnnoRepoConfiguration, private val 
     ): Response {
         log.info("annotation=\n$annotationJson")
         var name = slug ?: UUID.randomUUID().toString()
+        val uri = uriFactory.annotationURL(containerName, name)
         jdbi.open().use { handle ->
             val containerDao: AnnotationContainerDao = handle.attach(AnnotationContainerDao::class.java)
             val containerId = containerDao.findIdByName(containerName)!!
@@ -114,18 +123,30 @@ class W3CResource(private val configuration: AnnoRepoConfiguration, private val 
                 name = UUID.randomUUID().toString()
             }
             log.info("create annotation $name in container $containerName")
+            log.info("content = $annotationJson")
             val id = annotationDao.add(containerId, name, annotationJson)
+            indexAnnotation(id, containerName, name, annotationJson)
             val annotationData = annotationDao.findById(id)
-            val uri =
-                UriBuilder.fromUri(configuration.externalBaseUrl)
-                    .path(ResourcePaths.W3C)
-                    .path(containerName)
-                    .path(name)
-                    .build()
+            log.info("annotationData=${annotationData}")
+            val entity = withInsertedId(annotationData, containerName, name)
             return Response.created(uri)
-                .entity(annotationData)
+                .entity(entity)
                 .build()
         }
+    }
+
+    private fun indexAnnotation(dbId: Long, containerName: String, name: String, annotationJson: String) {
+        val wrapperJson = """{
+                |"container_name":"$containerName",
+                |"annotation_name":"$name",
+                |"annotation":$annotationJson
+                |}""".trimMargin()
+//        log.info("index_source=$wrapperJson")
+        val request = IndexRequest.of { i: IndexRequest.Builder<JsonData> ->
+            i.index(ES_INDEX_NAME).id(dbId.toString()).withJson(StringReader(wrapperJson))
+        }
+        val result = esClient.index(request).result()
+        log.info("result = $result")
     }
 
     @ApiOperation(value = "Get an Annotation")
@@ -142,9 +163,24 @@ class W3CResource(private val configuration: AnnoRepoConfiguration, private val 
             val annotationDao: AnnotationDao = handle.attach(AnnotationDao::class.java)
             val annotationData = annotationDao.findByContainerIdAndName(containerId, annotationName)
             return if (annotationData != null) {
-                Response.ok(annotationData).build()
+                val entity = withInsertedId(annotationData, containerName, annotationName)
+                Response.ok(entity).header("Last-Modified", annotationData.modified).build()
             } else Response.status(Response.Status.NOT_FOUND).build()
         }
+    }
+
+    private fun withInsertedId(
+        annotationData: AnnotationData,
+        containerName: String,
+        annotationName: String
+    ): Any? {
+        val content = annotationData.content
+        var jo = JSON.parse(content)
+        if (jo is HashMap<*, *>) {
+            jo = jo.toMutableMap()
+            jo["id"] = uriFactory.annotationURL(containerName, annotationName)
+        }
+        return jo
     }
 
     @ApiOperation(value = "Delete an Annotation")
@@ -159,8 +195,15 @@ class W3CResource(private val configuration: AnnoRepoConfiguration, private val 
             val containerDao: AnnotationContainerDao = handle.attach(AnnotationContainerDao::class.java)
             val containerId = containerDao.findIdByName(containerName)!!
             val annotationDao: AnnotationDao = handle.attach(AnnotationDao::class.java)
+            val annotationId = annotationDao.findIdByContainerIdAndName(containerId, annotationName)
+            deindexAnnotation(annotationId)
             annotationDao.deleteByContainerIdAndName(containerId, annotationName)
         }
+    }
+
+    private fun deindexAnnotation(annotationId: Long) {
+        val result = esClient.delete { r -> r.index(ES_INDEX_NAME).id(annotationId.toString()) }.result()
+        log.debug("result=$result")
     }
 
 }

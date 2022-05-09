@@ -3,7 +3,7 @@ package nl.knaw.huc.annorepo.resources
 import com.jayway.jsonpath.JsonPath
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport
 import io.dropwizard.testing.junit5.ResourceExtension
-import nl.knaw.huc.annorepo.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith

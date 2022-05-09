@@ -5,6 +5,10 @@ server:
 
 externalBaseUrl: ${AR_EXTERNAL_BASE_URL:-http://localhost:8080}
 
+elasticsearch:
+  host: ${AR_ES_HOST:-localhost}
+  port: ${AR_ES_PORT:-9200}
+
 logging:
   level: INFO
   loggers:

@@ -1,5 +1,9 @@
 package nl.knaw.huc.annorepo
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient
+import co.elastic.clients.json.jackson.JacksonJsonpMapper
+import co.elastic.clients.transport.ElasticsearchTransport
+import co.elastic.clients.transport.rest_client.RestClientTransport
 import com.codahale.metrics.health.HealthCheck
 import com.fasterxml.jackson.databind.module.SimpleModule
 import io.dropwizard.Application
@@ -13,13 +17,17 @@ import io.federecio.dropwizard.swagger.SwaggerBundle
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.cli.EnvCommand
+import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.health.ServerHealthCheck
 import nl.knaw.huc.annorepo.resources.AboutResource
 import nl.knaw.huc.annorepo.resources.HomePageResource
+import nl.knaw.huc.annorepo.resources.ListResource
 import nl.knaw.huc.annorepo.resources.RuntimeExceptionMapper
 import nl.knaw.huc.annorepo.resources.W3CResource
 import nl.knaw.huc.annorepo.service.LocalDateTimeSerializer
 import org.apache.commons.lang3.StringUtils
+import org.apache.http.HttpHost
+import org.elasticsearch.client.RestClient
 import org.jdbi.v3.core.Jdbi
 import org.jdbi.v3.postgres.PostgresPlugin
 import org.jdbi.v3.sqlobject.SqlObjectPlugin
@@ -60,13 +68,18 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         log.info("db.user = {}", configuration.database.user)
         log.info("db.password = {}", configuration.database.password)
 
+        log.info("es.host = {}", configuration.elasticSearchConfiguration.host)
+        log.info("es.port = {}", configuration.elasticSearchConfiguration.port)
+
         val jdbi = createJdbi(environment, configuration)
+        val esClient = createESClient(configuration)
 
         val appVersion = javaClass.getPackage().implementationVersion
         environment.jersey().apply {
             register(AboutResource(configuration, name, appVersion))
             register(HomePageResource())
-            register(W3CResource(configuration, jdbi))
+            register(W3CResource(configuration, jdbi, esClient))
+            register(ListResource(configuration, jdbi))
             register(RuntimeExceptionMapper())
         }
         environment.healthChecks().apply {
@@ -82,6 +95,17 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
                     "    locally accessible at    http://localhost:${System.getenv(ARConst.EnvironmentVariable.AR_SERVER_PORT.name) ?: 8080}\n" +
                     "    externally accessible at ${configuration.externalBaseUrl}\n"
         )
+    }
+
+    private fun createESClient(configuration: AnnoRepoConfiguration): ElasticsearchClient {
+        val restClient = RestClient.builder(
+            HttpHost(
+                configuration.elasticSearchConfiguration.host,
+                configuration.elasticSearchConfiguration.port
+            )
+        ).build()
+        val transport: ElasticsearchTransport = RestClientTransport(restClient, JacksonJsonpMapper())
+        return ElasticsearchClient(transport)
     }
 
     private fun customizeObjectMaper(environment: Environment) {

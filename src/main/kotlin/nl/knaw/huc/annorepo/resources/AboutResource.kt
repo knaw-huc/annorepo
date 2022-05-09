@@ -3,9 +3,9 @@ package nl.knaw.huc.annorepo.resources
 import com.codahale.metrics.annotation.Timed
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
-import nl.knaw.huc.annorepo.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.api.AboutInfo
 import nl.knaw.huc.annorepo.api.ResourcePaths
+import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import javax.ws.rs.GET

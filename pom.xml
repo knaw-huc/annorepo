@@ -27,7 +27,9 @@
         <assertj-core.version>3.22.0</assertj-core.version><!-- 2.0.0 = jdk1.7 -->
         <dropwizard-swagger.version>2.0.12-1</dropwizard-swagger.version>
         <dropwizard.version>2.0.28</dropwizard.version>
+        <elasticsearch-java.version>8.2.0</elasticsearch-java.version>
         <h2.version>2.1.210</h2.version>
+        <json.version>20220320</json.version>
         <json-path.version>2.7.0</json-path.version>
         <postgresql.version>42.3.3</postgresql.version>
         <problem.version>0.27.1</problem.version>
@@ -124,7 +126,18 @@
             <groupId>org.jdbi</groupId>
             <artifactId>jdbi3-postgres</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>${json.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>co.elastic.clients</groupId>
+            <artifactId>elasticsearch-java</artifactId>
+            <version>${elasticsearch-java.version}</version>
+        </dependency>
 
+        <!-- test dependencies -->
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-test</artifactId>

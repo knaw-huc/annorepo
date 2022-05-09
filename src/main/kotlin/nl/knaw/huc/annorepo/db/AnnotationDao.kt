@@ -28,7 +28,7 @@ interface AnnotationDao {
         @Bind("name") annotationName: String
     ): AnnotationData?
 
-    @SqlQuery("select id,name,created,modified from annotations where id = :id")
+    @SqlQuery("select id,name,content,created,modified from annotations where id = :id")
     @RegisterBeanMapper(AnnotationData::class)
     fun findById(@Bind("id") id: Long): AnnotationData
 
@@ -38,4 +38,10 @@ interface AnnotationDao {
     @SqlUpdate("delete from annotations where name = :name and container_id = :container_id")
     fun deleteByContainerIdAndName(@Bind("container_id") containerId: Long, @Bind("name") name: String)
 
+    @SqlQuery("select c.name as containerName, a.name as annotationName from annotations a join containers c on a.container_id=c.id order by containerName,annotationName")
+    @RegisterBeanMapper(AnnotationRecord::class)
+    fun allAnnotations(): List<AnnotationRecord>
+
+    @SqlQuery("select id from annotations where name = :name and container_id = :container_id")
+    fun findIdByContainerIdAndName(@Bind("container_id") containerId: Long, @Bind("name") name: String): Long
 }

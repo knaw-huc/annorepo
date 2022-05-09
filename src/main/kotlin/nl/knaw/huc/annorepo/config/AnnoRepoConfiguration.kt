@@ -1,4 +1,4 @@
-package nl.knaw.huc.annorepo
+package nl.knaw.huc.annorepo.config
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.dropwizard.Configuration
@@ -22,6 +22,11 @@ class AnnoRepoConfiguration : Configuration() {
     @NotNull
     @JsonProperty
     val database = DataSourceFactory()
+
+    @Valid
+    @NotNull
+    @JsonProperty("elasticsearch")
+    val elasticSearchConfiguration = ElasticSearchConfiguration()
 
     @Valid
     @NotNull
