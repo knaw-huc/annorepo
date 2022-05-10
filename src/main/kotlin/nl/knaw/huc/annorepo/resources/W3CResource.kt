@@ -1,6 +1,7 @@
 package nl.knaw.huc.annorepo.resources
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient
+import co.elastic.clients.elasticsearch._types.mapping.Property
 import co.elastic.clients.elasticsearch.core.IndexRequest
 import co.elastic.clients.json.JsonData
 import com.codahale.metrics.annotation.Timed
@@ -59,6 +60,7 @@ class W3CResource(
             }
             log.debug("create Container $name")
             val id = dao.add(name)
+            createIndex(name)
             val containerData = dao.findById(id)
             val uri = uriFactory.containerURL(name)
             return Response.created(uri).entity(containerData).build()
@@ -92,6 +94,7 @@ class W3CResource(
             val dao: AnnotationContainerDao = handle.attach(AnnotationContainerDao::class.java)
             if (dao.isEmpty(containerName)) {
                 dao.deleteByName(containerName)
+                deleteIndex(containerName)
                 return Response.noContent().build()
             } else {
                 return Response.status(Response.Status.BAD_REQUEST)
@@ -132,21 +135,6 @@ class W3CResource(
         }
     }
 
-    private fun indexAnnotation(dbId: Long, containerName: String, name: String, annotationJson: String) {
-        val wrapperJson = """{
-                |"container_name":"$containerName",
-                |"annotation_name":"$name",
-                |"annotation":$annotationJson
-                |}""".trimMargin()
-        val request = IndexRequest.of { i: IndexRequest.Builder<JsonData> ->
-            i.index(containerName)
-                .id(dbId.toString())
-                .withJson(StringReader(wrapperJson))
-        }
-        val result = esClient.index(request).result()
-        log.info("result = $result")
-    }
-
     @ApiOperation(value = "Get an Annotation")
     @Timed
     @GET
@@ -167,20 +155,6 @@ class W3CResource(
         }
     }
 
-    private fun withInsertedId(
-        annotationData: AnnotationData,
-        containerName: String,
-        annotationName: String
-    ): Any? {
-        val content = annotationData.content
-        var jo = JSON.parse(content)
-        if (jo is HashMap<*, *>) {
-            jo = jo.toMutableMap()
-            jo["id"] = uriFactory.annotationURL(containerName, annotationName)
-        }
-        return jo
-    }
-
     @ApiOperation(value = "Delete an Annotation")
     @Timed
     @DELETE
@@ -199,8 +173,80 @@ class W3CResource(
         }
     }
 
+    private fun withInsertedId(
+        annotationData: AnnotationData,
+        containerName: String,
+        annotationName: String
+    ): Any? {
+        val content = annotationData.content
+        var jo = JSON.parse(content)
+        if (jo is HashMap<*, *>) {
+            jo = jo.toMutableMap()
+            jo["id"] = uriFactory.annotationURL(containerName, annotationName)
+        }
+        return jo
+    }
+
+    private fun createIndex(name: String): Boolean {
+        val response = esClient.indices().create { _1 ->
+            _1.index(name).mappings { _2 ->
+                _2.properties(mapOf("annotation_name" to Property.of {
+                    it.keyword { it1 -> it1 }
+                }, "annotation" to Property.of { _3 ->
+                    _3.`object` { it }
+//                    _3.`object` { _4 ->
+//                        _4.properties(
+//                            mapOf(
+//                                "@context" to Property.of { _5 ->
+//                                    _5.`object` { it.enabled(false) }
+//                                },
+//                                "id" to Property.of { _5 ->
+//                                    _5.keyword { it }
+//                                },
+//                                "type" to Property.of { _5 ->
+//                                    _5.keyword { it }
+//                                },
+//                                "created" to Property.of { _5 ->
+//                                    _5.`date` { it }
+//                                },
+//                                "generator" to Property.of { _5 ->
+//                                    _5.`object` { it }
+//                                },
+//                                "body" to Property.of { _5 ->
+//                                    _5.`object` { it }
+//                                },
+//                                "target" to Property.of { _5 ->
+//                                    _5.`object` { it }
+//                                }
+//                            )
+//                        )
+//                    }
+                }))
+            }
+        }
+        return response.acknowledged() && response.shardsAcknowledged()
+    }
+
+    private fun deleteIndex(containerName: String): Boolean =
+        esClient.indices().delete { it.index(containerName) }.acknowledged()
+
+    private fun indexAnnotation(dbId: Long, containerName: String, name: String, annotationJson: String) {
+        val wrapperJson = """{
+                |"container_name":"$containerName",
+                |"annotation_name":"$name",
+                |"annotation":$annotationJson
+                |}""".trimMargin()
+        val request = IndexRequest.of { i: IndexRequest.Builder<JsonData> ->
+            i.index(containerName)
+                .id(dbId.toString())
+                .withJson(StringReader(wrapperJson))
+        }
+        val result = esClient.index(request).result()
+        log.info("result = $result")
+    }
+
     private fun deindexAnnotation(containerName: String, annotationId: Long) {
-        val result = esClient.delete { r -> r.index(containerName).id(annotationId.toString()) }.result()
+        val result = esClient.delete { it.index(containerName).id(annotationId.toString()) }.result()
         log.debug("result=$result")
     }
 
