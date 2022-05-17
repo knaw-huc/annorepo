@@ -36,7 +36,7 @@ class SearchResource(
     @Path("annotations")
     fun getAnnotationSearchResults(@QueryParam("container") containerName: String): Map<String, Any> {
         val searchRequest = SearchRequest.Builder()
-            .apply { index(containerName) }
+            .index(containerName)
             .size(100)
             .build()
         val results = esClient.search(searchRequest, JsonData::class.java)

@@ -16,10 +16,12 @@ import io.dropwizard.setup.Environment
 import io.federecio.dropwizard.swagger.SwaggerBundle
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
 import nl.knaw.huc.annorepo.api.ARConst
+import nl.knaw.huc.annorepo.api.ElasticsearchWrapper
 import nl.knaw.huc.annorepo.cli.EnvCommand
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.health.ServerHealthCheck
 import nl.knaw.huc.annorepo.resources.AboutResource
+import nl.knaw.huc.annorepo.resources.BatchResource
 import nl.knaw.huc.annorepo.resources.HomePageResource
 import nl.knaw.huc.annorepo.resources.ListResource
 import nl.knaw.huc.annorepo.resources.RuntimeExceptionMapper
@@ -74,13 +76,15 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
 
         val jdbi = createJdbi(environment, configuration)
         val esClient = createESClient(configuration)
+        val esWrapper = ElasticsearchWrapper(esClient)
 
         val appVersion = javaClass.getPackage().implementationVersion
         environment.jersey().apply {
             register(AboutResource(configuration, name, appVersion))
             register(HomePageResource())
-            register(W3CResource(configuration, jdbi, esClient))
+            register(W3CResource(configuration, jdbi, esWrapper))
             register(SearchResource(configuration, jdbi, esClient))
+            register(BatchResource(configuration, jdbi, esWrapper))
             register(ListResource(configuration, jdbi))
             register(RuntimeExceptionMapper())
         }

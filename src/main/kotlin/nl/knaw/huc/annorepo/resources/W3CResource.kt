@@ -1,13 +1,10 @@
 package nl.knaw.huc.annorepo.resources
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient
-import co.elastic.clients.elasticsearch._types.mapping.Property
-import co.elastic.clients.elasticsearch.core.IndexRequest
-import co.elastic.clients.json.JsonData
 import com.codahale.metrics.annotation.Timed
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import nl.knaw.huc.annorepo.api.AnnotationData
+import nl.knaw.huc.annorepo.api.ElasticsearchWrapper
 import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.db.AnnotationContainerDao
@@ -16,7 +13,6 @@ import nl.knaw.huc.annorepo.service.UriFactory
 import org.eclipse.jetty.util.ajax.JSON
 import org.jdbi.v3.core.Jdbi
 import org.slf4j.LoggerFactory
-import java.io.StringReader
 import java.util.*
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -32,7 +28,9 @@ import javax.ws.rs.core.Response
 @Path(ResourcePaths.W3C)
 @Produces(MediaType.APPLICATION_JSON)
 class W3CResource(
-    configuration: AnnoRepoConfiguration, private val jdbi: Jdbi, private val esClient: ElasticsearchClient
+    configuration: AnnoRepoConfiguration,
+    private val jdbi: Jdbi,
+    private val es: ElasticsearchWrapper
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -60,7 +58,7 @@ class W3CResource(
             }
             log.debug("create Container $name")
             val id = dao.add(name)
-            createIndex(name)
+            es.createIndex(name)
             val containerData = dao.findById(id)
             val uri = uriFactory.containerURL(name)
             return Response.created(uri).entity(containerData).build()
@@ -94,7 +92,7 @@ class W3CResource(
             val dao: AnnotationContainerDao = handle.attach(AnnotationContainerDao::class.java)
             if (dao.isEmpty(containerName)) {
                 dao.deleteByName(containerName)
-                deleteIndex(containerName)
+                es.deleteIndex(containerName)
                 return Response.noContent().build()
             } else {
                 return Response.status(Response.Status.BAD_REQUEST)
@@ -111,7 +109,7 @@ class W3CResource(
     fun createAnnotation(
         @HeaderParam("slug") slug: String?, @PathParam("containerName") containerName: String, annotationJson: String
     ): Response {
-        log.info("annotation=\n$annotationJson")
+        log.debug("annotation=\n$annotationJson")
         var name = slug ?: UUID.randomUUID().toString()
         val uri = uriFactory.annotationURL(containerName, name)
         jdbi.open().use { handle ->
@@ -119,19 +117,17 @@ class W3CResource(
             val containerId = containerDao.findIdByName(containerName)!!
             val annotationDao: AnnotationDao = handle.attach(AnnotationDao::class.java)
             if (annotationDao.existsWithNameInContainer(name, containerId)) {
-                log.debug("An annotation with the suggested name $name already exists in container $containerName, generating a new name.")
+                log.warn("An annotation with the suggested name $name already exists in container $containerName, generating a new name.")
                 name = UUID.randomUUID().toString()
             }
-            log.info("create annotation $name in container $containerName")
-            log.info("content = $annotationJson")
+            log.debug("create annotation $name in container $containerName")
+            log.debug("content = $annotationJson")
             val id = annotationDao.add(containerId, name, annotationJson)
-            indexAnnotation(id, containerName, name, annotationJson)
+            es.indexAnnotation(id, containerName, name, annotationJson)
             val annotationData = annotationDao.findById(id)
-            log.info("annotationData=${annotationData}")
+            log.debug("annotationData=${annotationData}")
             val entity = withInsertedId(annotationData, containerName, name)
-            return Response.created(uri)
-                .entity(entity)
-                .build()
+            return Response.created(uri).entity(entity).build()
         }
     }
 
@@ -168,15 +164,13 @@ class W3CResource(
             val containerId = containerDao.findIdByName(containerName)!!
             val annotationDao: AnnotationDao = handle.attach(AnnotationDao::class.java)
             val annotationId = annotationDao.findIdByContainerIdAndName(containerId, annotationName)
-            deindexAnnotation(containerName, annotationId)
+            es.deindexAnnotation(containerName, annotationId)
             annotationDao.deleteByContainerIdAndName(containerId, annotationName)
         }
     }
 
     private fun withInsertedId(
-        annotationData: AnnotationData,
-        containerName: String,
-        annotationName: String
+        annotationData: AnnotationData, containerName: String, annotationName: String
     ): Any? {
         val content = annotationData.content
         var jo = JSON.parse(content)
@@ -185,69 +179,6 @@ class W3CResource(
             jo["id"] = uriFactory.annotationURL(containerName, annotationName)
         }
         return jo
-    }
-
-    private fun createIndex(name: String): Boolean {
-        val response = esClient.indices().create { _1 ->
-            _1.index(name).mappings { _2 ->
-                _2.properties(mapOf("annotation_name" to Property.of {
-                    it.keyword { it1 -> it1 }
-                }, "annotation" to Property.of { _3 ->
-                    _3.`object` { it }
-//                    _3.`object` { _4 ->
-//                        _4.properties(
-//                            mapOf(
-//                                "@context" to Property.of { _5 ->
-//                                    _5.`object` { it.enabled(false) }
-//                                },
-//                                "id" to Property.of { _5 ->
-//                                    _5.keyword { it }
-//                                },
-//                                "type" to Property.of { _5 ->
-//                                    _5.keyword { it }
-//                                },
-//                                "created" to Property.of { _5 ->
-//                                    _5.`date` { it }
-//                                },
-//                                "generator" to Property.of { _5 ->
-//                                    _5.`object` { it }
-//                                },
-//                                "body" to Property.of { _5 ->
-//                                    _5.`object` { it }
-//                                },
-//                                "target" to Property.of { _5 ->
-//                                    _5.`object` { it }
-//                                }
-//                            )
-//                        )
-//                    }
-                }))
-            }
-        }
-        return response.acknowledged() && response.shardsAcknowledged()
-    }
-
-    private fun deleteIndex(containerName: String): Boolean =
-        esClient.indices().delete { it.index(containerName) }.acknowledged()
-
-    private fun indexAnnotation(dbId: Long, containerName: String, name: String, annotationJson: String) {
-        val wrapperJson = """{
-                |"container_name":"$containerName",
-                |"annotation_name":"$name",
-                |"annotation":$annotationJson
-                |}""".trimMargin()
-        val request = IndexRequest.of { i: IndexRequest.Builder<JsonData> ->
-            i.index(containerName)
-                .id(dbId.toString())
-                .withJson(StringReader(wrapperJson))
-        }
-        val result = esClient.index(request).result()
-        log.info("result = $result")
-    }
-
-    private fun deindexAnnotation(containerName: String, annotationId: Long) {
-        val result = esClient.delete { it.index(containerName).id(annotationId.toString()) }.result()
-        log.debug("result=$result")
     }
 
 }

@@ -13,7 +13,6 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Suppress("unused", "unused", "unused", "unused", "unused", "unused", "unused")
 @Api(ResourcePaths.ABOUT)
 @Path(ResourcePaths.ABOUT)
 @Produces(MediaType.APPLICATION_JSON)
