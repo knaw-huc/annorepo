@@ -24,7 +24,7 @@ import javax.ws.rs.core.Response
 @Path(ResourcePaths.BATCH)
 @Produces(MediaType.APPLICATION_JSON)
 class BatchResource(
-    private val configuration: AnnoRepoConfiguration,
+    configuration: AnnoRepoConfiguration,
     private val jdbi: Jdbi,
     private val es: ElasticsearchWrapper
 ) {
@@ -39,20 +39,17 @@ class BatchResource(
         @PathParam("containerName") containerName: String,
         annotations: List<HashMap<String, Any?>>
     ): Response {
-        log.info("size=${annotations.size}")
         val indexResult = jdbi.open().use { handle ->
             val containerDao: AnnotationContainerDao = handle.attach(AnnotationContainerDao::class.java)
             val containerId = containerDao.findIdByName(containerName)!!
             val annotationDao: AnnotationDao = handle.attach(AnnotationDao::class.java)
-            val bulkOperations = mutableListOf<ESIndexBulkOperation>()
-            for (annotation in annotations) {
+            val bulkOperations = annotations.map { annotation ->
                 val name = UUID.randomUUID().toString()
                 val annotationJson = ObjectMapper().writeValueAsString(annotation)
                 val id = annotationDao.add(containerId, name, annotationJson)
                 val json = normalizedAnnotationJson(annotation)
-                bulkOperations.add(ESIndexBulkOperation(containerName, id.toString(), name, json))
+                ESIndexBulkOperation(containerName, id.toString(), name, json)
             }
-//            log.info("operations=$bulkOperations")
             es.bulkIndex(bulkOperations)
         }
         return if (indexResult.success) {
