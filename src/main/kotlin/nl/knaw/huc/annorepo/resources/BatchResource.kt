@@ -59,7 +59,7 @@ class BatchResource(
             Response.ok().build()
         } else {
             Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity(mapOf("index_errors" to indexResult.errors.values))
+                .entity(mapOf("index_errors" to indexResult.errors))
                 .build()
         }
     }
