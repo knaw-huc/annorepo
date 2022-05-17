@@ -1,7 +1,6 @@
 package nl.knaw.huc.annorepo.api
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient
-import co.elastic.clients.elasticsearch._types.ElasticsearchException
 import co.elastic.clients.elasticsearch._types.mapping.Property
 import co.elastic.clients.elasticsearch.core.BulkResponse
 import co.elastic.clients.elasticsearch.core.IndexRequest
@@ -11,7 +10,6 @@ import co.elastic.clients.json.JsonData
 import com.fasterxml.jackson.databind.ObjectMapper
 import nl.knaw.huc.annorepo.resources.ESIndexBulkOperation
 import org.slf4j.LoggerFactory
-import java.io.Reader
 import java.io.StringReader
 
 class ElasticsearchWrapper(private val esClient: ElasticsearchClient) {
@@ -80,31 +78,11 @@ class ElasticsearchWrapper(private val esClient: ElasticsearchClient) {
         log.debug("result=$result")
     }
 
-    data class BulkIndexResult(val success: Boolean, val errors: Map<String, String>)
-
-    //    Since esClient.bulk() doesn't seem to work with JsonData, let's try it sequentially'
-    fun bulkIndex1(bulkOperations: List<ESIndexBulkOperation>): BulkIndexResult {
-        val errorMap = mutableMapOf<String, String>()
-        for (ibo: ESIndexBulkOperation in bulkOperations) {
-            try {
-                val reader: Reader = StringReader(wrapJson(ibo.annotationName, ibo.annotationJson))
-                val result = esClient.index(
-                    IndexRequest.Builder<JsonData>()
-                        .index(ibo.index)
-                        .id(ibo.annotationId)
-                        .withJson(reader).build()
-                )
-                log.info("result=${result.result()}")
-            } catch (exception: ElasticsearchException) {
-                log.error("exception: $exception")
-                errorMap[ibo.annotationId] = exception.message.toString()
-            }
-        }
-        val success = errorMap.isEmpty()
-        return BulkIndexResult(success = success, errors = errorMap)
-    }
+    data class BulkIndexResult(val success: Boolean, val errors: List<String>)
 
     fun bulkIndex(bulkOperations: List<ESIndexBulkOperation>): BulkIndexResult {
+        var success = true
+        val errors = mutableListOf<String>()
         try {
             val list: List<BulkOperation> = bulkOperations.map { ipo ->
                 val wrapJson = wrapJson(ipo.annotationName, ipo.annotationJson)
@@ -117,12 +95,12 @@ class ElasticsearchWrapper(private val esClient: ElasticsearchClient) {
             }
 
             val result: BulkResponse = esClient.bulk { it.operations(list) }
-
             if (result.errors()) {
+                success = false
                 log.error("Bulk had errors")
                 for (item in result.items()) {
                     if (item.error() != null) {
-                        log.error(item.error()!!.reason())
+                        errors.add(item.error()!!.reason())
                     }
                 }
             }
@@ -130,7 +108,7 @@ class ElasticsearchWrapper(private val esClient: ElasticsearchClient) {
             log.error("$e")
             throw e
         }
-        return BulkIndexResult(success = true, errors = mapOf())
+        return BulkIndexResult(success = success, errors = errors)
     }
 
 }
