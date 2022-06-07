@@ -1,16 +1,13 @@
 package nl.knaw.huc.annorepo.resources
 
 import com.codahale.metrics.annotation.Timed
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.mongodb.client.MongoClient
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
-import nl.knaw.huc.annorepo.api.ElasticsearchWrapper
 import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
-import nl.knaw.huc.annorepo.db.AnnotationContainerDao
-import nl.knaw.huc.annorepo.db.AnnotationDao
 import nl.knaw.huc.annorepo.service.UriFactory
-import org.jdbi.v3.core.Jdbi
+import org.bson.Document
 import org.slf4j.LoggerFactory
 import java.util.*
 import javax.ws.rs.POST
@@ -20,13 +17,12 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-@Api(ResourcePaths.BATCH)
-@Path(ResourcePaths.BATCH)
+@Api(ResourcePaths.MONGOBATCH)
+@Path(ResourcePaths.MONGOBATCH)
 @Produces(MediaType.APPLICATION_JSON)
 class BatchResource(
     configuration: AnnoRepoConfiguration,
-    private val jdbi: Jdbi,
-    private val es: ElasticsearchWrapper
+    private val client: MongoClient,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
     private val uriFactory = UriFactory(configuration)
@@ -35,38 +31,23 @@ class BatchResource(
     @Timed
     @POST
     @Path("{containerName}/annotations")
-    fun postAnnotations(
+    fun postAnnotationsMongo(
         @PathParam("containerName") containerName: String,
         annotations: List<HashMap<String, Any?>>
     ): Response {
         val annotationNames = mutableListOf<String>()
-        val indexResult = jdbi.open().use { handle ->
-            val containerDao: AnnotationContainerDao = handle.attach(AnnotationContainerDao::class.java)
-            val containerId = containerDao.findIdByName(containerName)!!
-            val annotationDao: AnnotationDao = handle.attach(AnnotationDao::class.java)
-            val bulkOperations = annotations.map { annotation ->
-                val name = UUID.randomUUID().toString()
-                val annotationJson = ObjectMapper().writeValueAsString(annotation)
-                val id = annotationDao.add(containerId, name, annotationJson)
-                annotationNames.add(name)
-
-                val json = normalizedAnnotationJson(annotation)
-                ESIndexBulkOperation(containerName, id.toString(), name, json)
-            }
-            es.bulkIndex(bulkOperations)
+        val mdb = client.getDatabase("annorepo")
+        val container = mdb.getCollection(containerName)
+        for (i in 0..annotations.size) {
+            annotationNames.add(UUID.randomUUID().toString())
         }
-        return if (indexResult.success) {
-            Response.ok(annotationNames).build()
-        } else {
-            Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity(mapOf("index_errors" to indexResult.errors))
-                .build()
+        val documents = annotations.mapIndexed { index, annotationMap ->
+            val name = annotationNames[index]
+            val annotationDocument = Document(annotationMap)
+            Document("annotation_name", name).append("annotation", annotationDocument)
         }
-    }
-
-    private fun normalizedAnnotationJson(annotation: HashMap<String, Any?>): String {
-        val normalizedAnnotation = annotation.apply { remove("@context") }
-        return ObjectMapper().writeValueAsString(normalizedAnnotation)
+        container.insertMany(documents)
+        return Response.ok(annotationNames).build()
     }
 
 }

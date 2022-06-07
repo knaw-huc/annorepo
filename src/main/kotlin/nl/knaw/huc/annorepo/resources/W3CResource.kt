@@ -1,18 +1,20 @@
 package nl.knaw.huc.annorepo.resources
 
 import com.codahale.metrics.annotation.Timed
+import com.mongodb.client.MongoClient
+import com.mongodb.client.MongoDatabase
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
+import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
 import nl.knaw.huc.annorepo.api.AnnotationData
-import nl.knaw.huc.annorepo.api.ElasticsearchWrapper
 import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
-import nl.knaw.huc.annorepo.db.AnnotationContainerDao
-import nl.knaw.huc.annorepo.db.AnnotationDao
 import nl.knaw.huc.annorepo.service.UriFactory
+import org.bson.Document
 import org.eclipse.jetty.util.ajax.JSON
-import org.jdbi.v3.core.Jdbi
 import org.slf4j.LoggerFactory
+import java.net.URI
+import java.time.Instant
 import java.util.*
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -24,24 +26,17 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-@Api(ResourcePaths.W3C)
-@Path(ResourcePaths.W3C)
+@Api(ResourcePaths.MONGO)
+@Path(ResourcePaths.MONGO)
 @Produces(MediaType.APPLICATION_JSON)
-class W3CResource(
+class MongoResource(
+    private val client: MongoClient,
     configuration: AnnoRepoConfiguration,
-    private val jdbi: Jdbi,
-    private val es: ElasticsearchWrapper
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
     private val uriFactory = UriFactory(configuration)
-
-    @ApiOperation(value = "Show link to the W3C Web Annotation Protocol")
-    @Timed
-    @GET
-    @Produces(MediaType.TEXT_HTML)
-    fun getW3CInfo() =
-        """<html>This is the endpoint for the <a href="https://www.w3.org/TR/annotation-protocol/">W3C Web Annotation Protocol</a></html>"""
+    private val mdb = mongoDatabase()
 
     @ApiOperation(value = "Create an Annotation Container")
     @Timed
@@ -50,19 +45,14 @@ class W3CResource(
         @HeaderParam("slug") slug: String?,
     ): Response {
         var name = slug ?: UUID.randomUUID().toString()
-        jdbi.open().use { handle ->
-            val dao: AnnotationContainerDao = handle.attach(AnnotationContainerDao::class.java)
-            if (dao.existsWithName(name)) {
-                log.debug("A container with the suggested name $name already exists, generating a new name.")
-                name = UUID.randomUUID().toString()
-            }
-            log.debug("create Container $name")
-            val id = dao.add(name)
-            es.createIndex(name)
-            val containerData = dao.findById(id)
-            val uri = uriFactory.containerURL(name)
-            return Response.created(uri).entity(containerData).build()
+        if (mdb.listCollectionNames().contains(name)) {
+            log.debug("A container with the suggested name $name already exists, generating a new name.")
+            name = UUID.randomUUID().toString()
         }
+        mdb.createCollection(name)
+        val containerData = getContainerData(name)
+        val uri = uriFactory.containerURL(name)
+        return Response.created(uri).entity(containerData).build()
     }
 
     @ApiOperation(value = "Get an Annotation Container")
@@ -71,15 +61,13 @@ class W3CResource(
     @Path("{containerName}")
     fun readContainer(@PathParam("containerName") containerName: String): Response {
         log.debug("read Container $containerName")
-        jdbi.open().use { handle ->
-            val dao: AnnotationContainerDao = handle.attach(AnnotationContainerDao::class.java)
-            val container = dao.findByName(containerName)
-            if (container != null) {
-                return Response.ok(container).build()
-            } else {
-                return Response.status(Response.Status.NOT_FOUND).entity("Container '$containerName' not found").build()
-            }
+        val container = getContainerData(containerName)
+        return if (container != null) {
+            Response.ok(container).build()
+        } else {
+            Response.status(Response.Status.NOT_FOUND).entity("Container '$containerName' not found").build()
         }
+
     }
 
     @ApiOperation(value = "Delete an empty Annotation Container")
@@ -88,17 +76,14 @@ class W3CResource(
     @Path("{containerName}")
     fun deleteContainer(@PathParam("containerName") containerName: String): Response {
         log.debug("delete Container $containerName")
-        jdbi.open().use { handle ->
-            val dao: AnnotationContainerDao = handle.attach(AnnotationContainerDao::class.java)
-            if (dao.isEmpty(containerName)) {
-                dao.deleteByName(containerName)
-                es.deleteIndex(containerName)
-                return Response.noContent().build()
-            } else {
-                return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Container $containerName is not empty, all annotations need to be removed from this container first.")
-                    .build()
-            }
+        val containerData = getContainerData(containerName)
+        return if (containerData.annotationCount == 0L) {
+            mdb.getCollection(containerName).drop()
+            Response.noContent().build()
+        } else {
+            Response.status(Response.Status.BAD_REQUEST)
+                .entity("Container $containerName is not empty, all annotations need to be removed from this container first.")
+                .build()
         }
     }
 
@@ -107,48 +92,55 @@ class W3CResource(
     @POST
     @Path("{containerName}")
     fun createAnnotation(
-        @HeaderParam("slug") slug: String?, @PathParam("containerName") containerName: String, annotationJson: String
+        @HeaderParam("slug") slug: String?,
+        @PathParam("containerName") containerName: String,
+        annotationJson: String
     ): Response {
 //        log.debug("annotation=\n$annotationJson")
         var name = slug ?: UUID.randomUUID().toString()
         val uri = uriFactory.annotationURL(containerName, name)
-        jdbi.open().use { handle ->
-            val containerDao: AnnotationContainerDao = handle.attach(AnnotationContainerDao::class.java)
-            val containerId = containerDao.findIdByName(containerName)!!
-            val annotationDao: AnnotationDao = handle.attach(AnnotationDao::class.java)
-            if (annotationDao.existsWithNameInContainer(name, containerId)) {
-                log.warn("An annotation with the suggested name $name already exists in container $containerName, generating a new name.")
-                name = UUID.randomUUID().toString()
-            }
-//            log.debug("create annotation $name in container $containerName")
-//            log.debug("content = $annotationJson")
-            val id = annotationDao.add(containerId, name, annotationJson)
-            es.indexAnnotation(id, containerName, name, annotationJson)
-            val annotationData = annotationDao.findById(id)
-//            log.debug("annotationData=${annotationData}")
-            val entity = withInsertedId(annotationData, containerName, name)
-            return Response.created(uri).entity(entity).build()
+        val container = mdb.getCollection(containerName)
+        val existingAnnotationDocument = container.find(Document("annotation_name", name)).first()
+        if (existingAnnotationDocument != null) {
+            log.warn("An annotation with the suggested name $name already exists in container $containerName, generating a new name.")
+            name = UUID.randomUUID().toString()
         }
+        val annotationDocument = Document.parse(annotationJson)
+        val doc = Document("annotation_name", name).append("annotation", annotationDocument)
+        val r = container.insertOne(doc).insertedId?.asObjectId()?.value
+        val annotationData = AnnotationData(
+            r!!.timestamp.toLong(),
+            name,
+            doc.getEmbedded(listOf("annotation"), Document::class.java).toJson(),
+            Date.from(Instant.now()),
+            Date.from(Instant.now())
+        )
+        val entity = withInsertedId(annotationData, containerName, name)
+        return Response.created(uri).entity(entity).build()
     }
 
     @ApiOperation(value = "Get an Annotation")
     @Timed
     @GET
     @Path("{containerName}/{annotationName}")
+    @Produces(ANNOTATION_MEDIA_TYPE)
     fun readAnnotation(
         @PathParam("containerName") containerName: String, @PathParam("annotationName") annotationName: String
     ): Response {
         log.debug("read annotation $annotationName in container $containerName")
-        jdbi.open().use { handle ->
-            val containerDao: AnnotationContainerDao = handle.attach(AnnotationContainerDao::class.java)
-            val containerId = containerDao.findIdByName(containerName)!!
-            val annotationDao: AnnotationDao = handle.attach(AnnotationDao::class.java)
-            val annotationData = annotationDao.findByContainerIdAndName(containerId, annotationName)
-            return if (annotationData != null) {
-                val entity = withInsertedId(annotationData, containerName, annotationName)
-                Response.ok(entity).header("Last-Modified", annotationData.modified).build()
-            } else Response.status(Response.Status.NOT_FOUND).build()
-        }
+        val container = mdb.getCollection(containerName)
+        val annotationDocument = container.find(Document("annotation_name", annotationName)).first()
+        return if (annotationDocument != null) {
+            val annotationData = AnnotationData(
+                0L,
+                annotationName,
+                annotationDocument.toJson(),
+                Date.from(Instant.now()),
+                Date.from(Instant.now())
+            )
+            val entity = withInsertedId(annotationData, containerName, annotationName)
+            Response.ok(entity).header("Last-Modified", annotationData.modified).build()
+        } else Response.status(Response.Status.NOT_FOUND).build()
     }
 
     @ApiOperation(value = "Delete an Annotation")
@@ -159,14 +151,8 @@ class W3CResource(
         @PathParam("containerName") containerName: String, @PathParam("annotationName") annotationName: String
     ) {
         log.debug("delete annotation $annotationName in container $containerName")
-        jdbi.open().use { handle ->
-            val containerDao: AnnotationContainerDao = handle.attach(AnnotationContainerDao::class.java)
-            val containerId = containerDao.findIdByName(containerName)!!
-            val annotationDao: AnnotationDao = handle.attach(AnnotationDao::class.java)
-            val annotationId = annotationDao.findIdByContainerIdAndName(containerId, annotationName)
-            es.deindexAnnotation(containerName, annotationId)
-            annotationDao.deleteByContainerIdAndName(containerId, annotationName)
-        }
+        val container = mdb.getCollection(containerName)
+        container.findOneAndDelete(Document("annotation_name", annotationName))
     }
 
     private fun withInsertedId(
@@ -181,4 +167,15 @@ class W3CResource(
         return jo
     }
 
+    private fun getContainerData(name: String): MongoCollectionData {
+        val collection = mdb.getCollection(name)
+        val uri = uriFactory.containerURL(name)
+        val count = collection.countDocuments()
+        return MongoCollectionData(name, uri, count)
+    }
+
+    private fun mongoDatabase(): MongoDatabase = client.getDatabase("annorepo")
+
 }
+
+data class MongoCollectionData(val name: String, val id: URI, val annotationCount: Long)

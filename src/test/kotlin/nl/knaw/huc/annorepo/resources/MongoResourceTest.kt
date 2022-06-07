@@ -1,19 +1,16 @@
 package nl.knaw.huc.annorepo.resources
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport
 import io.dropwizard.testing.junit5.ResourceExtension
 import nl.knaw.huc.annorepo.api.ResourcePaths.MONGO
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
-import org.apache.http.HttpStatus
 import org.assertj.core.api.Assertions.assertThat
 import org.bson.Document
-import org.jdbi.v3.core.Jdbi
+import org.eclipse.jetty.http.HttpStatus
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.litote.kmongo.KMongo
-import org.mockito.Mockito
 import javax.ws.rs.client.Entity
 import javax.ws.rs.core.MediaType
 
@@ -24,8 +21,6 @@ class MongoResourceTest {
 
     private val client = KMongo.createClient("mongodb://localhost/")
     private val config: AnnoRepoConfiguration = AnnoRepoConfiguration().apply { externalBaseUrl = BASE_URI }
-    private val jdbi = Mockito.mock(Jdbi::class.java)
-    private val esClient = Mockito.mock(ElasticsearchClient::class.java)
     private val resource = ResourceExtension.builder().addResource(MongoResource(client, config))
         .addResource(SearchResource(config, client)).build()
 
@@ -36,12 +31,12 @@ class MongoResourceTest {
         val createResponse =
             resource.client().target("/$MONGO/").request(MediaType.APPLICATION_JSON).header("Slug", name).post(null)
         println("response=$createResponse")
-        assertThat(createResponse.status).isEqualTo(HttpStatus.SC_CREATED)
+        assertThat(createResponse.status).isEqualTo(HttpStatus.CREATED_201)
         println(
             createResponse.readEntity(HashMap::class.java)
         )
         val deleteResponse = resource.client().target("/$MONGO/$name").request(MediaType.APPLICATION_JSON).delete()
-        assertThat(deleteResponse.status).isEqualTo(HttpStatus.SC_NO_CONTENT)
+        assertThat(deleteResponse.status).isEqualTo(HttpStatus.NO_CONTENT_204)
 
         val readResponse = resource.client().target("/$MONGO/$name").request(MediaType.APPLICATION_JSON).get()
         println(readResponse.status)
@@ -62,7 +57,7 @@ class MongoResourceTest {
         val searchResponse = resource.client().target("/search/$name/annotations").request(MediaType.APPLICATION_JSON)
             .post(Entity.json(Document.parse(query)))
         println("response=$searchResponse")
-        assertThat(searchResponse.status).isEqualTo(HttpStatus.SC_OK)
+        assertThat(searchResponse.status).isEqualTo(HttpStatus.OK_200)
         println(
             searchResponse.readEntity(String::class.java)
         )
@@ -76,7 +71,7 @@ class MongoResourceTest {
             resource.client().target("/search/$name/within_range").queryParam("target.source", "urn:textrepo:text_x")
                 .queryParam("range.start", 10).queryParam("range.end", 300).request().get()
         println("response=$searchResponse")
-        assertThat(searchResponse.status).isEqualTo(HttpStatus.SC_OK)
+        assertThat(searchResponse.status).isEqualTo(HttpStatus.OK_200)
         val resultPage = searchResponse.readEntity(Document::class.java)
         val list = getAnnotationList(resultPage)
         println(list)
@@ -91,7 +86,7 @@ class MongoResourceTest {
             .queryParam("target.source", "urn:textrepo:text_x").queryParam("range.start", 10)
             .queryParam("range.end", 300).request().get()
         println("response=$searchResponse")
-        assertThat(searchResponse.status).isEqualTo(HttpStatus.SC_OK)
+        assertThat(searchResponse.status).isEqualTo(HttpStatus.OK_200)
         val resultPage = searchResponse.readEntity(Document::class.java)
         val list = getAnnotationList(resultPage)
         println(list)
