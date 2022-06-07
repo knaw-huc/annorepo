@@ -11,6 +11,8 @@ import javax.validation.constraints.NotNull
 
 class AnnoRepoConfiguration : Configuration() {
 
+    val pageSize: Int = 100
+
     private val log = LoggerFactory.getLogger(javaClass)
 
     @Valid

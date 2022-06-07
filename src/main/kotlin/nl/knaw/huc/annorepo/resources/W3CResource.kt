@@ -109,7 +109,7 @@ class W3CResource(
     fun createAnnotation(
         @HeaderParam("slug") slug: String?, @PathParam("containerName") containerName: String, annotationJson: String
     ): Response {
-        log.debug("annotation=\n$annotationJson")
+//        log.debug("annotation=\n$annotationJson")
         var name = slug ?: UUID.randomUUID().toString()
         val uri = uriFactory.annotationURL(containerName, name)
         jdbi.open().use { handle ->
@@ -120,12 +120,12 @@ class W3CResource(
                 log.warn("An annotation with the suggested name $name already exists in container $containerName, generating a new name.")
                 name = UUID.randomUUID().toString()
             }
-            log.debug("create annotation $name in container $containerName")
-            log.debug("content = $annotationJson")
+//            log.debug("create annotation $name in container $containerName")
+//            log.debug("content = $annotationJson")
             val id = annotationDao.add(containerId, name, annotationJson)
             es.indexAnnotation(id, containerName, name, annotationJson)
             val annotationData = annotationDao.findById(id)
-            log.debug("annotationData=${annotationData}")
+//            log.debug("annotationData=${annotationData}")
             val entity = withInsertedId(annotationData, containerName, name)
             return Response.created(uri).entity(entity).build()
         }

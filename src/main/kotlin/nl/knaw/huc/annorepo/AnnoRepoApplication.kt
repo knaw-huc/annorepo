@@ -19,11 +19,14 @@ import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ElasticsearchWrapper
 import nl.knaw.huc.annorepo.cli.EnvCommand
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.health.MongoDbHealthCheck
 import nl.knaw.huc.annorepo.health.ServerHealthCheck
 import nl.knaw.huc.annorepo.resources.AboutResource
 import nl.knaw.huc.annorepo.resources.BatchResource
 import nl.knaw.huc.annorepo.resources.HomePageResource
 import nl.knaw.huc.annorepo.resources.ListResource
+import nl.knaw.huc.annorepo.resources.MongoBatchResource
+import nl.knaw.huc.annorepo.resources.MongoResource
 import nl.knaw.huc.annorepo.resources.RuntimeExceptionMapper
 import nl.knaw.huc.annorepo.resources.SearchResource
 import nl.knaw.huc.annorepo.resources.W3CResource
@@ -34,6 +37,7 @@ import org.elasticsearch.client.RestClient
 import org.jdbi.v3.core.Jdbi
 import org.jdbi.v3.postgres.PostgresPlugin
 import org.jdbi.v3.sqlobject.SqlObjectPlugin
+import org.litote.kmongo.KMongo
 import org.slf4j.LoggerFactory
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
@@ -78,18 +82,23 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         val esClient = createESClient(configuration)
         val esWrapper = ElasticsearchWrapper(esClient)
 
+        val mongoClient = KMongo.createClient("mongodb://localhost/")
+
         val appVersion = javaClass.getPackage().implementationVersion
         environment.jersey().apply {
             register(AboutResource(configuration, name, appVersion))
             register(HomePageResource())
             register(W3CResource(configuration, jdbi, esWrapper))
-            register(SearchResource(configuration, jdbi, esClient))
+            register(MongoResource(mongoClient, configuration))
+            register(SearchResource(configuration, mongoClient))
             register(BatchResource(configuration, jdbi, esWrapper))
+            register(MongoBatchResource(configuration, mongoClient))
             register(ListResource(configuration, jdbi))
             register(RuntimeExceptionMapper())
         }
         environment.healthChecks().apply {
             register("server", ServerHealthCheck())
+            register("mongodb", MongoDbHealthCheck(mongoClient))
         }
 
         customizeObjectMapper(environment)
@@ -114,24 +123,28 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         return ElasticsearchClient(transport)
     }
 
+    private val dateFormatString = "yyyy-MM-dd'T'HH:mm:ss"
     private fun customizeObjectMapper(environment: Environment) {
-        val objectMapper = environment.objectMapper
-        objectMapper.dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
-        val module = SimpleModule()
-        module.addSerializer(LocalDateTime::class.java, LocalDateTimeSerializer("yyyy-MM-dd'T'HH:mm:ss"))
+        val objectMapper = environment.objectMapper.apply {
+            dateFormat = SimpleDateFormat(dateFormatString)
+        }
+
+        val module = SimpleModule().apply {
+            addSerializer(LocalDateTime::class.java, LocalDateTimeSerializer(dateFormatString))
+        }
         objectMapper.registerModule(module)
     }
 
     private fun createJdbi(
         environment: Environment,
         configuration: AnnoRepoConfiguration
-    ): Jdbi {
-        val factory = JdbiFactory()
-        val jdbi = factory.build(environment, configuration.database, "postgresql")
-        jdbi.installPlugin(SqlObjectPlugin())
-        jdbi.installPlugin(PostgresPlugin())
-        return jdbi
-    }
+    ): Jdbi =
+        JdbiFactory()
+            .build(environment, configuration.database, "postgresql")
+            .apply {
+                installPlugin(SqlObjectPlugin())
+                installPlugin(PostgresPlugin())
+            }
 
     private fun doHealthChecks(environment: Environment) {
         val results = environment.healthChecks().runHealthChecks()

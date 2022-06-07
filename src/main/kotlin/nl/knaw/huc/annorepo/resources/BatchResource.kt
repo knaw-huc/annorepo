@@ -39,6 +39,7 @@ class BatchResource(
         @PathParam("containerName") containerName: String,
         annotations: List<HashMap<String, Any?>>
     ): Response {
+        val annotationNames = mutableListOf<String>()
         val indexResult = jdbi.open().use { handle ->
             val containerDao: AnnotationContainerDao = handle.attach(AnnotationContainerDao::class.java)
             val containerId = containerDao.findIdByName(containerName)!!
@@ -47,13 +48,15 @@ class BatchResource(
                 val name = UUID.randomUUID().toString()
                 val annotationJson = ObjectMapper().writeValueAsString(annotation)
                 val id = annotationDao.add(containerId, name, annotationJson)
+                annotationNames.add(name)
+
                 val json = normalizedAnnotationJson(annotation)
                 ESIndexBulkOperation(containerName, id.toString(), name, json)
             }
             es.bulkIndex(bulkOperations)
         }
         return if (indexResult.success) {
-            Response.ok().build()
+            Response.ok(annotationNames).build()
         } else {
             Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                 .entity(mapOf("index_errors" to indexResult.errors))

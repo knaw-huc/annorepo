@@ -64,7 +64,7 @@ class ElasticsearchWrapper(private val esClient: ElasticsearchClient) {
             i.index(containerName).id(dbId.toString()).withJson(StringReader(wrapperJson))
         }
         val result = esClient.index(request).result()
-        log.debug("result = $result")
+//        log.debug("result = $result")
     }
 
     private fun wrapJson(name: String, annotationJson: String): String =
@@ -81,9 +81,9 @@ class ElasticsearchWrapper(private val esClient: ElasticsearchClient) {
     data class BulkIndexResult(val success: Boolean, val errors: List<String>)
 
     fun bulkIndex(bulkOperations: List<ESIndexBulkOperation>): BulkIndexResult {
-        var success = true
-        val errors = mutableListOf<String>()
         try {
+            var success = true
+            val errors = mutableListOf<String>()
             val list: List<BulkOperation> = bulkOperations.map { ipo ->
                 val wrapJson = wrapJson(ipo.annotationName, ipo.annotationJson)
                 val obj = ObjectMapper().readTree(wrapJson)
@@ -104,11 +104,11 @@ class ElasticsearchWrapper(private val esClient: ElasticsearchClient) {
                     }
                 }
             }
+            return BulkIndexResult(success = success, errors = errors)
         } catch (e: Exception) {
             log.error("$e")
             throw e
         }
-        return BulkIndexResult(success = success, errors = errors)
     }
 
 }
