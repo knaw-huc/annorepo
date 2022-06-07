@@ -1,5 +1,3 @@
-package nl.knaw.huc.annorepo.db
-
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.mongodb.client.MongoClients
 import com.mongodb.client.MongoCollection
