@@ -1,8 +1,6 @@
 all: help
 tag = annorepo
 
-.PHONY: build run-server docker-image push help
-
 .make:
 	mkdir -p .make
 
@@ -12,8 +10,10 @@ tag = annorepo
 target/annorepo-$(shell cat .make/.version).jar: .make/.version  $(shell find src -type f) pom.xml
 	mvn package
 
+.PHONY: build
 build: .make/.version target/annorepo-$(shell cat .make/.version).jar
 
+.PHONY: run-server
 run-server: build
 	java -jar target/annorepo-$(shell cat .make/.version).jar server config.yml
 
@@ -21,6 +21,7 @@ run-server: build
 	docker build -t $(tag):$(shell cat .make/.version) .
 	@touch .make/.docker
 
+.PHONY: docker-image
 docker-image: .make/.docker
 
 .make/.push: .make/.docker
@@ -28,20 +29,19 @@ docker-image: .make/.docker
 	docker push registry.diginfra.net/tt/$(tag):$(shell cat .make/.version)
 	@touch .make/.push
 
+.PHONY: push
 push:   .make/.push
 
-init_db:
-	psql -U postgres -f sql/init.sql
-
+.PHONY:clean
 clean:
 	rm -rf .make
 	mvn clean
 
+.PHONY: help
 help:
 	@echo "make-tools for $(tag)"
 	@echo "Please use \`make <target>' where <target> is one of"
 	@echo "  build           to test and build the app"
-	@echo "  init_db         to create the necessary database and user"
 	@echo "  run-server      to start the server app"
 	@echo "  docker-image    to build the docker image of the app"
 	@echo "  push            to push the docker image to registry.diginfra.net"
