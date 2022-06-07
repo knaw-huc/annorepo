@@ -18,6 +18,7 @@ import nl.knaw.huc.annorepo.health.ServerHealthCheck
 import nl.knaw.huc.annorepo.resources.AboutResource
 import nl.knaw.huc.annorepo.resources.BatchResource
 import nl.knaw.huc.annorepo.resources.HomePageResource
+import nl.knaw.huc.annorepo.resources.ListResource
 import nl.knaw.huc.annorepo.resources.RuntimeExceptionMapper
 import nl.knaw.huc.annorepo.resources.SearchResource
 import nl.knaw.huc.annorepo.resources.W3CResource
@@ -67,6 +68,8 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             register(W3CResource(configuration, mongoClient))
             register(SearchResource(configuration, mongoClient))
             register(BatchResource(configuration, mongoClient))
+            register(ListResource(configuration, mongoClient))
+
             register(RuntimeExceptionMapper())
         }
         environment.healthChecks().apply {

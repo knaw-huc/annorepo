@@ -129,7 +129,10 @@ class W3CResource(
     ): Response {
         log.debug("read annotation $annotationName in container $containerName")
         val container = mdb.getCollection(containerName)
-        val annotationDocument = container.find(Document("annotation_name", annotationName)).first()
+        val annotationDocument =
+            container.find(Document("annotation_name", annotationName))
+                .first()
+                ?.get("annotation", Document::class.java)
         return if (annotationDocument != null) {
             val annotationData = AnnotationData(
                 0L,

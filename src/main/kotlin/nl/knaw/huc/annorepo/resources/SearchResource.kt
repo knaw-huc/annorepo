@@ -39,7 +39,7 @@ class SearchResource(
 ) {
     //    private val log = LoggerFactory.getLogger(javaClass)
     private val uriFactory = UriFactory(configuration)
-    private val mdb = client.getDatabase("annorepo")
+    private val mdb = client.getDatabase(configuration.databaseName)
 
     private val annotationProjectStage = project(Document("annotation", 1).append("_id", 0))
     private val paginationStage = limit(configuration.pageSize)
