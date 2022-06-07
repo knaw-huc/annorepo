@@ -1,15 +1,19 @@
-package nl.knaw.huc.annorepo.resources
 
+import com.mongodb.client.MongoCollection
+import com.mongodb.client.MongoDatabase
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport
 import io.dropwizard.testing.junit5.ResourceExtension
 import nl.knaw.huc.annorepo.api.ResourcePaths.W3C
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.resources.SearchResource
+import nl.knaw.huc.annorepo.resources.W3CResource
 import org.assertj.core.api.Assertions.assertThat
 import org.bson.Document
 import org.eclipse.jetty.http.HttpStatus
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.litote.kmongo.KMongo
+import org.mockito.Mockito.mock
 import javax.ws.rs.client.Entity
 import javax.ws.rs.core.MediaType
 
@@ -17,16 +21,22 @@ private const val BASE_URI = "https://annorepo.com"
 
 @ExtendWith(DropwizardExtensionsSupport::class)
 class W3CResourceTest {
+    private val db: MongoDatabase = mock(MongoDatabase::class.java)
+    private val dbCollection: MongoCollection<*> = mock(MongoCollection::class.java)
 
     private val client = KMongo.createClient("mongodb://localhost/")
+
+    //    private val client = mock(MongoClient::class.java)
     private val config: AnnoRepoConfiguration = AnnoRepoConfiguration().apply { externalBaseUrl = BASE_URI }
     private val resource = ResourceExtension.builder()
-        .addResource(W3CResource(client, config))
+        .addResource(W3CResource(config, client))
         .addResource(SearchResource(config, client))
         .build()
 
     @Test
     fun test() {
+//        Mockito.`when`(client.getDatabase("annorepo")).thenReturn(db)
+
         val name = "containername"
         val createResponse =
             resource.client().target("/$W3C/").request(MediaType.APPLICATION_JSON).header("Slug", name).post(null)
