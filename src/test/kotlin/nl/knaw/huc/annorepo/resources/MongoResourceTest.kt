@@ -9,6 +9,7 @@ import org.apache.http.HttpStatus
 import org.assertj.core.api.Assertions.assertThat
 import org.bson.Document
 import org.jdbi.v3.core.Jdbi
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.litote.kmongo.KMongo
@@ -28,7 +29,7 @@ class MongoResourceTest {
     private val resource = ResourceExtension.builder().addResource(MongoResource(client, config))
         .addResource(SearchResource(config, client)).build()
 
-    //    @Disabled
+    @Disabled
     @Test
     fun test() {
         val name = "containername"
@@ -48,6 +49,7 @@ class MongoResourceTest {
 //        assertThat(readResponse.status).isEqualTo(HttpStatus.SC_NOT_FOUND)
     }
 
+    @Disabled
     @Test
     fun testSearchAnnotations() {
         val name = "2b958f4-e66b-40dd-bf90-923849ec5540"
@@ -66,6 +68,7 @@ class MongoResourceTest {
         )
     }
 
+    @Disabled
     @Test
     fun testSearchAnnotationsWithinRange() {
         val name = "searchbyrange"
@@ -80,6 +83,7 @@ class MongoResourceTest {
         assertThat(list).hasSize(2)
     }
 
+    @Disabled
     @Test
     fun testSearchAnnotationsOverlappingWithRange() {
         val name = "searchbyrange"
