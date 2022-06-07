@@ -1,0 +1,19 @@
+package nl.knaw.huc.annorepo.cli
+
+import io.dropwizard.setup.Bootstrap
+import net.sourceforge.argparse4j.inf.Namespace
+import org.junit.jupiter.api.Test
+import org.mockito.Mockito.mock
+
+internal class EnvCommandTest {
+
+    @Test
+    fun run() {
+        val ec = EnvCommand()
+        val bootstrap = mock(
+            Bootstrap::class.java
+        )
+        val namespace = mock(Namespace::class.java)
+        ec.run(bootstrap = bootstrap, namespace = namespace)
+    }
+}

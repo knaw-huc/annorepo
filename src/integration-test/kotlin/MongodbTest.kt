@@ -12,6 +12,7 @@ import com.mongodb.client.model.Filters.gte
 import com.mongodb.client.model.Filters.lte
 import org.assertj.core.api.Assertions.assertThat
 import org.bson.Document
+import org.junit.jupiter.api.Test
 import org.litote.kmongo.aggregate
 import org.slf4j.LoggerFactory
 
@@ -19,7 +20,7 @@ class MongodbTest {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    //    @Test
+    @Test
     fun testMongodb1() {
         logger.info("a")
         MongoClients.create("mongodb://localhost/").use { client ->
@@ -35,7 +36,7 @@ class MongodbTest {
         logger.info("b")
     }
 
-    //    @Test
+    @Test
     fun testMongodb() {
         MongoClients.create("mongodb://localhost/").use { client ->
             val database = client.getDatabase("annorepo")
@@ -151,7 +152,7 @@ class MongodbTest {
         }
     }
 
-    //    @Test
+    @Test
     fun testSearchByRange() {
         val collectionName = "searchbyrange"
         MongoClients.create("mongodb://localhost/").use { client ->

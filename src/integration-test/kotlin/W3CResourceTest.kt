@@ -7,7 +7,6 @@ import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import org.assertj.core.api.Assertions.assertThat
 import org.bson.Document
 import org.eclipse.jetty.http.HttpStatus
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.litote.kmongo.KMongo
@@ -26,7 +25,6 @@ class W3CResourceTest {
         .addResource(SearchResource(config, client))
         .build()
 
-    @Disabled
     @Test
     fun test() {
         val name = "containername"
@@ -46,7 +44,6 @@ class W3CResourceTest {
 //        assertThat(readResponse.status).isEqualTo(HttpStatus.SC_NOT_FOUND)
     }
 
-    @Disabled
     @Test
     fun testSearchAnnotations() {
         val name = "2b958f4-e66b-40dd-bf90-923849ec5540"
@@ -65,7 +62,6 @@ class W3CResourceTest {
         )
     }
 
-    @Disabled
     @Test
     fun testSearchAnnotationsWithinRange() {
         val name = "searchbyrange"
@@ -80,7 +76,6 @@ class W3CResourceTest {
         assertThat(list).hasSize(2)
     }
 
-    @Disabled
     @Test
     fun testSearchAnnotationsOverlappingWithRange() {
         val name = "searchbyrange"
