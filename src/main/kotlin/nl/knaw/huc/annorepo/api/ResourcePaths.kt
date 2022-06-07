@@ -6,6 +6,4 @@ object ResourcePaths {
     const val LIST = "_list"
     const val SEARCH = "search"
     const val BATCH = "batch"
-    const val MONGOBATCH = "mongobatch"
-    const val MONGO = "mongo/w3c"
 }

@@ -18,9 +18,9 @@ import nl.knaw.huc.annorepo.health.ServerHealthCheck
 import nl.knaw.huc.annorepo.resources.AboutResource
 import nl.knaw.huc.annorepo.resources.BatchResource
 import nl.knaw.huc.annorepo.resources.HomePageResource
-import nl.knaw.huc.annorepo.resources.MongoResource
 import nl.knaw.huc.annorepo.resources.RuntimeExceptionMapper
 import nl.knaw.huc.annorepo.resources.SearchResource
+import nl.knaw.huc.annorepo.resources.W3CResource
 import nl.knaw.huc.annorepo.service.LocalDateTimeSerializer
 import org.apache.commons.lang3.StringUtils
 import org.litote.kmongo.KMongo
@@ -64,7 +64,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         environment.jersey().apply {
             register(AboutResource(configuration, name, appVersion))
             register(HomePageResource())
-            register(MongoResource(mongoClient, configuration))
+            register(W3CResource(mongoClient, configuration))
             register(SearchResource(configuration, mongoClient))
             register(BatchResource(configuration, mongoClient))
             register(RuntimeExceptionMapper())

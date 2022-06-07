@@ -26,10 +26,10 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-@Api(ResourcePaths.MONGO)
-@Path(ResourcePaths.MONGO)
+@Api(ResourcePaths.W3C)
+@Path(ResourcePaths.W3C)
 @Produces(MediaType.APPLICATION_JSON)
-class MongoResource(
+class W3CResource(
     private val client: MongoClient,
     configuration: AnnoRepoConfiguration,
 ) {

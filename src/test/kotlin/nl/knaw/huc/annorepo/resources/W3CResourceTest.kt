@@ -2,7 +2,7 @@ package nl.knaw.huc.annorepo.resources
 
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport
 import io.dropwizard.testing.junit5.ResourceExtension
-import nl.knaw.huc.annorepo.api.ResourcePaths.MONGO
+import nl.knaw.huc.annorepo.api.ResourcePaths.W3C
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import org.assertj.core.api.Assertions.assertThat
 import org.bson.Document
@@ -17,28 +17,30 @@ import javax.ws.rs.core.MediaType
 private const val BASE_URI = "https://annorepo.com"
 
 @ExtendWith(DropwizardExtensionsSupport::class)
-class MongoResourceTest {
+class W3CResourceTest {
 
     private val client = KMongo.createClient("mongodb://localhost/")
     private val config: AnnoRepoConfiguration = AnnoRepoConfiguration().apply { externalBaseUrl = BASE_URI }
-    private val resource = ResourceExtension.builder().addResource(MongoResource(client, config))
-        .addResource(SearchResource(config, client)).build()
+    private val resource = ResourceExtension.builder()
+        .addResource(W3CResource(client, config))
+        .addResource(SearchResource(config, client))
+        .build()
 
     @Disabled
     @Test
     fun test() {
         val name = "containername"
         val createResponse =
-            resource.client().target("/$MONGO/").request(MediaType.APPLICATION_JSON).header("Slug", name).post(null)
+            resource.client().target("/$W3C/").request(MediaType.APPLICATION_JSON).header("Slug", name).post(null)
         println("response=$createResponse")
         assertThat(createResponse.status).isEqualTo(HttpStatus.CREATED_201)
         println(
             createResponse.readEntity(HashMap::class.java)
         )
-        val deleteResponse = resource.client().target("/$MONGO/$name").request(MediaType.APPLICATION_JSON).delete()
+        val deleteResponse = resource.client().target("/$W3C/$name").request(MediaType.APPLICATION_JSON).delete()
         assertThat(deleteResponse.status).isEqualTo(HttpStatus.NO_CONTENT_204)
 
-        val readResponse = resource.client().target("/$MONGO/$name").request(MediaType.APPLICATION_JSON).get()
+        val readResponse = resource.client().target("/$W3C/$name").request(MediaType.APPLICATION_JSON).get()
         println(readResponse.status)
         println(readResponse.readEntity(HashMap::class.java))
 //        assertThat(readResponse.status).isEqualTo(HttpStatus.SC_NOT_FOUND)

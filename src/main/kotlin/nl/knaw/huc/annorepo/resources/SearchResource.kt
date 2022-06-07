@@ -47,9 +47,9 @@ class SearchResource(
     @ApiOperation(value = "Find annotations in the given container with all the given field values")
     @Timed
     @POST
-    @Path("{container}/annotations")
+    @Path("{containerName}/annotations")
     fun findAnnotationsInContainer(
-        @PathParam("container") containerName: String,
+        @PathParam("containerName") containerName: String,
         queryJson: String
     ): Response {
         val container = mdb.getCollection(containerName)
@@ -74,15 +74,15 @@ class SearchResource(
         return Response.status(Response.Status.BAD_REQUEST).build()
     }
 
-    private val WITHIN_RANGE = "within_range"
+    private val withinRange = "within_range"
     private val selectorType = "urn:example:republic:TextAnchorSelector"
 
     @ApiOperation(value = "Find annotations within the given range")
     @Timed
     @GET
-    @Path("{container}/within_range")
+    @Path("{containerName}/within_range")
     fun findAnnotationsInContainerWithinRange(
-        @PathParam("container") containerName: String,
+        @PathParam("containerName") containerName: String,
         @QueryParam("target.source") targetSource: String,
         @QueryParam("range.start") rangeStart: Float,
         @QueryParam("range.end") rangeEnd: Float,
@@ -105,7 +105,7 @@ class SearchResource(
             .map { document -> toAnnotationMap(document, containerName) }
             .toList()
         val partOfURL =
-            "${configuration.externalBaseUrl}/${ResourcePaths.SEARCH}/$containerName/$WITHIN_RANGE?target.source=$targetSource&range.start=$rangeStart&range.end=$rangeEnd"
+            "${configuration.externalBaseUrl}/${ResourcePaths.SEARCH}/$containerName/$withinRange?target.source=$targetSource&range.start=$rangeStart&range.end=$rangeEnd"
         val entity = annotationPage(annotations, partOfURL, startIndex)
         return Response.ok(entity).build()
     }
@@ -113,9 +113,9 @@ class SearchResource(
     @ApiOperation(value = "Find annotations that overlap with the given range")
     @Timed
     @GET
-    @Path("{container}/overlapping_with_range")
+    @Path("{containerName}/overlapping_with_range")
     fun findAnnotationsInContainerOverlappingWithRange(
-        @PathParam("container") containerName: String,
+        @PathParam("containerName") containerName: String,
         @QueryParam("target.source") targetSource: String,
         @QueryParam("range.start") rangeStart: Float,
         @QueryParam("range.end") rangeEnd: Float,

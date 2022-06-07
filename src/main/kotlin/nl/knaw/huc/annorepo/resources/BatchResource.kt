@@ -17,8 +17,8 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-@Api(ResourcePaths.MONGOBATCH)
-@Path(ResourcePaths.MONGOBATCH)
+@Api(ResourcePaths.BATCH)
+@Path(ResourcePaths.BATCH)
 @Produces(MediaType.APPLICATION_JSON)
 class BatchResource(
     configuration: AnnoRepoConfiguration,
@@ -31,9 +31,9 @@ class BatchResource(
     @Timed
     @POST
     @Path("{containerName}/annotations")
-    fun postAnnotationsMongo(
+    fun postAnnotationsBatch(
         @PathParam("containerName") containerName: String,
-        annotations: List<HashMap<String, Any?>>
+        annotations: List<HashMap<String, Any>>
     ): Response {
         val annotationNames = mutableListOf<String>()
         val mdb = client.getDatabase("annorepo")

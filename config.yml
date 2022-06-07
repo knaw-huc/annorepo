@@ -5,9 +5,9 @@ server:
 
 externalBaseUrl: ${AR_EXTERNAL_BASE_URL:-http://localhost:8080}
 
-pageSize: 100
+pageSize: ${AR_PAGE_SIZE:-100}
 
-mongodbURL: "mongodb://localhost/"
+mongodbURL: ${AR_MONGODB_URL:-mongodb://localhost/}
 
 logging:
   level: INFO
