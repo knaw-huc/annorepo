@@ -20,6 +20,11 @@ class AnnoRepoConfiguration : Configuration() {
     @Valid
     @NotNull
     @JsonProperty
+    var databaseName: String = "annorepo"
+
+    @Valid
+    @NotNull
+    @JsonProperty
     var pageSize: Int = 100
 
     @Valid

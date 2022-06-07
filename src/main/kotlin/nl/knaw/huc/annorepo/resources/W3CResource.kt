@@ -30,8 +30,8 @@ import javax.ws.rs.core.Response
 @Path(ResourcePaths.W3C)
 @Produces(MediaType.APPLICATION_JSON)
 class W3CResource(
+    private val configuration: AnnoRepoConfiguration,
     private val client: MongoClient,
-    configuration: AnnoRepoConfiguration,
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -174,7 +174,8 @@ class W3CResource(
         return MongoCollectionData(name, uri, count)
     }
 
-    private fun mongoDatabase(): MongoDatabase = client.getDatabase("annorepo")
+    private fun mongoDatabase(): MongoDatabase =
+        client.getDatabase(configuration.databaseName)
 
 }
 

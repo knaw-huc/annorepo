@@ -8,6 +8,7 @@ externalBaseUrl: ${AR_EXTERNAL_BASE_URL:-http://localhost:8080}
 pageSize: ${AR_PAGE_SIZE:-100}
 
 mongodbURL: ${AR_MONGODB_URL:-mongodb://localhost/}
+databaseName: ${AR_DB_NAME:-annorepo}
 
 logging:
   level: INFO

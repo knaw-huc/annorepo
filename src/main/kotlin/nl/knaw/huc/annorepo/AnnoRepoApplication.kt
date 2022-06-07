@@ -64,7 +64,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         environment.jersey().apply {
             register(AboutResource(configuration, name, appVersion))
             register(HomePageResource())
-            register(W3CResource(mongoClient, configuration))
+            register(W3CResource(configuration, mongoClient))
             register(SearchResource(configuration, mongoClient))
             register(BatchResource(configuration, mongoClient))
             register(RuntimeExceptionMapper())

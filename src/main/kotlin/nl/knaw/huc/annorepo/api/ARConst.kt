@@ -5,6 +5,7 @@ object ARConst {
         AR_SERVER_PORT,
         AR_EXTERNAL_BASE_URL,
         AR_MONGODB_URL,
+        AR_DB_NAME,
         AR_PAGE_SIZE
     }
 
