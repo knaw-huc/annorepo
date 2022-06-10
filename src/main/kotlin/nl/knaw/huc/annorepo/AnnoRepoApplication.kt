@@ -2,6 +2,9 @@ package nl.knaw.huc.annorepo
 
 import com.codahale.metrics.health.HealthCheck
 import com.fasterxml.jackson.databind.module.SimpleModule
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.mongodb.client.MongoClient
+import com.mongodb.client.model.Indexes
 import io.dropwizard.Application
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor
 import io.dropwizard.configuration.SubstitutingSourceProvider
@@ -11,12 +14,14 @@ import io.dropwizard.setup.Environment
 import io.federecio.dropwizard.swagger.SwaggerBundle
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
 import nl.knaw.huc.annorepo.api.ARConst
+import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.cli.EnvCommand
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.health.MongoDbHealthCheck
 import nl.knaw.huc.annorepo.health.ServerHealthCheck
 import nl.knaw.huc.annorepo.resources.AboutResource
 import nl.knaw.huc.annorepo.resources.BatchResource
+import nl.knaw.huc.annorepo.resources.ContainerMetadata
 import nl.knaw.huc.annorepo.resources.HomePageResource
 import nl.knaw.huc.annorepo.resources.ListResource
 import nl.knaw.huc.annorepo.resources.RuntimeExceptionMapper
@@ -25,6 +30,7 @@ import nl.knaw.huc.annorepo.resources.W3CResource
 import nl.knaw.huc.annorepo.service.LocalDateTimeSerializer
 import org.apache.commons.lang3.StringUtils
 import org.litote.kmongo.KMongo
+import org.litote.kmongo.getCollection
 import org.slf4j.LoggerFactory
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
@@ -59,7 +65,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
                     "\n"
         )
 
-        val mongoClient = KMongo.createClient(configuration!!.mongodbURL)
+        val mongoClient = createMongoClient(configuration!!)
 
         val appVersion = javaClass.getPackage().implementationVersion
         environment.jersey().apply {
@@ -88,16 +94,30 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         )
     }
 
+    private fun createMongoClient(configuration: AnnoRepoConfiguration): MongoClient {
+        val mongoClient = KMongo.createClient(configuration.mongodbURL)
+        val mdb = mongoClient.getDatabase(configuration.databaseName)
+        val metadataCollectionExists = mdb.listCollectionNames()
+            .firstOrNull { it == CONTAINER_METADATA_COLLECTION } == CONTAINER_METADATA_COLLECTION
+        if (!metadataCollectionExists) {
+            log.debug("creating container metadata collection + index")
+            mdb.createCollection(CONTAINER_METADATA_COLLECTION)
+            val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
+            containerMetadataCollection.createIndex(Indexes.ascending("name"))
+        }
+        return mongoClient
+    }
+
     private val dateFormatString = "yyyy-MM-dd'T'HH:mm:ss"
     private fun customizeObjectMapper(environment: Environment) {
-        val objectMapper = environment.objectMapper.apply {
-            dateFormat = SimpleDateFormat(dateFormatString)
-        }
-
         val module = SimpleModule().apply {
             addSerializer(LocalDateTime::class.java, LocalDateTimeSerializer(dateFormatString))
         }
-        objectMapper.registerModule(module)
+        environment.objectMapper.apply {
+            dateFormat = SimpleDateFormat(dateFormatString)
+            registerModule(module)
+            registerKotlinModule()
+        }
     }
 
     private fun doHealthChecks(environment: Environment) {

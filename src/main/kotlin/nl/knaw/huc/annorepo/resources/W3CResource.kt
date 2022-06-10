@@ -6,16 +6,20 @@ import com.mongodb.client.MongoDatabase
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
+import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.api.AnnotationData
 import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.service.UriFactory
 import org.bson.Document
 import org.eclipse.jetty.util.ajax.JSON
+import org.litote.kmongo.findOne
+import org.litote.kmongo.getCollection
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.Instant
 import java.util.*
+import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -23,12 +27,11 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
 @Api(ResourcePaths.W3C)
 @Path(ResourcePaths.W3C)
-@Produces(MediaType.APPLICATION_JSON)
+@Produces(ANNOTATION_MEDIA_TYPE)
 class W3CResource(
     private val configuration: AnnoRepoConfiguration,
     private val client: MongoClient,
@@ -41,18 +44,28 @@ class W3CResource(
     @ApiOperation(value = "Create an Annotation Container")
     @Timed
     @POST
+    @Consumes(ANNOTATION_MEDIA_TYPE)
     fun createContainer(
+        containerSpecs: ContainerSpecs,
         @HeaderParam("slug") slug: String?,
     ): Response {
+        log.debug("$containerSpecs")
         var name = slug ?: UUID.randomUUID().toString()
         if (mdb.listCollectionNames().contains(name)) {
             log.debug("A container with the suggested name $name already exists, generating a new name.")
             name = UUID.randomUUID().toString()
         }
         mdb.createCollection(name)
+        storeCollectionMetadata(containerSpecs.label, name)
         val containerData = getContainerData(name)
         val uri = uriFactory.containerURL(name)
         return Response.created(uri).entity(containerData).build()
+    }
+
+    private fun storeCollectionMetadata(label: String, name: String) {
+        val cmd = ContainerMetadata(name, label)
+        val containerMetadataStore = mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
+        containerMetadataStore.insertOne(cmd)
     }
 
     @ApiOperation(value = "Get an Annotation Container")
@@ -91,6 +104,7 @@ class W3CResource(
     @Timed
     @POST
     @Path("{containerName}")
+    @Consumes(ANNOTATION_MEDIA_TYPE)
     fun createAnnotation(
         @HeaderParam("slug") slug: String?,
         @PathParam("containerName") containerName: String,
@@ -171,10 +185,12 @@ class W3CResource(
     }
 
     private fun getContainerData(name: String): MongoCollectionData {
+        val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
+        val metadata = containerMetadataCollection.findOne(Document("name", name))!!
         val collection = mdb.getCollection(name)
         val uri = uriFactory.containerURL(name)
         val count = collection.countDocuments()
-        return MongoCollectionData(name, uri, count)
+        return MongoCollectionData(name, uri, metadata.label, metadata.createdAt, count)
     }
 
     private fun mongoDatabase(): MongoDatabase =
@@ -182,4 +198,10 @@ class W3CResource(
 
 }
 
-data class MongoCollectionData(val name: String, val id: URI, val annotationCount: Long)
+data class MongoCollectionData(
+    val name: String,
+    val id: URI,
+    val label: String,
+    val createdAt: Instant,
+    val annotationCount: Long
+)

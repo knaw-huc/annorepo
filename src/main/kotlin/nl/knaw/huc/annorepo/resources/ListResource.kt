@@ -5,6 +5,7 @@ import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Filters.exists
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
+import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
 import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.service.UriFactory
@@ -18,11 +19,10 @@ import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
 
 @Api(ResourcePaths.LIST)
 @Path(ResourcePaths.LIST)
-@Produces(MediaType.APPLICATION_JSON)
+@Produces(ANNOTATION_MEDIA_TYPE)
 class ListResource(
     private val configuration: AnnoRepoConfiguration, client: MongoClient
 ) {

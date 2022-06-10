@@ -10,4 +10,6 @@ object ARConst {
     }
 
     const val ANNOTATION_MEDIA_TYPE = """application/ld+json;profile="http://www.w3.org/ns/anno.jsonld""""
+
+    const val CONTAINER_METADATA_COLLECTION = "_containerMetadata"
 }
