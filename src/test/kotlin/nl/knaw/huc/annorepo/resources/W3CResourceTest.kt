@@ -1,0 +1,58 @@
+package nl.knaw.huc.annorepo.resources
+
+import com.mongodb.client.MongoClient
+import com.mongodb.client.MongoCollection
+import com.mongodb.client.MongoCursor
+import com.mongodb.client.MongoDatabase
+import com.mongodb.client.MongoIterable
+import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.mock
+import javax.ws.rs.core.Response
+
+class W3CResourceTest {
+
+    private val mongoCursor: MongoCursor<String> = mock()
+    private val mongoIterable: MongoIterable<String> = mock() {
+        on { iterator() }.doReturn(mongoCursor)
+    }
+    private val collection: MongoCollection<ContainerMetadata> = mock()
+    private val mdb: MongoDatabase = mock() {
+        on { listCollectionNames() }.doReturn(mongoIterable)
+        on { getCollection(anyString(), eq(ContainerMetadata::class.java)) }.doReturn(collection)
+    }
+    private val client: MongoClient = mock() {
+        on { getDatabase(anyString()) }.doReturn(mdb)
+    }
+    private val configuration: AnnoRepoConfiguration = mock()
+
+    @Disabled
+    @Test
+    fun createContainer() {
+        configuration.databaseName = "annorepo"
+        println(configuration.databaseName)
+        println(client.getDatabase(configuration.databaseName))
+        val r = W3CResource(client = client, configuration = configuration)
+        val response = r.createContainer(
+            containerSpecs = ContainerSpecs(
+                context = listOf(),
+                type = listOf(),
+                label = "container label"
+            ), slug = "container"
+        )
+        println(response)
+        assertThat(response.status).isEqualTo(Response.Status.CREATED)
+        assertThat(response.headers).containsAllEntriesOf(
+            mapOf(
+                "Accept-Post" to listOf("""application/ld+json; profile="http://www.w3.org/ns/anno.jsonld", text/turtle""")
+            )
+        )
+    }
+
+}
+

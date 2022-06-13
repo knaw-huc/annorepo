@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory
 import javax.validation.Valid
 import javax.validation.constraints.NotNull
 
-class AnnoRepoConfiguration : Configuration() {
+open class AnnoRepoConfiguration : Configuration() {
 
     private val log = LoggerFactory.getLogger(javaClass)
 

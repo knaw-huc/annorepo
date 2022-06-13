@@ -27,6 +27,7 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
 @Api(ResourcePaths.W3C)
@@ -44,7 +45,7 @@ class W3CResource(
     @ApiOperation(value = "Create an Annotation Container")
     @Timed
     @POST
-    @Consumes(ANNOTATION_MEDIA_TYPE)
+    @Consumes(ANNOTATION_MEDIA_TYPE, MediaType.APPLICATION_JSON)
     fun createContainer(
         containerSpecs: ContainerSpecs,
         @HeaderParam("slug") slug: String?,

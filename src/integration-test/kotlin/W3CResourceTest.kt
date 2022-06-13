@@ -1,10 +1,11 @@
-
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport
 import io.dropwizard.testing.junit5.ResourceExtension
+import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
 import nl.knaw.huc.annorepo.api.ResourcePaths.W3C
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.resources.ContainerSpecs
 import nl.knaw.huc.annorepo.resources.SearchResource
 import nl.knaw.huc.annorepo.resources.W3CResource
 import org.assertj.core.api.Assertions.assertThat
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.litote.kmongo.KMongo
 import org.mockito.Mockito.mock
 import javax.ws.rs.client.Entity
+import javax.ws.rs.client.Entity.json
 import javax.ws.rs.core.MediaType
 
 private const val BASE_URI = "https://annorepo.com"
@@ -35,11 +37,19 @@ class W3CResourceTest {
 
     @Test
     fun test() {
-//        Mockito.`when`(client.getDatabase("annorepo")).thenReturn(db)
-
         val name = "containername"
+        val builder = resource.client()
+            .target("/$W3C/")
+            .request(ANNOTATION_MEDIA_TYPE)
+            .header("Slug", name)
+        val json = Entity.json(
+            ContainerSpecs(label = "label", context = listOf(), type = listOf()),
+        )
         val createResponse =
-            resource.client().target("/$W3C/").request(MediaType.APPLICATION_JSON).header("Slug", name).post(null)
+            builder
+                .post(
+                    json
+                )
         println("response=$createResponse")
         assertThat(createResponse.status).isEqualTo(HttpStatus.CREATED_201)
         println(
@@ -63,8 +73,10 @@ class W3CResourceTest {
                 "type": "Annotation"
             }
         """.trimIndent()
-        val searchResponse = resource.client().target("/search/$name/annotations").request(MediaType.APPLICATION_JSON)
-            .post(Entity.json(Document.parse(query)))
+        val searchResponse = resource.client()
+            .target("/search/$name/annotations")
+            .request(ANNOTATION_MEDIA_TYPE)
+            .post(json(Document.parse(query)))
         println("response=$searchResponse")
         assertThat(searchResponse.status).isEqualTo(HttpStatus.OK_200)
         println(
@@ -76,8 +88,13 @@ class W3CResourceTest {
     fun testSearchAnnotationsWithinRange() {
         val name = "searchbyrange"
         val searchResponse =
-            resource.client().target("/search/$name/within_range").queryParam("target.source", "urn:textrepo:text_x")
-                .queryParam("range.start", 10).queryParam("range.end", 300).request().get()
+            resource.client()
+                .target("/search/$name/within_range")
+                .queryParam("target.source", "urn:textrepo:text_x")
+                .queryParam("range.start", 10)
+                .queryParam("range.end", 300)
+                .request()
+                .get()
         println("response=$searchResponse")
         assertThat(searchResponse.status).isEqualTo(HttpStatus.OK_200)
         val resultPage = searchResponse.readEntity(Document::class.java)
