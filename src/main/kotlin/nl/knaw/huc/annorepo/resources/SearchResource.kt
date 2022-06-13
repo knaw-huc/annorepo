@@ -14,6 +14,8 @@ import com.mongodb.client.model.Filters.lt
 import com.mongodb.client.model.Filters.lte
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
+import nl.knaw.huc.annorepo.api.ARConst.ANNO_JSONLD_URL
+import nl.knaw.huc.annorepo.api.ARConst.LDP_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.service.UriFactory
@@ -160,8 +162,8 @@ class SearchResource(
     ) = JSONObject(
         mapOf(
             "@context" to listOf(
-                "http://www.w3.org/ns/anno.jsonld",
-                "http://www.w3.org/ns/ldp.jsonld"
+                ANNO_JSONLD_URL,
+                LDP_JSONLD_URL
             ),
             "type" to "AnnotationPage",
             "as:items" to mapOf("@list" to urls),

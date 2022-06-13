@@ -5,6 +5,8 @@ import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoCursor
 import com.mongodb.client.MongoDatabase
 import com.mongodb.client.MongoIterable
+import nl.knaw.huc.annorepo.api.ContainerMetadata
+import nl.knaw.huc.annorepo.api.ContainerSpecs
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Disabled

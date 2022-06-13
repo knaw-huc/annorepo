@@ -3,9 +3,9 @@ import com.mongodb.client.MongoDatabase
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport
 import io.dropwizard.testing.junit5.ResourceExtension
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
+import nl.knaw.huc.annorepo.api.ContainerSpecs
 import nl.knaw.huc.annorepo.api.ResourcePaths.W3C
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
-import nl.knaw.huc.annorepo.resources.ContainerSpecs
 import nl.knaw.huc.annorepo.resources.SearchResource
 import nl.knaw.huc.annorepo.resources.W3CResource
 import org.assertj.core.api.Assertions.assertThat

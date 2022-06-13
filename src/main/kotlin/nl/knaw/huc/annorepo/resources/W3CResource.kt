@@ -2,12 +2,14 @@ package nl.knaw.huc.annorepo.resources
 
 import com.codahale.metrics.annotation.Timed
 import com.mongodb.client.MongoClient
-import com.mongodb.client.MongoDatabase
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.api.AnnotationData
+import nl.knaw.huc.annorepo.api.ContainerMetadata
+import nl.knaw.huc.annorepo.api.ContainerPage
+import nl.knaw.huc.annorepo.api.ContainerSpecs
 import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.service.UriFactory
@@ -16,7 +18,6 @@ import org.eclipse.jetty.util.ajax.JSON
 import org.litote.kmongo.findOne
 import org.litote.kmongo.getCollection
 import org.slf4j.LoggerFactory
-import java.net.URI
 import java.time.Instant
 import java.util.*
 import javax.ws.rs.Consumes
@@ -34,13 +35,13 @@ import javax.ws.rs.core.Response
 @Path(ResourcePaths.W3C)
 @Produces(ANNOTATION_MEDIA_TYPE)
 class W3CResource(
-    private val configuration: AnnoRepoConfiguration,
-    private val client: MongoClient,
+    configuration: AnnoRepoConfiguration,
+    client: MongoClient,
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
     private val uriFactory = UriFactory(configuration)
-    private val mdb = mongoDatabase()
+    private val mdb = client.getDatabase(configuration.databaseName)
 
     @ApiOperation(value = "Create an Annotation Container")
     @Timed
@@ -58,7 +59,7 @@ class W3CResource(
         }
         mdb.createCollection(name)
         storeCollectionMetadata(containerSpecs.label, name)
-        val containerData = getContainerData(name)
+        val containerData = getContainerPage(name)
         val uri = uriFactory.containerURL(name)
         return Response.created(uri).entity(containerData).build()
     }
@@ -75,9 +76,9 @@ class W3CResource(
     @Path("{containerName}")
     fun readContainer(@PathParam("containerName") containerName: String): Response {
         log.debug("read Container $containerName")
-        val container = getContainerData(containerName)
-        return if (container != null) {
-            Response.ok(container).build()
+        val containerPage = getContainerPage(containerName)
+        return if (containerPage != null) {
+            Response.ok(containerPage).build()
         } else {
             Response.status(Response.Status.NOT_FOUND).entity("Container '$containerName' not found").build()
         }
@@ -90,14 +91,22 @@ class W3CResource(
     @Path("{containerName}")
     fun deleteContainer(@PathParam("containerName") containerName: String): Response {
         log.debug("delete Container $containerName")
-        val containerData = getContainerData(containerName)
-        return if (containerData.annotationCount == 0L) {
-            mdb.getCollection(containerName).drop()
-            Response.noContent().build()
-        } else {
-            Response.status(Response.Status.BAD_REQUEST)
-                .entity("Container $containerName is not empty, all annotations need to be removed from this container first.")
-                .build()
+        val containerPage = getContainerPage(containerName)
+        return when {
+            containerPage == null -> {
+                Response.status(Response.Status.NOT_FOUND)
+                    .entity("Container $containerName was not found.")
+                    .build()
+            }
+            containerPage.total == 0L -> {
+                mdb.getCollection(containerName).drop()
+                Response.noContent().build()
+            }
+            else -> {
+                Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Container $containerName is not empty, all annotations need to be removed from this container first.")
+                    .build()
+            }
         }
     }
 
@@ -185,24 +194,19 @@ class W3CResource(
         return jo
     }
 
-    private fun getContainerData(name: String): MongoCollectionData {
+    private fun getContainerPage(name: String): ContainerPage? {
         val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
-        val metadata = containerMetadataCollection.findOne(Document("name", name))!!
+        val metadata = containerMetadataCollection.findOne(Document("name", name)) ?: return null
         val collection = mdb.getCollection(name)
         val uri = uriFactory.containerURL(name)
         val count = collection.countDocuments()
-        return MongoCollectionData(name, uri, metadata.label, metadata.createdAt, count)
+        return ContainerPage(
+            id = uri.toString(),
+            label = metadata.label,
+            annotations = listOf(),
+            startIndex = 0,
+            total = count
+        )
     }
 
-    private fun mongoDatabase(): MongoDatabase =
-        client.getDatabase(configuration.databaseName)
-
 }
-
-data class MongoCollectionData(
-    val name: String,
-    val id: URI,
-    val label: String,
-    val createdAt: Instant,
-    val annotationCount: Long
-)

@@ -3,15 +3,20 @@ package nl.knaw.huc.annorepo.resources
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
+import nl.knaw.huc.annorepo.api.ARConst.ANNO_JSONLD_URL
+import nl.knaw.huc.annorepo.api.ARConst.LDP_JSONLD_URL
+import nl.knaw.huc.annorepo.api.ContainerSpecs
 import org.junit.jupiter.api.Test
 
 internal class ContainerSpecsTest {
+    private val objectMapper = ObjectMapper().registerKotlinModule()
+
     @Test
     fun getLabel() {
         val spec = ContainerSpecs(
             context = listOf(
-                "http://www.w3.org/ns/anno.jsonld",
-                "http://www.w3.org/ns/ldp.jsonld"
+                ANNO_JSONLD_URL,
+                LDP_JSONLD_URL
             ),
             type = listOf(
                 "BasicContainer",
@@ -19,7 +24,6 @@ internal class ContainerSpecsTest {
             ),
             label = "A Container for Web Annotations"
         )
-        val objectMapper = ObjectMapper().registerKotlinModule()
         val json = objectMapper.writeValueAsString(spec)
         val expectedJson = """{
           "@context": [

@@ -9,7 +9,9 @@ object ARConst {
         AR_PAGE_SIZE
     }
 
-    const val ANNOTATION_MEDIA_TYPE = """application/ld+json;profile="http://www.w3.org/ns/anno.jsonld""""
-
+    const val ANNO_JSONLD_URL = "http://www.w3.org/ns/anno.jsonld"
+    const val LDP_JSONLD_URL = "http://www.w3.org/ns/ldp.jsonld"
+    const val ANNOTATION_MEDIA_TYPE = """application/ld+json;profile="$ANNO_JSONLD_URL""""
     const val CONTAINER_METADATA_COLLECTION = "_containerMetadata"
+
 }

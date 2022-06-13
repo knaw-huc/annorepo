@@ -15,13 +15,13 @@ import io.federecio.dropwizard.swagger.SwaggerBundle
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
+import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.cli.EnvCommand
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.health.MongoDbHealthCheck
 import nl.knaw.huc.annorepo.health.ServerHealthCheck
 import nl.knaw.huc.annorepo.resources.AboutResource
 import nl.knaw.huc.annorepo.resources.BatchResource
-import nl.knaw.huc.annorepo.resources.ContainerMetadata
 import nl.knaw.huc.annorepo.resources.HomePageResource
 import nl.knaw.huc.annorepo.resources.ListResource
 import nl.knaw.huc.annorepo.resources.RuntimeExceptionMapper

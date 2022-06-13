@@ -1,4 +1,4 @@
-package nl.knaw.huc.annorepo.resources
+package nl.knaw.huc.annorepo.api
 
 import java.time.Instant
 
