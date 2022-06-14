@@ -1,0 +1,43 @@
+version: '2'
+
+services:
+  annorepo_server:
+    container_name: annorepo_server
+    environment:
+      - VIRTUAL_HOST=annorepo.tt.di.huc.knaw.nl
+      - AR_EXTERNAL_BASE_URL=https://annorepo.tt.di.huc.knaw.nl
+      - AR_MONGODB_URL=mongodb://annorepo_mongodb/
+      - AR_DB_NAME=annorepo
+      - AR_PAGE_SIZE=100
+    expose:
+      - 8080
+    image: registry.diginfra.net/hi/annorepo:0.1-SNAPSHOT
+    networks:
+      - annorepo_network
+      - nginxproxynetwork
+    restart: unless-stopped
+    tty: true
+    depends_on:
+      - annorepo_mongodb
+
+  annorepo_mongodb:
+    container_name: annorepo_mongodb
+    expose:
+      - 27017
+    image: mongo:5.0.9
+    networks:
+      - annorepo_network
+    restart: unless-stopped
+    tty: true
+    volumes:
+      - annorepo_mongodb_data:/data/db:rw
+
+networks:
+  annorepo_network:
+  nginxproxynetwork:
+    external:
+      name: nginxproxynetwork
+
+volumes:
+  annorepo_mongodb_data:
+    driver: local

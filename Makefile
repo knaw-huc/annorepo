@@ -17,8 +17,20 @@ build: .make/.version target/annorepo-$(shell cat .make/.version).jar
 run-server: build
 	java -jar target/annorepo-$(shell cat .make/.version).jar server config.yml
 
-.make/.docker: .make build Dockerfile
-	docker build -t $(tag):$(shell cat .make/.version) .
+.PHONY: run-env
+run-env: build
+	java -jar target/annorepo-$(shell cat .make/.version).jar env
+
+.PHONY: docker-run
+docker-run: k8s/local/docker-compose.yml
+	cd k8s/local && docker compose up &
+
+.PHONY: docker-stop
+docker-stop: k8s/local/docker-compose.yml
+	cd k8s/local && docker compose down
+
+.make/.docker: .make build k8s/annorepo-server/Dockerfile
+	docker build -t $(tag):$(shell cat .make/.version) -f k8s/annorepo-server/Dockerfile .
 	@touch .make/.docker
 
 .PHONY: docker-image
@@ -43,6 +55,9 @@ help:
 	@echo "Please use \`make <target>' where <target> is one of"
 	@echo "  build           to test and build the app"
 	@echo "  run-server      to start the server app"
+	@echo "  docker-run      to start the server app in docker"
+	@echo "  docker-stop     to stop the server app in docker"
+	@echo "  run-env         to run the annorepo env command"
 	@echo "  docker-image    to build the docker image of the app"
 	@echo "  push            to push the docker image to registry.diginfra.net"
 	@echo "  clean           to remove generated files"

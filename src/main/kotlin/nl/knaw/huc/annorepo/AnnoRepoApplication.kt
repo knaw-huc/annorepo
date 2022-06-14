@@ -65,7 +65,9 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
                     "\n"
         )
 
-        val mongoClient = createMongoClient(configuration!!)
+        log.info("connecting to mongodb at ${configuration!!.mongodbURL} ...")
+        val mongoClient = createMongoClient(configuration)
+        log.info("connected!")
 
         val appVersion = javaClass.getPackage().implementationVersion
         environment.jersey().apply {

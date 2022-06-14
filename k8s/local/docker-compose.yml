@@ -1,0 +1,38 @@
+version: '2'
+
+services:
+  annorepo_server:
+    container_name: annorepo_server
+    environment:
+      - AR_EXTERNAL_BASE_URL=http://localhost:2021
+      - AR_MONGODB_URL=mongodb://annorepo_mongodb/
+      - AR_DB_NAME=annorepo
+      - AR_PAGE_SIZE=100
+    ports:
+      - "2021:8080"
+    image: annorepo:0.1-SNAPSHOT
+    networks:
+      - annorepo_network
+    restart: unless-stopped
+    tty: true
+    depends_on:
+      - annorepo_mongodb
+
+  annorepo_mongodb:
+    container_name: annorepo_mongodb
+    expose:
+      - 27017
+    image: mongo:5.0.9
+    networks:
+      - annorepo_network
+    restart: unless-stopped
+    tty: true
+    volumes:
+      - annorepo_mongodb_data:/data/db:rw
+
+networks:
+  annorepo_network:
+
+volumes:
+  annorepo_mongodb_data:
+    driver: local
