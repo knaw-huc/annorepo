@@ -49,6 +49,10 @@ clean:
 	rm -rf .make
 	mvn clean
 
+.PHONY:version-update
+version-update:
+	mvn versions:set && mvn versions:commit
+
 .PHONY: help
 help:
 	@echo "make-tools for $(tag)"
@@ -61,3 +65,5 @@ help:
 	@echo "  docker-image    to build the docker image of the app"
 	@echo "  push            to push the docker image to registry.diginfra.net"
 	@echo "  clean           to remove generated files"
+	@echo "  version-update  to update the project version"
+	@echo
