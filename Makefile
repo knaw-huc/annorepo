@@ -29,7 +29,7 @@ docker-run: k8s/local/docker-compose.yml
 docker-stop: k8s/local/docker-compose.yml
 	cd k8s/local && docker compose down
 
-.make/.docker: .make build k8s/annorepo-server/Dockerfile
+.make/.docker: .make k8s/annorepo-server/Dockerfile
 	docker build -t $(tag):$(shell cat .make/.version) -f k8s/annorepo-server/Dockerfile .
 	@touch .make/.docker
 
