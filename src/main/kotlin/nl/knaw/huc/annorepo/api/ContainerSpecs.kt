@@ -6,7 +6,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder
 @JsonPropertyOrder("@context", "type", "label")
 
 data class ContainerSpecs(
-    @JsonProperty("@context") val context: List<String>,
+    // context has to be a var to prevent read_only=true in swagger
+    @JsonProperty("@context") var context: List<String>,
     val type: List<String>,
     val label: String
 )

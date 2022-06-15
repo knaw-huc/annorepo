@@ -14,6 +14,7 @@ import io.dropwizard.setup.Environment
 import io.federecio.dropwizard.swagger.SwaggerBundle
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
 import nl.knaw.huc.annorepo.api.ARConst
+import nl.knaw.huc.annorepo.api.ARConst.APP_NAME
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.cli.EnvCommand
@@ -39,7 +40,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    override fun getName(): String = "AnnoRepo"
+    override fun getName(): String = APP_NAME
 
     override fun initialize(bootstrap: Bootstrap<AnnoRepoConfiguration?>) {
         bootstrap.configurationSourceProvider = SubstitutingSourceProvider(

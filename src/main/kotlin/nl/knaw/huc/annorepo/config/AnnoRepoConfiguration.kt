@@ -3,14 +3,14 @@ package nl.knaw.huc.annorepo.config
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.dropwizard.Configuration
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
+import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.resources.AboutResource
-import org.slf4j.LoggerFactory
 import javax.validation.Valid
 import javax.validation.constraints.NotNull
 
 open class AnnoRepoConfiguration : Configuration() {
 
-    private val log = LoggerFactory.getLogger(javaClass)
+//    private val log = LoggerFactory.getLogger(javaClass)
 
     @Valid
     @NotNull
@@ -35,14 +35,11 @@ open class AnnoRepoConfiguration : Configuration() {
     @Valid
     @NotNull
     @JsonProperty("swagger")
-    val swaggerBundleConfiguration = SwaggerBundleConfiguration()
-
-    init {
-        setDefaults()
-    }
-
-    private fun setDefaults() {
-        swaggerBundleConfiguration.resourcePackage = AboutResource::class.java.getPackage().name
+    val swaggerBundleConfiguration = SwaggerBundleConfiguration().apply {
+        resourcePackage = AboutResource::class.java.getPackage().name
+        version = javaClass.getPackage().implementationVersion
+        title = ARConst.APP_NAME
+        schemes = listOf("http", "https").toTypedArray()
     }
 
 }

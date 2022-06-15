@@ -1,6 +1,9 @@
 package nl.knaw.huc.annorepo.api
 
 object ARConst {
+
+    const val APP_NAME = "AnnoRepo"
+
     enum class EnvironmentVariable {
         AR_SERVER_PORT,
         AR_EXTERNAL_BASE_URL,

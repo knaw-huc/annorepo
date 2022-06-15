@@ -42,7 +42,7 @@ class W3CResourceTest {
         val r = W3CResource(client = client, configuration = configuration)
         val response = r.createContainer(
             containerSpecs = ContainerSpecs(
-                context = listOf(),
+                context = mutableListOf(),
                 type = listOf(),
                 label = "container label"
             ), slug = "container"
