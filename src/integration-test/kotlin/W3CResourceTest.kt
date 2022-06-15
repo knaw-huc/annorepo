@@ -1,3 +1,4 @@
+
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport
@@ -15,7 +16,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.litote.kmongo.KMongo
 import org.mockito.Mockito.mock
-import javax.ws.rs.client.Entity
 import javax.ws.rs.client.Entity.json
 import javax.ws.rs.core.MediaType
 
@@ -42,7 +42,7 @@ class W3CResourceTest {
             .target("/$W3C/")
             .request(ANNOTATION_MEDIA_TYPE)
             .header("Slug", name)
-        val json = Entity.json(
+        val json = json(
             ContainerSpecs(label = "label", context = listOf(), type = listOf()),
         )
         val createResponse =

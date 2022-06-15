@@ -20,15 +20,15 @@ import javax.ws.rs.core.Response
 class W3CResourceTest {
 
     private val mongoCursor: MongoCursor<String> = mock()
-    private val mongoIterable: MongoIterable<String> = mock() {
+    private val mongoIterable: MongoIterable<String> = mock {
         on { iterator() }.doReturn(mongoCursor)
     }
     private val collection: MongoCollection<ContainerMetadata> = mock()
-    private val mdb: MongoDatabase = mock() {
+    private val mdb: MongoDatabase = mock {
         on { listCollectionNames() }.doReturn(mongoIterable)
         on { getCollection(anyString(), eq(ContainerMetadata::class.java)) }.doReturn(collection)
     }
-    private val client: MongoClient = mock() {
+    private val client: MongoClient = mock {
         on { getDatabase(anyString()) }.doReturn(mdb)
     }
     private val configuration: AnnoRepoConfiguration = mock()
