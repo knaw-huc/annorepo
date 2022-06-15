@@ -5,14 +5,14 @@ import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Indexes
+import `in`.vectorpro.dropwizard.swagger.SwaggerBundle
+import `in`.vectorpro.dropwizard.swagger.SwaggerBundleConfiguration
 import io.dropwizard.Application
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor
 import io.dropwizard.configuration.SubstitutingSourceProvider
 import io.dropwizard.jdbi3.bundles.JdbiExceptionsBundle
 import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
-import io.federecio.dropwizard.swagger.SwaggerBundle
-import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ARConst.APP_NAME
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION

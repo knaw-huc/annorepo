@@ -2,8 +2,7 @@ package nl.knaw.huc.annorepo.resources
 
 import com.codahale.metrics.annotation.Timed
 import com.mongodb.client.MongoClient
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
+import io.swagger.v3.oas.annotations.Operation
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.api.AnnotationData
@@ -31,7 +30,6 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-@Api(ResourcePaths.W3C)
 @Path(ResourcePaths.W3C)
 @Produces(ANNOTATION_MEDIA_TYPE)
 class W3CResource(
@@ -43,7 +41,7 @@ class W3CResource(
     private val uriFactory = UriFactory(configuration)
     private val mdb = client.getDatabase(configuration.databaseName)
 
-    @ApiOperation(value = "Create an Annotation Container")
+    @Operation(description = "Create an Annotation Container")
     @Timed
     @POST
     @Consumes(ANNOTATION_MEDIA_TYPE, MediaType.APPLICATION_JSON)
@@ -70,7 +68,7 @@ class W3CResource(
         containerMetadataStore.insertOne(cmd)
     }
 
-    @ApiOperation(value = "Get an Annotation Container")
+    @Operation(description = "Get an Annotation Container")
     @Timed
     @GET
     @Path("{containerName}")
@@ -85,7 +83,7 @@ class W3CResource(
 
     }
 
-    @ApiOperation(value = "Delete an empty Annotation Container")
+    @Operation(description = "Delete an empty Annotation Container")
     @Timed
     @DELETE
     @Path("{containerName}")
@@ -110,7 +108,7 @@ class W3CResource(
         }
     }
 
-    @ApiOperation(value = "Create an Annotation")
+    @Operation(description = "Create an Annotation")
     @Timed
     @POST
     @Path("{containerName}")
@@ -143,7 +141,7 @@ class W3CResource(
         return Response.created(uri).entity(entity).build()
     }
 
-    @ApiOperation(value = "Get an Annotation")
+    @Operation(description = "Get an Annotation")
     @Timed
     @GET
     @Path("{containerName}/{annotationName}")
@@ -170,7 +168,7 @@ class W3CResource(
         } else Response.status(Response.Status.NOT_FOUND).build()
     }
 
-    @ApiOperation(value = "Delete an Annotation")
+    @Operation(description = "Delete an Annotation")
     @Timed
     @DELETE
     @Path("{containerName}/{annotationName}")

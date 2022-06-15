@@ -12,8 +12,7 @@ import com.mongodb.client.model.Filters.gt
 import com.mongodb.client.model.Filters.gte
 import com.mongodb.client.model.Filters.lt
 import com.mongodb.client.model.Filters.lte
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
+import io.swagger.v3.oas.annotations.Operation
 import nl.knaw.huc.annorepo.api.ARConst.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ARConst.LDP_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ResourcePaths
@@ -32,7 +31,6 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-@Api(ResourcePaths.SEARCH)
 @Path(ResourcePaths.SEARCH)
 @Produces(MediaType.APPLICATION_JSON)
 class SearchResource(
@@ -46,7 +44,7 @@ class SearchResource(
     private val annotationProjectStage = project(Document("annotation", 1).append("_id", 0))
     private val paginationStage = limit(configuration.pageSize)
 
-    @ApiOperation(value = "Find annotations in the given container with all the given field values")
+    @Operation(description = "Find annotations in the given container with all the given field values")
     @Timed
     @POST
     @Path("{containerName}/annotations")
@@ -79,7 +77,7 @@ class SearchResource(
     private val withinRange = "within_range"
     private val selectorType = "urn:example:republic:TextAnchorSelector"
 
-    @ApiOperation(value = "Find annotations within the given range")
+    @Operation(description = "Find annotations within the given range")
     @Timed
     @GET
     @Path("{containerName}/within_range")
@@ -112,7 +110,7 @@ class SearchResource(
         return Response.ok(entity).build()
     }
 
-    @ApiOperation(value = "Find annotations that overlap with the given range")
+    @Operation(description = "Find annotations that overlap with the given range")
     @Timed
     @GET
     @Path("{containerName}/overlapping_with_range")

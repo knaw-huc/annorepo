@@ -26,9 +26,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <assertj-core.version>3.23.1</assertj-core.version><!-- 2.0.0 = jdk1.7 -->
-        <dropwizard-swagger.version>2.0.0-1
-        </dropwizard-swagger.version><!-- 2.0.12-1 throws error on "Try it out" / Execute -->
+        <assertj-core.version>3.23.1</assertj-core.version>
+        <dropwizard-swagger.version>2.0.28-1</dropwizard-swagger.version>
         <dropwizard.version>2.0.28</dropwizard.version>
         <h2.version>2.1.212</h2.version>
         <json.version>20220320</json.version>
@@ -48,6 +47,8 @@
         <jackson-module-kotlin.version>2.13.3</jackson-module-kotlin.version>
         <mockito.version>4.6.1</mockito.version>
         <mockito-kotlin.version>4.0.0</mockito-kotlin.version>
+        <dropwizard-swagger-ui.version>4.6.2</dropwizard-swagger-ui.version>
+        <swagger-annotations.version>1.6.6</swagger-annotations.version>
     </properties>
 
     <dependencyManagement>
@@ -83,16 +84,29 @@
             <groupId>org.hibernate.validator</groupId>
             <artifactId>hibernate-validator</artifactId>
         </dependency>
+
         <dependency>
-            <groupId>com.smoketurner</groupId>
+            <groupId>in.vectorpro.dropwizard</groupId>
             <artifactId>dropwizard-swagger</artifactId>
             <version>${dropwizard-swagger.version}</version>
         </dependency>
+        <dependency>
+            <groupId>in.vectorpro.dropwizard</groupId>
+            <artifactId>dropwizard-swagger-ui</artifactId>
+            <version>${dropwizard-swagger-ui.version}</version>
+        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>io.swagger</groupId>-->
+        <!--            <artifactId>swagger-annotations</artifactId>-->
+        <!--            <version>${swagger-annotations.version}</version>-->
+        <!--        </dependency>-->
+
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib-jdk8</artifactId>
             <version>${kotlin.version}</version>
         </dependency>
+
         <dependency>
             <groupId>org.zalando</groupId>
             <artifactId>problem</artifactId>
@@ -108,6 +122,7 @@
             <artifactId>problem-gson</artifactId>
             <version>${problem.version}</version>
         </dependency>
+
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>

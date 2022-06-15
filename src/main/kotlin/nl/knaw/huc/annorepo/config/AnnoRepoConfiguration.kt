@@ -1,8 +1,8 @@
 package nl.knaw.huc.annorepo.config
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import `in`.vectorpro.dropwizard.swagger.SwaggerBundleConfiguration
 import io.dropwizard.Configuration
-import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.resources.AboutResource
 import javax.validation.Valid
@@ -39,7 +39,6 @@ open class AnnoRepoConfiguration : Configuration() {
         resourcePackage = AboutResource::class.java.getPackage().name
         version = javaClass.getPackage().implementationVersion
         title = ARConst.APP_NAME
-        schemes = listOf("http", "https").toTypedArray()
     }
 
 }

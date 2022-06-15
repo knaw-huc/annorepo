@@ -1,16 +1,13 @@
 package nl.knaw.huc.annorepo.resources
 
 import com.codahale.metrics.annotation.Timed
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
+import io.swagger.v3.oas.annotations.Operation
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-
-@Api("/")
 @Path("/")
 class HomePageResource {
     /**
@@ -19,7 +16,7 @@ class HomePageResource {
      * @return HTML representation of the homepage
      */
     @GET
-    @ApiOperation(value = "Show the server homepage")
+    @Operation(description = "Show the server homepage")
     @Produces(MediaType.TEXT_HTML)
     @Timed
     fun getHomePage(): Response {
@@ -32,12 +29,12 @@ class HomePageResource {
 
     @GET
     @Path("favicon.ico")
-    @ApiOperation(value = "Placeholder for favicon.ico")
+    @Operation(description = "Placeholder for favicon.ico")
     fun getFavIcon(): Response = Response.noContent().build()
 
     @GET
     @Path("robots.txt")
     @Produces(MediaType.TEXT_PLAIN)
-    @ApiOperation(value = "Placeholder for robots.txt")
+    @Operation(description = "Placeholder for robots.txt")
     fun noRobots(): String = "User-agent: *\nDisallow: /\n"
 }

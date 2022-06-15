@@ -3,14 +3,12 @@ package nl.knaw.huc.annorepo.resources
 import com.codahale.metrics.annotation.Timed
 import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Filters.exists
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
+import io.swagger.v3.oas.annotations.Operation
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
 import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.service.UriFactory
 import org.bson.Document
-import org.json.JSONObject
 import org.litote.kmongo.aggregate
 import org.litote.kmongo.match
 import org.slf4j.LoggerFactory
@@ -20,7 +18,6 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 
-@Api(ResourcePaths.LIST)
 @Path(ResourcePaths.LIST)
 @Produces(ANNOTATION_MEDIA_TYPE)
 class ListResource(
@@ -30,7 +27,7 @@ class ListResource(
     private val uriFactory = UriFactory(configuration)
     private val mdb = client.getDatabase(configuration.databaseName)
 
-    @ApiOperation(value = "Get a list of all the container URLs")
+    @Operation(description = "Get a list of all the container URLs")
     @Timed
     @GET
     @Path("containers")
@@ -41,7 +38,7 @@ class ListResource(
 
     private val field = "annotation_name"
 
-    @ApiOperation(value = "Get a list of all the annotation URLs")
+    @Operation(description = "Get a list of all the annotation URLs")
     @Timed
     @GET
     @Path("{containerName}/annotations")
@@ -57,21 +54,21 @@ class ListResource(
             .sorted()
             .subList(fromIndex = offset, toIndex = offset + configuration.pageSize)
 
-    private fun annotationPage(
-        urls: List<String>,
-        partOfURL: String,
-        startIndex: Int
-    ) = JSONObject(
-        mapOf(
-            "@context" to listOf(
-                "http://www.w3.org/ns/anno.jsonld",
-                "http://www.w3.org/ns/ldp.jsonld"
-            ),
-            "type" to "AnnotationPage",
-            "as:items" to mapOf("@list" to urls),
-            "partOf" to partOfURL,
-            "startIndex" to startIndex
-        )
-    ).toMap()
+//    private fun annotationPage(
+//        urls: List<String>,
+//        partOfURL: String,
+//        startIndex: Int
+//    ) = JSONObject(
+//        mapOf(
+//            "@context" to listOf(
+//                "http://www.w3.org/ns/anno.jsonld",
+//                "http://www.w3.org/ns/ldp.jsonld"
+//            ),
+//            "type" to "AnnotationPage",
+//            "as:items" to mapOf("@list" to urls),
+//            "partOf" to partOfURL,
+//            "startIndex" to startIndex
+//        )
+//    ).toMap()
 
 }

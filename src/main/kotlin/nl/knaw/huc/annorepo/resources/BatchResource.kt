@@ -2,13 +2,10 @@ package nl.knaw.huc.annorepo.resources
 
 import com.codahale.metrics.annotation.Timed
 import com.mongodb.client.MongoClient
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
+import io.swagger.v3.oas.annotations.Operation
 import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
-import nl.knaw.huc.annorepo.service.UriFactory
 import org.bson.Document
-import org.slf4j.LoggerFactory
 import java.util.*
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -17,17 +14,16 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-@Api(ResourcePaths.BATCH)
 @Path(ResourcePaths.BATCH)
 @Produces(MediaType.APPLICATION_JSON)
 class BatchResource(
     configuration: AnnoRepoConfiguration,
     private val client: MongoClient,
 ) {
-    private val log = LoggerFactory.getLogger(javaClass)
-    private val uriFactory = UriFactory(configuration)
+//    private val log = LoggerFactory.getLogger(javaClass)
+//    private val uriFactory = UriFactory(configuration)
 
-    @ApiOperation(value = "Upload annotations in batch to a given container")
+    @Operation(description = "Upload annotations in batch to a given container")
     @Timed
     @POST
     @Path("{containerName}/annotations")
