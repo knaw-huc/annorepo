@@ -27,7 +27,8 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <assertj-core.version>3.23.1</assertj-core.version><!-- 2.0.0 = jdk1.7 -->
-        <dropwizard-swagger.version>2.0.12-1</dropwizard-swagger.version>
+        <dropwizard-swagger.version>2.0.0-1
+        </dropwizard-swagger.version><!-- 2.0.12-1 throws error on "Try it out" / Execute -->
         <dropwizard.version>2.0.28</dropwizard.version>
         <h2.version>2.1.212</h2.version>
         <json.version>20220320</json.version>
@@ -35,7 +36,6 @@
         <kmongo.version>4.6.0</kmongo.version>
         <mongodb.version>4.6.0</mongodb.version>
         <problem.version>0.27.1</problem.version>
-        <!--        <shield.version>2.2.0</shield.version>-->
 
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
