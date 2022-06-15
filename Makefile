@@ -29,14 +29,15 @@ docker-run: k8s/local/docker-compose.yml
 docker-stop: k8s/local/docker-compose.yml
 	cd k8s/local && docker compose down
 
-.make/.docker: .make k8s/annorepo-server/Dockerfile
-	docker build -t $(tag):$(shell cat .make/.version) -f k8s/annorepo-server/Dockerfile .
+.make/.docker: .make k8s/annorepo-server/Dockerfile-multistage
+	docker build -t $(tag):$(shell cat .make/.version) -f k8s/annorepo-server/Dockerfile-multistage .
 	@touch .make/.docker
 
 .PHONY: docker-image
 docker-image: .make/.docker
 
-.make/.push: .make/.docker
+.make/.push: build k8s/annorepo-server/Dockerfile
+	docker build -t $(tag):$(shell cat .make/.version) --platform=linux/amd64 -f k8s/annorepo-server/Dockerfile .
 	docker tag $(tag):$(shell cat .make/.version) registry.diginfra.net/tt/$(tag):$(shell cat .make/.version)
 	docker push registry.diginfra.net/tt/$(tag):$(shell cat .make/.version)
 	@touch .make/.push
@@ -63,7 +64,7 @@ help:
 	@echo "  docker-stop     to stop the server app in docker"
 	@echo "  run-env         to run the annorepo env command"
 	@echo "  docker-image    to build the docker image of the app"
-	@echo "  push            to push the docker image to registry.diginfra.net"
+	@echo "  push            to push the linux/amd64 docker image to registry.diginfra.net"
 	@echo "  clean           to remove generated files"
 	@echo "  version-update  to update the project version"
 	@echo
