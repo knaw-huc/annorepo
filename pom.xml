@@ -48,8 +48,6 @@
         <jackson-module-kotlin.version>2.13.3</jackson-module-kotlin.version>
         <mockito.version>4.6.1</mockito.version>
         <mockito-kotlin.version>4.0.0</mockito-kotlin.version>
-        <mongo-java-server.version>1.40.0</mongo-java-server.version>
-        <fongo.version>2.1.0</fongo.version>
     </properties>
 
     <dependencyManagement>
