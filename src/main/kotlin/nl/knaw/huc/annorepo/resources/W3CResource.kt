@@ -59,7 +59,12 @@ class W3CResource(
         storeCollectionMetadata(containerSpecs.label, name)
         val containerData = getContainerPage(name)
         val uri = uriFactory.containerURL(name)
-        return Response.created(uri).entity(containerData).build()
+        return Response.created(uri)
+            .link("http://www.w3.org/ns/ldp#BasicContainer", "type")
+            .link("http://www.w3.org/TR/annotation-protocol", "http://www.w3.org/ns/ldp#constrainedBy")
+            .allow("POST", "GET", "DELETE", "OPTIONS", "HEAD")
+            .entity(containerData)
+            .build()
     }
 
     private fun storeCollectionMetadata(label: String, name: String) {
@@ -76,7 +81,11 @@ class W3CResource(
         log.debug("read Container $containerName")
         val containerPage = getContainerPage(containerName)
         return if (containerPage != null) {
-            Response.ok(containerPage).build()
+            Response.ok(containerPage)
+                .link("http://www.w3.org/ns/ldp#BasicContainer", "type")
+                .link("http://www.w3.org/TR/annotation-protocol/", "http://www.w3.org/ns/ldp#constrainedBy")
+                .allow("POST", "GET", "DELETE", "OPTIONS", "HEAD")
+                .build()
         } else {
             Response.status(Response.Status.NOT_FOUND).entity("Container '$containerName' not found").build()
         }
@@ -138,7 +147,11 @@ class W3CResource(
             Date.from(Instant.now())
         )
         val entity = withInsertedId(annotationData, containerName, name)
-        return Response.created(uri).entity(entity).build()
+        return Response.created(uri)
+            .link("http://www.w3.org/ns/ldp#Resource", "type")
+            .link("http://www.w3.org/ns/ldp#Annotation", "type")
+            .entity(entity)
+            .build()
     }
 
     @Operation(description = "Get an Annotation")
@@ -164,7 +177,11 @@ class W3CResource(
                 Date.from(Instant.now())
             )
             val entity = withInsertedId(annotationData, containerName, annotationName)
-            Response.ok(entity).header("Last-Modified", annotationData.modified).build()
+            Response.ok(entity)
+                .link("http://www.w3.org/ns/ldp#Resource", "type")
+                .link("http://www.w3.org/ns/ldp#Annotation", "type")
+                .lastModified(annotationData.modified)
+                .build()
         } else Response.status(Response.Status.NOT_FOUND).build()
     }
 
