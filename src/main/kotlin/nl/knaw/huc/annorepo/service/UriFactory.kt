@@ -11,6 +11,7 @@ class UriFactory(private val configuration: AnnoRepoConfiguration) {
         UriBuilder.fromUri(configuration.externalBaseUrl)
             .path(ResourcePaths.W3C)
             .path(containerName)
+            .path("/")
             .build()
 
     fun annotationURL(containerName: String, annotationName: String): URI =
