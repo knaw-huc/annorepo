@@ -53,17 +53,18 @@ class W3CResource(
         @HeaderParam("slug") slug: String?,
     ): Response {
         log.debug("$containerSpecs")
-        var name = slug ?: UUID.randomUUID().toString()
-        if (mdb.listCollectionNames().contains(name)) {
-            log.debug("A container with the suggested name $name already exists, generating a new name.")
-            name = UUID.randomUUID().toString()
+        var containerName = slug ?: UUID.randomUUID().toString()
+        if (mdb.listCollectionNames().contains(containerName)) {
+            log.debug("A container with the suggested name $containerName already exists, generating a new name.")
+            containerName = UUID.randomUUID().toString()
         }
-        mdb.createCollection(name)
-        storeCollectionMetadata(containerSpecs.label, name)
-        val containerData = getContainerPage(name)
-        val uri = uriFactory.containerURL(name)
-        val eTag = makeETag(name)
+        mdb.createCollection(containerName)
+        storeCollectionMetadata(containerSpecs.label, containerName)
+        val containerData = getContainerPage(containerName)
+        val uri = uriFactory.containerURL(containerName)
+        val eTag = makeETag(containerName)
         return Response.created(uri)
+            .contentLocation(uri)
             .link("http://www.w3.org/ns/ldp#BasicContainer", "type")
             .link("http://www.w3.org/TR/annotation-protocol", "http://www.w3.org/ns/ldp#constrainedBy")
             .allow("POST", "GET", "DELETE", "OPTIONS", "HEAD")
@@ -85,9 +86,11 @@ class W3CResource(
     fun readContainer(@PathParam("containerName") containerName: String): Response {
         log.debug("read Container $containerName")
         val containerPage = getContainerPage(containerName)
+        val uri = uriFactory.containerURL(containerName)
         val eTag = makeETag(containerName)
         return if (containerPage != null) {
             Response.ok(containerPage)
+                .contentLocation(uri)
                 .link("http://www.w3.org/ns/ldp#BasicContainer", "type")
                 .link("http://www.w3.org/TR/annotation-protocol/", "http://www.w3.org/ns/ldp#constrainedBy")
                 .allow("POST", "GET", "DELETE", "OPTIONS", "HEAD")
