@@ -274,11 +274,11 @@ class W3CResource(
     private fun AnnotationData.contentWithAssignedId(
         containerName: String, annotationName: String
     ): Any? {
+        val assignedId = uriFactory.annotationURL(containerName, annotationName)
         var jo = JSON.parse(content)
         if (jo is HashMap<*, *>) {
             jo = jo.toMutableMap()
             val originalId = jo["id"]
-            val assignedId = uriFactory.annotationURL(containerName, annotationName)
             jo["id"] = assignedId
             if (originalId != null && originalId != assignedId) {
                 jo["via"] = originalId
