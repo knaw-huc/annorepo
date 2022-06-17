@@ -162,6 +162,7 @@ class W3CResource(
         val annotationDocument = Document.parse(annotationJson)
         val doc = Document("annotation_name", name).append("annotation", annotationDocument)
         val r = container.insertOne(doc).insertedId?.asObjectId()?.value
+        val eTag = makeETag(name)
         val annotationData = AnnotationData(
             r!!.timestamp.toLong(),
             name,
@@ -171,8 +172,10 @@ class W3CResource(
         )
         val entity = withInsertedId(annotationData, containerName, name)
         return Response.created(uri)
+            .allow("POST", "PUT", "GET", "DELETE", "OPTIONS", "HEAD")
             .link("http://www.w3.org/ns/ldp#Resource", "type")
             .link("http://www.w3.org/ns/ldp#Annotation", "type")
+            .tag(eTag)
             .entity(entity)
             .build()
     }
@@ -183,7 +186,8 @@ class W3CResource(
     @Path("{containerName}/{annotationName}")
     @Produces(ANNOTATION_MEDIA_TYPE)
     fun readAnnotation(
-        @PathParam("containerName") containerName: String, @PathParam("annotationName") annotationName: String
+        @PathParam("containerName") containerName: String,
+        @PathParam("annotationName") annotationName: String
     ): Response {
         log.debug("read annotation $annotationName in container $containerName")
         val container = mdb.getCollection(containerName)
@@ -200,10 +204,13 @@ class W3CResource(
                 Date.from(Instant.now())
             )
             val entity = withInsertedId(annotationData, containerName, annotationName)
+            val eTag = makeETag(annotationName)
             Response.ok(entity)
+                .allow("POST", "PUT", "GET", "DELETE", "OPTIONS", "HEAD")
                 .link("http://www.w3.org/ns/ldp#Resource", "type")
                 .link("http://www.w3.org/ns/ldp#Annotation", "type")
                 .lastModified(annotationData.modified)
+                .tag(eTag)
                 .build()
         } else Response.status(Response.Status.NOT_FOUND).build()
     }
@@ -213,7 +220,8 @@ class W3CResource(
     @DELETE
     @Path("{containerName}/{annotationName}")
     fun deleteAnnotation(
-        @PathParam("containerName") containerName: String, @PathParam("annotationName") annotationName: String
+        @PathParam("containerName") containerName: String,
+        @PathParam("annotationName") annotationName: String
     ) {
         log.debug("delete annotation $annotationName in container $containerName")
         val container = mdb.getCollection(containerName)
