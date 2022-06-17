@@ -27,7 +27,10 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.core.Context
+import javax.ws.rs.core.EntityTag
 import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Request
 import javax.ws.rs.core.Response
 
 @Path(ResourcePaths.W3C)
@@ -59,10 +62,12 @@ class W3CResource(
         storeCollectionMetadata(containerSpecs.label, name)
         val containerData = getContainerPage(name)
         val uri = uriFactory.containerURL(name)
+        val eTag = makeETag(name)
         return Response.created(uri)
             .link("http://www.w3.org/ns/ldp#BasicContainer", "type")
             .link("http://www.w3.org/TR/annotation-protocol", "http://www.w3.org/ns/ldp#constrainedBy")
             .allow("POST", "GET", "DELETE", "OPTIONS", "HEAD")
+            .tag(eTag)
             .entity(containerData)
             .build()
     }
@@ -80,11 +85,13 @@ class W3CResource(
     fun readContainer(@PathParam("containerName") containerName: String): Response {
         log.debug("read Container $containerName")
         val containerPage = getContainerPage(containerName)
+        val eTag = makeETag(containerName)
         return if (containerPage != null) {
             Response.ok(containerPage)
                 .link("http://www.w3.org/ns/ldp#BasicContainer", "type")
                 .link("http://www.w3.org/TR/annotation-protocol/", "http://www.w3.org/ns/ldp#constrainedBy")
                 .allow("POST", "GET", "DELETE", "OPTIONS", "HEAD")
+                .tag(eTag)
                 .build()
         } else {
             Response.status(Response.Status.NOT_FOUND).entity("Container '$containerName' not found").build()
@@ -92,14 +99,27 @@ class W3CResource(
 
     }
 
+    private fun makeETag(containerName: String): EntityTag =
+        EntityTag(containerName.hashCode().toString())
+
     @Operation(description = "Delete an empty Annotation Container")
     @Timed
     @DELETE
     @Path("{containerName}")
-    fun deleteContainer(@PathParam("containerName") containerName: String): Response {
+    fun deleteContainer(
+        @PathParam("containerName") containerName: String,
+        @Context req: Request
+    ): Response {
         log.debug("delete Container $containerName")
+        val eTag = makeETag(containerName)
+        val valid = req.evaluatePreconditions(eTag)
         val containerPage = getContainerPage(containerName)
         return when {
+            valid == null -> {
+                Response.status(Response.Status.PRECONDITION_FAILED)
+                    .entity("Etag does not match")
+                    .build()
+            }
             containerPage == null -> {
                 Response.status(Response.Status.NOT_FOUND)
                     .entity("Container $containerName was not found.")
