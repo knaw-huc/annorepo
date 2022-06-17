@@ -155,7 +155,6 @@ class W3CResource(
     ): Response {
 //        log.debug("annotation=\n$annotationJson")
         var name = slug ?: UUID.randomUUID().toString()
-        val uri = uriFactory.annotationURL(containerName, name)
         val container = mdb.getCollection(containerName)
         val existingAnnotationDocument = container.find(Document("annotation_name", name)).first()
         if (existingAnnotationDocument != null) {
@@ -165,7 +164,6 @@ class W3CResource(
         val annotationDocument = Document.parse(annotationJson)
         val doc = Document("annotation_name", name).append("annotation", annotationDocument)
         val r = container.insertOne(doc).insertedId?.asObjectId()?.value
-        val eTag = makeETag(name)
         val annotationData = AnnotationData(
             r!!.timestamp.toLong(),
             name,
@@ -173,6 +171,8 @@ class W3CResource(
             Date.from(Instant.now()),
             Date.from(Instant.now())
         )
+        val uri = uriFactory.annotationURL(containerName, name)
+        val eTag = makeETag(name)
         val entity = withInsertedId(annotationData, containerName, name)
         return Response.created(uri)
             .header("Vary", "Accept")
@@ -278,7 +278,12 @@ class W3CResource(
         var jo = JSON.parse(content)
         if (jo is HashMap<*, *>) {
             jo = jo.toMutableMap()
-            jo["id"] = uriFactory.annotationURL(containerName, annotationName)
+            val originalId = jo["id"]
+            val assignedId = uriFactory.annotationURL(containerName, annotationName)
+            jo["id"] = assignedId
+            if (originalId != null && originalId != assignedId) {
+                jo["via"] = originalId
+            }
         }
         return jo
     }
