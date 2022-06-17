@@ -173,7 +173,7 @@ class W3CResource(
         )
         val uri = uriFactory.annotationURL(containerName, name)
         val eTag = makeETag(name)
-        val entity = withInsertedId(annotationData, containerName, name)
+        val entity = annotationData.contentWithAssignedId(containerName, name)
         return Response.created(uri)
             .header("Vary", "Accept")
             .allow("POST", "PUT", "GET", "DELETE", "OPTIONS", "HEAD")
@@ -207,7 +207,7 @@ class W3CResource(
                 Date.from(Instant.now()),
                 Date.from(Instant.now())
             )
-            val entity = withInsertedId(annotationData, containerName, annotationName)
+            val entity = annotationData.contentWithAssignedId(containerName, annotationName)
             val eTag = makeETag(annotationName)
             Response.ok(entity)
                 .header("Vary", "Accept")
@@ -247,7 +247,7 @@ class W3CResource(
             Date.from(Instant.now()),
             Date.from(Instant.now())
         )
-        val entity = withInsertedId(annotationData, containerName, annotationName)
+        val entity = annotationData.contentWithAssignedId(containerName, annotationName)
         return Response.ok(entity)
             .header("Vary", "Accept")
             .allow("POST", "PUT", "GET", "DELETE", "OPTIONS", "HEAD")
@@ -271,10 +271,9 @@ class W3CResource(
         container.findOneAndDelete(Document("annotation_name", annotationName))
     }
 
-    private fun withInsertedId(
-        annotationData: AnnotationData, containerName: String, annotationName: String
+    private fun AnnotationData.contentWithAssignedId(
+        containerName: String, annotationName: String
     ): Any? {
-        val content = annotationData.content
         var jo = JSON.parse(content)
         if (jo is HashMap<*, *>) {
             jo = jo.toMutableMap()
