@@ -2,6 +2,8 @@ package nl.knaw.huc.annorepo.resources
 
 import com.codahale.metrics.annotation.Timed
 import com.mongodb.client.MongoClient
+import com.mongodb.client.model.Aggregates
+import com.mongodb.client.model.Filters
 import io.swagger.v3.oas.annotations.Operation
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
@@ -14,6 +16,7 @@ import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.service.UriFactory
 import org.bson.Document
 import org.eclipse.jetty.util.ajax.JSON
+import org.litote.kmongo.aggregate
 import org.litote.kmongo.findOne
 import org.litote.kmongo.getCollection
 import org.slf4j.LoggerFactory
@@ -61,7 +64,7 @@ class W3CResource(
         }
         mdb.createCollection(containerName)
         storeCollectionMetadata(containerSpecs.label, containerName)
-        val containerData = getContainerPage(containerName)
+        val containerData = getContainerPage(containerName, 0)
         val uri = uriFactory.containerURL(containerName)
         val eTag = makeETag(containerName)
         return Response.created(uri)
@@ -87,7 +90,7 @@ class W3CResource(
     @Path("{containerName}")
     fun readContainer(@PathParam("containerName") containerName: String): Response {
         log.debug("read Container $containerName")
-        val containerPage = getContainerPage(containerName)
+        val containerPage = getContainerPage(containerName, 0)
         val uri = uriFactory.containerURL(containerName)
         val eTag = makeETag(containerName)
         return if (containerPage != null) {
@@ -119,7 +122,7 @@ class W3CResource(
         log.debug("delete Container $containerName")
         val eTag = makeETag(containerName)
         val valid = req.evaluatePreconditions(eTag)
-        val containerPage = getContainerPage(containerName)
+        val containerPage = getContainerPage(containerName, 0)
         return when {
             valid == null -> {
                 Response.status(Response.Status.PRECONDITION_FAILED)
@@ -287,19 +290,42 @@ class W3CResource(
         return jo
     }
 
-    private fun getContainerPage(name: String): ContainerPage? {
+    private val paginationStage = Aggregates.limit(configuration.pageSize)
+
+    private fun getContainerPage(containerName: String, startIndex: Int): ContainerPage? {
         val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
-        val metadata = containerMetadataCollection.findOne(Document("name", name)) ?: return null
-        val collection = mdb.getCollection(name)
-        val uri = uriFactory.containerURL(name)
+        val metadata = containerMetadataCollection.findOne(Document("name", containerName)) ?: return null
+        val collection = mdb.getCollection(containerName)
+        val uri = uriFactory.containerURL(containerName)
         val count = collection.countDocuments()
+        val annotations = collection.aggregate<Document>(
+            Aggregates.match(
+                Filters.exists("annotation")
+            ),
+            Aggregates.skip(startIndex), // start at offset
+            paginationStage // return $pageSize documents or less
+        )
+            .map { document -> toAnnotationMap(document, containerName) }
+            .toList()
+
         return ContainerPage(
             id = uri.toString(),
             label = metadata.label,
-            annotations = listOf(),
+            annotations = annotations,
             startIndex = 0,
             total = count
         )
     }
+
+    private fun toAnnotationMap(a: Document, containerName: String): Map<String, Any> =
+        a.get("annotation", Document::class.java)
+            .toMutableMap()
+            .apply<MutableMap<String, Any>> {
+                put(
+                    "id",
+                    uriFactory.annotationURL(containerName, a.getString("annotation_name"))
+                )
+                remove("@context")
+            }
 
 }

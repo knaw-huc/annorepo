@@ -34,9 +34,7 @@ internal class ContainerPageTest {
               "label": "A Container for Web Annotations",
               "first": {
                 "type": "AnnotationPage",
-                "as:items": {
-                  "@list": []
-                },
+                "items":  [],
                 "partOf": "http://example.org/w3c/my-container/",
                 "startIndex": 0
               },

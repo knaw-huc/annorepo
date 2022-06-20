@@ -15,9 +15,7 @@ internal class AnnotationPageTest {
         val expectedJson = """
           {
             "type": "AnnotationPage",
-            "as:items": {
-              "@list": [{"key":"value"}]
-            },
+            "items": [{"key":"value"}],
             "partOf": "http://example.org",
             "startIndex": 0
           }
