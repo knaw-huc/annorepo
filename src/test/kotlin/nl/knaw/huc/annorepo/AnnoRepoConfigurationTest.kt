@@ -9,7 +9,7 @@ class AnnoRepoConfigurationTest {
     private val log: Logger = LoggerFactory.getLogger(javaClass)
 
     @Test
-    fun getBaseUri() {
+    fun `get base uri`() {
         val c = AnnoRepoConfiguration()
         log.info(c.externalBaseUrl)
     }

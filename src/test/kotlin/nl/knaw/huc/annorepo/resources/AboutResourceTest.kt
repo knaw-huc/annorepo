@@ -23,7 +23,7 @@ open class AboutResourceTest {
 //    private val log = LoggerFactory.getLogger(javaClass)
 
     @Test
-    fun getAboutInfo() {
+    fun `about endpoint returns expected json`() {
         val response = resource
             .client()
             .target("/about")

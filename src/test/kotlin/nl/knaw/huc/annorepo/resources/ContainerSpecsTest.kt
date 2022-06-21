@@ -12,7 +12,7 @@ internal class ContainerSpecsTest {
     private val objectMapper = ObjectMapper().registerKotlinModule()
 
     @Test
-    fun getLabel() {
+    fun `ContainerSpecs json serialization works as expected`() {
         val spec = ContainerSpecs(
             context = listOf(
                 ANNO_JSONLD_URL,

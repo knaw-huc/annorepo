@@ -35,7 +35,7 @@ class W3CResourceTest {
 
     @Disabled
     @Test
-    fun createContainer() {
+    fun `create container works as expected`() {
         configuration.databaseName = "annorepo"
         println(configuration.databaseName)
         println(client.getDatabase(configuration.databaseName))
@@ -57,7 +57,7 @@ class W3CResourceTest {
     }
 
     @Test
-    fun testLastPageCalculation() {
+    fun `last page calculation is correct`() {
         assertThat(lastPage(count = 100, pageSize = 99)).isEqualTo(1)
         assertThat(lastPage(count = 100, pageSize = 100)).isEqualTo(0)
         assertThat(lastPage(count = 100, pageSize = 101)).isEqualTo(0)

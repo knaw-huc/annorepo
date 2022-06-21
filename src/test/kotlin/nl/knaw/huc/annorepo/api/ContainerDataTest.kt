@@ -10,14 +10,14 @@ internal class ContainerDataTest {
     private val log = LoggerFactory.getLogger(javaClass)
 
     @Test
-    fun test_default_constructor() {
+    fun `test default constructor`() {
         val cd = ContainerData()
         log.info("cd=$cd")
         assertThat(cd).isNotNull
     }
 
     @Test
-    fun test_secondary_constructor() {
+    fun `test secondary constructor`() {
         val cd = ContainerData(1, "name", Date.from(Instant.now()), Date.from(Instant.now()))
         log.info("cd=$cd")
         assertThat(cd).isNotNull
