@@ -12,16 +12,14 @@ internal class ContainerPageTest {
     private val objectMapper = ObjectMapper().registerKotlinModule()
 
     @Test
-    fun jsonSerializationWithoutNextPageIsAsExpected() {
+    fun `a ContainerPage without next serializes as expected`() {
         val ap = ContainerPage(
             id = "http://example.org/w3c/my-container/",
             label = "A Container for Web Annotations",
             annotations = listOf(),
             page = 0,
             total = 10,
-            prevPage = null,
-            nextPage = null,
-            lastPage = 1
+            lastPage = 1,
         )
         val expectedJson = """
             {
@@ -36,6 +34,7 @@ internal class ContainerPageTest {
               ],
               "label": "A Container for Web Annotations",
               "first": {
+                "id": "http://example.org/w3c/my-container/?page=0",
                 "type": "AnnotationPage",
                 "items":  [],
                 "partOf": "http://example.org/w3c/my-container/",
@@ -51,16 +50,16 @@ internal class ContainerPageTest {
     }
 
     @Test
-    fun jsonSerializationWithNextPageIsAsExpected() {
+    fun `a ContainerPage with next serializes as expected`() {
         val ap = ContainerPage(
             id = "http://example.org/w3c/my-container/",
             label = "A Container for Web Annotations",
             annotations = listOf(),
             page = 0,
             total = 100,
+            lastPage = 1,
             prevPage = null,
-            nextPage = 1,
-            lastPage = 1
+            nextPage = 1
         )
         val expectedJson = """
             {
@@ -75,12 +74,13 @@ internal class ContainerPageTest {
               ],
               "label": "A Container for Web Annotations",
               "first": {
+                "id": "http://example.org/w3c/my-container/?page=0",
                 "type": "AnnotationPage",
                 "items":  [],
                 "partOf": "http://example.org/w3c/my-container/",
+                "next": "http://example.org/w3c/my-container/?page=1",
                 "startIndex": 0
               },
-              "next": "http://example.org/w3c/my-container/?page=1",
               "last": "http://example.org/w3c/my-container/?page=1",
               "total": 100
             }
@@ -91,16 +91,16 @@ internal class ContainerPageTest {
     }
 
     @Test
-    fun jsonSerializationWithPrevAndNextPageIsAsExpected() {
+    fun `a ContainerPage with both prev and next serializes as expected`() {
         val ap = ContainerPage(
             id = "http://example.org/w3c/my-container/",
             label = "A Container for Web Annotations",
             annotations = listOf(),
             page = 1,
             total = 100,
+            lastPage = 2,
             prevPage = 0,
-            nextPage = 2,
-            lastPage = 2
+            nextPage = 2
         )
         val expectedJson = """
             {
@@ -115,13 +115,14 @@ internal class ContainerPageTest {
               ],
               "label": "A Container for Web Annotations",
               "first": {
+                "id": "http://example.org/w3c/my-container/?page=1",
                 "type": "AnnotationPage",
                 "items":  [],
                 "partOf": "http://example.org/w3c/my-container/",
+                "prev": "http://example.org/w3c/my-container/?page=0",
+                "next": "http://example.org/w3c/my-container/?page=2",
                 "startIndex": 1
               },
-              "prev": "http://example.org/w3c/my-container/?page=0",
-              "next": "http://example.org/w3c/my-container/?page=2",
               "last": "http://example.org/w3c/my-container/?page=2",
               "total": 100
             }

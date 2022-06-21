@@ -91,23 +91,27 @@ class W3CResource(
     @Path("{containerName}")
     fun readContainer(
         @PathParam("containerName") containerName: String,
-        @QueryParam("page") page: Int = 0
+        @QueryParam("page") page: Int? = null
     ): Response {
         log.debug("read Container $containerName, page $page")
-        val containerPage = getContainerPage(containerName, page, configuration.pageSize)
+        val containerPage = getContainerPage(containerName, page ?: 0, configuration.pageSize)
         val uri = uriFactory.containerURL(containerName)
         val eTag = makeETag(containerName)
-        return if (containerPage != null) {
-            Response.ok(containerPage)
-                .contentLocation(uri)
-                .header("Vary", "Accept")
-                .link("http://www.w3.org/ns/ldp#BasicContainer", "type")
-                .link("http://www.w3.org/TR/annotation-protocol/", "http://www.w3.org/ns/ldp#constrainedBy")
-                .allow("POST", "GET", "DELETE", "OPTIONS", "HEAD")
-                .tag(eTag)
-                .build()
-        } else {
-            Response.status(Response.Status.NOT_FOUND).entity("Container '$containerName' not found").build()
+        return when {
+            containerPage != null -> {
+                val entity = if (page == null) containerPage else containerPage.first
+                Response.ok(entity)
+                    .contentLocation(uri)
+                    .header("Vary", "Accept")
+                    .link("http://www.w3.org/ns/ldp#BasicContainer", "type")
+                    .link("http://www.w3.org/TR/annotation-protocol/", "http://www.w3.org/ns/ldp#constrainedBy")
+                    .allow("POST", "GET", "DELETE", "OPTIONS", "HEAD")
+                    .tag(eTag)
+                    .build()
+            }
+            else -> {
+                Response.status(Response.Status.NOT_FOUND).entity("Container '$containerName' not found").build()
+            }
         }
 
     }
@@ -329,9 +333,9 @@ class W3CResource(
             annotations = annotations,
             page = page,
             total = count,
+            lastPage = lastPage,
             prevPage = prevPage,
-            nextPage = nextPage,
-            lastPage = lastPage
+            nextPage = nextPage
         )
     }
 

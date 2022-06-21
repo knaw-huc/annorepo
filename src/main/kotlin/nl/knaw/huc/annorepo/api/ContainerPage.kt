@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder
 import nl.knaw.huc.annorepo.api.ARConst.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ARConst.LDP_JSONLD_URL
 
-@JsonPropertyOrder("@context", "type", "id", "label", "first", "prev", "next", "last", "total")
+@JsonPropertyOrder("@context", "id", "type", "total", "label", "modified", "first", "last")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 class ContainerPage(
     val id: String,
@@ -14,9 +14,9 @@ class ContainerPage(
     annotations: List<Map<String, Any>>,
     page: Int = 0,
     val total: Long = 0,
-    prevPage: Int?,
-    nextPage: Int?,
-    lastPage: Int
+    lastPage: Int,
+    prevPage: Int? = null,
+    nextPage: Int? = null
 ) {
     @JsonProperty("@context")
     val context = listOf(
@@ -27,8 +27,13 @@ class ContainerPage(
         "BasicContainer",
         "AnnotationCollection"
     )
-    val first = AnnotationPage(items = annotations, partOf = id, startIndex = page)
-    val prev = if (prevPage != null) "$id?page=$prevPage" else null
-    val next = if (nextPage != null) "$id?page=$nextPage" else null
     val last = "$id?page=$lastPage"
+    val first = AnnotationPage(
+        id = "$id?page=$page",
+        partOf = id,
+        startIndex = page,
+        items = annotations,
+        prev = if (prevPage != null) "$id?page=$prevPage" else null,
+        next = if (nextPage != null) "$id?page=$nextPage" else null
+    )
 }
