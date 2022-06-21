@@ -31,6 +31,7 @@ import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.EntityTag
 import javax.ws.rs.core.MediaType
@@ -40,7 +41,7 @@ import javax.ws.rs.core.Response
 @Path(ResourcePaths.W3C)
 @Produces(ANNOTATION_MEDIA_TYPE)
 class W3CResource(
-    configuration: AnnoRepoConfiguration,
+    val configuration: AnnoRepoConfiguration,
     client: MongoClient,
 ) {
 
@@ -64,7 +65,7 @@ class W3CResource(
         }
         mdb.createCollection(containerName)
         storeCollectionMetadata(containerSpecs.label, containerName)
-        val containerData = getContainerPage(containerName, 0)
+        val containerData = getContainerPage(containerName, 0, configuration.pageSize)
         val uri = uriFactory.containerURL(containerName)
         val eTag = makeETag(containerName)
         return Response.created(uri)
@@ -88,9 +89,12 @@ class W3CResource(
     @Timed
     @GET
     @Path("{containerName}")
-    fun readContainer(@PathParam("containerName") containerName: String): Response {
-        log.debug("read Container $containerName")
-        val containerPage = getContainerPage(containerName, 0)
+    fun readContainer(
+        @PathParam("containerName") containerName: String,
+        @QueryParam("page") page: Int = 0
+    ): Response {
+        log.debug("read Container $containerName, page $page")
+        val containerPage = getContainerPage(containerName, page, configuration.pageSize)
         val uri = uriFactory.containerURL(containerName)
         val eTag = makeETag(containerName)
         return if (containerPage != null) {
@@ -122,7 +126,7 @@ class W3CResource(
         log.debug("delete Container $containerName")
         val eTag = makeETag(containerName)
         val valid = req.evaluatePreconditions(eTag)
-        val containerPage = getContainerPage(containerName, 0)
+        val containerPage = getContainerPage(containerName, 0, configuration.pageSize)
         return when {
             valid == null -> {
                 Response.status(Response.Status.PRECONDITION_FAILED)
@@ -229,7 +233,6 @@ class W3CResource(
     @Path("{containerName}/{annotationName}")
     @Consumes(ANNOTATION_MEDIA_TYPE)
     fun updateAnnotation(
-        @HeaderParam("slug") slug: String?,
         @PathParam("containerName") containerName: String,
         @PathParam("annotationName") annotationName: String,
         annotationJson: String
@@ -292,7 +295,7 @@ class W3CResource(
 
     private val paginationStage = Aggregates.limit(configuration.pageSize)
 
-    private fun getContainerPage(containerName: String, startIndex: Int): ContainerPage? {
+    private fun getContainerPage(containerName: String, page: Int, pageSize: Int): ContainerPage? {
         val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
         val metadata = containerMetadataCollection.findOne(Document("name", containerName)) ?: return null
         val collection = mdb.getCollection(containerName)
@@ -302,20 +305,37 @@ class W3CResource(
             Aggregates.match(
                 Filters.exists("annotation")
             ),
-            Aggregates.skip(startIndex), // start at offset
+            Aggregates.skip(page * pageSize), // start at offset
             paginationStage // return $pageSize documents or less
         )
             .map { document -> toAnnotationMap(document, containerName) }
             .toList()
 
+        val lastPage = lastPage(count, pageSize)
+        val prevPage = if (page > 0) {
+            page - 1
+        } else {
+            null
+        }
+        val nextPage = if (lastPage > page) {
+            page + 1
+        } else {
+            null
+        }
+
         return ContainerPage(
             id = uri.toString(),
             label = metadata.label,
             annotations = annotations,
-            startIndex = 0,
-            total = count
+            page = page,
+            total = count,
+            prevPage = prevPage,
+            nextPage = nextPage,
+            lastPage = lastPage
         )
     }
+
+    private fun lastPage(count: Long, pageSize: Int) = (count - 1).div(pageSize).toInt()
 
     private fun toAnnotationMap(a: Document, containerName: String): Map<String, Any> =
         a.get("annotation", Document::class.java)

@@ -56,5 +56,17 @@ class W3CResourceTest {
         )
     }
 
+    @Test
+    fun testLastPageCalculation() {
+        assertThat(lastPage(count = 100, pageSize = 99)).isEqualTo(1)
+        assertThat(lastPage(count = 100, pageSize = 100)).isEqualTo(0)
+        assertThat(lastPage(count = 100, pageSize = 101)).isEqualTo(0)
+        assertThat(lastPage(count = 0, pageSize = 99)).isEqualTo(0)
+        assertThat(lastPage(count = 100, pageSize = 50)).isEqualTo(1)
+        assertThat(lastPage(count = 100, pageSize = 40)).isEqualTo(2)
+    }
+
+    private fun lastPage(count: Long, pageSize: Int) = (count - 1).div(pageSize).toLong()
+
 }
 
