@@ -13,32 +13,26 @@ object JsonLdUtils {
 
     fun extractFields(jsonld: String): Set<String> {
         val doc = Document.parse(jsonld).toMap()
-        return extractFields(doc, "")
+        return extractFields(doc, "").toSet()
     }
 
-    private fun extractFields(doc: Map<String, Any>, prefix: String): Set<String> {
-        val fields = mutableSetOf<String>()
-        for (key in doc.keys) {
+    private fun extractFields(doc: Map<String, Any>, prefix: String): List<String> =
+        doc.keys.flatMap { key ->
             when (val value = doc.getValue(key)) {
-                is Map<*, *> -> fields.addAll(extractFields(value as Map<String, Any>, "$prefix$key."))
-                is List<*> -> fields.addAll(extractFields(value as List<Any>, "$prefix$key."))
-                else -> fields.add("$prefix$key")
+                is Map<*, *> -> extractFields(value as Map<String, Any>, "$prefix$key.")
+                is List<*> -> extractFields(value as List<Any>, "$prefix$key.")
+                else -> listOf("$prefix$key")
             }
         }
-        return fields
-    }
 
-    private fun extractFields(list: List<Any>, prefix: String): Set<String> {
-        val fields = mutableSetOf<String>()
-        for (any in list) {
+    private fun extractFields(list: List<Any>, prefix: String): List<String> =
+        list.flatMap { any ->
             when (any) {
-                is Map<*, *> -> fields.addAll(extractFields(any as Map<String, Any>, prefix))
-                is List<*> -> fields.addAll(extractFields(any as List<Any>, prefix))
-                else -> fields.add(prefix.trimEnd('.'))
+                is Map<*, *> -> extractFields(any as Map<String, Any>, prefix)
+                is List<*> -> extractFields(any as List<Any>, prefix)
+                else -> listOf(prefix.trimEnd('.'))
             }
         }
-        return fields
-    }
 
     data class JsonLdReport(val isValid: Boolean = false, val invalidFields: List<String> = emptyList())
 }
