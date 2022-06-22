@@ -6,6 +6,7 @@ import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Filters
 import io.swagger.v3.oas.annotations.Operation
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
+import nl.knaw.huc.annorepo.api.ARConst.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.api.AnnotationData
 import nl.knaw.huc.annorepo.api.ContainerMetadata
@@ -99,7 +100,8 @@ class W3CResource(
         val eTag = makeETag(containerName)
         return when {
             containerPage != null -> {
-                val entity = if (page == null) containerPage else containerPage.first
+                val entity =
+                    if (page == null) containerPage else containerPage.first.copy(context = listOf(ANNO_JSONLD_URL))
                 Response.ok(entity)
                     .contentLocation(uri)
                     .header("Vary", "Accept")

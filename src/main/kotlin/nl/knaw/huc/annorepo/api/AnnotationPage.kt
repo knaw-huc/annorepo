@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder
 
 @JsonPropertyOrder("@context", "id", "type", "partOf", "startIndex", "prev", "next", "items")
 @JsonInclude(JsonInclude.Include.NON_NULL)
-class AnnotationPage(
+data class AnnotationPage(
     val id: String,
     val partOf: String,
     val startIndex: Int,
