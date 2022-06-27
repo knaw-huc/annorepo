@@ -17,9 +17,11 @@ import nl.knaw.huc.annorepo.api.ARConst.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ARConst.LDP_JSONLD_URL
 import nl.knaw.huc.annorepo.api.AnnotationPage
 import nl.knaw.huc.annorepo.api.ResourcePaths
+import nl.knaw.huc.annorepo.api.ResourcePaths.SEARCH
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.service.UriFactory
 import org.bson.Document
+import org.bson.conversions.Bson
 import org.eclipse.jetty.util.ajax.JSON
 import org.json.JSONObject
 import org.litote.kmongo.aggregate
@@ -31,6 +33,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
+import javax.ws.rs.core.UriBuilder
 
 @Path(ResourcePaths.SEARCH)
 @Produces(MediaType.APPLICATION_JSON)
@@ -44,6 +47,11 @@ class SearchResource(
 
     private val annotationProjectStage = project(Document("annotation", 1).append("_id", 0))
     private val paginationStage = limit(configuration.pageSize)
+
+    private val withinRange = "within_range"
+    private val overlappingWithRange = "overlapping_with_range"
+    private val selectorType = "urn:example:republic:TextAnchorSelector"
+    private val annotationFieldPrefix = "annotation."
 
     @Operation(description = "Find annotations in the given container with all the given field values")
     @Timed
@@ -75,10 +83,6 @@ class SearchResource(
         return Response.status(Response.Status.BAD_REQUEST).build()
     }
 
-    private val withinRange = "within_range"
-    private val overlappingWithRange = "overlapping_with_range"
-    private val selectorType = "urn:example:republic:TextAnchorSelector"
-
     @Operation(description = "Find annotations within the given range")
     @Timed
     @GET
@@ -89,30 +93,21 @@ class SearchResource(
         @QueryParam("range.start") rangeStart: Float,
         @QueryParam("range.end") rangeEnd: Float,
         @QueryParam("page") page: Int = 0
-    ): Response {
-        val collection = mdb.getCollection(containerName)
-        val annotationFieldPrefix = "annotation."
-        val offset = page * configuration.pageSize
-        val annotations = collection.aggregate<Document>(
-            match(
-                and(
-                    eq("${annotationFieldPrefix}target.source", targetSource),
-                    eq("${annotationFieldPrefix}target.selector.type", selectorType),
-                    gte("${annotationFieldPrefix}target.selector.start", rangeStart),
-                    lte("${annotationFieldPrefix}target.selector.end", rangeEnd),
-                )
+    ): Response =
+        filterContainerAnnotationsWithRange(
+            searchType = withinRange,
+            matchPattern = and(
+                eq("${annotationFieldPrefix}target.source", targetSource),
+                eq("${annotationFieldPrefix}target.selector.type", selectorType),
+                gte("${annotationFieldPrefix}target.selector.start", rangeStart),
+                lte("${annotationFieldPrefix}target.selector.end", rangeEnd),
             ),
-            skip(offset), // start at offset
-            paginationStage // return $pageSize documents or less
+            containerName = containerName,
+            targetSource = targetSource,
+            rangeStart = rangeStart,
+            rangeEnd = rangeEnd,
+            page = page
         )
-            .map { document -> toAnnotationMap(document, containerName) }
-            .toList()
-        val searchURL =
-            "${configuration.externalBaseUrl}/${ResourcePaths.SEARCH}/$containerName/$withinRange?" +
-                    "target.source=$targetSource&range.start=$rangeStart&range.end=$rangeEnd"
-        val annotationPage = buildAnnotationPage(searchURL, annotations, page)
-        return Response.ok(annotationPage).build()
-    }
 
     @Operation(description = "Find annotations that overlap with the given range")
     @Timed
@@ -124,28 +119,49 @@ class SearchResource(
         @QueryParam("range.start") rangeStart: Float,
         @QueryParam("range.end") rangeEnd: Float,
         @QueryParam("page") page: Int = 0
+    ): Response =
+        filterContainerAnnotationsWithRange(
+            searchType = overlappingWithRange,
+            matchPattern = and(
+                eq("${annotationFieldPrefix}target.source", targetSource),
+                eq("${annotationFieldPrefix}target.selector.type", selectorType),
+                lt("${annotationFieldPrefix}target.selector.start", rangeEnd),
+                gt("${annotationFieldPrefix}target.selector.end", rangeStart),
+            ),
+            containerName = containerName,
+            targetSource = targetSource,
+            rangeStart = rangeStart,
+            rangeEnd = rangeEnd,
+            page = page
+        )
+
+    private fun filterContainerAnnotationsWithRange(
+        searchType: String,
+        matchPattern: Bson,
+        containerName: String,
+        targetSource: String,
+        rangeStart: Float,
+        rangeEnd: Float,
+        page: Int
     ): Response {
         val collection = mdb.getCollection(containerName)
-        val annotationFieldPrefix = "annotation."
         val offset = page * configuration.pageSize
         val annotations = collection.aggregate<Document>(
-            match(
-                and(
-                    eq("${annotationFieldPrefix}target.source", targetSource),
-                    eq("${annotationFieldPrefix}target.selector.type", selectorType),
-                    lt("${annotationFieldPrefix}target.selector.start", rangeEnd),
-                    gt("${annotationFieldPrefix}target.selector.end", rangeStart),
-                )
-            ),
+            match(matchPattern),
             skip(offset), // start at offset
             paginationStage // return $pageSize documents or less
         )
             .map { document -> toAnnotationMap(document, containerName) }
             .toList()
-        val searchURL =
-            "${configuration.externalBaseUrl}/${ResourcePaths.SEARCH}/$containerName/$overlappingWithRange?" +
-                    "target.source=$targetSource&range.start=$rangeStart&range.end=$rangeEnd"
-        val annotationPage = buildAnnotationPage(searchURL, annotations, page)
+        val uri = UriBuilder.fromUri(configuration.externalBaseUrl)
+            .path(SEARCH)
+            .path(containerName)
+            .path(searchType)
+            .queryParam("target.source", targetSource)
+            .queryParam("range.start", rangeStart)
+            .queryParam("range.end", rangeEnd)
+            .build()
+        val annotationPage = buildAnnotationPage(uri.toString(), annotations, page)
         return Response.ok(annotationPage).build()
     }
 
