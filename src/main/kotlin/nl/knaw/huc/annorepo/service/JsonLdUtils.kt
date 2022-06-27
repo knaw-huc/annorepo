@@ -2,11 +2,23 @@
 
 package nl.knaw.huc.annorepo.service
 
+import com.apicatalog.jsonld.JsonLd
+import com.apicatalog.jsonld.document.JsonDocument
+import com.apicatalog.jsonld.document.RdfDocument
 import org.bson.Document
+import java.io.StringReader
 
 object JsonLdUtils {
+    data class JsonLdReport(val isValid: Boolean = false, val invalidFields: List<String> = emptyList())
 
     fun checkFieldContext(jsonld: String): JsonLdReport {
+        val originalfields = extractFields(jsonld)
+        val reader = StringReader(jsonld)
+        val doc = JsonDocument.of(reader)
+        val rdf = JsonLd.toRdf(doc).get()
+        val expanded = JsonLd.expand(doc).get()
+        val rd = RdfDocument.of(rdf)
+        val x = JsonLd.fromRdf(rd).get()
         val isValid = false
         return JsonLdReport(isValid)
     }
@@ -34,5 +46,4 @@ object JsonLdUtils {
             }
         }
 
-    data class JsonLdReport(val isValid: Boolean = false, val invalidFields: List<String> = emptyList())
 }
