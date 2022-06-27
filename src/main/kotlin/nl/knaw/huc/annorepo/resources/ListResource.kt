@@ -5,6 +5,7 @@ import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Filters.exists
 import io.swagger.v3.oas.annotations.Operation
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
+import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.service.UriFactory
@@ -32,7 +33,9 @@ class ListResource(
     @GET
     @Path("containers")
     fun getContainerURLs(): List<String> =
-        mdb.listCollectionNames().map {
+        mdb.listCollectionNames().filter {
+            it != CONTAINER_METADATA_COLLECTION
+        }.map {
             uriFactory.containerURL(it).toString()
         }.toList()
 
