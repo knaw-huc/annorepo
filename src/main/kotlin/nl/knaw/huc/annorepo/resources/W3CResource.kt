@@ -36,6 +36,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.EntityTag
 import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.MediaType.APPLICATION_JSON
 import javax.ws.rs.core.Request
 import javax.ws.rs.core.Response
 
@@ -160,7 +161,7 @@ class W3CResource(
     @Timed
     @POST
     @Path("{containerName}")
-    @Consumes(ANNOTATION_MEDIA_TYPE)
+    @Consumes(ANNOTATION_MEDIA_TYPE, APPLICATION_JSON)
     fun createAnnotation(
         @HeaderParam("slug") slug: String?,
         @PathParam("containerName") containerName: String,
@@ -237,7 +238,7 @@ class W3CResource(
     @Timed
     @PUT
     @Path("{containerName}/{annotationName}")
-    @Consumes(ANNOTATION_MEDIA_TYPE)
+    @Consumes(ANNOTATION_MEDIA_TYPE, APPLICATION_JSON)
     fun updateAnnotation(
         @PathParam("containerName") containerName: String,
         @PathParam("annotationName") annotationName: String,
