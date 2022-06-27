@@ -16,7 +16,6 @@ import io.swagger.v3.oas.annotations.Operation
 import nl.knaw.huc.annorepo.api.ARConst.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ARConst.LDP_JSONLD_URL
 import nl.knaw.huc.annorepo.api.AnnotationPage
-import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.api.ResourcePaths.SEARCH
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.service.UriFactory
@@ -25,6 +24,7 @@ import org.bson.conversions.Bson
 import org.eclipse.jetty.util.ajax.JSON
 import org.json.JSONObject
 import org.litote.kmongo.aggregate
+import java.net.URI
 import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -35,7 +35,7 @@ import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
 
-@Path(ResourcePaths.SEARCH)
+@Path(SEARCH)
 @Produces(MediaType.APPLICATION_JSON)
 class SearchResource(
     private val configuration: AnnoRepoConfiguration,
@@ -75,7 +75,7 @@ class SearchResource(
             val annotations =
                 container.aggregate(aggregateStages).map { a -> toAnnotationMap(a, containerName) }.toList()
             val searchURL =
-                "${configuration.externalBaseUrl}/${ResourcePaths.SEARCH}/$containerName/annotations"
+                "${configuration.externalBaseUrl}/$SEARCH/$containerName/annotations"
             val startIndex = 0
             val entity = annotationPage(annotations, searchURL, startIndex)
             return Response.ok(entity).build()
@@ -161,12 +161,12 @@ class SearchResource(
             .queryParam("range.start", rangeStart)
             .queryParam("range.end", rangeEnd)
             .build()
-        val annotationPage = buildAnnotationPage(uri.toString(), annotations, page)
+        val annotationPage = buildAnnotationPage(uri, annotations, page)
         return Response.ok(annotationPage).build()
     }
 
     private fun buildAnnotationPage(
-        searchURL: String,
+        searchUri: URI,
         annotations: List<Map<String, Any>>,
         page: Int
     ): AnnotationPage {
@@ -182,14 +182,20 @@ class SearchResource(
         }
 
         return AnnotationPage(
-            id = "$searchURL&page=$page",
-            partOf = searchURL,
+            id = searchPageUri(searchUri, page),
+            partOf = searchUri.toString(),
             startIndex = page,
             items = annotations,
-            prev = if (prevPage != null) "$searchURL&page=$prevPage" else null,
-            next = if (nextPage != null) "$searchURL&page=$nextPage" else null
+            prev = if (prevPage != null) searchPageUri(searchUri, prevPage) else null,
+            next = if (nextPage != null) searchPageUri(searchUri, nextPage) else null
         )
     }
+
+    private fun searchPageUri(searchUri: URI, page: Int) =
+        UriBuilder.fromUri(searchUri)
+            .queryParam("page", page)
+            .build()
+            .toString()
 
     private fun toAnnotationMap(a: Document, containerName: String): Map<String, Any> =
         a.get("annotation", Document::class.java)
