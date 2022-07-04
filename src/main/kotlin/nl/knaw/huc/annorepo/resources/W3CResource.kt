@@ -35,7 +35,6 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.EntityTag
-import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.MediaType.APPLICATION_JSON
 import javax.ws.rs.core.Request
 import javax.ws.rs.core.Response
@@ -54,7 +53,7 @@ class W3CResource(
     @Operation(description = "Create an Annotation Container")
     @Timed
     @POST
-    @Consumes(ANNOTATION_MEDIA_TYPE, MediaType.APPLICATION_JSON)
+    @Consumes(ANNOTATION_MEDIA_TYPE, APPLICATION_JSON)
     fun createContainer(
         containerSpecs: ContainerSpecs,
         @HeaderParam("slug") slug: String?,
@@ -69,7 +68,7 @@ class W3CResource(
         storeCollectionMetadata(containerSpecs.label, containerName)
         val containerData = getContainerPage(containerName, 0, configuration.pageSize)
         val uri = uriFactory.containerURL(containerName)
-        val eTag = makeETag(containerName)
+        val eTag = makeContainerETag(containerName)
         return Response.created(uri)
             .contentLocation(uri)
             .header("Vary", "Accept")
@@ -79,12 +78,6 @@ class W3CResource(
             .tag(eTag)
             .entity(containerData)
             .build()
-    }
-
-    private fun storeCollectionMetadata(label: String, name: String) {
-        val cmd = ContainerMetadata(name, label)
-        val containerMetadataStore = mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
-        containerMetadataStore.insertOne(cmd)
     }
 
     @Operation(description = "Get an Annotation Container")
@@ -98,7 +91,7 @@ class W3CResource(
         log.debug("read Container $containerName, page $page")
         val containerPage = getContainerPage(containerName, page ?: 0, configuration.pageSize)
         val uri = uriFactory.containerURL(containerName)
-        val eTag = makeETag(containerName)
+        val eTag = makeContainerETag(containerName)
         return when {
             containerPage != null -> {
                 val entity =
@@ -119,9 +112,6 @@ class W3CResource(
 
     }
 
-    private fun makeETag(containerName: String): EntityTag =
-        EntityTag(containerName.hashCode().toString())
-
     @Operation(description = "Delete an empty Annotation Container")
     @Timed
     @DELETE
@@ -131,7 +121,7 @@ class W3CResource(
         @Context req: Request
     ): Response {
         log.debug("delete Container $containerName")
-        val eTag = makeETag(containerName)
+        val eTag = makeContainerETag(containerName)
         val valid = req.evaluatePreconditions(eTag)
         val containerPage = getContainerPage(containerName, 0, configuration.pageSize)
         return when {
@@ -147,11 +137,16 @@ class W3CResource(
             }
             containerPage.total == 0L -> {
                 mdb.getCollection(containerName).drop()
+                val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
+                containerMetadataCollection.deleteOne(Document("name", containerName))
                 Response.noContent().build()
             }
             else -> {
                 Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Container $containerName is not empty, all annotations need to be removed from this container first.")
+                    .entity(
+                        "Container $containerName is not empty," +
+                                " all annotations need to be removed from this container first."
+                    )
                     .build()
             }
         }
@@ -172,7 +167,10 @@ class W3CResource(
         val container = mdb.getCollection(containerName)
         val existingAnnotationDocument = container.find(Document("annotation_name", name)).first()
         if (existingAnnotationDocument != null) {
-            log.warn("An annotation with the suggested name $name already exists in container $containerName, generating a new name.")
+            log.warn(
+                "An annotation with the suggested name $name already exists in container $containerName," +
+                        " generating a new name."
+            )
             name = UUID.randomUUID().toString()
         }
         val annotationDocument = Document.parse(annotationJson)
@@ -186,7 +184,7 @@ class W3CResource(
             Date.from(Instant.now())
         )
         val uri = uriFactory.annotationURL(containerName, name)
-        val eTag = makeETag(name)
+        val eTag = makeAnnotationETag(containerName, name)
         val entity = annotationData.contentWithAssignedId(containerName, name)
         return Response.created(uri)
             .header("Vary", "Accept")
@@ -222,7 +220,7 @@ class W3CResource(
                 Date.from(Instant.now())
             )
             val entity = annotationData.contentWithAssignedId(containerName, annotationName)
-            val eTag = makeETag(annotationName)
+            val eTag = makeAnnotationETag(containerName, annotationName)
             Response.ok(entity)
                 .header("Vary", "Accept")
                 .allow("POST", "PUT", "GET", "DELETE", "OPTIONS", "HEAD")
@@ -245,14 +243,14 @@ class W3CResource(
         annotationJson: String
     ): Response {
 //        log.debug("annotation=\n$annotationJson")
-        val uri = uriFactory.annotationURL(containerName, annotationName)
+//        val uri = uriFactory.annotationURL(containerName, annotationName)
         val container = mdb.getCollection(containerName)
         val existingAnnotationDocument = container.find(Document("annotation_name", annotationName)).first()
             ?: return Response.status(Response.Status.NOT_FOUND).build()
         val annotationDocument = Document.parse(annotationJson)
         val doc = Document("annotation_name", annotationName).append("annotation", annotationDocument)
         val r = container.updateOne(existingAnnotationDocument, annotationDocument).upsertedId?.asObjectId()?.value
-        val eTag = makeETag(annotationName)
+        val eTag = makeContainerETag(annotationName)
         val annotationData = AnnotationData(
             r!!.timestamp.toLong(),
             annotationName,
@@ -277,11 +275,25 @@ class W3CResource(
     @Path("{containerName}/{annotationName}")
     fun deleteAnnotation(
         @PathParam("containerName") containerName: String,
-        @PathParam("annotationName") annotationName: String
-    ) {
+        @PathParam("annotationName") annotationName: String,
+        @Context req: Request
+    ): Response {
         log.debug("delete annotation $annotationName in container $containerName")
+        val eTag = makeAnnotationETag(containerName, annotationName)
+        req.evaluatePreconditions(eTag)
+            ?: return Response.status(Response.Status.PRECONDITION_FAILED)
+                .entity("Etag does not match")
+                .build()
+
         val container = mdb.getCollection(containerName)
         container.findOneAndDelete(Document("annotation_name", annotationName))
+        return Response.noContent().build()
+    }
+
+    private fun storeCollectionMetadata(label: String, name: String) {
+        val cmd = ContainerMetadata(name, label)
+        val containerMetadataStore = mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
+        containerMetadataStore.insertOne(cmd)
     }
 
     private fun AnnotationData.contentWithAssignedId(
@@ -354,5 +366,11 @@ class W3CResource(
                 )
                 remove("@context")
             }
+
+    private fun makeContainerETag(containerName: String): EntityTag =
+        EntityTag(containerName.hashCode().toString(), true)
+
+    private fun makeAnnotationETag(containerName: String, annotationName: String): EntityTag =
+        EntityTag("$containerName/$annotationName".hashCode().toString(), true)
 
 }
