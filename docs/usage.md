@@ -37,15 +37,80 @@ Content-Type: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
 #### Response
 
 ```
-HTTP/1.1 201 CREATED
+HTTP/1.1 201 Created
 
-Accept-Post: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld", text/turtle
-Allow: POST,GET,OPTIONS,HEAD
-Content-Location: http://localhost:9999/w3c/my-container/
-Content-Type: application/ld+json;charset=UTF-8
-Link: <http://www.w3.org/ns/ldp#BasicContainer>; rel="type", <http://www.w3.org/TR/annotation-protocol/>; rel="http://www.w3.org/ns/ldp#constrainedBy"
+Location: http://localhost:9999/w3c/137d2619-7bcd-41c9-abc3-7ec78733993c/
+Content-Location: http://localhost:9999/w3c/137d2619-7bcd-41c9-abc3-7ec78733993c/
+Vary: Accept
+Link: <http://www.w3.org/ns/ldp#BasicContainer>; rel="type"
+Link: <http://www.w3.org/TR/annotation-protocol>; rel="http://www.w3.org/ns/ldp#constrainedBy"
+Allow: HEAD,DELETE,POST,GET,OPTIONS
+ETag: W/"-1172057598"
+Content-Type: application/ld+json;profile="http://www.w3.org/ns/anno.jsonld"
+Content-Length: 548
+
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "http://www.w3.org/ns/ldp.jsonld"
+  ],
+  "id": "http://localhost:9999/w3c/137d2619-7bcd-41c9-abc3-7ec78733993c/",
+  "type": [
+    "BasicContainer",
+    "AnnotationCollection"
+  ],
+  "total": 0,
+  "label": "A Container for Web Annotations",
+  "first": {
+    "id": "http://localhost:9999/w3c/137d2619-7bcd-41c9-abc3-7ec78733993c/?page=0",
+    "type": "AnnotationPage",
+    "partOf": "http://localhost:9999/w3c/137d2619-7bcd-41c9-abc3-7ec78733993c/",
+    "startIndex": 0,
+    "items": []
+  },
+  "last": "http://localhost:9999/w3c/137d2619-7bcd-41c9-abc3-7ec78733993c/?page=0"
+}
+```
+
+Use a `slug` header to choose your own container name. If a container with the same name already exists, AnnoRepo will
+generate a new one.
+
+#### Request
+
+```
+POST http://localhost:9999/w3c/ HTTP/1.1
+
+Accept: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
+Content-Type: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
+Slug: "my-container"
+
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "http://www.w3.org/ns/ldp.jsonld"
+  ],
+  "type": [
+    "BasicContainer",
+    "AnnotationCollection"
+  ],
+  "label": "A Container for Web Annotations"
+}
+```
+
+#### Response
+
+```
+HTTP/1.1 201 Created
+
 Location: http://localhost:9999/w3c/my-container/
-Vary: Origin, Accept, Prefer
+Content-Location: http://localhost:9999/w3c/my-container/
+Vary: Accept
+Link: <http://www.w3.org/ns/ldp#BasicContainer>; rel="type"
+Link: <http://www.w3.org/TR/annotation-protocol>; rel="http://www.w3.org/ns/ldp#constrainedBy"
+Allow: HEAD,DELETE,POST,GET,OPTIONS
+ETag: W/"2133202336"
+Content-Type: application/ld+json;profile="http://www.w3.org/ns/anno.jsonld"
+Content-Length: 452
 
 {
   "@context": [
@@ -57,17 +122,16 @@ Vary: Origin, Accept, Prefer
     "BasicContainer",
     "AnnotationCollection"
   ],
+  "total": 0,
   "label": "A Container for Web Annotations",
   "first": {
+    "id": "http://localhost:9999/w3c/my-container/?page=0",
     "type": "AnnotationPage",
-    "as:items": {
-      "@list": []
-    },
     "partOf": "http://localhost:9999/w3c/my-container/",
-    "startIndex": 0
+    "startIndex": 0,
+    "items": []
   },
-  "last": "http://localhost:9999/w3c/my-container/?page=0&desc=1",
-  "total": 0
+  "last": "http://localhost:9999/w3c/my-container/?page=0"
 }
 ```
 
@@ -84,15 +148,17 @@ Accept: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
 #### Response
 
 ```
-
 HTTP/1.1 200 OK
-
-Accept-Post: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld", text/turtle
-Allow: POST,GET,OPTIONS,HEAD
+Date: Mon, 04 Jul 2022 15:42:22 GMT
 Content-Location: http://localhost:9999/w3c/my-container/
-Content-Type: application/ld+json;charset=UTF-8
-Link: <http://www.w3.org/ns/ldp#BasicContainer>; rel="type", <http://www.w3.org/TR/annotation-protocol/>; rel="http://www.w3.org/ns/ldp#constrainedBy"
-Vary: Accept,Prefer
+Vary: Accept
+Link: <http://www.w3.org/ns/ldp#BasicContainer>; rel="type"
+Link: <http://www.w3.org/TR/annotation-protocol/>; rel="http://www.w3.org/ns/ldp#constrainedBy"
+Allow: HEAD,DELETE,POST,GET,OPTIONS
+ETag: W/"2133202336"
+Content-Type: application/ld+json;profile="http://www.w3.org/ns/anno.jsonld"
+Vary: Accept-Encoding
+Content-Length: 452
 
 {
   "@context": [
@@ -104,17 +170,16 @@ Vary: Accept,Prefer
     "BasicContainer",
     "AnnotationCollection"
   ],
+  "total": 0,
   "label": "A Container for Web Annotations",
   "first": {
+    "id": "http://localhost:9999/w3c/my-container/?page=0",
     "type": "AnnotationPage",
-    "as:items": {
-      "@list": []
-    },
     "partOf": "http://localhost:9999/w3c/my-container/",
-    "startIndex": 0
+    "startIndex": 0,
+    "items": []
   },
-  "last": "http://localhost:9999/w3c/my-container/?page=0&desc=1",
-  "total": 0
+  "last": "http://localhost:9999/w3c/my-container/?page=0"
 }
 ```
 
@@ -122,27 +187,20 @@ Vary: Accept,Prefer
 
 Deleting an annotation container is only possible if the container doesn't contain any annotations.
 
+The `If-Match` header must contain the Etag of the container.
+
 #### Request
 
 ```
 DELETE http://localhost:9999/w3c/my-container/ HTTP/1.1
 
+If-Match: 2133202336
 ```
 
 #### Response
 
 ```
-
-HTTP/1.1 200 OK
-
-Accept-Post: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld", text/turtle
-Allow: POST,GET,OPTIONS,HEAD
-Content-Location: http://localhost:9999/w3c/my-container/
-Content-Type: application/ld+json;charset=UTF-8
-Link: <http://www.w3.org/ns/ldp#BasicContainer>; rel="type", <http://www.w3.org/TR/annotation-protocol/>; rel="http://www.w3.org/ns/ldp#constrainedBy"
-Vary: Accept,Prefer
-
-{
+HTTP/1.1 204 No Content
 ```
 
 ## Annotations
