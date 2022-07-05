@@ -38,6 +38,7 @@ import javax.ws.rs.core.EntityTag
 import javax.ws.rs.core.MediaType.APPLICATION_JSON
 import javax.ws.rs.core.Request
 import javax.ws.rs.core.Response
+import kotlin.math.abs
 
 @Path(ResourcePaths.W3C)
 @Produces(ANNOTATION_MEDIA_TYPE)
@@ -240,19 +241,26 @@ class W3CResource(
     fun updateAnnotation(
         @PathParam("containerName") containerName: String,
         @PathParam("annotationName") annotationName: String,
+        @Context req: Request,
         annotationJson: String
     ): Response {
-//        log.debug("annotation=\n$annotationJson")
-//        val uri = uriFactory.annotationURL(containerName, annotationName)
-        val container = mdb.getCollection(containerName)
-        val existingAnnotationDocument = container.find(Document("annotation_name", annotationName)).first()
-            ?: return Response.status(Response.Status.NOT_FOUND).build()
+        log.debug("annotation=\n$annotationJson")
+        val eTag = makeAnnotationETag(containerName, annotationName)
+        req.evaluatePreconditions(eTag)
+            ?: return Response.status(Response.Status.PRECONDITION_FAILED)
+                .entity("Etag does not match")
+                .build()
         val annotationDocument = Document.parse(annotationJson)
+        val container = mdb.getCollection(containerName)
+        container.find(Document("annotation_name", annotationName)).first()
+            ?: return Response.status(Response.Status.NOT_FOUND).build()
         val doc = Document("annotation_name", annotationName).append("annotation", annotationDocument)
-        val r = container.updateOne(existingAnnotationDocument, annotationDocument).upsertedId?.asObjectId()?.value
-        val eTag = makeContainerETag(annotationName)
+        val updateResult = container.replaceOne(Filters.eq("annotation_name", annotationName), doc)
+        if (!updateResult.wasAcknowledged()) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Failed to update annotation").build()
+        }
         val annotationData = AnnotationData(
-            r!!.timestamp.toLong(),
+            Instant.now().toEpochMilli(),
             annotationName,
             doc.getEmbedded(listOf("annotation"), Document::class.java).toJson(),
             Date.from(Instant.now()),
@@ -368,9 +376,9 @@ class W3CResource(
             }
 
     private fun makeContainerETag(containerName: String): EntityTag =
-        EntityTag(containerName.hashCode().toString(), true)
+        EntityTag(abs(containerName.hashCode()).toString(), true)
 
     private fun makeAnnotationETag(containerName: String, annotationName: String): EntityTag =
-        EntityTag("$containerName/$annotationName".hashCode().toString(), true)
+        EntityTag(abs("$containerName/$annotationName".hashCode()).toString(), true)
 
 }
