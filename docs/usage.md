@@ -207,16 +207,19 @@ HTTP/1.1 204 No Content
 
 ### adding an annotation to a given annotation container
 
+As with the container creation, you can let annorepo pick the annotation name:
+
 #### Request
 
 ```
-POST http://localhost:9999/w3c/mycontainer/ HTTP/1.1
+POST http://localhost:9999/w3c/my-container/ HTTP/1.1
 
 Accept: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
 Content-Type: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
 
 {
   "@context": "http://www.w3.org/ns/anno.jsonld",
+  "id": "http://example.org/annotations/myannotation"
   "type": "Annotation",
   "body": {
     "type": "TextualBody",
@@ -231,22 +234,74 @@ Content-Type: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
 ```
 HTTP/1.1 201 CREATED
 
-Allow: PUT,GET,OPTIONS,HEAD,DELETE
-Content-Type: application/ld+json;charset=UTF-8
-ETag: W/"797c2ee5253966de8882f496c25dd823"
+Location: http://localhost:9999/w3c/my-container/0bb16696-245c-4614-955f-78dec7065f60
+Vary: Accept
+Allow: HEAD,DELETE,POST,GET,OPTIONS,PUT
 Link: <http://www.w3.org/ns/ldp#Resource>; rel="type"
-Location: http://localhost:9999/w3c/my-container/my-annotation
-Vary: Origin, Accept
+Link: <http://www.w3.org/ns/ldp#Annotation>; rel="type"
+ETag: W/"-1699442532"
+Content-Type: application/ld+json;profile="http://www.w3.org/ns/anno.jsonld"
+Content-Length: 305
+
+{
+   "@context": "http://www.w3.org/ns/anno.jsonld",
+   "id": "http://localhost:9999/w3c/my-container/0bb16696-245c-4614-955f-78dec7065f60",
+   "type": "Annotation",
+   "body": {
+      "type": "TextualBody",
+      "value": "I like this page!"
+   },
+   "target": "http://www.example.com/index.html",
+   "via": "http://example.org/annotations/myannotation"
+}
+```
+
+or, you can add a `Slug` header to set the name. When the preferred name is already in use in the container, AnnoRepo
+will pick the name:
+
+```
+POST http://localhost:9999/w3c/my-container/ HTTP/1.1
+
+Accept: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
+Content-Type: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
+Slug: hello-world
 
 {
   "@context": "http://www.w3.org/ns/anno.jsonld",
-  "id": "http://localhost:9999/w3c/my-container/my-annotation",
+  "id": "http://example.org/annotations/my-annotation",
   "type": "Annotation",
   "body": {
     "type": "TextualBody",
-    "value": "I like this page!"
+    "value": "Hello!"
   },
-  "target": "http://www.example.com/index.html",
+  "target": "http://www.example.com/world.html"
+}
+```
+
+#### Response
+
+```
+HTTP/1.1 201 CREATED
+
+Location: http://localhost:9999/w3c/my-container/hello-world
+Vary: Accept
+Allow: HEAD,DELETE,POST,GET,OPTIONS,PUT
+Link: <http://www.w3.org/ns/ldp#Resource>; rel="type"
+Link: <http://www.w3.org/ns/ldp#Annotation>; rel="type"
+ETag: W/"1303452440"
+Content-Type: application/ld+json;profile="http://www.w3.org/ns/anno.jsonld"
+Content-Length: 270
+
+{
+   "@context": "http://www.w3.org/ns/anno.jsonld",
+   "id": "http://localhost:9999/w3c/my-container/hello-world",
+   "type": "Annotation",
+   "body": {
+      "type": "TextualBody",
+      "value": "Hello!"
+   },
+   "target": "http://www.example.com/world.html",
+   "via": "http://example.org/annotations/my-annotation"
 }
 ```
 
@@ -265,21 +320,26 @@ Accept: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
 ```
 HTTP/1.1 200 OK
 
-Allow: PUT,GET,OPTIONS,HEAD,DELETE
-Content-Type: application/ld+json;charset=UTF-8
-ETag: W/"797c2ee5253966de8882f496c25dd823"
-Link: <http://www.w3.org/ns/ldp#Resource>; rel="type"
 Vary: Accept
+Allow: HEAD,DELETE,POST,GET,OPTIONS,PUT
+Link: <http://www.w3.org/ns/ldp#Resource>; rel="type"
+Link: <http://www.w3.org/ns/ldp#Annotation>; rel="type"
+Last-Modified: Tue, 05 Jul 2022 09:04:53 GMT
+ETag: W/"-1518598207"
+Content-Type: application/ld+json;profile="http://www.w3.org/ns/anno.jsonld"
+Vary: Accept-Encoding
+Content-Length: 272
 
 {
-  "@context": "http://www.w3.org/ns/anno.jsonld",
-  "id": "http://localhost:9999/w3c/my-container/my-annotation",
-  "type": "Annotation",
-  "body": {
-    "type": "TextualBody",
-    "value": "I like this page!"
-  },
-  "target": "http://www.example.com/index.html",
+   "id": "http://localhost:9999/w3c/my-container/my-annotation",
+   "type": "Annotation",
+   "body": {
+      "type": "TextualBody",
+      "value": "Hello!"
+   },
+   "@context": "http://www.w3.org/ns/anno.jsonld",
+   "target": "http://www.example.com/world.html",
+   "via": "http://example.org/annotations/my-annotation"
 }
 ```
 
@@ -288,22 +348,21 @@ Vary: Accept
 #### Request
 
 ```
-PUT http://localhost:9999/w3c/my-container/my-annotation HTTP/1.1
+PUT http://localhost:9999/w3c/my-container/hello-world HTTP/1.1
 
 Accept: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
 Content-Type: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
-If-Match: 797c2ee5253966de8882f496c25dd823
+If-Match: "1303452440"
 
 {
   "@context": "http://www.w3.org/ns/anno.jsonld",
-  "id": "http://localhost:9999/w3c/mycontainer/anno1",
+  "id": "http://example.org/annotations/my-annotation",
   "type": "Annotation",
-  "created": "2015-01-31T12:03:45Z",
   "body": {
     "type": "TextualBody",
-    "value": "I don't like this page!"
+    "value": "Goodbye!"
   },
-  "target": "http://www.example.com/index.html"
+  "target": "http://www.example.com/world.html"
 }
 ```
 
@@ -312,32 +371,36 @@ If-Match: 797c2ee5253966de8882f496c25dd823
 ```
 HTTP/1.1 200 OK
 
-Allow: PUT,GET,OPTIONS,HEAD,DELETE
-Content-Type: application/ld+json;charset=UTF-8
-ETag: W/"24d535a13f2c16e2701bf46b11407cea"
+Vary: Accept
+Allow: HEAD,DELETE,POST,GET,OPTIONS,PUT
 Link: <http://www.w3.org/ns/ldp#Resource>; rel="type"
-Vary: Origin, Accept
+Link: <http://www.w3.org/ns/ldp#Annotation>; rel="type"
+ETag: W/"1303452440"
+Content-Type: application/ld+json;profile="http://www.w3.org/ns/anno.jsonld"
 
 {
   "@context": "http://www.w3.org/ns/anno.jsonld",
-  "id": "http://localhost:9999/w3c/my-collection/my-annotation",
+  "id": "http://localhost:9999/w3c/my-container/hello-world",
   "type": "Annotation",
   "body": {
     "type": "TextualBody",
-    "value": "I like this page!"
+    "value": "Goodbye!"
   },
-  "target": "http://www.example.com/index.html"
+  "target": "http://www.example.com/world.html",
+  "via": "http://example.org/annotations/my-annotation"
 }
 ```
 
 ### deleting an annotation
 
+When deleting an annotation, you need to send its Etag in the `if-match` header.
+
 #### Request
 
 ```
-DELETE http://localhost:9999/w3c/my-container/my-annotation HTTP/1.1
+DELETE http://localhost:9999/w3c/my-container/hello-world HTTP/1.1
 
-If-Match: 24d535a13f2c16e2701bf46b11407cea
+If-Match: "1303452440"
 ```
 
 #### Response
@@ -351,44 +414,76 @@ HTTP/1.1 204 No Content
 #### Request
 
 ```
-POST http://localhost:9999/w3c/mycontainer/ HTTP/1.1
+POST http://localhost:9999/batch/my-container/annotations HTTP/1.1
+Content-Type: application/json
 
-Accept: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
-Content-Type: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
-
-{
-  "@context": "http://www.w3.org/ns/anno.jsonld",
-  "type": "Annotation",
-  "body": {
-    "type": "TextualBody",
-    "value": "I like this page!"
+[
+  {
+    "@context": "http://www.w3.org/ns/anno.jsonld",
+    "type": "Annotation",
+    "body": {
+      "type": "TextualBody",
+      "value": "An annotation"
+    },
+    "target": "http://www.example.com/page1.html"
   },
-  "target": "http://www.example.com/index.html"
-}
+  {
+    "@context": "http://www.w3.org/ns/anno.jsonld",
+    "type": "Annotation",
+    "body": {
+      "type": "TextualBody",
+      "value": "Another annotation!"
+    },
+    "target": "http://www.example.com/index.html"
+  },
+  {
+    "@context": "http://www.w3.org/ns/anno.jsonld",
+    "type": "Annotation",
+    "body": {
+      "type": "TextualBody",
+      "value": "A third annotation"
+    },
+    "target": "http://www.example.com/page3.html"
+  },
+  {
+    "@context": "http://www.w3.org/ns/anno.jsonld",
+    "type": "Annotation",
+    "body": {
+      "type": "TextualBody",
+      "value": "Number four"
+    },
+    "target": "http://www.example.com/index.html"
+  },
+  {
+    "@context": "http://www.w3.org/ns/anno.jsonld",
+    "type": "Annotation",
+    "body": {
+      "type": "TextualBody",
+      "value": "The last, for now"
+    },
+    "target": "http://www.example.com/index.html"
+  }
+]
 ```
 
 #### Response
 
+The batch request will return a list of the generated annotation names
+
 ```
-HTTP/1.1 201 CREATED
+HTTP/1.1 200 OK
 
-Allow: PUT,GET,OPTIONS,HEAD,DELETE
-Content-Type: application/ld+json;charset=UTF-8
-ETag: W/"797c2ee5253966de8882f496c25dd823"
-Link: <http://www.w3.org/ns/ldp#Resource>; rel="type"
-Location: http://localhost:9999/w3c/my-container/my-annotation
-Vary: Origin, Accept
-
-{
-  "@context": "http://www.w3.org/ns/anno.jsonld",
-  "id": "http://localhost:9999/w3c/my-container/my-annotation",
-  "type": "Annotation",
-  "body": {
-    "type": "TextualBody",
-    "value": "I like this page!"
-  },
-  "target": "http://www.example.com/index.html",
-}
+Content-Type: application/json
+Content-Length: 23
+    
+[
+   "9de49b24-97d8-4e7a-8167-c043723ef672",
+   "82866a01-dd23-4f4b-896b-3e30cb7bff5c",
+   "8f2aa0c5-379b-4705-b1be-9c72627fb153",
+   "623fa415-6206-4b0f-9268-ae13be1b4fba",
+   "358d775e-106e-4232-b39e-8129035fd43d",
+   "a1f6d1a5-af08-4779-b35a-d36e695a9d4e"
+]
 ```
 
 ## Querying
@@ -398,7 +493,7 @@ Vary: Origin, Accept
 #### Request
 
 ```
-POST http://localhost:9999/w3c/mycontainer/ HTTP/1.1
+POST http://localhost:9999/search/my-container/annotation HTTP/1.1
 
 ```
 
@@ -414,7 +509,7 @@ HTTP/1.1 201 CREATED
 #### Request
 
 ```
-POST http://localhost:9999/w3c/mycontainer/ HTTP/1.1
+POST http://localhost:9999/w3c/my-container/ HTTP/1.1
 
 ```
 
@@ -430,7 +525,7 @@ HTTP/1.1 201 CREATED
 #### Request
 
 ```
-POST http://localhost:9999/w3c/mycontainer/ HTTP/1.1
+POST http://localhost:9999/w3c/my-container/ HTTP/1.1
 
 ```
 
