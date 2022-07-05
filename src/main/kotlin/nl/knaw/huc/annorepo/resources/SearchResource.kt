@@ -4,7 +4,6 @@ import com.codahale.metrics.annotation.Timed
 import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Aggregates.limit
 import com.mongodb.client.model.Aggregates.match
-import com.mongodb.client.model.Aggregates.project
 import com.mongodb.client.model.Aggregates.skip
 import com.mongodb.client.model.Filters.and
 import com.mongodb.client.model.Filters.eq
@@ -44,7 +43,6 @@ class SearchResource(
     private val uriFactory = UriFactory(configuration)
     private val mdb = client.getDatabase(configuration.databaseName)
 
-    private val annotationProjectStage = project(Document("annotation", 1).append("_id", 0))
     private val paginationStage = limit(configuration.pageSize)
 
     private val withinRange = "within_range"
@@ -69,7 +67,6 @@ class SearchResource(
             }.toMutableList().apply {
                 add(skip(0))
                 add(paginationStage)
-                add(annotationProjectStage)
             }
             val annotations =
                 container.aggregate(aggregateStages).map { a -> toAnnotationMap(a, containerName) }.toList()
@@ -216,7 +213,7 @@ class SearchResource(
             LDP_JSONLD_URL
         ),
         "type" to "AnnotationPage",
-        "items" to mapOf("@list" to urls),
+        "items" to urls,
         "partOf" to partOfURL,
         "startIndex" to startIndex
     )
