@@ -22,7 +22,6 @@ import nl.knaw.huc.annorepo.service.UriFactory
 import org.bson.Document
 import org.bson.conversions.Bson
 import org.eclipse.jetty.util.ajax.JSON
-import org.json.JSONObject
 import org.litote.kmongo.aggregate
 import java.net.URI
 import javax.ws.rs.GET
@@ -211,17 +210,15 @@ class SearchResource(
         urls: List<Map<String, Any>>,
         partOfURL: String,
         startIndex: Int
-    ) = JSONObject(
-        mapOf(
-            "@context" to listOf(
-                ANNO_JSONLD_URL,
-                LDP_JSONLD_URL
-            ),
-            "type" to "AnnotationPage",
-            "as:items" to mapOf("@list" to urls),
-            "partOf" to partOfURL,
-            "startIndex" to startIndex
-        )
-    ).toMap()
+    ): Map<String, Any> = mapOf(
+        "@context" to listOf(
+            ANNO_JSONLD_URL,
+            LDP_JSONLD_URL
+        ),
+        "type" to "AnnotationPage",
+        "items" to mapOf("@list" to urls),
+        "partOf" to partOfURL,
+        "startIndex" to startIndex
+    )
 
 }
