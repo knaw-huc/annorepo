@@ -7,11 +7,15 @@ the [W3C Web Annotation Protocol](https://www.w3.org/TR/2017/REC-annotation-prot
 As the protocol does not specify how to create, update or delete annotation containers, AnnoRep implements endpoints for
 that in a way similar to that used by [elucidate](https://github.com/dlcs/elucidate-server)
 
-The following requests expect the annorepo server running locally at `http://localhost:9999/`
+The following requests expect the annorepo server to be running locally at `http://localhost:9999/`
+
+Features marked `(experimental)` are likely to change in the next release.
+
+---
 
 ## Annotation Containers
 
-### creating an annotation container
+### Creating an annotation container
 
 #### Request
 
@@ -135,7 +139,7 @@ Content-Length: 452
 }
 ```
 
-### reading an annotation container
+### Reading an annotation container
 
 #### Request
 
@@ -149,7 +153,7 @@ Accept: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
 
 ```
 HTTP/1.1 200 OK
-Date: Mon, 04 Jul 2022 15:42:22 GMT
+
 Content-Location: http://localhost:9999/w3c/my-container/
 Vary: Accept
 Link: <http://www.w3.org/ns/ldp#BasicContainer>; rel="type"
@@ -183,18 +187,18 @@ Content-Length: 452
 }
 ```
 
-### deleting an annotation container
+### Deleting an annotation container
 
 Deleting an annotation container is only possible if the container doesn't contain any annotations.
 
-The `If-Match` header must contain the Etag of the container.
+The `If-Match` header must contain the ETag of the container.
 
 #### Request
 
 ```
 DELETE http://localhost:9999/w3c/my-container/ HTTP/1.1
 
-If-Match: 2133202336
+If-Match: "2133202336"
 ```
 
 #### Response
@@ -203,9 +207,11 @@ If-Match: 2133202336
 HTTP/1.1 204 No Content
 ```
 
+---
+
 ## Annotations
 
-### adding an annotation to a given annotation container
+### Adding an annotation to a given annotation container
 
 As with the container creation, you can let annorepo pick the annotation name:
 
@@ -305,7 +311,7 @@ Content-Length: 270
 }
 ```
 
-### reading an annotation
+### Reading an annotation
 
 #### Request
 
@@ -320,11 +326,9 @@ Accept: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
 ```
 HTTP/1.1 200 OK
 
-Vary: Accept
 Allow: HEAD,DELETE,POST,GET,OPTIONS,PUT
 Link: <http://www.w3.org/ns/ldp#Resource>; rel="type"
 Link: <http://www.w3.org/ns/ldp#Annotation>; rel="type"
-Last-Modified: Tue, 05 Jul 2022 09:04:53 GMT
 ETag: W/"-1518598207"
 Content-Type: application/ld+json;profile="http://www.w3.org/ns/anno.jsonld"
 Vary: Accept-Encoding
@@ -343,7 +347,9 @@ Content-Length: 272
 }
 ```
 
-### updating an annotation
+### Updating an annotation
+
+When updating an annotation, you need to send its ETag in the `If-Match` header.
 
 #### Request
 
@@ -391,9 +397,9 @@ Content-Type: application/ld+json;profile="http://www.w3.org/ns/anno.jsonld"
 }
 ```
 
-### deleting an annotation
+### Deleting an annotation
 
-When deleting an annotation, you need to send its Etag in the `if-match` header.
+When deleting an annotation, you need to send its ETag in the `If-Match` header.
 
 #### Request
 
@@ -409,7 +415,7 @@ If-Match: "1303452440"
 HTTP/1.1 204 No Content
 ```
 
-### uploading multiple annotations to a given annotation container
+### Uploading multiple annotations to a given annotation container `(experimental)`
 
 #### Request
 
@@ -468,7 +474,7 @@ Content-Type: application/json
 
 #### Response
 
-The batch request will return a list of the generated annotation names
+The batch request will return a list of the generated annotation names:
 
 ```
 HTTP/1.1 200 OK
@@ -486,9 +492,11 @@ Content-Length: 23
 ]
 ```
 
+---
+
 ## Querying
 
-### find annotations with the given field/value combinations
+### Find annotations with the given field/value combinations `(experimental)`
 
 #### Request
 
@@ -500,50 +508,60 @@ POST http://localhost:9999/search/my-container/annotation HTTP/1.1
 #### Response
 
 ```
-HTTP/1.1 201 CREATED
+HTTP/1.1 200 OK
 
+Content-Type: application/json
+Content-Length: 935
+
+{
+   "@context": [
+      "http://www.w3.org/ns/anno.jsonld",
+      "http://www.w3.org/ns/ldp.jsonld"
+   ],
+   "type": "AnnotationPage",
+   "items": [
+      {
+         "@context": "http://www.w3.org/ns/anno.jsonld",
+         "id": "http://localhost:9999/w3c/my-container/anno1.jsonld",
+         "type": "Annotation",
+         "body": {
+            "type": "TextualBody",
+            "value": "I like this page!"
+         },
+         "target": "http://www.example.com/index.html"
+      },
+      {
+         "@context": "http://www.w3.org/ns/anno.jsonld",
+         "id": "http://localhost:9999/w3c/my-container/eadda8ec-3708-4af6-9283-d6a428c1d1e6",
+         "type": "Annotation",
+         "body": {
+            "type": "TextualBody",
+            "value": "I like this page!"
+         },
+         "target": "http://www.example.com/index.html"
+      },
+      {
+         "@context": "http://www.w3.org/ns/anno.jsonld",
+         "id": "http://localhost:9999/w3c/my-container/0bb16696-245c-4614-955f-78dec7065f60",
+         "type": "Annotation",
+         "body": {
+            "type": "TextualBody",
+            "value": "I like this page!"
+         },
+         "target": "http://www.example.com/index.html"
+      }
+   ],
+   "partOf": "http://localhost:9999/search/my-container/annotations",
+   "startIndex": 0
+}
 ```
 
-### find annotations that overlap with the given range
+### Find annotations that fall within the given range `(experimental)`
 
 #### Request
 
 ```
-POST http://localhost:9999/w3c/my-container/ HTTP/1.1
-
-```
-
-#### Response
-
-```
-HTTP/1.1 201 CREATED
-
-```
-
-### find annotations that fall within the given range
-
-#### Request
-
-```
-POST http://localhost:9999/w3c/my-container/ HTTP/1.1
-
-```
-
-#### Response
-
-```
-HTTP/1.1 201 CREATED
-
-```
-
-## Server info
-
-### get information about the servers
-
-#### Request
-
-```
-GET http://localhost:9999/about HTTP/1.1
+GET http://localhost:9999/search/my-container/within_range?target.source=urn:some-image&range.start=0&range.end=10 HTTP/1.1
 ```
 
 #### Response
@@ -551,19 +569,31 @@ GET http://localhost:9999/about HTTP/1.1
 ```
 HTTP/1.1 200 OK
 
-Date: Mon, 04 Jul 2022 10:55:27 GMT
 Content-Type: application/json
 Vary: Accept-Encoding
-Content-Length: 164
-
-{
-   "appName": "AnnoRepo",
-   "version": "0.1.0",
-   "startedAt": "2022-07-04T10:55:12.399444Z",
-   "baseURI": "http://localhost:9999",
-   "source": "https://github.com/knaw-huc/annorepo"
-}
 ```
+
+### Find annotations that overlap with the given range `(experimental)`
+
+#### Request
+
+```
+GET http://localhost:9999/search/my-container/overlapping_with_range?target.source=urn:some-image&range.start=0&range.end=10 HTTP/1.1
+
+```
+
+#### Response
+
+```
+HTTP/1.1 200 OK
+
+Content-Type: application/json
+Vary: Accept-Encoding
+
+
+```
+
+---
 
 ## OpenAPI
 
@@ -597,4 +627,34 @@ or
 
 ```
 GET http://localhost:9999/openapi.yaml HTTP/1.1
+```
+
+---
+
+## Server info
+
+### Get information about the servers
+
+#### Request
+
+```
+GET http://localhost:9999/about HTTP/1.1
+```
+
+#### Response
+
+```
+HTTP/1.1 200 OK
+
+Content-Type: application/json
+Vary: Accept-Encoding
+Content-Length: 164
+
+{
+   "appName": "AnnoRepo",
+   "version": "0.1.0",
+   "startedAt": "2022-07-04T10:55:12.399444Z",
+   "baseURI": "http://localhost:9999",
+   "source": "https://github.com/knaw-huc/annorepo"
+}
 ```
