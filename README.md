@@ -27,3 +27,8 @@ Health Check
 ---
 
 To see your application's health enter url `http://localhost:8081/healthcheck`
+
+----
+
+[USAGE](docs/usage.md) |
+[LICENSE](LICENSE)
