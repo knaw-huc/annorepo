@@ -1,6 +1,6 @@
-# AnnoRepo
+# AnnoRepo: REST API
 
-## usage
+## REST API usage
 
 For the basic annotation CRUD handling, AnnoRepo has a `/w3c/` endpoint that implements part of
 the [W3C Web Annotation Protocol](https://www.w3.org/TR/2017/REC-annotation-protocol-20170223/)
@@ -557,6 +557,10 @@ Content-Length: 23
 ```
 POST http://localhost:9999/search/my-container/annotation HTTP/1.1
 
+{
+  "body.value": "I like this page!",
+  "target": "http://www.example.com/index.html"
+}
 ```
 
 #### Response
