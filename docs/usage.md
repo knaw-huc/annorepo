@@ -424,51 +424,106 @@ POST http://localhost:9999/batch/my-container/annotations HTTP/1.1
 Content-Type: application/json
 
 [
-  {
-    "@context": "http://www.w3.org/ns/anno.jsonld",
-    "type": "Annotation",
-    "body": {
-      "type": "TextualBody",
-      "value": "An annotation"
+    {
+        "@context": "http://www.w3.org/ns/anno.jsonld",
+        "type": "Annotation",
+        "motivation": "classifying",
+        "body": {
+            "type": "TextualBody",
+            "purpose": "classifying",
+            "value": "attendant",
+            "id": "urn:example:republic:person-1"
+        },
+        "target": {
+            "source": "urn:example:republic:text-1",
+            "type": "Text",
+            "selector": {
+                "type": "urn:example:republic:TextAnchorSelector",
+                "start": 100,
+                "end": 130
+            }
+        }
     },
-    "target": "http://www.example.com/page1.html"
-  },
-  {
-    "@context": "http://www.w3.org/ns/anno.jsonld",
-    "type": "Annotation",
-    "body": {
-      "type": "TextualBody",
-      "value": "Another annotation!"
+    {
+        "@context": "http://www.w3.org/ns/anno.jsonld",
+        "type": "Annotation",
+        "motivation": "classifying",
+        "body": {
+            "type": "TextualBody",
+            "purpose": "classifying",
+            "value": "recipient",
+            "id": "urn:example:republic:person-2"
+        },
+        "target": {
+            "source": "urn:example:republic:text-1",
+            "type": "Text",
+            "selector": {
+                "type": "urn:example:republic:TextAnchorSelector",
+                "start": 190,
+                "end": 200
+            }
+        }
     },
-    "target": "http://www.example.com/index.html"
-  },
-  {
-    "@context": "http://www.w3.org/ns/anno.jsonld",
-    "type": "Annotation",
-    "body": {
-      "type": "TextualBody",
-      "value": "A third annotation"
+    {
+        "@context": "http://www.w3.org/ns/anno.jsonld",
+        "type": "Annotation",
+        "motivation": "classifying",
+        "body": {
+            "type": "TextualBody",
+            "purpose": "classifying",
+            "value": "attendant",
+            "id": "urn:example:republic:person-3"
+        },
+        "target": {
+            "source": "urn:example:republic:text-1",
+            "type": "Text",
+            "selector": {
+                "type": "urn:example:republic:TextAnchorSelector",
+                "start": 200,
+                "end": 220
+            }
+        }
     },
-    "target": "http://www.example.com/page3.html"
-  },
-  {
-    "@context": "http://www.w3.org/ns/anno.jsonld",
-    "type": "Annotation",
-    "body": {
-      "type": "TextualBody",
-      "value": "Number four"
+    {
+        "@context": "http://www.w3.org/ns/anno.jsonld",
+        "type": "Annotation",
+        "motivation": "classifying",
+        "body": {
+            "type": "TextualBody",
+            "purpose": "classifying",
+            "value": "attendant",
+            "id": "urn:example:republic:person-4"
+        },
+        "target": {
+            "source": "urn:example:republic:text-1",
+            "type": "Text",
+            "selector": {
+                "type": "urn:example:republic:TextAnchorSelector",
+                "start": 300,
+                "end": 315
+            }
+        }
     },
-    "target": "http://www.example.com/index.html"
-  },
-  {
-    "@context": "http://www.w3.org/ns/anno.jsonld",
-    "type": "Annotation",
-    "body": {
-      "type": "TextualBody",
-      "value": "The last, for now"
-    },
-    "target": "http://www.example.com/index.html"
-  }
+    {
+        "@context": "http://www.w3.org/ns/anno.jsonld",
+        "type": "Annotation",
+        "motivation": "classifying",
+        "body": {
+            "type": "TextualBody",
+            "purpose": "classifying",
+            "value": "attendant",
+            "id": "urn:example:republic:person-5"
+        },
+        "target": {
+            "source": "urn:example:republic:text-2",
+            "type": "Text",
+            "selector": {
+                "type": "urn:example:republic:TextAnchorSelector",
+                "start": 90,
+                "end": 110
+            }
+        }
+    }
 ]
 ```
 
@@ -487,7 +542,6 @@ Content-Length: 23
    "82866a01-dd23-4f4b-896b-3e30cb7bff5c",
    "8f2aa0c5-379b-4705-b1be-9c72627fb153",
    "623fa415-6206-4b0f-9268-ae13be1b4fba",
-   "358d775e-106e-4232-b39e-8129035fd43d",
    "a1f6d1a5-af08-4779-b35a-d36e695a9d4e"
 ]
 ```
@@ -561,7 +615,7 @@ Content-Length: 935
 #### Request
 
 ```
-GET http://localhost:9999/search/my-container/within_range?target.source=urn:some-image&range.start=0&range.end=10 HTTP/1.1
+GET http://localhost:9999/search/my-container/within_range?target.source=urn:example:republic:text-1&range.start=50&range.end=210 HTTP/1.1
 ```
 
 #### Response
@@ -571,6 +625,57 @@ HTTP/1.1 200 OK
 
 Content-Type: application/json
 Vary: Accept-Encoding
+
+{
+   "id": "http://localhost:9999/search/my-container/within_range?target.source=urn%3Aexample%3Arepublic%3Atext-1&range.start=50.0&range.end=210.0&page=0",
+   "type": "AnnotationPage",
+   "partOf": "http://localhost:9999/search/my-container/within_range?target.source=urn%3Aexample%3Arepublic%3Atext-1&range.start=50.0&range.end=210.0",
+   "startIndex": 0,
+   "items": [
+      {
+         "motivation": "classifying",
+         "type": "Annotation",
+         "body": {
+            "type": "TextualBody",
+            "purpose": "classifying",
+            "value": "attendant",
+            "id": "urn:example:republic:person-1"
+         },
+         "@context": "http://www.w3.org/ns/anno.jsonld",
+         "target": {
+            "source": "urn:example:republic:text-1",
+            "type": "Text",
+            "selector": {
+               "type": "urn:example:republic:TextAnchorSelector",
+               "start": 100,
+               "end": 130
+            }
+         },
+         "id": "http://localhost:9999/w3c/my-container/b58a5b5e-ada9-4a13-8995-9588f41d1153"
+      },
+      {
+         "motivation": "classifying",
+         "type": "Annotation",
+         "body": {
+            "type": "TextualBody",
+            "purpose": "classifying",
+            "value": "recipient",
+            "id": "urn:example:republic:person-2"
+         },
+         "@context": "http://www.w3.org/ns/anno.jsonld",
+         "target": {
+            "source": "urn:example:republic:text-1",
+            "type": "Text",
+            "selector": {
+               "type": "urn:example:republic:TextAnchorSelector",
+               "start": 190,
+               "end": 200
+            }
+         },
+         "id": "http://localhost:9999/w3c/my-container/62ccf74d-27aa-4f7d-a2ed-edece9bba087"
+      }
+   ]
+}
 ```
 
 ### Find annotations that overlap with the given range `(experimental)`
@@ -578,7 +683,7 @@ Vary: Accept-Encoding
 #### Request
 
 ```
-GET http://localhost:9999/search/my-container/overlapping_with_range?target.source=urn:some-image&range.start=0&range.end=10 HTTP/1.1
+GET http://localhost:9999/search/my-container/overlapping_with_range?target.source=urn:example:republic:text-1&range.start=50&range.end=210 HTTP/1.1
 
 ```
 
@@ -590,7 +695,77 @@ HTTP/1.1 200 OK
 Content-Type: application/json
 Vary: Accept-Encoding
 
-
+{
+   "id": "http://localhost:9999/search/my-container/overlapping_with_range?target.source=urn%3Aexample%3Arepublic%3Atext-1&range.start=50.0&range.end=210.0&page=0",
+   "type": "AnnotationPage",
+   "partOf": "http://localhost:9999/search/my-container/overlapping_with_range?target.source=urn%3Aexample%3Arepublic%3Atext-1&range.start=50.0&range.end=210.0",
+   "startIndex": 0,
+   "items": [
+      {
+         "motivation": "classifying",
+         "type": "Annotation",
+         "body": {
+            "type": "TextualBody",
+            "purpose": "classifying",
+            "value": "attendant",
+            "id": "urn:example:republic:person-1"
+         },
+         "@context": "http://www.w3.org/ns/anno.jsonld",
+         "target": {
+            "source": "urn:example:republic:text-1",
+            "type": "Text",
+            "selector": {
+               "type": "urn:example:republic:TextAnchorSelector",
+               "start": 100,
+               "end": 130
+            }
+         },
+         "id": "http://localhost:9999/w3c/my-container/b58a5b5e-ada9-4a13-8995-9588f41d1153"
+      },
+      {
+         "motivation": "classifying",
+         "type": "Annotation",
+         "body": {
+            "type": "TextualBody",
+            "purpose": "classifying",
+            "value": "recipient",
+            "id": "urn:example:republic:person-2"
+         },
+         "@context": "http://www.w3.org/ns/anno.jsonld",
+         "target": {
+            "source": "urn:example:republic:text-1",
+            "type": "Text",
+            "selector": {
+               "type": "urn:example:republic:TextAnchorSelector",
+               "start": 190,
+               "end": 200
+            }
+         },
+         "id": "http://localhost:9999/w3c/my-container/62ccf74d-27aa-4f7d-a2ed-edece9bba087"
+      },
+      {
+         "motivation": "classifying",
+         "type": "Annotation",
+         "body": {
+            "type": "TextualBody",
+            "purpose": "classifying",
+            "value": "attendant",
+            "id": "urn:example:republic:person-3"
+         },
+         "@context": "http://www.w3.org/ns/anno.jsonld",
+         "target": {
+            "source": "urn:example:republic:text-1",
+            "type": "Text",
+            "selector": {
+               "type": "urn:example:republic:TextAnchorSelector",
+               "start": 200,
+               "end": 220
+            }
+         },
+         "id": "http://localhost:9999/w3c/my-container/470e0052-c3e8-4dce-9dff-512d68f4deab"
+      }
+   ]
+}
 ```
 
 ---
