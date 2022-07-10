@@ -12,8 +12,6 @@ import com.mongodb.client.model.Filters.gte
 import com.mongodb.client.model.Filters.lt
 import com.mongodb.client.model.Filters.lte
 import io.swagger.v3.oas.annotations.Operation
-import nl.knaw.huc.annorepo.api.ARConst.ANNO_JSONLD_URL
-import nl.knaw.huc.annorepo.api.ARConst.LDP_JSONLD_URL
 import nl.knaw.huc.annorepo.api.AnnotationPage
 import nl.knaw.huc.annorepo.api.ResourcePaths.SEARCH
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
@@ -32,6 +30,8 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
+
+typealias AnnotationList = List<Map<String, Any>>
 
 @Path(SEARCH)
 @Produces(MediaType.APPLICATION_JSON)
@@ -73,7 +73,7 @@ class SearchResource(
             val searchURL =
                 "${configuration.externalBaseUrl}/$SEARCH/$containerName/annotations"
             val startIndex = 0
-            val entity = annotationPage(annotations, searchURL, startIndex)
+            val entity = buildAnnotationPage(URI.create(searchURL), annotations, startIndex)
             return Response.ok(entity).build()
         }
         return Response.status(Response.Status.BAD_REQUEST).build()
@@ -163,7 +163,7 @@ class SearchResource(
 
     private fun buildAnnotationPage(
         searchUri: URI,
-        annotations: List<Map<String, Any>>,
+        annotations: AnnotationList,
         page: Int
     ): AnnotationPage {
         val prevPage = if (page > 0) {
@@ -203,19 +203,5 @@ class SearchResource(
                 )
             }
 
-    private fun annotationPage(
-        urls: List<Map<String, Any>>,
-        partOfURL: String,
-        startIndex: Int
-    ): Map<String, Any> = mapOf(
-        "@context" to listOf(
-            ANNO_JSONLD_URL,
-            LDP_JSONLD_URL
-        ),
-        "type" to "AnnotationPage",
-        "items" to urls,
-        "partOf" to partOfURL,
-        "startIndex" to startIndex
-    )
-
 }
+

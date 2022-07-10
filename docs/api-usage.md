@@ -572,11 +572,10 @@ Content-Type: application/json
 Content-Length: 935
 
 {
-   "@context": [
-      "http://www.w3.org/ns/anno.jsonld",
-      "http://www.w3.org/ns/ldp.jsonld"
-   ],
+   "id": "http://localhost:9999/search/my-container/annotations?page=0",
    "type": "AnnotationPage",
+   "partOf": "http://localhost:9999/search/my-container/annotations",
+   "startIndex": 0,
    "items": [
       {
          "@context": "http://www.w3.org/ns/anno.jsonld",
@@ -608,9 +607,7 @@ Content-Length: 935
          },
          "target": "http://www.example.com/index.html"
       }
-   ],
-   "partOf": "http://localhost:9999/search/my-container/annotations",
-   "startIndex": 0
+   ]
 }
 ```
 
