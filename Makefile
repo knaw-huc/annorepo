@@ -1,5 +1,6 @@
 all: help
 tag = annorepo
+docker_domain = registry.diginfra.net/tt
 
 .make:
 	mkdir -p .make
@@ -38,8 +39,8 @@ docker-image: .make/.docker
 
 .make/.push: build k8s/annorepo-server/Dockerfile
 	docker build -t $(tag):$(shell cat .make/.version) --platform=linux/amd64 -f k8s/annorepo-server/Dockerfile .
-	docker tag $(tag):$(shell cat .make/.version) registry.diginfra.net/tt/$(tag):$(shell cat .make/.version)
-	docker push registry.diginfra.net/tt/$(tag):$(shell cat .make/.version)
+	docker tag $(tag):$(shell cat .make/.version) $(docker_domain)/$(tag):$(shell cat .make/.version)
+	docker push $(docker_domain)/$(tag):$(shell cat .make/.version)
 	@touch .make/.push
 
 .PHONY: push
