@@ -3,6 +3,7 @@ package nl.knaw.huc.annorepo.resources
 import com.codahale.metrics.annotation.Timed
 import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Filters.exists
+import io.swagger.v3.oas.annotations.Hidden
 import io.swagger.v3.oas.annotations.Operation
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
@@ -19,6 +20,7 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 
+@Hidden
 @Path(ResourcePaths.LIST)
 @Produces(ANNOTATION_MEDIA_TYPE)
 class ListResource(
