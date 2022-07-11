@@ -51,7 +51,7 @@ INFO  [2022-07-08 22:26:49,481] io.dropwizard.server.ServerFactory: Starting Ann
 
 ```
 
-    The "accessible at" lines should tell you at what url to access the annorepo server.
+The "accessible at" lines should tell you at what url to access the annorepo server.
 
 ## Configuring
 

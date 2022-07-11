@@ -11,6 +11,23 @@ The following requests expect the annorepo server to be running locally at `http
 
 Features marked `(experimental)` are likely to change in the next release.
 
+- [Annotation Containers](#annotation-containers):
+  - [Create](#creating-an-annotation-container)
+  - [Read](#reading-an-annotation-container)
+  - [Delete](#deleting-an-annotation-container)
+- [Annotations](#annotations):
+  - [Create](#adding-an-annotation-to-a-given-annotation-container)
+  - [Read](#reading-an-annotation)
+  - [Update](#updating-an-annotation)
+  - [Delete](#deleting-an-annotation)
+  - [Batch upload](#uploading-multiple-annotations-to-a-given-annotation-container-experimental)
+- [Querying](#querying):
+  - [On field/value combinations](#find-annotations-with-the-given-fieldvalue-combinations-experimental)
+  - [Within a range](#find-annotations-that-fall-within-the-given-range-experimental)
+  - [Overlapping a range](#find-annotations-that-overlap-with-the-given-range-experimental)
+- [OpenAPI](#openapi)
+- [Server info](#server-info)
+
 ---
 
 ## Annotation Containers
