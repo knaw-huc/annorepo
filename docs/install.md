@@ -55,7 +55,7 @@ The "accessible at" lines should tell you at what url to access the annorepo ser
 
 ## Configuring
 
-The config file `config.yml` has some values that can be overridden by setting `AF_` environment variables:
+The config file `config.yml` has some values that can be overridden by setting `AR_` environment variables:
 
 | environment variable   | default value         | purpose                                                 |
 |------------------------|-----------------------|---------------------------------------------------------|
