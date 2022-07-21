@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-java -jar annorepo.jar server config.yml
+java -jar annorepo-server.jar server config.yml

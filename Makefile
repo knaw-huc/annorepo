@@ -8,19 +8,28 @@ docker_domain = registry.diginfra.net/tt
 .make/.version: .make pom.xml
 	mvn help:evaluate -Dexpression=project.version -q -DforceStdout > .make/.version
 
-target/annorepo-$(shell cat .make/.version).jar: .make/.version  $(shell find src -type f) pom.xml
-	mvn package
+server/target/annorepo-server-$(shell cat .make/.version).jar: .make/.version  $(shell find server/src -type f) pom.xml server/pom.xml
+	mvn --projects server --also-make package
+
+client/target/annorepo-client-$(shell cat .make/.version).jar: .make/.version  $(shell find client/src -type f) pom.xml client/pom.xml
+	mvn --projects client --also-make package
 
 .PHONY: build
-build: .make/.version target/annorepo-$(shell cat .make/.version).jar
+build: .make/.version server/target/annorepo-server-$(shell cat .make/.version).jar client/target/annorepo-client-$(shell cat .make/.version).jar
+
+.PHONY: build-server
+build: .make/.version server/target/annorepo-server-$(shell cat .make/.version).jar
+
+.PHONY: build-client
+build: .make/.version client/target/annorepo-client-$(shell cat .make/.version).jar
 
 .PHONY: run-server
-run-server: build
-	java -jar target/annorepo-$(shell cat .make/.version).jar server config.yml
+run-server: build-server
+	java -jar server/target/annorepo-server-$(shell cat .make/.version).jar server server/config.yml
 
 .PHONY: run-env
-run-env: build
-	java -jar target/annorepo-$(shell cat .make/.version).jar env
+run-env: build-server
+	java -jar server/target/annorepo-server-$(shell cat .make/.version).jar env
 
 .PHONY: docker-run
 docker-run: k8s/local/docker-compose.yml
@@ -59,7 +68,9 @@ version-update:
 help:
 	@echo "make-tools for $(tag)"
 	@echo "Please use \`make <target>' where <target> is one of"
-	@echo "  build           to test and build the app"
+	@echo "  build           to test and build the project"
+	@echo "  build-server    to test and build just the server"
+	@echo "  build-client    to test and build just the client"
 	@echo "  run-server      to start the server app"
 	@echo "  docker-run      to start the server app in docker"
 	@echo "  docker-stop     to stop the server app in docker"
