@@ -13,7 +13,7 @@
     <parent>
         <groupId>nl.knaw.huc</groupId>
         <artifactId>annorepo</artifactId>
-        <version>0.1.0</version>
+        <version>0.1.1.beta</version>
     </parent>
 
     <properties>
