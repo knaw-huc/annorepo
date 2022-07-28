@@ -10,6 +10,8 @@ pageSize: ${AR_PAGE_SIZE:-100}
 mongodbURL: ${AR_MONGODB_URL:-mongodb://localhost/}
 databaseName: ${AR_DB_NAME:-annorepo}
 
+rangeSelectorType: ${AR_RANGE_SELECTOR_TYPE:-urn:republic:TextAnchorSelector}
+
 logging:
   level: INFO
   loggers:

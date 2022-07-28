@@ -21,6 +21,7 @@ import org.bson.conversions.Bson
 import org.eclipse.jetty.util.ajax.JSON
 import org.litote.kmongo.aggregate
 import java.net.URI
+import javax.ws.rs.BadRequestException
 import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -47,7 +48,6 @@ class SearchResource(
 
     private val withinRange = "within_range"
     private val overlappingWithRange = "overlapping_with_range"
-    private val selectorType = "urn:example:republic:TextAnchorSelector"
     private val annotationFieldPrefix = "annotation."
 
     @Operation(description = "Find annotations in the given container with all the given field values")
@@ -58,6 +58,7 @@ class SearchResource(
         @PathParam("containerName") containerName: String,
         queryJson: String
     ): Response {
+        checkContainerExists(containerName)
         val container = mdb.getCollection(containerName)
         var queryMap = JSON.parse(queryJson)
         if (queryMap is HashMap<*, *>) {
@@ -94,7 +95,7 @@ class SearchResource(
             searchType = withinRange,
             matchPattern = and(
                 eq("${annotationFieldPrefix}target.source", targetSource),
-                eq("${annotationFieldPrefix}target.selector.type", selectorType),
+                eq("${annotationFieldPrefix}target.selector.type", configuration.rangeSelectorType),
                 gte("${annotationFieldPrefix}target.selector.start", rangeStart),
                 lte("${annotationFieldPrefix}target.selector.end", rangeEnd),
             ),
@@ -120,7 +121,7 @@ class SearchResource(
             searchType = overlappingWithRange,
             matchPattern = and(
                 eq("${annotationFieldPrefix}target.source", targetSource),
-                eq("${annotationFieldPrefix}target.selector.type", selectorType),
+                eq("${annotationFieldPrefix}target.selector.type", configuration.rangeSelectorType),
                 lt("${annotationFieldPrefix}target.selector.start", rangeEnd),
                 gt("${annotationFieldPrefix}target.selector.end", rangeStart),
             ),
@@ -140,6 +141,7 @@ class SearchResource(
         rangeEnd: Float,
         page: Int
     ): Response {
+        checkContainerExists(containerName)
         val collection = mdb.getCollection(containerName)
         val offset = page * configuration.pageSize
         val annotations = collection.aggregate<Document>(
@@ -185,6 +187,12 @@ class SearchResource(
             prev = if (prevPage != null) searchPageUri(searchUri, prevPage) else null,
             next = if (nextPage != null) searchPageUri(searchUri, nextPage) else null
         )
+    }
+
+    private fun checkContainerExists(containerName: String) {
+        if (!mdb.listCollectionNames().contains(containerName)) {
+            throw BadRequestException("Annotation Container '$containerName' not found")
+        }
     }
 
     private fun searchPageUri(searchUri: URI, page: Int) =
