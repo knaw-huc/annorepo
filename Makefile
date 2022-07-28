@@ -25,7 +25,7 @@ build: .make/.version client/target/annorepo-client-$(shell cat .make/.version).
 
 .PHONY: run-server
 run-server: build-server
-	java -jar server/target/annorepo-server-$(shell cat .make/.version).jar server server/config.yml
+	java -jar server/target/annorepo-server-$(shell cat .make/.version).jar server config.yml
 
 .PHONY: run-env
 run-env: build-server
