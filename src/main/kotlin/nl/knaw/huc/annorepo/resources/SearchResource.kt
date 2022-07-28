@@ -47,7 +47,6 @@ class SearchResource(
 
     private val withinRange = "within_range"
     private val overlappingWithRange = "overlapping_with_range"
-    private val selectorType = "urn:example:republic:TextAnchorSelector"
     private val annotationFieldPrefix = "annotation."
 
     @Operation(description = "Find annotations in the given container with all the given field values")
@@ -94,7 +93,7 @@ class SearchResource(
             searchType = withinRange,
             matchPattern = and(
                 eq("${annotationFieldPrefix}target.source", targetSource),
-                eq("${annotationFieldPrefix}target.selector.type", selectorType),
+                eq("${annotationFieldPrefix}target.selector.type", configuration.rangeSelectorType),
                 gte("${annotationFieldPrefix}target.selector.start", rangeStart),
                 lte("${annotationFieldPrefix}target.selector.end", rangeEnd),
             ),
@@ -120,7 +119,7 @@ class SearchResource(
             searchType = overlappingWithRange,
             matchPattern = and(
                 eq("${annotationFieldPrefix}target.source", targetSource),
-                eq("${annotationFieldPrefix}target.selector.type", selectorType),
+                eq("${annotationFieldPrefix}target.selector.type", configuration.rangeSelectorType),
                 lt("${annotationFieldPrefix}target.selector.start", rangeEnd),
                 gt("${annotationFieldPrefix}target.selector.end", rangeStart),
             ),

@@ -34,6 +34,11 @@ open class AnnoRepoConfiguration : Configuration() {
 
     @Valid
     @NotNull
+    @JsonProperty
+    var rangeSelectorType = "urn:republic:TextAnchorSelector"
+
+    @Valid
+    @NotNull
     @JsonProperty("swagger")
     val swaggerBundleConfiguration = SwaggerBundleConfiguration().apply {
         resourcePackage = AboutResource::class.java.getPackage().name
