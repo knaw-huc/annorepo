@@ -21,8 +21,8 @@ import org.bson.conversions.Bson
 import org.eclipse.jetty.util.ajax.JSON
 import org.litote.kmongo.aggregate
 import java.net.URI
+import javax.ws.rs.BadRequestException
 import javax.ws.rs.GET
-import javax.ws.rs.NotFoundException
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -191,7 +191,7 @@ class SearchResource(
 
     private fun checkContainerExists(containerName: String) {
         if (!mdb.listCollectionNames().contains(containerName)) {
-            throw NotFoundException("Annotation Container '$containerName' not found")
+            throw BadRequestException("Annotation Container '$containerName' not found")
         }
     }
 
