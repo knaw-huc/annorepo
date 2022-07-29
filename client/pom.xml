@@ -83,6 +83,16 @@
             <version>${json-unit-assertj.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>jakarta.ws.rs</groupId>
+            <artifactId>jakarta.ws.rs-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.dropwizard</groupId>
+            <artifactId>dropwizard-jersey</artifactId>
+            <version>2.0.28</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>
