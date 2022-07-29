@@ -17,7 +17,7 @@ import javax.ws.rs.core.Response
 @Path(ResourcePaths.BATCH)
 @Produces(MediaType.APPLICATION_JSON)
 class BatchResource(
-    configuration: AnnoRepoConfiguration,
+    private val configuration: AnnoRepoConfiguration,
     private val client: MongoClient,
 ) {
 //    private val log = LoggerFactory.getLogger(javaClass)
@@ -32,7 +32,7 @@ class BatchResource(
         annotations: List<HashMap<String, Any>>
     ): Response {
         val annotationNames = mutableListOf<String>()
-        val mdb = client.getDatabase("annorepo")
+        val mdb = client.getDatabase(configuration.databaseName)
         val container = mdb.getCollection(containerName)
         for (i in 0..annotations.size) {
             annotationNames.add(UUID.randomUUID().toString())
