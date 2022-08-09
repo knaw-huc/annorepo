@@ -1,6 +1,5 @@
 package nl.knaw.huc.annorepo.client
 
-import nl.knaw.huc.annorepo.util.extractVersion
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
@@ -27,7 +26,9 @@ class AnnoRepoClientTest {
         val response = client.createContainer()
         assertThat(response.created).isTrue
         assertThat(response.location).startsWith(ANNOREPO_BASE_URL)
-        client.deleteContainer("")
+        assertThat(response.containerId).isNotNull
+        assertThat(response.etag).isNotNull
+        client.deleteContainer(response.containerId, response.etag)
     }
 
     @Test
@@ -36,17 +37,10 @@ class AnnoRepoClientTest {
         val response = client.createContainer(preferredName)
         assertThat(response.created).isTrue
         assertThat(response.location).endsWith("/$preferredName/")
-        val ok = client.deleteContainer(preferredName)
+        assertThat(response.containerId).isEqualTo(preferredName)
+        assertThat(response.etag).isNotNull
+        val ok = client.deleteContainer(preferredName, response.etag)
         assertThat(ok).isTrue
-    }
-
-    @Test
-    fun `get version`() {
-        log.info("{}", javaClass.extractVersion())
-        log.info("{}", AnnoRepoClient::class.java.extractVersion())
-        val version = com.google.common.collect.LinkedHashMultimap::class.java.extractVersion()
-        log.info("{}", version)
-        assertThat(version).isNotNull
     }
 
 }

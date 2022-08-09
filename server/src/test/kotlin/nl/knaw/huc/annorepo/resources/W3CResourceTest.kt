@@ -66,7 +66,7 @@ class W3CResourceTest {
         assertThat(lastPage(count = 100, pageSize = 40)).isEqualTo(2)
     }
 
-    private fun lastPage(count: Long, pageSize: Int) = (count - 1).div(pageSize).toLong()
+    private fun lastPage(count: Long, pageSize: Int) = (count - 1).div(pageSize)
 
 }
 

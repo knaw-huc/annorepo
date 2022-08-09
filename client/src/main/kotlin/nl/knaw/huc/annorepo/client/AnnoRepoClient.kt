@@ -36,25 +36,39 @@ class AnnoRepoClient(serverURI: URI, private val userAgent: String? = null) {
         log.info("response={}", response)
         val created = (response.status == HttpStatus.CREATED_201)
         val location = location(response) ?: ""
-        return AnnoRepoResponse(created, location)
+        val containerId = extractId(location)
+        val etag = eTag(response) ?: ""
+        return AnnoRepoResponse(created, location, containerId = containerId, etag = etag)
     }
 
-    fun deleteContainer(containerName: String): Boolean {
-        var response = webTarget.path("w3c").path(containerName)
+    private fun extractId(location: String): String {
+        val parts = location.split("/")
+        return parts[parts.size - 2]
+    }
+
+    fun deleteContainer(containerName: String, etag: String): Boolean {
+        val response = webTarget.path("w3c").path(containerName)
             .request()
+            .header("if-match", etag)
             .addUserAgent()
             .delete()
         log.info("{}", response)
         return response.status == NO_CONTENT_204
     }
 
-    private fun location(response: Response): String? {
-        if (response.headers.containsKey("location")) {
-            val locations: MutableList<Any> = response.headers["location"]!!
-            return locations[0].toString()
+    private fun location(response: Response): String? =
+        response.firstHeader("location")
+
+    private fun eTag(response: Response): String? =
+        response.firstHeader("etag")
+
+    private fun Response.firstHeader(key: String): String? =
+        if (headers.containsKey(key)) {
+            val locations: MutableList<Any> = headers[key]!!
+            locations[0].toString()
+        } else {
+            null
         }
-        return null
-    }
 
     private fun Invocation.Builder.addUserAgent(): Invocation.Builder {
         val libUA = "${AnnoRepoClient::class.java.name}/${getVersion() ?: ""}"
