@@ -24,7 +24,6 @@ import nl.knaw.huc.annorepo.health.ServerHealthCheck
 import nl.knaw.huc.annorepo.resources.AboutResource
 import nl.knaw.huc.annorepo.resources.BatchResource
 import nl.knaw.huc.annorepo.resources.HomePageResource
-import nl.knaw.huc.annorepo.resources.ListResource
 import nl.knaw.huc.annorepo.resources.RuntimeExceptionMapper
 import nl.knaw.huc.annorepo.resources.ServiceResource
 import nl.knaw.huc.annorepo.resources.W3CResource
@@ -77,7 +76,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             register(W3CResource(configuration, mongoClient))
             register(ServiceResource(configuration, mongoClient))
             register(BatchResource(configuration, mongoClient))
-            register(ListResource(configuration, mongoClient))
+//            register(ListResource(configuration, mongoClient))
 
             register(RuntimeExceptionMapper())
         }
@@ -92,7 +91,8 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
 
         log.info(
             "\n\n  Starting $name (v$appVersion)\n" +
-                    "    locally accessible at    http://localhost:${System.getenv(ARConst.EnvironmentVariable.AR_SERVER_PORT.name) ?: 8080}\n" +
+                    "    locally accessible at    " +
+                    "http://localhost:${System.getenv(ARConst.EnvironmentVariable.AR_SERVER_PORT.name) ?: 8080}\n" +
                     "    externally accessible at ${configuration.externalBaseUrl}\n"
         )
     }
