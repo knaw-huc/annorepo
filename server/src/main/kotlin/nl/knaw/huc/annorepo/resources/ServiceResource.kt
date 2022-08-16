@@ -5,9 +5,9 @@ import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.google.common.base.Joiner
 import com.mongodb.client.MongoClient
+import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Aggregates.limit
 import com.mongodb.client.model.Aggregates.match
-import com.mongodb.client.model.Aggregates.skip
 import com.mongodb.client.model.Filters.and
 import com.mongodb.client.model.Filters.eq
 import com.mongodb.client.model.Filters.gt
@@ -59,7 +59,9 @@ class ServiceResource(
     private val overlappingWithRange = ":overlapsWithTextAnchorRange"
     private val annotationFieldPrefix = "annotation."
 
-    private val queryCache: Cache<String, AggregateStageList> = Caffeine.newBuilder()
+    data class QueryCacheItem(val queryMap: HashMap<*, *>, val aggregateStages: AggregateStageList, val count: Int)
+
+    private val queryCache: Cache<String, QueryCacheItem> = Caffeine.newBuilder()
         .expireAfterAccess(1, TimeUnit.HOURS)
         .maximumSize(1000)
         .build()
@@ -79,8 +81,11 @@ class ServiceResource(
             val aggregateStages = queryMap.toMap()
                 .map { (k, v) -> generateStage(k, v) }
                 .toList()
+            val container = mdb.getCollection(containerName)
+            val count = container.aggregate(aggregateStages).count()
+
             val id = UUID.randomUUID().toString()
-            queryCache.put(id, aggregateStages)
+            queryCache.put(id, QueryCacheItem(queryMap, aggregateStages, count))
             val location = uriFactory.searchURL(containerName, id)
             return Response.created(location).build();
         }
@@ -96,21 +101,41 @@ class ServiceResource(
         @PathParam("searchId") searchId: String,
         @QueryParam("page") page: Int = 0
     ): Response {
-        val aggregateStages = queryCache.getIfPresent(searchId)?.toMutableList()
-            ?: throw NotFoundException("No search results found for this search id. The search might have expired.")
-        aggregateStages.add(skip(page * configuration.pageSize))
-        aggregateStages.add(paginationStage)
+        val queryCacheItem = getQueryCacheItem(searchId)
+        val aggregateStages = queryCacheItem.aggregateStages.toMutableList().apply {
+            add(Aggregates.skip(page * configuration.pageSize))
+            add(paginationStage)
+        }
 
         checkContainerExists(containerName)
         val container = mdb.getCollection(containerName)
-        log.info("aggregateStages=\n  {}", Joiner.on("\n  ").join(aggregateStages))
+        log.debug("aggregateStages=\n  {}", Joiner.on("\n  ").join(aggregateStages))
         val annotations =
             container.aggregate(aggregateStages)
                 .map { a -> toAnnotationMap(a, containerName) }
                 .toList()
-        val entity = buildAnnotationPage(uriFactory.searchURL(containerName, searchId), annotations, page)
+        val entity =
+            buildAnnotationPage(uriFactory.searchURL(containerName, searchId), annotations, page, queryCacheItem.count)
         return Response.ok(entity).build()
     }
+
+    @Operation(description = "Get information about the given search")
+    @Timed
+    @GET
+    @Path("{containerName}/search/{searchId}/info")
+    fun getSearchInfo(
+        @PathParam("containerName") containerName: String,
+        @PathParam("searchId") searchId: String
+    ): Response {
+        checkContainerExists(containerName)
+        val queryCacheItem = getQueryCacheItem(searchId)
+        val info = mapOf("query" to queryCacheItem.queryMap, "total" to queryCacheItem.count)
+        return Response.ok(info).build()
+    }
+
+    private fun getQueryCacheItem(searchId: String): QueryCacheItem =
+        queryCache.getIfPresent(searchId)
+            ?: throw NotFoundException("No search results found for this search id. The search might have expired.")
 
     private fun generateStage(key: Any, value: Any) =
         when (key) {
@@ -119,7 +144,7 @@ class ServiceResource(
             overlappingWithRange -> overlappingWithRangeStage(value)
             else -> {
                 if (key.startsWith(":")) {
-                    throw BadRequestException("Unknow subquery: $key")
+                    throw BadRequestException("Unknown sub-query: $key")
                 } else {
                     fieldMatchStage(key, value)
                 }
@@ -210,14 +235,16 @@ class ServiceResource(
     private fun buildAnnotationPage(
         searchUri: URI,
         annotations: AnnotationList,
-        page: Int
+        page: Int,
+        total: Int
     ): AnnotationPage {
         val prevPage = if (page > 0) {
             page - 1
         } else {
             null
         }
-        val nextPage = if (annotations.size == configuration.pageSize) {
+        val startIndex = configuration.pageSize * page
+        val nextPage = if (startIndex + annotations.size < total) {
             page + 1
         } else {
             null
@@ -226,7 +253,7 @@ class ServiceResource(
         return AnnotationPage(
             id = searchPageUri(searchUri, page),
             partOf = searchUri.toString(),
-            startIndex = configuration.pageSize * page,
+            startIndex = startIndex,
             items = annotations,
             prev = if (prevPage != null) searchPageUri(searchUri, prevPage) else null,
             next = if (nextPage != null) searchPageUri(searchUri, nextPage) else null
