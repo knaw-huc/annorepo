@@ -18,10 +18,10 @@ client/target/annorepo-client-$(shell cat .make/.version).jar: .make/.version  $
 build: .make/.version server/target/annorepo-server-$(shell cat .make/.version).jar client/target/annorepo-client-$(shell cat .make/.version).jar
 
 .PHONY: build-server
-build: .make/.version server/target/annorepo-server-$(shell cat .make/.version).jar
+build-server: .make/.version server/target/annorepo-server-$(shell cat .make/.version).jar
 
 .PHONY: build-client
-build: .make/.version client/target/annorepo-client-$(shell cat .make/.version).jar
+build-client: .make/.version client/target/annorepo-client-$(shell cat .make/.version).jar
 
 .PHONY: run-server
 run-server: build-server

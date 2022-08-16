@@ -21,4 +21,12 @@ class UriFactory(private val configuration: AnnoRepoConfiguration) {
             .path(annotationName)
             .build()
 
+    fun searchURL(containerName: String, id: String): URI =
+        UriBuilder.fromUri(configuration.externalBaseUrl)
+            .path(ResourcePaths.SERVICES)
+            .path(containerName)
+            .path(ResourcePaths.SEARCH)
+            .path(id)
+            .build()
+
 }

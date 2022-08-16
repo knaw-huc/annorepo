@@ -5,5 +5,6 @@ object ResourcePaths {
     const val W3C = "w3c"
     const val LIST = "_list"
     const val SEARCH = "search"
+    const val SERVICES = "services"
     const val BATCH = "batch"
 }
