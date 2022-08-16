@@ -14,12 +14,12 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
 
     fun generateStage(key: Any, value: Any): Bson =
         when (key) {
-            !is String -> throw BadRequestException("Unexpected field: $key ; query root fields should be strings")
+            !is String -> throw BadRequestException("Unexpected field: '$key' ; query root fields should be strings")
             WITHIN_RANGE -> withinRangeStage(value)
             OVERLAPPING_WITH_RANGE -> overlappingWithRangeStage(value)
             else -> {
                 if (key.startsWith(":")) {
-                    throw BadRequestException("Unknown sub-query: $key")
+                    throw BadRequestException("Unknown sub-query: '$key'")
                 } else {
                     fieldMatchStage(key, value)
                 }
@@ -38,7 +38,7 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
                 ":isNotIn" -> Aggregates.match(
                     Filters.nin("$ANNOTATION_FIELD_PREFIX$field", (v as Array<Any>).toList())
                 )
-                else -> throw BadRequestException("unknown key $k")
+                else -> throw BadRequestException("unknown key '$k'")
             }
         })
 
