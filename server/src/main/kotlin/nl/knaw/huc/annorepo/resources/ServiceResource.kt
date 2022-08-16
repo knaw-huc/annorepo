@@ -7,14 +7,6 @@ import com.google.common.base.Joiner
 import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Aggregates.limit
-import com.mongodb.client.model.Aggregates.match
-import com.mongodb.client.model.Filters.and
-import com.mongodb.client.model.Filters.eq
-import com.mongodb.client.model.Filters.gt
-import com.mongodb.client.model.Filters.gte
-import com.mongodb.client.model.Filters.lt
-import com.mongodb.client.model.Filters.lte
-import com.mongodb.client.model.Filters.nin
 import io.swagger.v3.oas.annotations.Operation
 import nl.knaw.huc.annorepo.api.AnnotationPage
 import nl.knaw.huc.annorepo.api.ResourcePaths.SERVICES
@@ -39,9 +31,10 @@ import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
 
-typealias QueryMap = Map<Any, Any>
 typealias AggregateStageList = List<Bson>
 typealias AnnotationList = List<Map<String, Any>>
+
+data class QueryCacheItem(val queryMap: HashMap<*, *>, val aggregateStages: AggregateStageList, val count: Int)
 
 @Path(SERVICES)
 @Produces(MediaType.APPLICATION_JSON)
@@ -49,17 +42,11 @@ class ServiceResource(
     private val configuration: AnnoRepoConfiguration,
     client: MongoClient
 ) {
-    //    private val log = LoggerFactory.getLogger(javaClass)
     private val uriFactory = UriFactory(configuration)
     private val mdb = client.getDatabase(configuration.databaseName)
 
     private val paginationStage = limit(configuration.pageSize)
-
-    private val withinRange = ":isWithinTextAnchorRange"
-    private val overlappingWithRange = ":overlapsWithTextAnchorRange"
-    private val annotationFieldPrefix = "annotation."
-
-    data class QueryCacheItem(val queryMap: HashMap<*, *>, val aggregateStages: AggregateStageList, val count: Int)
+    private val aggregateStageGenerator = AggregateStageGenerator(configuration)
 
     private val queryCache: Cache<String, QueryCacheItem> = Caffeine.newBuilder()
         .expireAfterAccess(1, TimeUnit.HOURS)
@@ -79,7 +66,7 @@ class ServiceResource(
         val queryMap = JSON.parse(queryJson)
         if (queryMap is HashMap<*, *>) {
             val aggregateStages = queryMap.toMap()
-                .map { (k, v) -> generateStage(k, v) }
+                .map { (k, v) -> aggregateStageGenerator.generateStage(k, v) }
                 .toList()
             val container = mdb.getCollection(containerName)
             val count = container.aggregate(aggregateStages).count()
@@ -136,101 +123,6 @@ class ServiceResource(
     private fun getQueryCacheItem(searchId: String): QueryCacheItem =
         queryCache.getIfPresent(searchId)
             ?: throw NotFoundException("No search results found for this search id. The search might have expired.")
-
-    private fun generateStage(key: Any, value: Any) =
-        when (key) {
-            !is String -> throw BadRequestException("Unexpected field: $key ; query root fields should be strings")
-            withinRange -> withinRangeStage(value)
-            overlappingWithRange -> overlappingWithRangeStage(value)
-            else -> {
-                if (key.startsWith(":")) {
-                    throw BadRequestException("Unknown sub-query: $key")
-                } else {
-                    fieldMatchStage(key, value)
-                }
-            }
-        }
-
-    private fun fieldMatchStage(key: String, value: Any) =
-        when (value) {
-            is Map<*, *> -> specialFieldMatchStage(key, value as Map<String, Any>)
-            else -> match(eq("$annotationFieldPrefix$key", value))
-        }
-
-    private fun specialFieldMatchStage(field: String, value: Map<String, Any>): Bson =
-        and(value.map { (k, v) ->
-            return when (k) {
-                ":isNotIn" -> match(
-                    nin("$annotationFieldPrefix$field", (v as Array<Any>).toList())
-                )
-                else -> throw BadRequestException("unknown key $k")
-            }
-        })
-
-    private fun overlappingWithRangeStage(rawParameters: Any): Bson =
-        when (rawParameters) {
-            is Map<*, *> -> {
-                val rangeParameters = rangeParameters(rawParameters)
-                match(
-                    and(
-                        eq("${annotationFieldPrefix}target.source", rangeParameters.source),
-                        eq("${annotationFieldPrefix}target.selector.type", configuration.rangeSelectorType),
-                        lt("${annotationFieldPrefix}target.selector.start", rangeParameters.end),
-                        gt("${annotationFieldPrefix}target.selector.end", rangeParameters.start),
-                    )
-                )
-            }
-            else -> throw BadRequestException("invalid parameter: $rawParameters")
-        }
-
-    private fun rangeParameters(v: Map<*, *>): RangeParameters {
-        val source: String = v.stringValue("source")
-        val start: Float = v.floatValue("start")
-        val end: Float = v.floatValue("end")
-        return RangeParameters(source, start, end)
-    }
-
-    private fun Map<*, *>.floatValue(key: String): Float {
-        if (!containsKey(key)) {
-            throw BadRequestException("missing float parameter $key")
-        }
-        val startValue = get(key)
-        val start: Float?
-        when (startValue) {
-            is Number -> start = startValue.toFloat()
-            else -> throw BadRequestException("parameter $key should be a float")
-        }
-        return start
-    }
-
-    private fun Map<*, *>.stringValue(key: String): String {
-        if (!containsKey(key)) {
-            throw BadRequestException("missing string parameter $key")
-        }
-        val sourceValue = get(key)
-        val source: String?
-        when (sourceValue) {
-            is String -> source = sourceValue
-            else -> throw BadRequestException("parameter $key should be a string")
-        }
-        return source
-    }
-
-    private fun withinRangeStage(rawParameters: Any): Bson =
-        when (rawParameters) {
-            is Map<*, *> -> {
-                val rangeParameters = rangeParameters(rawParameters)
-                match(
-                    and(
-                        eq("${annotationFieldPrefix}target.source", rangeParameters.source),
-                        eq("${annotationFieldPrefix}target.selector.type", configuration.rangeSelectorType),
-                        gte("${annotationFieldPrefix}target.selector.start", rangeParameters.start),
-                        lte("${annotationFieldPrefix}target.selector.end", rangeParameters.end),
-                    )
-                )
-            }
-            else -> throw BadRequestException("invalid parameter: $rawParameters")
-        }
 
     private fun buildAnnotationPage(
         searchUri: URI,
