@@ -22,9 +22,14 @@ Features marked `(experimental)` are likely to change in the next release.
   - [Delete](#deleting-an-annotation)
   - [Batch upload](#uploading-multiple-annotations-to-a-given-annotation-container-experimental)
 - [Querying](#querying):
-  - [On field/value combinations](#find-annotations-with-the-given-fieldvalue-combinations-experimental)
-  - [Within a range](#find-annotations-that-fall-within-the-given-range-experimental)
-  - [Overlapping a range](#find-annotations-that-overlap-with-the-given-range-experimental)
+  - [Create a query](#create-a-query-experimental)
+  - [Get a query result page](#get-a-search-result-page-experimental)
+  - [On field/value combinations](#find-annotations-with-the-given-fieldvalue-combinations-experimental) *(DEPRECATED;
+    will be removed in a future release)*
+  - [Within a range](#find-annotations-that-fall-within-the-given-range-experimental) *(DEPRECATED; will be removed in a
+    future release)*
+  - [Overlapping a range](#find-annotations-that-overlap-with-the-given-range-experimental) *(DEPRECATED; will be
+    removed in a future release)*
 - [OpenAPI](#openapi)
 - [Server info](#server-info)
 
@@ -566,6 +571,110 @@ Content-Length: 23
 ---
 
 ## Querying
+
+### Create a query `(experimental)`
+
+#### Request
+
+```
+POST http://localhost:9999/service/my-container/search HTTP/1.1
+
+{
+  ":overlapsWithTextAnchorRange": {
+    "start": 12,
+    "end": 134,
+    "source": "https://textrepo.republic-caf.diginfra.org/api/rest/versions/42df1275-81cd-489c-b28c-345780c3889b/contents"
+  },
+  "body.type": {
+    ":isNotIn": [
+      "Line",
+      "Page"
+      ]
+  }
+}
+
+```
+
+#### Response
+
+```
+HTTP/1.1 200 OK
+
+location: http://localhost:9999/services/my-container/search/f3da8d25-701c-4e25-b1be-39cd6243dac7
+```
+
+The Location header contains the link to the first search result page.
+
+---
+
+### Get a search result page `(experimental)`
+
+#### Request
+
+```
+GET http://localhost:9999/service/my-container/search/f3da8d25-701c-4e25-b1be-39cd6243dac7 HTTP/1.1
+```
+
+#### Response
+
+```
+HTTP/1.1 200 OK
+
+{
+   "id": "http://localhost:9999/service/my-container/search/f3da8d25-701c-4e25-b1be-39cd6243dac7&page=0",
+   "type": "AnnotationPage",
+   "partOf": "http://localhost:9999/service/my-container/search/f3da8d25-701c-4e25-b1be-39cd6243dac7",
+   "startIndex": 0,
+   "items": [
+      {
+         "motivation": "classifying",
+         "type": "Annotation",
+         "body": {
+            "type": "TextualBody",
+            "purpose": "classifying",
+            "value": "attendant",
+            "id": "urn:example:republic:person-1"
+         },
+         "@context": "http://www.w3.org/ns/anno.jsonld",
+         "target": {
+            "source": "urn:example:republic:text-1",
+            "type": "Text",
+            "selector": {
+               "type": "urn:example:republic:TextAnchorSelector",
+               "start": 100,
+               "end": 130
+            }
+         },
+         "id": "http://localhost:9999/w3c/my-container/b58a5b5e-ada9-4a13-8995-9588f41d1153"
+      },
+      {
+         "motivation": "classifying",
+         "type": "Annotation",
+         "body": {
+            "type": "TextualBody",
+            "purpose": "classifying",
+            "value": "recipient",
+            "id": "urn:example:republic:person-2"
+         },
+         "@context": "http://www.w3.org/ns/anno.jsonld",
+         "target": {
+            "source": "urn:example:republic:text-1",
+            "type": "Text",
+            "selector": {
+               "type": "urn:example:republic:TextAnchorSelector",
+               "start": 190,
+               "end": 200
+            }
+         },
+         "id": "http://localhost:9999/w3c/my-container/62ccf74d-27aa-4f7d-a2ed-edece9bba087"
+      }
+   ]
+}
+```
+
+The Location header contains the link to the first search result page.
+
+---
 
 ### Find annotations with the given field/value combinations `(experimental)`
 
