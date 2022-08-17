@@ -577,7 +577,7 @@ Content-Length: 23
 #### Request
 
 ```
-POST http://localhost:9999/service/my-container/search HTTP/1.1
+POST http://localhost:9999/services/my-container/search HTTP/1.1
 
 {
   ":overlapsWithTextAnchorRange": {
@@ -612,7 +612,7 @@ The Location header contains the link to the first search result page.
 #### Request
 
 ```
-GET http://localhost:9999/service/my-container/search/f3da8d25-701c-4e25-b1be-39cd6243dac7 HTTP/1.1
+GET http://localhost:9999/services/my-container/search/f3da8d25-701c-4e25-b1be-39cd6243dac7 HTTP/1.1
 ```
 
 #### Response
@@ -621,9 +621,9 @@ GET http://localhost:9999/service/my-container/search/f3da8d25-701c-4e25-b1be-39
 HTTP/1.1 200 OK
 
 {
-   "id": "http://localhost:9999/service/my-container/search/f3da8d25-701c-4e25-b1be-39cd6243dac7&page=0",
+   "id": "http://localhost:9999/services/my-container/search/f3da8d25-701c-4e25-b1be-39cd6243dac7&page=0",
    "type": "AnnotationPage",
-   "partOf": "http://localhost:9999/service/my-container/search/f3da8d25-701c-4e25-b1be-39cd6243dac7",
+   "partOf": "http://localhost:9999/services/my-container/search/f3da8d25-701c-4e25-b1be-39cd6243dac7",
    "startIndex": 0,
    "items": [
       {
