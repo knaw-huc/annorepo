@@ -6,8 +6,18 @@ import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import org.bson.conversions.Bson
 import javax.ws.rs.BadRequestException
 
-private const val WITHIN_RANGE = ":isWithinTextAnchorRange"
-private const val OVERLAPPING_WITH_RANGE = ":overlapsWithTextAnchorRange"
+const val WITHIN_RANGE = ":isWithinTextAnchorRange"
+const val OVERLAPPING_WITH_RANGE = ":overlapsWithTextAnchorRange"
+
+const val IS_NOT_IN = ":isNotIn"
+const val IS_IN = ":isIn"
+const val IS_GREATER = ":>"
+const val IS_GREATER_OR_EQUAL = ":>="
+const val IS_LESS = ":<"
+const val IS_LESS_OR_EQUAL = ":<="
+const val IS_EQUAL_TO = ":="
+const val IS_NOT = ":!="
+
 private const val ANNOTATION_FIELD_PREFIX = "annotation."
 
 class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
@@ -19,7 +29,7 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
             OVERLAPPING_WITH_RANGE -> overlappingWithRangeStage(value)
             else -> {
                 if (key.startsWith(":")) {
-                    throw BadRequestException("Unknown sub-query: '$key'")
+                    throw BadRequestException("Unknown query function: '$key'")
                 } else {
                     fieldMatchStage(key, value)
                 }
@@ -35,10 +45,31 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
     private fun specialFieldMatchStage(field: String, value: Map<String, Any>): Bson =
         Filters.and(value.map { (k, v) ->
             return when (k) {
-                ":isNotIn" -> Aggregates.match(
+                IS_NOT_IN -> Aggregates.match(
                     Filters.nin("$ANNOTATION_FIELD_PREFIX$field", (v as Array<Any>).toList())
                 )
-                else -> throw BadRequestException("unknown key '$k'")
+                IS_IN -> Aggregates.match(
+                    Filters.`in`("$ANNOTATION_FIELD_PREFIX$field", (v as Array<Any>).toList())
+                )
+                IS_GREATER -> Aggregates.match(
+                    Filters.gt("$ANNOTATION_FIELD_PREFIX$field", v)
+                )
+                IS_GREATER_OR_EQUAL -> Aggregates.match(
+                    Filters.gte("$ANNOTATION_FIELD_PREFIX$field", v)
+                )
+                IS_LESS -> Aggregates.match(
+                    Filters.lt("$ANNOTATION_FIELD_PREFIX$field", v)
+                )
+                IS_LESS_OR_EQUAL -> Aggregates.match(
+                    Filters.lte("$ANNOTATION_FIELD_PREFIX$field", v)
+                )
+                IS_EQUAL_TO -> Aggregates.match(
+                    Filters.eq("$ANNOTATION_FIELD_PREFIX$field", v)
+                )
+                IS_NOT -> Aggregates.match(
+                    Filters.ne("$ANNOTATION_FIELD_PREFIX$field", v)
+                )
+                else -> throw BadRequestException("unknown selector '$k'")
             }
         })
 
