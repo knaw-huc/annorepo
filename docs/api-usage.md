@@ -571,7 +571,7 @@ Content-Length: 23
 #### Request
 
 ```
-POST http://localhost:9999/service/my-container/search HTTP/1.1
+POST http://localhost:9999/services/my-container/search HTTP/1.1
 
 {
   "purpose": "tagging",
@@ -715,14 +715,16 @@ The Location header contains the link to the first search result page.
 #### Request
 
 ```
-GET http://localhost:9999/service/my-container/search/f3da8d25-701c-4e25-b1be-39cd6243dac7 HTTP/1.1
+GET http://localhost:9999/services/my-container/search/f3da8d25-701c-4e25-b1be-39cd6243dac7 HTTP/1.1
 ```
 
 #### Response
 
 ```
 HTTP/1.1 200 OK
+
 Content-Type: application/json
+Vary: Accept-Encoding
 
 {
   "id": "http://localhost:9999/services/volume-1728/search/d6883433-de41-43fb-93d2-85c1cd9570ee?page=0",
