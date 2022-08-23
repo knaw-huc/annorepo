@@ -29,4 +29,13 @@ class UriFactory(private val configuration: AnnoRepoConfiguration) {
             .path(id)
             .build()
 
+    fun searchInfoURL(containerName: String, id: String): URI =
+        UriBuilder.fromUri(configuration.externalBaseUrl)
+            .path(ResourcePaths.SERVICES)
+            .path(containerName)
+            .path(ResourcePaths.SEARCH)
+            .path(id)
+            .path("info")
+            .build()
+
 }

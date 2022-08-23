@@ -74,7 +74,10 @@ class ServiceResource(
             val id = UUID.randomUUID().toString()
             queryCache.put(id, QueryCacheItem(queryMap, aggregateStages, count))
             val location = uriFactory.searchURL(containerName, id)
-            return Response.created(location).build();
+            return Response.created(location)
+                .link(uriFactory.searchInfoURL(containerName, id), "info")
+                .entity(mapOf("hits" to count))
+                .build()
         }
         return Response.status(Response.Status.BAD_REQUEST).build()
     }
@@ -116,7 +119,7 @@ class ServiceResource(
     ): Response {
         checkContainerExists(containerName)
         val queryCacheItem = getQueryCacheItem(searchId)
-        val info = mapOf("query" to queryCacheItem.queryMap, "total" to queryCacheItem.count)
+        val info = mapOf("query" to queryCacheItem.queryMap, "hits" to queryCacheItem.count)
         return Response.ok(info).build()
     }
 

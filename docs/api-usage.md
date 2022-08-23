@@ -26,8 +26,8 @@ Features marked `(experimental)` are likely to change in the next release.
   - [Get a query result page](#get-a-search-result-page-experimental)
   - [On field/value combinations](#find-annotations-with-the-given-fieldvalue-combinations-experimental) *(DEPRECATED;
     will be removed in a future release)*
-  - [Within a range](#find-annotations-that-fall-within-the-given-range-experimental) *(DEPRECATED; will be removed in a
-    future release)*
+  - [Within a range](#find-annotations-that-fall-within-the-given-range-experimental) *(DEPRECATED; will be removed in
+    a future release)*
   - [Overlapping a range](#find-annotations-that-overlap-with-the-given-range-experimental) *(DEPRECATED; will be
     removed in a future release)*
 - [OpenAPI](#openapi)
@@ -580,20 +580,129 @@ Content-Length: 23
 POST http://localhost:9999/service/my-container/search HTTP/1.1
 
 {
-  ":overlapsWithTextAnchorRange": {
-    "start": 12,
-    "end": 134,
-    "source": "https://textrepo.republic-caf.diginfra.org/api/rest/versions/42df1275-81cd-489c-b28c-345780c3889b/contents"
-  },
+  "purpose": "tagging",
   "body.type": {
     ":isNotIn": [
       "Line",
       "Page"
       ]
+  },
+  ":overlapsWithTextAnchorRange": {
+    "start": 12,
+    "end": 134,
+    "source": "https://textrepo.republic-caf.diginfra.org/api/rest/versions/42df1275-81cd-489c-b28c-345780c3889b/contents"
   }
 }
 
 ```
+
+This request body (the query) consists of three parts:
+
+- a _field query_, which in this case describes we want annotations that have the value `tagging` in the root `purpose`
+  field.
+- an _extended field query_, which in this case has the _query operator_ `:isNotIn`
+- a call to the custom _query function_ `:overlapsWithTextAnchorRange` with `source`, `start` and `end` parameters.
+
+This query will return only those annotations in `my-container` that match with all three sub-queries.
+
+In general, a query must consist of at least 1 _field query_, _extended field query_ or _query function call_,
+and the returned annotations must match with all the sub-queries.
+
+##### field names
+
+- field names are case-sensitive
+- values are case-sensitive, and must match the entire field value.
+
+example: `"purpose": "tag"` will not match with `"purpose": "tagging"` or `"Purpose": "tag"`
+
+- use `.` to indicate the hierarchy depth of the field.
+
+example: given this `body`:
+
+```json
+{
+  "body": [
+    {
+      "type": "Object",
+      "metadata": {
+        "height": 12,
+        "width": 10,
+        "color": "yellow"
+      }
+    },
+    {
+      "type": "Text",
+      "value": "Hello, World!"
+    }
+  ]
+}
+```
+
+This json contains the queryable fields:
+
+- `body.type`
+- `body.metadata.height`
+- `body.metadata.width`
+- `body.metadata.color`
+- `body.value`
+
+##### (simple) field query
+
+This matches the given field with the given value.  
+A value can be a:
+
+- string (`"value"`)
+- number (`42`, `3.14159265358979323846`, `6e23`)
+- boolean (`true`, `false`)
+
+##### extended field query
+
+In an extended field query you can use one of the following _query operators_:
+
+- `:=` to indicate the field value should be the given value:  
+  example: `"body.type": { ":=": "Object" }` will return those annotations where `body.type` has the value `Object`.
+
+- `:!=` to indicate the field value should not be the given value:  
+  example: `"target.type": { ":!=": "Image" }` will return those annotations where no `body.type` has the value `Line`.
+
+- `:<` to indicate the field value should be less than the given value:  
+  example: `"body.metadata.offset": { ":<": 100 }` will return those annotations where `body.metadata.offset` has a
+  value less than 100.
+
+- `:<=` to indicate the field value should be less than or equal to the given value:
+  example: `"target.selector.beginCharOffset": { ":<=": 10 }` will return those annotations
+  where `target.selector.beginCharOffset` has a value less than or equal to 10.
+
+- `:>` to indicate the field value should be greater than the given value:  
+  example: `"body.metadata.offset": { ":>": 100 }` will return those annotations where `body.metadata.offset` has a
+  value greater than 100.
+
+- `:>=` to indicate the field value should be greater than or equal to the given value:
+  example: `"target.selector.beginCharOffset": { ":>=": 10 }` will return those annotations
+  where `target.selector.beginCharOffset` has a value greater than or equal to 10.
+
+- `:isIn` to indicate the field value should be one of the values in the given list:  
+  example: `"body.type": { ":isIn": [ "Object", "Text"] }` will return those annotations where `body.type` is
+  either `Object` or `Text`
+
+- `:isNotIn` to indicate the field value should not match with any of the values in the given list:  
+  example: `"target.type": { ":isNotIn": [ "Image", "Text"] }` will return those annotations that have no `target.type`
+  with values `Image` or `Text`
+
+##### query function call
+
+A _query function_ in AnnoRepo is a pre-programmed combination of simple and extended field queries, and can be called
+with a parameter map. The query function
+
+Currently, the following query functions are available:
+
+- `:isWithinTextAnchorRange` (parameters: `source`, `start`, `end`)  
+  This function will return those annotations that fall within the _TextAnchorRange_ defined by the `source` uri and
+  the `start` and `end` _TextAnchor_ numbers.
+
+- `:overlapsWithTextAnchorRange` (parameters: `source`, `start`, `end`)  
+  This function will return those annotations that overlap with the _TextAnchorRange_ defined by the `source` uri and
+  the `start` and `end` _TextAnchor_ numbers.
 
 #### Response
 
@@ -619,56 +728,16 @@ GET http://localhost:9999/service/my-container/search/f3da8d25-701c-4e25-b1be-39
 
 ```
 HTTP/1.1 200 OK
+Content-Type: application/json
 
 {
-   "id": "http://localhost:9999/service/my-container/search/f3da8d25-701c-4e25-b1be-39cd6243dac7&page=0",
-   "type": "AnnotationPage",
-   "partOf": "http://localhost:9999/service/my-container/search/f3da8d25-701c-4e25-b1be-39cd6243dac7",
-   "startIndex": 0,
-   "items": [
-      {
-         "motivation": "classifying",
-         "type": "Annotation",
-         "body": {
-            "type": "TextualBody",
-            "purpose": "classifying",
-            "value": "attendant",
-            "id": "urn:example:republic:person-1"
-         },
-         "@context": "http://www.w3.org/ns/anno.jsonld",
-         "target": {
-            "source": "urn:example:republic:text-1",
-            "type": "Text",
-            "selector": {
-               "type": "urn:example:republic:TextAnchorSelector",
-               "start": 100,
-               "end": 130
-            }
-         },
-         "id": "http://localhost:9999/w3c/my-container/b58a5b5e-ada9-4a13-8995-9588f41d1153"
-      },
-      {
-         "motivation": "classifying",
-         "type": "Annotation",
-         "body": {
-            "type": "TextualBody",
-            "purpose": "classifying",
-            "value": "recipient",
-            "id": "urn:example:republic:person-2"
-         },
-         "@context": "http://www.w3.org/ns/anno.jsonld",
-         "target": {
-            "source": "urn:example:republic:text-1",
-            "type": "Text",
-            "selector": {
-               "type": "urn:example:republic:TextAnchorSelector",
-               "start": 190,
-               "end": 200
-            }
-         },
-         "id": "http://localhost:9999/w3c/my-container/62ccf74d-27aa-4f7d-a2ed-edece9bba087"
-      }
-   ]
+  "id": "http://localhost:9999/services/volume-1728/search/d6883433-de41-43fb-93d2-85c1cd9570ee?page=0",
+  "type": "AnnotationPage",
+  "partOf": "http://localhost:9999/services/volume-1728/search/d6883433-de41-43fb-93d2-85c1cd9570ee",
+  "startIndex": 0,
+  "items": [
+    ....
+  ]
 }
 ```
 
