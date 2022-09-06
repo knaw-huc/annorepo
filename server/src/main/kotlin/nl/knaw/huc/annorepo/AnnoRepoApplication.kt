@@ -17,6 +17,7 @@ import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ARConst.APP_NAME
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.api.ContainerMetadata
+import nl.knaw.huc.annorepo.auth.AuthenticateFilter
 import nl.knaw.huc.annorepo.cli.EnvCommand
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.health.MongoDbHealthCheck
@@ -78,6 +79,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             register(ServiceResource(configuration, mongoClient))
             register(BatchResource(configuration, mongoClient))
             register(SecuredResource(configuration))
+            register(AuthenticateFilter())
 //            register(ListResource(configuration, mongoClient))
 
             register(RuntimeExceptionMapper())

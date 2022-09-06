@@ -4,6 +4,7 @@ import com.codahale.metrics.annotation.Timed
 import io.swagger.v3.jaxrs2.integration.OpenApiServlet.APPLICATION_JSON
 import io.swagger.v3.oas.annotations.Hidden
 import io.swagger.v3.oas.annotations.Operation
+import nl.knaw.huc.annorepo.auth.NeedsAPIKey
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import org.slf4j.LoggerFactory
 import javax.ws.rs.BadRequestException
@@ -31,6 +32,15 @@ class SecuredResource(
         }
         val s = "api-key=$apiKey"
         return s
+    }
+
+    @Operation(description = "Can i?")
+    @Timed
+    @GET
+    @Path("s")
+    @NeedsAPIKey
+    fun gets(): String {
+        return "yes"
     }
 
 }
