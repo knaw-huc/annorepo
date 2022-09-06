@@ -38,7 +38,7 @@ class AnnoRepoClient(serverURI: URI, private val userAgent: String? = null) {
         val location = location(response) ?: ""
         val containerId = extractId(location)
         val etag = eTag(response) ?: ""
-        return AnnoRepoResponse(created, location, containerId = containerId, etag = etag)
+        return AnnoRepoResponse(created, location, containerId = containerId, eTag = etag)
     }
 
     private fun extractId(location: String): String {

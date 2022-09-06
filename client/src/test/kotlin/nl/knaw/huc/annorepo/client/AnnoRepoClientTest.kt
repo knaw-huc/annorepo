@@ -27,8 +27,8 @@ class AnnoRepoClientTest {
         assertThat(response.created).isTrue
         assertThat(response.location).startsWith(ANNOREPO_BASE_URL)
         assertThat(response.containerId).isNotNull
-        assertThat(response.etag).isNotNull
-        client.deleteContainer(response.containerId, response.etag)
+        assertThat(response.eTag).isNotNull
+        client.deleteContainer(response.containerId, response.eTag)
     }
 
     @Test
@@ -38,8 +38,8 @@ class AnnoRepoClientTest {
         assertThat(response.created).isTrue
         assertThat(response.location).endsWith("/$preferredName/")
         assertThat(response.containerId).isEqualTo(preferredName)
-        assertThat(response.etag).isNotNull
-        val ok = client.deleteContainer(preferredName, response.etag)
+        assertThat(response.eTag).isNotNull
+        val ok = client.deleteContainer(preferredName, response.eTag)
         assertThat(ok).isTrue
     }
 

@@ -25,6 +25,7 @@ import nl.knaw.huc.annorepo.resources.AboutResource
 import nl.knaw.huc.annorepo.resources.BatchResource
 import nl.knaw.huc.annorepo.resources.HomePageResource
 import nl.knaw.huc.annorepo.resources.RuntimeExceptionMapper
+import nl.knaw.huc.annorepo.resources.SecuredResource
 import nl.knaw.huc.annorepo.resources.ServiceResource
 import nl.knaw.huc.annorepo.resources.W3CResource
 import nl.knaw.huc.annorepo.service.LocalDateTimeSerializer
@@ -76,6 +77,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             register(W3CResource(configuration, mongoClient))
             register(ServiceResource(configuration, mongoClient))
             register(BatchResource(configuration, mongoClient))
+            register(SecuredResource(configuration))
 //            register(ListResource(configuration, mongoClient))
 
             register(RuntimeExceptionMapper())
