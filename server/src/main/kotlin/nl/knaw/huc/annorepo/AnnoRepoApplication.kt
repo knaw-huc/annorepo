@@ -8,6 +8,8 @@ import com.mongodb.client.model.Indexes
 import `in`.vectorpro.dropwizard.swagger.SwaggerBundle
 import `in`.vectorpro.dropwizard.swagger.SwaggerBundleConfiguration
 import io.dropwizard.Application
+import io.dropwizard.auth.AuthDynamicFeature
+import io.dropwizard.auth.oauth.OAuthCredentialAuthFilter
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor
 import io.dropwizard.configuration.SubstitutingSourceProvider
 import io.dropwizard.jdbi3.bundles.JdbiExceptionsBundle
@@ -17,7 +19,8 @@ import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ARConst.APP_NAME
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.api.ContainerMetadata
-import nl.knaw.huc.annorepo.auth.AuthenticateFilter
+import nl.knaw.huc.annorepo.auth.AROAuthAuthenticator
+import nl.knaw.huc.annorepo.auth.User
 import nl.knaw.huc.annorepo.cli.EnvCommand
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.health.MongoDbHealthCheck
@@ -26,7 +29,6 @@ import nl.knaw.huc.annorepo.resources.AboutResource
 import nl.knaw.huc.annorepo.resources.BatchResource
 import nl.knaw.huc.annorepo.resources.HomePageResource
 import nl.knaw.huc.annorepo.resources.RuntimeExceptionMapper
-import nl.knaw.huc.annorepo.resources.SecuredResource
 import nl.knaw.huc.annorepo.resources.ServiceResource
 import nl.knaw.huc.annorepo.resources.W3CResource
 import nl.knaw.huc.annorepo.service.LocalDateTimeSerializer
@@ -78,10 +80,15 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             register(W3CResource(configuration, mongoClient))
             register(ServiceResource(configuration, mongoClient))
             register(BatchResource(configuration, mongoClient))
-            register(SecuredResource(configuration))
-            register(AuthenticateFilter())
+            register(
+                AuthDynamicFeature(
+                    OAuthCredentialAuthFilter.Builder<User>()
+                        .setAuthenticator(AROAuthAuthenticator())
+                        .setPrefix("Bearer")
+                        .buildAuthFilter()
+                )
+            )
 //            register(ListResource(configuration, mongoClient))
-
             register(RuntimeExceptionMapper())
         }
         environment.healthChecks().apply {
