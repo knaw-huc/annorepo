@@ -27,6 +27,7 @@ import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.health.MongoDbHealthCheck
 import nl.knaw.huc.annorepo.health.ServerHealthCheck
 import nl.knaw.huc.annorepo.resources.AboutResource
+import nl.knaw.huc.annorepo.resources.AdminResource
 import nl.knaw.huc.annorepo.resources.BatchResource
 import nl.knaw.huc.annorepo.resources.HomePageResource
 import nl.knaw.huc.annorepo.resources.RuntimeExceptionMapper
@@ -81,7 +82,8 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             register(W3CResource(configuration, mongoClient))
             register(ServiceResource(configuration, mongoClient))
             register(BatchResource(configuration, mongoClient))
-            if (configuration.needsAuthentication) {
+            if (configuration.withAuthentication) {
+                register(AdminResource(configuration, mongoClient))
                 register(
                     AuthDynamicFeature(
                         OAuthCredentialAuthFilter.Builder<User>()

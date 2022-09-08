@@ -7,4 +7,5 @@ object ResourcePaths {
     const val SEARCH = "search"
     const val SERVICES = "services"
     const val BATCH = "batch"
+    const val ADMIN = "admin"
 }

@@ -22,7 +22,7 @@ class AboutResource(configuration: AnnoRepoConfiguration, appName: String, versi
         version = version,
         startedAt = Instant.now().toString(),
         baseURI = configuration.externalBaseUrl,
-        needsAuthentication = configuration.needsAuthentication
+        needsAuthentication = configuration.withAuthentication
     )
 
     @Operation(description = "Get some info about the server")

@@ -1,10 +1,12 @@
 package nl.knaw.huc.annorepo.auth
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.security.Principal
 
-data class User(private val name: String) : Principal {
-    val log: Logger = LoggerFactory.getLogger(javaClass)
+abstract class User : Principal {
+    internal abstract var name: String
     override fun getName(): String = name
 }
+
+data class BasicUser(override var name: String) : User()
+
+data class RootUser(override var name: String = ":root:") : User()

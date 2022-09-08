@@ -39,7 +39,7 @@ open class AnnoRepoConfiguration : Configuration() {
 
     @Valid
     @JsonProperty
-    var needsAuthentication: Boolean = false
+    var withAuthentication: Boolean = false
 
     @Valid
     @NotNull

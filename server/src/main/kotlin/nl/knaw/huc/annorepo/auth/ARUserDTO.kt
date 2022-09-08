@@ -6,8 +6,8 @@ import nl.knaw.huc.annorepo.api.ARConst.USER_COLLECTION
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import org.bson.Document
 
-private const val FIELD_API_KEY = "apiKey"
-private const val FIELD_USER_NAME = "userName"
+const val FIELD_API_KEY = "apiKey"
+const val FIELD_USER_NAME = "userName"
 
 class ARUserDTO(
     private val configuration: AnnoRepoConfiguration,
@@ -31,7 +31,7 @@ class ARUserDTO(
             }
 
             configuration.rootApiKey -> {
-                User(":root:")
+                RootUser()
             }
 
             else -> {
@@ -39,7 +39,7 @@ class ARUserDTO(
                 if (doc == null) {
                     null
                 } else {
-                    User(doc.getString(FIELD_USER_NAME))
+                    BasicUser(doc.getString(FIELD_USER_NAME))
                 }
             }
         }
