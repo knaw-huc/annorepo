@@ -8,6 +8,7 @@ import com.mongodb.client.MongoIterable
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.ContainerSpecs
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.resources.ServiceResourceTest.Companion.securityContext
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -45,7 +46,8 @@ class W3CResourceTest {
                 context = mutableListOf(),
                 type = listOf(),
                 label = "container label"
-            ), slug = "container"
+            ), slug = "container",
+            context = securityContext
         )
         println(response)
         assertThat(response.status).isEqualTo(Response.Status.CREATED)

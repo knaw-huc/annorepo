@@ -5,5 +5,6 @@ data class AboutInfo(
     val version: String,
     val startedAt: String,
     val baseURI: String,
-    val source: String = "https://github.com/knaw-huc/annorepo"
+    val source: String = "https://github.com/knaw-huc/annorepo",
+    val needsAuthentication: Boolean
 )

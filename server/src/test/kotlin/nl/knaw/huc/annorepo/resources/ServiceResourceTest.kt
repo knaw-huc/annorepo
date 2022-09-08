@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
 import java.net.URI
+import javax.ws.rs.core.SecurityContext
 
 @ExtendWith(MockKExtension::class)
 class ServiceResourceTest {
@@ -40,7 +41,8 @@ class ServiceResourceTest {
                     }
                 }
         """.trimIndent()
-        val response = resource.createSearch(containerName, queryJson)
+
+        val response = resource.createSearch(containerName, queryJson, context = securityContext)
         log.info("result={}", response)
         val locations = response.headers["location"] as List<*>
         val location: URI = locations[0] as URI
@@ -52,7 +54,7 @@ class ServiceResourceTest {
         val searchId = location.path.split('/').last()
         log.info("searchId={}", searchId)
 
-        val searchResponse = resource.getSearchResultPage(containerName, searchId)
+        val searchResponse = resource.getSearchResultPage(containerName, searchId, context = securityContext)
         log.info("searchResponse={}", searchResponse)
         log.info("searchResponse.entity={}", searchResponse.entity)
     }
@@ -64,6 +66,9 @@ class ServiceResourceTest {
 
         @MockK
         lateinit var config: AnnoRepoConfiguration
+
+        @MockK
+        lateinit var securityContext: SecurityContext
 
         @MockK
         lateinit var client: MongoClient

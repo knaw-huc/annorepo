@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory
 import java.net.URI
 import java.util.*
 import java.util.concurrent.TimeUnit
+import javax.annotation.security.PermitAll
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.GET
 import javax.ws.rs.NotFoundException
@@ -27,8 +28,10 @@ import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
+import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
+import javax.ws.rs.core.SecurityContext
 import javax.ws.rs.core.UriBuilder
 
 typealias AggregateStageList = List<Bson>
@@ -38,6 +41,7 @@ data class QueryCacheItem(val queryMap: HashMap<*, *>, val aggregateStages: Aggr
 
 @Path(SERVICES)
 @Produces(MediaType.APPLICATION_JSON)
+@PermitAll
 class ServiceResource(
     private val configuration: AnnoRepoConfiguration,
     client: MongoClient
@@ -60,7 +64,8 @@ class ServiceResource(
     @Path("{containerName}/search")
     fun createSearch(
         @PathParam("containerName") containerName: String,
-        queryJson: String
+        queryJson: String,
+        @Context context: SecurityContext
     ): Response {
         checkContainerExists(containerName)
         val queryMap = JSON.parse(queryJson)
@@ -89,7 +94,8 @@ class ServiceResource(
     fun getSearchResultPage(
         @PathParam("containerName") containerName: String,
         @PathParam("searchId") searchId: String,
-        @QueryParam("page") page: Int = 0
+        @QueryParam("page") page: Int = 0,
+        @Context context: SecurityContext
     ): Response {
         val queryCacheItem = getQueryCacheItem(searchId)
         val aggregateStages = queryCacheItem.aggregateStages.toMutableList().apply {
@@ -115,7 +121,8 @@ class ServiceResource(
     @Path("{containerName}/search/{searchId}/info")
     fun getSearchInfo(
         @PathParam("containerName") containerName: String,
-        @PathParam("searchId") searchId: String
+        @PathParam("searchId") searchId: String,
+        @Context context: SecurityContext
     ): Response {
         checkContainerExists(containerName)
         val queryCacheItem = getQueryCacheItem(searchId)

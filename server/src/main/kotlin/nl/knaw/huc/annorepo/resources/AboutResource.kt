@@ -21,7 +21,8 @@ class AboutResource(configuration: AnnoRepoConfiguration, appName: String, versi
         appName = appName,
         version = version,
         startedAt = Instant.now().toString(),
-        baseURI = configuration.externalBaseUrl
+        baseURI = configuration.externalBaseUrl,
+        needsAuthentication = configuration.needsAuthentication
     )
 
     @Operation(description = "Get some info about the server")

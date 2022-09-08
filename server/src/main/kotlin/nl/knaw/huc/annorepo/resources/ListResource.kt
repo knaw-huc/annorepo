@@ -14,15 +14,19 @@ import org.bson.Document
 import org.litote.kmongo.aggregate
 import org.litote.kmongo.match
 import org.slf4j.LoggerFactory
+import javax.annotation.security.PermitAll
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
+import javax.ws.rs.core.Context
+import javax.ws.rs.core.SecurityContext
 
 @Hidden
 @Path(ResourcePaths.LIST)
 @Produces(ANNOTATION_MEDIA_TYPE)
+@PermitAll
 class ListResource(
     private val configuration: AnnoRepoConfiguration, client: MongoClient
 ) {
@@ -34,7 +38,7 @@ class ListResource(
     @Timed
     @GET
     @Path("containers")
-    fun getContainerURLs(): List<String> =
+    fun getContainerURLs(@Context context: SecurityContext): List<String> =
         mdb.listCollectionNames().filter {
             it != CONTAINER_METADATA_COLLECTION
         }.map {
@@ -49,7 +53,8 @@ class ListResource(
     @Path("{containerName}/annotations")
     fun getAnnotationURLs(
         @PathParam("containerName") containerName: String,
-        @QueryParam("start") offset: Int = 0
+        @QueryParam("start") offset: Int = 0,
+        @Context context: SecurityContext
     ): List<String> =
         mdb.getCollection(containerName).aggregate<Document>(
             match(exists(field)),

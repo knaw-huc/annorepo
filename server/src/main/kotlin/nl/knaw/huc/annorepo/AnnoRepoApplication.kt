@@ -15,11 +15,12 @@ import io.dropwizard.configuration.SubstitutingSourceProvider
 import io.dropwizard.jdbi3.bundles.JdbiExceptionsBundle
 import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
-import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ARConst.APP_NAME
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
+import nl.knaw.huc.annorepo.api.ARConst.EnvironmentVariable
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.auth.AROAuthAuthenticator
+import nl.knaw.huc.annorepo.auth.ARUserDTO
 import nl.knaw.huc.annorepo.auth.User
 import nl.knaw.huc.annorepo.cli.EnvCommand
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
@@ -62,7 +63,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
     override fun run(configuration: AnnoRepoConfiguration?, environment: Environment) {
         log.info(
             "AR_ environment variables:\n\n" +
-                    ARConst.EnvironmentVariable.values()
+                    EnvironmentVariable.values()
                         .joinToString("\n") { e ->
                             "  ${e.name}:\t${System.getenv(e.name) ?: "(not set, using default)"}"
                         } +
@@ -80,14 +81,16 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             register(W3CResource(configuration, mongoClient))
             register(ServiceResource(configuration, mongoClient))
             register(BatchResource(configuration, mongoClient))
-            register(
-                AuthDynamicFeature(
-                    OAuthCredentialAuthFilter.Builder<User>()
-                        .setAuthenticator(AROAuthAuthenticator())
-                        .setPrefix("Bearer")
-                        .buildAuthFilter()
+            if (configuration.needsAuthentication) {
+                register(
+                    AuthDynamicFeature(
+                        OAuthCredentialAuthFilter.Builder<User>()
+                            .setAuthenticator(AROAuthAuthenticator(ARUserDTO(configuration, mongoClient)))
+                            .setPrefix("Bearer")
+                            .buildAuthFilter()
+                    )
                 )
-            )
+            }
 //            register(ListResource(configuration, mongoClient))
             register(RuntimeExceptionMapper())
         }
@@ -103,7 +106,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         log.info(
             "\n\n  Starting $name (v$appVersion)\n" +
                     "    locally accessible at    " +
-                    "http://localhost:${System.getenv(ARConst.EnvironmentVariable.AR_SERVER_PORT.name) ?: 8080}\n" +
+                    "http://localhost:${System.getenv(EnvironmentVariable.AR_SERVER_PORT.name) ?: 8080}\n" +
                     "    externally accessible at ${configuration.externalBaseUrl}\n"
         )
     }

@@ -38,6 +38,15 @@ open class AnnoRepoConfiguration : Configuration() {
     var rangeSelectorType = "urn:republic:TextAnchorSelector"
 
     @Valid
+    @JsonProperty
+    var needsAuthentication: Boolean = false
+
+    @Valid
+    @NotNull
+    @JsonProperty
+    var rootApiKey: String = "YouIntSeenMeRoit"
+
+    @Valid
     @NotNull
     @JsonProperty("swagger")
     val swaggerBundleConfiguration = SwaggerBundleConfiguration().apply {

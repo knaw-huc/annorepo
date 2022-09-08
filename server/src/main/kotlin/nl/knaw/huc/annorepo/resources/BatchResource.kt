@@ -7,15 +7,19 @@ import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import org.bson.Document
 import java.util.*
+import javax.annotation.security.PermitAll
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
+import javax.ws.rs.core.SecurityContext
 
 @Path(ResourcePaths.BATCH)
 @Produces(MediaType.APPLICATION_JSON)
+@PermitAll
 class BatchResource(
     private val configuration: AnnoRepoConfiguration,
     private val client: MongoClient,
@@ -29,7 +33,8 @@ class BatchResource(
     @Path("{containerName}/annotations")
     fun postAnnotationsBatch(
         @PathParam("containerName") containerName: String,
-        annotations: List<HashMap<String, Any>>
+        annotations: List<HashMap<String, Any>>,
+        @Context context: SecurityContext
     ): Response {
         val annotationNames = mutableListOf<String>()
         val mdb = client.getDatabase(configuration.databaseName)

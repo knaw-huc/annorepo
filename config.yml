@@ -12,6 +12,9 @@ databaseName: ${AR_DB_NAME:-annorepo}
 
 rangeSelectorType: ${AR_RANGE_SELECTOR_TYPE:-urn:republic:TextAnchorSelector}
 
+needsAuthentication: ${AR_NEEDS_AUTHENTICATION:-false}
+rootApiKey: ${AR_ROOT_API_KEY:-thisdefaultapikeyisunsafesochangeitplease}
+
 logging:
   level: INFO
   loggers:
