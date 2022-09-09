@@ -7,7 +7,7 @@ import nl.knaw.huc.annorepo.auth.FIELD_API_KEY
 import nl.knaw.huc.annorepo.auth.FIELD_USER_NAME
 import nl.knaw.huc.annorepo.auth.RejectedUserEntry
 import nl.knaw.huc.annorepo.auth.RootUser
-import nl.knaw.huc.annorepo.auth.UserDTO
+import nl.knaw.huc.annorepo.auth.UserDAO
 import nl.knaw.huc.annorepo.auth.UserEntry
 import org.slf4j.LoggerFactory
 import javax.annotation.security.PermitAll
@@ -29,7 +29,7 @@ import javax.ws.rs.core.SecurityContext
 @Produces(MediaType.APPLICATION_JSON)
 @PermitAll
 class AdminResource(
-    private val userDTO: UserDTO
+    private val userDAO: UserDAO
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -39,7 +39,7 @@ class AdminResource(
     @Path("users")
     fun getUsers(@Context context: SecurityContext): Response {
         assertUserIsRoot(context)
-        val users = userDTO.allUserEntries()
+        val users = userDAO.allUserEntries()
         return Response.ok(users).build()
     }
 
@@ -69,7 +69,7 @@ class AdminResource(
                 )
             }
         }
-        val result = userDTO.addUserEntries(correctEntries)
+        val result = userDAO.addUserEntries(correctEntries)
         val entity = result.copy(rejected = rejectedEntries.plus(result.rejected))
         return Response.ok(entity).build()
     }
@@ -80,7 +80,7 @@ class AdminResource(
     @Path("users/{userName}")
     fun deleteUser(@Context context: SecurityContext, @PathParam("userName") userName: String): Response {
         assertUserIsRoot(context)
-        val userWasDeleted = userDTO.deleteUsersByName(listOf(userName))
+        val userWasDeleted = userDAO.deleteUsersByName(listOf(userName))
         return if (userWasDeleted) {
             Response.noContent().build()
         } else {

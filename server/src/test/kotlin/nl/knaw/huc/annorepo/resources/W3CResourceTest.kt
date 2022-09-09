@@ -50,7 +50,7 @@ class W3CResourceTest {
             context = securityContext
         )
         println(response)
-        assertThat(response.status).isEqualTo(Response.Status.CREATED)
+        assertThat(response.status).isEqualTo(Response.Status.CREATED.statusCode)
         assertThat(response.headers).containsAllEntriesOf(
             mapOf(
                 "Accept-Post" to listOf("""application/ld+json; profile="http://www.w3.org/ns/anno.jsonld", text/turtle""")

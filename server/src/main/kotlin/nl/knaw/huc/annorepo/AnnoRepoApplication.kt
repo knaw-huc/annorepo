@@ -20,7 +20,7 @@ import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.api.ARConst.EnvironmentVariable
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.auth.AROAuthAuthenticator
-import nl.knaw.huc.annorepo.auth.ARUserDTO
+import nl.knaw.huc.annorepo.auth.ARUserDAO
 import nl.knaw.huc.annorepo.auth.User
 import nl.knaw.huc.annorepo.cli.EnvCommand
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
@@ -82,11 +82,11 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             register(ServiceResource(configuration, mongoClient))
             register(BatchResource(configuration, mongoClient))
             if (configuration.withAuthentication) {
-                register(AdminResource(ARUserDTO(configuration, mongoClient)))
+                register(AdminResource(ARUserDAO(configuration, mongoClient)))
                 register(
                     AuthDynamicFeature(
                         OAuthCredentialAuthFilter.Builder<User>()
-                            .setAuthenticator(AROAuthAuthenticator(ARUserDTO(configuration, mongoClient)))
+                            .setAuthenticator(AROAuthAuthenticator(ARUserDAO(configuration, mongoClient)))
                             .setPrefix("Bearer")
                             .buildAuthFilter()
                     )

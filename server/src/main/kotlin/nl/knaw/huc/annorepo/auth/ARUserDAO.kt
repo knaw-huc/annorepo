@@ -16,9 +16,9 @@ const val FIELD_USER_NAME = "userName"
 data class RejectedUserEntry(val userEntry: Map<String, String>, val reason: String)
 data class UserAddResults(val added: List<String>, val rejected: List<RejectedUserEntry>)
 
-class ARUserDTO(
+class ARUserDAO(
     private val configuration: AnnoRepoConfiguration, mongoClient: MongoClient
-) : UserDTO {
+) : UserDAO {
 
     private val mdb = mongoClient.getDatabase(configuration.databaseName)
     private val userCollection = mdb.getCollection(USER_COLLECTION)
@@ -53,13 +53,12 @@ class ARUserDTO(
     override fun addUserEntries(userEntries: List<UserEntry>): UserAddResults {
         val added = mutableListOf<String>()
         val rejected = mutableListOf<RejectedUserEntry>()
-        val documents = mutableListOf<Document>()
         for (userEntry in userEntries) {
             when {
                 userEntry.apiKey == rootApiKey || apiKeyExistsInCollection(userEntry) ->
                     rejected.add(
                         RejectedUserEntry(
-                            userEntry = Companion.asMap(userEntry),
+                            userEntry = asMap(userEntry),
                             reason = "apiKey already in use"
                         )
                     )
@@ -67,7 +66,7 @@ class ARUserDTO(
                 userNameExistsInCollection(userEntry) ->
                     rejected.add(
                         RejectedUserEntry(
-                            userEntry = Companion.asMap(userEntry),
+                            userEntry = asMap(userEntry),
                             reason = "userName already in use"
                         )
                     )

@@ -1,6 +1,6 @@
 package nl.knaw.huc.annorepo.auth
 
-interface UserDTO {
+interface UserDAO {
     fun userForApiKey(apiKey: String?): User?
     fun addUserEntries(userEntries: List<UserEntry>): UserAddResults
     fun allUserEntries(): List<UserEntry>
