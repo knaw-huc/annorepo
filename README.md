@@ -19,4 +19,7 @@ Inspired by [elucidate](https://github.com/dlcs/elucidate-server).
 ----
 
 [USAGE](docs/usage.md) |
-[LICENSE](LICENSE)
+[LICENSE](LICENSE) |
+[AUTHORS](AUTHORS) |
+[MAINTAINERS](MAINTAINERS) |
+[CONTRIBUTORS](CONTRIBUTORS)
