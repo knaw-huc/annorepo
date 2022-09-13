@@ -11,7 +11,8 @@ object ARConst {
         AR_DB_NAME,
         AR_PAGE_SIZE,
         AR_ROOT_API_KEY,
-        AR_WITH_AUTHENTICATION
+        AR_WITH_AUTHENTICATION,
+        AR_PRETTY_PRINT,
     }
 
     const val ANNO_JSONLD_URL = "http://www.w3.org/ns/anno.jsonld"

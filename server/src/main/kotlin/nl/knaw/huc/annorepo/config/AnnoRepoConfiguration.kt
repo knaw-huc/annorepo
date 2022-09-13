@@ -15,6 +15,11 @@ open class AnnoRepoConfiguration : Configuration() {
     @Valid
     @NotNull
     @JsonProperty
+    var prettyPrint: Boolean = true
+
+    @Valid
+    @NotNull
+    @JsonProperty
     var mongodbURL: String = "mongodb://localhost/"
 
     @Valid

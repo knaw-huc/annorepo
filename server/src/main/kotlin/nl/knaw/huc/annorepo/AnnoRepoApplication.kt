@@ -24,6 +24,7 @@ import nl.knaw.huc.annorepo.auth.ARUserDAO
 import nl.knaw.huc.annorepo.auth.User
 import nl.knaw.huc.annorepo.cli.EnvCommand
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.filters.JSONPrettyPrintFilter
 import nl.knaw.huc.annorepo.health.MongoDbHealthCheck
 import nl.knaw.huc.annorepo.health.ServerHealthCheck
 import nl.knaw.huc.annorepo.resources.AboutResource
@@ -81,6 +82,9 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             register(W3CResource(configuration, mongoClient))
             register(ServiceResource(configuration, mongoClient))
             register(BatchResource(configuration, mongoClient))
+            if (configuration.prettyPrint) {
+                register(JSONPrettyPrintFilter())
+            }
             if (configuration.withAuthentication) {
                 register(AdminResource(ARUserDAO(configuration, mongoClient)))
                 register(
