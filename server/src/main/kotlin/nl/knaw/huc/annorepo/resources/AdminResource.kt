@@ -2,6 +2,7 @@ package nl.knaw.huc.annorepo.resources
 
 import com.codahale.metrics.annotation.Timed
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import nl.knaw.huc.annorepo.api.ResourcePaths.ADMIN
 import nl.knaw.huc.annorepo.auth.FIELD_API_KEY
 import nl.knaw.huc.annorepo.auth.FIELD_USER_NAME
@@ -28,6 +29,7 @@ import javax.ws.rs.core.SecurityContext
 @Path(ADMIN)
 @Produces(MediaType.APPLICATION_JSON)
 @PermitAll
+@SecurityRequirement(name = "bearer")
 class AdminResource(
     private val userDAO: UserDAO
 ) {

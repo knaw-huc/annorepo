@@ -5,6 +5,7 @@ import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Filters.exists
 import io.swagger.v3.oas.annotations.Hidden
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.api.ResourcePaths
@@ -27,6 +28,7 @@ import javax.ws.rs.core.SecurityContext
 @Path(ResourcePaths.LIST)
 @Produces(ANNOTATION_MEDIA_TYPE)
 @PermitAll
+@SecurityRequirement(name = "bearer")
 class ListResource(
     private val configuration: AnnoRepoConfiguration, client: MongoClient
 ) {

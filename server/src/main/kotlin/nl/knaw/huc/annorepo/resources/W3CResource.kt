@@ -4,7 +4,10 @@ import com.codahale.metrics.annotation.Timed
 import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Filters
+import com.mongodb.client.model.Filters.eq
+import com.mongodb.client.model.ReplaceOptions
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
 import nl.knaw.huc.annorepo.api.ARConst.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
@@ -20,6 +23,7 @@ import org.eclipse.jetty.util.ajax.JSON
 import org.litote.kmongo.aggregate
 import org.litote.kmongo.findOne
 import org.litote.kmongo.getCollection
+import org.litote.kmongo.replaceOneWithFilter
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.*
@@ -45,6 +49,7 @@ import kotlin.math.abs
 @Path(ResourcePaths.W3C)
 @Produces(ANNOTATION_MEDIA_TYPE)
 @PermitAll
+@SecurityRequirement(name = "bearer")
 class W3CResource(
     val configuration: AnnoRepoConfiguration,
     client: MongoClient,
@@ -111,6 +116,7 @@ class W3CResource(
                     .tag(eTag)
                     .build()
             }
+
             else -> {
                 Response.status(Response.Status.NOT_FOUND).entity("Container '$containerName' not found").build()
             }
@@ -137,17 +143,20 @@ class W3CResource(
                     .entity("Etag does not match")
                     .build()
             }
+
             containerPage == null -> {
                 Response.status(Response.Status.NOT_FOUND)
                     .entity("Container $containerName was not found.")
                     .build()
             }
+
             containerPage.total == 0L -> {
                 mdb.getCollection(containerName).drop()
                 val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
                 containerMetadataCollection.deleteOne(Document("name", containerName))
                 Response.noContent().build()
             }
+
             else -> {
                 Response.status(Response.Status.BAD_REQUEST)
                     .entity(
@@ -264,7 +273,7 @@ class W3CResource(
         container.find(Document("annotation_name", annotationName)).first()
             ?: return Response.status(Response.Status.NOT_FOUND).build()
         val doc = Document("annotation_name", annotationName).append("annotation", annotationDocument)
-        val updateResult = container.replaceOne(Filters.eq("annotation_name", annotationName), doc)
+        val updateResult = container.replaceOne(eq("annotation_name", annotationName), doc)
         if (!updateResult.wasAcknowledged()) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Failed to update annotation").build()
         }
@@ -309,9 +318,13 @@ class W3CResource(
     }
 
     private fun storeCollectionMetadata(label: String, name: String) {
-        val cmd = ContainerMetadata(name, label)
         val containerMetadataStore = mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
-        containerMetadataStore.insertOne(cmd)
+        val result = containerMetadataStore.replaceOneWithFilter(
+            filter = eq("name", name),
+            replacement = ContainerMetadata(name, label),
+            replaceOptions = ReplaceOptions().upsert(true)
+        )
+        log.debug("replace result={}", result)
     }
 
     private fun AnnotationData.contentWithAssignedId(

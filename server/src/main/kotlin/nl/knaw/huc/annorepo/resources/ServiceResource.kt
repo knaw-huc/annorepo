@@ -3,18 +3,27 @@ package nl.knaw.huc.annorepo.resources
 import com.codahale.metrics.annotation.Timed
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.google.common.base.Joiner
+import com.google.common.collect.SortedMultiset
+import com.google.common.collect.TreeMultiset
 import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Aggregates.limit
+import com.mongodb.client.model.Filters.eq
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.AnnotationPage
+import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.ResourcePaths.SERVICES
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.service.JsonLdUtils.extractFields
 import nl.knaw.huc.annorepo.service.UriFactory
 import org.bson.Document
 import org.bson.conversions.Bson
 import org.eclipse.jetty.util.ajax.JSON
+import org.litote.kmongo.findOne
+import org.litote.kmongo.getCollection
+import org.litote.kmongo.json
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.util.*
@@ -42,6 +51,7 @@ data class QueryCacheItem(val queryMap: HashMap<*, *>, val aggregateStages: Aggr
 @Path(SERVICES)
 @Produces(MediaType.APPLICATION_JSON)
 @PermitAll
+@SecurityRequirement(name = "bearer")
 class ServiceResource(
     private val configuration: AnnoRepoConfiguration,
     client: MongoClient
@@ -97,22 +107,23 @@ class ServiceResource(
         @QueryParam("page") page: Int = 0,
         @Context context: SecurityContext
     ): Response {
+        checkContainerExists(containerName)
+
         val queryCacheItem = getQueryCacheItem(searchId)
         val aggregateStages = queryCacheItem.aggregateStages.toMutableList().apply {
             add(Aggregates.skip(page * configuration.pageSize))
             add(paginationStage)
         }
+//        log.debug("aggregateStages=\n  {}", Joiner.on("\n  ").join(aggregateStages))
 
-        checkContainerExists(containerName)
-        val container = mdb.getCollection(containerName)
-        log.debug("aggregateStages=\n  {}", Joiner.on("\n  ").join(aggregateStages))
         val annotations =
-            container.aggregate(aggregateStages)
+            mdb.getCollection(containerName)
+                .aggregate(aggregateStages)
                 .map { a -> toAnnotationMap(a, containerName) }
                 .toList()
-        val entity =
+        val annotationPage =
             buildAnnotationPage(uriFactory.searchURL(containerName, searchId), annotations, page, queryCacheItem.count)
-        return Response.ok(entity).build()
+        return Response.ok(annotationPage).build()
     }
 
     @Operation(description = "Get information about the given search")
@@ -128,6 +139,51 @@ class ServiceResource(
         val queryCacheItem = getQueryCacheItem(searchId)
         val info = mapOf("query" to queryCacheItem.queryMap, "hits" to queryCacheItem.count)
         return Response.ok(info).build()
+    }
+
+    @Operation(description = "Get a list of the fields used in the annotations in a container")
+    @Timed
+    @GET
+    @Path("{containerName}/fields")
+    fun getAnnotationFieldsForContainer(
+        @PathParam("containerName") containerName: String
+    ): Response {
+        checkContainerExists(containerName)
+        val container = mdb.getCollection(containerName)
+        val fields = container.find()
+            .flatMap { d -> extractFields(d["annotation"]!!.json) }
+            .filter { f -> !f.contains("@") }
+            .toList()
+        val bag: SortedMultiset<String> = TreeMultiset.create()
+        for (f in fields) {
+            bag.add(f)
+        }
+        val fieldCounts = mutableMapOf<String, Int>()
+        bag.forEachEntry { field, count -> fieldCounts[field] = count }
+        return Response.ok(fieldCounts).build()
+    }
+
+    @Operation(description = "Get some container metadata")
+    @Timed
+    @GET
+    @Path("{containerName}/metadata")
+    fun getMetadataForContainer(
+        @PathParam("containerName") containerName: String
+    ): Response {
+        checkContainerExists(containerName)
+        val container = mdb.getCollection(containerName)
+        val containerMetadataStore = mdb.getCollection<ContainerMetadata>(ARConst.CONTAINER_METADATA_COLLECTION)
+        val meta = containerMetadataStore.findOne { eq("name", containerName) }!!
+
+        val metadata = mapOf(
+            "id" to uriFactory.containerURL(containerName),
+            "label" to meta.label,
+            "created" to meta.createdAt,
+            "modified" to meta.modifiedAt,
+            "size" to container.countDocuments(),
+            "indexes" to container.listIndexes(),
+        )
+        return Response.ok(metadata).build()
     }
 
     private fun getQueryCacheItem(searchId: String): QueryCacheItem =

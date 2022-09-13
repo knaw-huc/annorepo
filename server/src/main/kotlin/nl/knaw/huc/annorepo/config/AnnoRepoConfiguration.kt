@@ -53,6 +53,10 @@ open class AnnoRepoConfiguration : Configuration() {
         resourcePackage = AboutResource::class.java.getPackage().name
         version = javaClass.getPackage().implementationVersion
         title = ARConst.APP_NAME
+        license = "Apache 2.0"
+        licenseUrl = "http://www.apache.org/licenses/"
+        contactUrl = "https://github.com/knaw-huc/annorepo"
+        contact = ARConst.APP_NAME
     }
 
 }
