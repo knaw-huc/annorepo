@@ -49,7 +49,7 @@ import kotlin.math.abs
 @Path(ResourcePaths.W3C)
 @Produces(ANNOTATION_MEDIA_TYPE)
 @PermitAll
-@SecurityRequirement(name = "bearer")
+@SecurityRequirement(name = "bearerAuth")
 class W3CResource(
     val configuration: AnnoRepoConfiguration,
     client: MongoClient,

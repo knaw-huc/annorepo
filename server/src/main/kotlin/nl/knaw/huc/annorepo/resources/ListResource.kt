@@ -28,7 +28,7 @@ import javax.ws.rs.core.SecurityContext
 @Path(ResourcePaths.LIST)
 @Produces(ANNOTATION_MEDIA_TYPE)
 @PermitAll
-@SecurityRequirement(name = "bearer")
+@SecurityRequirement(name = "bearerAuth")
 class ListResource(
     private val configuration: AnnoRepoConfiguration, client: MongoClient
 ) {

@@ -1,24 +1,10 @@
-package nl.knaw.huc.annorepo.resources
+package nl.knaw.huc.annorepo.resources.tools
 
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Filters
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import org.bson.conversions.Bson
 import javax.ws.rs.BadRequestException
-
-const val WITHIN_RANGE = ":isWithinTextAnchorRange"
-const val OVERLAPPING_WITH_RANGE = ":overlapsWithTextAnchorRange"
-
-const val IS_EQUAL_TO = ":="
-const val IS_NOT = ":!="
-const val IS_LESS = ":<"
-const val IS_LESS_OR_EQUAL = ":<="
-const val IS_GREATER = ":>"
-const val IS_GREATER_OR_EQUAL = ":>="
-const val IS_IN = ":isIn"
-const val IS_NOT_IN = ":isNotIn"
-
-private const val ANNOTATION_FIELD_PREFIX = "annotation."
 
 class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
 
@@ -48,27 +34,35 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
                 IS_NOT_IN -> Aggregates.match(
                     Filters.nin("$ANNOTATION_FIELD_PREFIX$field", (v as Array<Any>).toList())
                 )
+
                 IS_IN -> Aggregates.match(
                     Filters.`in`("$ANNOTATION_FIELD_PREFIX$field", (v as Array<Any>).toList())
                 )
+
                 IS_GREATER -> Aggregates.match(
                     Filters.gt("$ANNOTATION_FIELD_PREFIX$field", v)
                 )
+
                 IS_GREATER_OR_EQUAL -> Aggregates.match(
                     Filters.gte("$ANNOTATION_FIELD_PREFIX$field", v)
                 )
+
                 IS_LESS -> Aggregates.match(
                     Filters.lt("$ANNOTATION_FIELD_PREFIX$field", v)
                 )
+
                 IS_LESS_OR_EQUAL -> Aggregates.match(
                     Filters.lte("$ANNOTATION_FIELD_PREFIX$field", v)
                 )
+
                 IS_EQUAL_TO -> Aggregates.match(
                     Filters.eq("$ANNOTATION_FIELD_PREFIX$field", v)
                 )
+
                 IS_NOT -> Aggregates.match(
                     Filters.ne("$ANNOTATION_FIELD_PREFIX$field", v)
                 )
+
                 else -> throw BadRequestException("unknown selector '$k'")
             }
         })
@@ -86,6 +80,7 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
                     )
                 )
             }
+
             else -> throw BadRequestException("invalid parameter: $rawParameters")
         }
 
@@ -102,6 +97,7 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
                     )
                 )
             }
+
             else -> throw BadRequestException("invalid parameter: $rawParameters")
         }
 

@@ -16,10 +16,12 @@ import nl.knaw.huc.annorepo.api.AnnotationPage
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.ResourcePaths.SERVICES
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
+import nl.knaw.huc.annorepo.resources.tools.AnnotationList
+import nl.knaw.huc.annorepo.resources.tools.QueryCacheItem
 import nl.knaw.huc.annorepo.service.JsonLdUtils.extractFields
 import nl.knaw.huc.annorepo.service.UriFactory
 import org.bson.Document
-import org.bson.conversions.Bson
 import org.eclipse.jetty.util.ajax.JSON
 import org.litote.kmongo.findOne
 import org.litote.kmongo.getCollection
@@ -43,15 +45,10 @@ import javax.ws.rs.core.Response
 import javax.ws.rs.core.SecurityContext
 import javax.ws.rs.core.UriBuilder
 
-typealias AggregateStageList = List<Bson>
-typealias AnnotationList = List<Map<String, Any>>
-
-data class QueryCacheItem(val queryMap: HashMap<*, *>, val aggregateStages: AggregateStageList, val count: Int)
-
 @Path(SERVICES)
 @Produces(MediaType.APPLICATION_JSON)
 @PermitAll
-@SecurityRequirement(name = "bearer")
+@SecurityRequirement(name = "bearerAuth")
 class ServiceResource(
     private val configuration: AnnoRepoConfiguration,
     client: MongoClient

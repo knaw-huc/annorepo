@@ -21,7 +21,7 @@ import javax.ws.rs.core.SecurityContext
 @Path(ResourcePaths.BATCH)
 @Produces(MediaType.APPLICATION_JSON)
 @PermitAll
-@SecurityRequirement(name = "bearer")
+@SecurityRequirement(name = "bearerAuth")
 class BatchResource(
     private val configuration: AnnoRepoConfiguration,
     private val client: MongoClient,

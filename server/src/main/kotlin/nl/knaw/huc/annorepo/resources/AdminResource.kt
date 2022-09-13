@@ -2,6 +2,8 @@ package nl.knaw.huc.annorepo.resources
 
 import com.codahale.metrics.annotation.Timed
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import nl.knaw.huc.annorepo.api.ResourcePaths.ADMIN
 import nl.knaw.huc.annorepo.auth.FIELD_API_KEY
@@ -29,13 +31,21 @@ import javax.ws.rs.core.SecurityContext
 @Path(ADMIN)
 @Produces(MediaType.APPLICATION_JSON)
 @PermitAll
-@SecurityRequirement(name = "bearer")
+@SecurityRequirement(name = "bearerAuth")
 class AdminResource(
     private val userDAO: UserDAO
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    @Operation(description = "Get username, api-key for all registered users")
+    @Operation(
+        description = "Get username, api-key for all registered users",
+        parameters = [Parameter(
+            name = "Authorization",
+            `in` = ParameterIn.HEADER,
+            description = "The bearer token",
+            required = true
+        )]
+    )
     @Timed
     @GET
     @Path("users")
@@ -95,6 +105,5 @@ class AdminResource(
             throw NotAuthorizedException("This endpoint is for the root user only")
         }
     }
-
 }
 
