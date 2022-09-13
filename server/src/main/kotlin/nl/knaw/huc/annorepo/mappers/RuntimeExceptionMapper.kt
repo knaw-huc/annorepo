@@ -1,4 +1,4 @@
-package nl.knaw.huc.annorepo.resources
+package nl.knaw.huc.annorepo.mappers
 
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
