@@ -1,4 +1,4 @@
-package nl.knaw.huc.annorepo.resources
+package nl.knaw.huc.annorepo.resources.tools
 
 import io.mockk.every
 import io.mockk.impl.annotations.RelaxedMockK

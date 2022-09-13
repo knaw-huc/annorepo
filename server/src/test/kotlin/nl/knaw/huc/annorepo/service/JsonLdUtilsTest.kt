@@ -2,7 +2,6 @@ package nl.knaw.huc.annorepo.service
 
 import nl.knaw.huc.annorepo.service.JsonLdUtils.checkFieldContext
 import nl.knaw.huc.annorepo.service.JsonLdUtils.extractFields
-import org.apache.jena.query.Dataset
 import org.apache.jena.query.DatasetFactory
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.riot.JsonLDWriteContext
@@ -139,7 +138,7 @@ class JsonLdUtilsTest {
             }
         """.trimMargin()
         println("|$jsonld|")
-        var dataset: Dataset
+//        var dataset: Dataset
         // The parsers will do the necessary character set conversion.
         jsonld.byteInputStream().use { `in` ->
             val errorHandler = MyErrorHandler()
