@@ -43,7 +43,8 @@ class AggregateStageGeneratorTest {
             fail("expected BadRequestException")
         } catch (bre: BadRequestException) {
             log.info(bre.toString())
-            assertThat(bre.message).isEqualTo("Unexpected field: '[field1, field2]' ; query root fields should be strings")
+            assertThat(bre.message)
+                .isEqualTo("Unexpected field: '[field1, field2]' ; query root fields should be strings")
         }
     }
 

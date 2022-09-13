@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
 import nl.knaw.huc.annorepo.api.ARConst.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
+import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.AnnotationData
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.ContainerPage
@@ -49,7 +50,7 @@ import kotlin.math.abs
 @Path(ResourcePaths.W3C)
 @Produces(ANNOTATION_MEDIA_TYPE)
 @PermitAll
-@SecurityRequirement(name = "bearerAuth")
+@SecurityRequirement(name = SECURITY_SCHEME_NAME)
 class W3CResource(
     val configuration: AnnoRepoConfiguration,
     client: MongoClient,
@@ -75,7 +76,7 @@ class W3CResource(
             containerName = UUID.randomUUID().toString()
         }
         mdb.createCollection(containerName)
-        storeCollectionMetadata(containerSpecs.label, containerName)
+        setupCollectionMetadata(containerSpecs.label, containerName)
         val containerData = getContainerPage(containerName, 0, configuration.pageSize)
         val uri = uriFactory.containerURL(containerName)
         val eTag = makeContainerETag(containerName)
@@ -317,7 +318,7 @@ class W3CResource(
         return Response.noContent().build()
     }
 
-    private fun storeCollectionMetadata(label: String, name: String) {
+    private fun setupCollectionMetadata(label: String, name: String) {
         val containerMetadataStore = mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
         val result = containerMetadataStore.replaceOneWithFilter(
             filter = eq("name", name),

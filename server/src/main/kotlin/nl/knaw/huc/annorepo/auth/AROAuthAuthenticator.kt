@@ -4,12 +4,14 @@ import io.dropwizard.auth.Authenticator
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType
 import io.swagger.v3.oas.annotations.security.SecurityScheme
+import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
 
+
 @SecurityScheme(
-    name = "bearerAuth",
+    name = SECURITY_SCHEME_NAME,
     type = SecuritySchemeType.HTTP,
     scheme = "bearer",
     `in` = SecuritySchemeIn.HEADER,

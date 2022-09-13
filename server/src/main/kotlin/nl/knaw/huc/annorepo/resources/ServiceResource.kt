@@ -12,6 +12,7 @@ import com.mongodb.client.model.Filters.eq
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import nl.knaw.huc.annorepo.api.ARConst
+import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.AnnotationPage
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.ResourcePaths.SERVICES
@@ -48,7 +49,7 @@ import javax.ws.rs.core.UriBuilder
 @Path(SERVICES)
 @Produces(MediaType.APPLICATION_JSON)
 @PermitAll
-@SecurityRequirement(name = "bearerAuth")
+@SecurityRequirement(name = SECURITY_SCHEME_NAME)
 class ServiceResource(
     private val configuration: AnnoRepoConfiguration,
     client: MongoClient

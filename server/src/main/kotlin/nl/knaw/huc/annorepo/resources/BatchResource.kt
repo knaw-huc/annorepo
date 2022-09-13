@@ -4,6 +4,7 @@ import com.codahale.metrics.annotation.Timed
 import com.mongodb.client.MongoClient
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import org.bson.Document
@@ -21,7 +22,7 @@ import javax.ws.rs.core.SecurityContext
 @Path(ResourcePaths.BATCH)
 @Produces(MediaType.APPLICATION_JSON)
 @PermitAll
-@SecurityRequirement(name = "bearerAuth")
+@SecurityRequirement(name = SECURITY_SCHEME_NAME)
 class BatchResource(
     private val configuration: AnnoRepoConfiguration,
     private val client: MongoClient,

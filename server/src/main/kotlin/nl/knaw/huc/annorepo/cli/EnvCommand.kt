@@ -8,6 +8,7 @@ import nl.knaw.huc.annorepo.api.ARConst
 
 class EnvCommand : Command("env", "Shows the environment variables you can use") {
     override fun configure(subparser: Subparser?) {
+
     }
 
     override fun run(bootstrap: Bootstrap<*>?, namespace: Namespace?) {

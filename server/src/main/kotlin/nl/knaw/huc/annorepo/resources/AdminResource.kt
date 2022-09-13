@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.enums.ParameterIn
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.ResourcePaths.ADMIN
 import nl.knaw.huc.annorepo.auth.FIELD_API_KEY
 import nl.knaw.huc.annorepo.auth.FIELD_USER_NAME
@@ -31,7 +32,7 @@ import javax.ws.rs.core.SecurityContext
 @Path(ADMIN)
 @Produces(MediaType.APPLICATION_JSON)
 @PermitAll
-@SecurityRequirement(name = "bearerAuth")
+@SecurityRequirement(name = SECURITY_SCHEME_NAME)
 class AdminResource(
     private val userDAO: UserDAO
 ) {
