@@ -3,8 +3,6 @@ package nl.knaw.huc.annorepo.resources
 import com.codahale.metrics.annotation.Timed
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.google.common.collect.SortedMultiset
-import com.google.common.collect.TreeMultiset
 import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Aggregates.limit
@@ -20,13 +18,11 @@ import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
 import nl.knaw.huc.annorepo.resources.tools.AnnotationList
 import nl.knaw.huc.annorepo.resources.tools.QueryCacheItem
-import nl.knaw.huc.annorepo.service.JsonLdUtils.extractFields
 import nl.knaw.huc.annorepo.service.UriFactory
 import org.bson.Document
 import org.eclipse.jetty.util.ajax.JSON
 import org.litote.kmongo.findOne
 import org.litote.kmongo.getCollection
-import org.litote.kmongo.json
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.util.*
@@ -147,18 +143,10 @@ class ServiceResource(
         @PathParam("containerName") containerName: String
     ): Response {
         checkContainerExists(containerName)
-        val container = mdb.getCollection(containerName)
-        val fields = container.find()
-            .flatMap { d -> extractFields(d["annotation"]!!.json) }
-            .filter { f -> !f.contains("@") }
-            .toList()
-        val bag: SortedMultiset<String> = TreeMultiset.create()
-        for (f in fields) {
-            bag.add(f)
-        }
-        val fieldCounts = mutableMapOf<String, Int>()
-        bag.forEachEntry { field, count -> fieldCounts[field] = count }
-        return Response.ok(fieldCounts).build()
+        val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(ARConst.CONTAINER_METADATA_COLLECTION)
+        val containerMetadata: ContainerMetadata =
+            containerMetadataCollection.findOne(eq("name", containerName))!!
+        return Response.ok(containerMetadata.fieldCounts.toSortedMap()).build()
     }
 
     @Operation(description = "Get some container metadata")
