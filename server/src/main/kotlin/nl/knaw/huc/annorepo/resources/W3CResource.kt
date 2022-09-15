@@ -76,7 +76,7 @@ class W3CResource(
             containerName = UUID.randomUUID().toString()
         }
         mdb.createCollection(containerName)
-        setupCollectionMetadata(containerSpecs.label, containerName)
+        setupCollectionMetadata(containerName, containerSpecs.label)
         val containerData = getContainerPage(containerName, 0, configuration.pageSize)
         val uri = uriFactory.containerURL(containerName)
         val eTag = makeContainerETag(containerName)
@@ -154,7 +154,7 @@ class W3CResource(
             containerPage.total == 0L -> {
                 mdb.getCollection(containerName).drop()
                 val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
-                containerMetadataCollection.deleteOne(Document("name", containerName))
+                containerMetadataCollection.deleteOne(eq("name", containerName))
                 Response.noContent().build()
             }
 
@@ -318,7 +318,7 @@ class W3CResource(
         return Response.noContent().build()
     }
 
-    private fun setupCollectionMetadata(label: String, name: String) {
+    private fun setupCollectionMetadata(name: String, label: String) {
         val containerMetadataStore = mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
         val result = containerMetadataStore.replaceOneWithFilter(
             filter = eq("name", name),
