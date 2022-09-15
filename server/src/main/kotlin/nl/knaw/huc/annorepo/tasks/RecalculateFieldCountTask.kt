@@ -61,9 +61,9 @@ class RecalculateFieldCountTask(
         }
 
         val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
-        val containerMetadata: ContainerMetadata? =
+        val containerMetadata: ContainerMetadata =
             containerMetadataCollection.findOne(eq("name", containerName)) ?: return
-        val newContainerMetadata = containerMetadata!!.copy(fieldCounts = fieldCounts)
+        val newContainerMetadata = containerMetadata.copy(fieldCounts = fieldCounts)
         containerMetadataCollection.replaceOne(eq("name", containerName), newContainerMetadata)
     }
 
