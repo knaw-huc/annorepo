@@ -33,7 +33,7 @@
         <assertj-core.version>3.23.1</assertj-core.version>
         <dropwizard-swagger-ui.version>4.6.2</dropwizard-swagger-ui.version>
         <dropwizard-swagger.version>2.0.28-1</dropwizard-swagger.version>
-        <dropwizard.version>2.0.28</dropwizard.version>
+        <dropwizard.version>2.1.2</dropwizard.version>
         <h2.version>2.1.212</h2.version>
         <jackson-module-kotlin.version>2.13.3</jackson-module-kotlin.version>
         <jakarta.json.version>2.0.1</jakarta.json.version>
@@ -43,7 +43,7 @@
         <json.version>20220320</json.version>
         <kmongo.version>4.6.0</kmongo.version>
         <mockito-kotlin.version>4.0.0</mockito-kotlin.version>
-        <mockito.version>4.6.1</mockito.version>
+        <mockito.version>4.8.0</mockito.version>
         <mockk.version>1.12.5</mockk.version>
         <mongodb.version>4.6.0</mongodb.version>
         <problem.version>0.27.1</problem.version>
