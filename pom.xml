@@ -34,7 +34,7 @@
         <dropwizard-swagger-ui.version>4.6.2</dropwizard-swagger-ui.version>
         <dropwizard-swagger.version>2.0.28-1</dropwizard-swagger.version>
         <dropwizard.version>2.1.2</dropwizard.version>
-        <h2.version>2.1.212</h2.version>
+        <h2.version>2.1.214</h2.version>
         <jackson-module-kotlin.version>2.13.3</jackson-module-kotlin.version>
         <jakarta.json.version>2.0.1</jakarta.json.version>
         <jena.version>4.5.0</jena.version>
