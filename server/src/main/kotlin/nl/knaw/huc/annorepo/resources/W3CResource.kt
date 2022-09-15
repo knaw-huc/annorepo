@@ -18,12 +18,14 @@ import nl.knaw.huc.annorepo.api.ContainerPage
 import nl.knaw.huc.annorepo.api.ContainerSpecs
 import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.service.JsonLdUtils
 import nl.knaw.huc.annorepo.service.UriFactory
 import org.bson.Document
 import org.eclipse.jetty.util.ajax.JSON
 import org.litote.kmongo.aggregate
 import org.litote.kmongo.findOne
 import org.litote.kmongo.getCollection
+import org.litote.kmongo.json
 import org.litote.kmongo.replaceOneWithFilter
 import org.slf4j.LoggerFactory
 import java.time.Instant
@@ -192,8 +194,11 @@ class W3CResource(
             name = UUID.randomUUID().toString()
         }
         val annotationDocument = Document.parse(annotationJson)
+        val fields = JsonLdUtils.extractFields(annotationJson)
+        updateFieldCount(containerName, fields, emptySet())
         val doc = Document("annotation_name", name).append("annotation", annotationDocument)
         val r = container.insertOne(doc).insertedId?.asObjectId()?.value
+
         val annotationData = AnnotationData(
             r!!.timestamp.toLong(),
             name,
@@ -270,14 +275,18 @@ class W3CResource(
                 .entity("Etag does not match")
                 .build()
         val annotationDocument = Document.parse(annotationJson)
+        val newFields = JsonLdUtils.extractFields(annotationJson)
+
         val container = mdb.getCollection(containerName)
-        container.find(Document("annotation_name", annotationName)).first()
+        val oldAnnotation = container.find(Document("annotation_name", annotationName)).first()
             ?: return Response.status(Response.Status.NOT_FOUND).build()
         val doc = Document("annotation_name", annotationName).append("annotation", annotationDocument)
         val updateResult = container.replaceOne(eq("annotation_name", annotationName), doc)
         if (!updateResult.wasAcknowledged()) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Failed to update annotation").build()
         }
+        val oldFields = JsonLdUtils.extractFields(oldAnnotation["annotation"]!!.json)
+        updateFieldCount(containerName, newFields, oldFields)
         val annotationData = AnnotationData(
             Instant.now().toEpochMilli(),
             annotationName,
@@ -314,6 +323,11 @@ class W3CResource(
                 .build()
 
         val container = mdb.getCollection(containerName)
+
+        val oldAnnotation = container.find(Document("annotation_name", annotationName)).first()
+            ?: return Response.status(Response.Status.NOT_FOUND).build()
+        val oldFields = JsonLdUtils.extractFields(oldAnnotation["annotation"]!!.json)
+        updateFieldCount(containerName, emptySet(), oldFields)
         container.findOneAndDelete(Document("annotation_name", annotationName))
         return Response.noContent().build()
     }
@@ -404,5 +418,20 @@ class W3CResource(
 
     private fun makeAnnotationETag(containerName: String, annotationName: String): EntityTag =
         EntityTag(abs("$containerName/$annotationName".hashCode()).toString(), true)
+
+    private fun updateFieldCount(containerName: String, fieldsAdded: Set<String>, fieldsDeleted: Set<String>) {
+        val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
+        val containerMetadata: ContainerMetadata =
+            containerMetadataCollection.findOne(eq("name", containerName)) ?: return
+        val fieldCounts = containerMetadata.fieldCounts.toMutableMap()
+        for (field in fieldsAdded.filter { f -> !f.contains("@") }) {
+            fieldCounts[field] = fieldCounts.getOrDefault(field, 0) + 1
+        }
+        for (field in fieldsDeleted.filter { f -> !f.contains("@") }) {
+            fieldCounts[field] = fieldCounts.getOrDefault(field, 1) - 1
+        }
+        val newContainerMetadata = containerMetadata.copy(fieldCounts = fieldCounts)
+        containerMetadataCollection.replaceOne(eq("name", containerName), newContainerMetadata)
+    }
 
 }
