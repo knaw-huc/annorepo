@@ -1,3 +1,11 @@
 {
-  "programmingLanguage": "Kotlin"
+  "programmingLanguage": "Kotlin",
+  "softwareHelp": [
+    {
+      "@id": "https://knaw-huc.github.io/annorepo/docs/api-usage.html",
+      "@type": "WebSite",
+      "name": "AnnoRepo API Usage",
+      "url": "https://knaw-huc.github.io/annorepo/docs/api-usage.html"
+    }
+  ]
 }
