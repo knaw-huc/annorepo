@@ -12,7 +12,8 @@
 # AnnoRepo
 
 A webservice for [W3C Web Annotations](https://www.w3.org/TR/annotation-model/), implementing
-the [W3C Web Annotation Protocol](https://www.w3.org/TR/annotation-protocol/).
+the [W3C Web Annotation Protocol](https://www.w3.org/TR/annotation-protocol/), plus custom services (batch upload,
+search, etc.).
 
 Inspired by [elucidate](https://github.com/dlcs/elucidate-server).
 
