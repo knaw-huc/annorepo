@@ -16,18 +16,36 @@ class IntegrationTest {
         val t = Terminal()
         t.println("Testing server at $server :")
         val client = AnnoRepoClient(URI.create(server), "annorepo-integration-tester")
-        val about = client.getAbout()
-        t.println(green(about.toString()))
-        val containerName = "testcontainer"
-        val r = client.createContainer(containerName)
-        t.println(green(r.toString()))
-        val deleteResult = client.deleteContainer(r.containerId, etag = r.eTag)
-        t.println(green(deleteResult.toString()))
-//        t.printTable()
+        val testResults = mutableMapOf<String, Boolean>()
+
+        testResults["testAbout"] = client.testAbout(t)
+        testResults["ContainerCreationAndDeletion"] = client.testContainerCreationAndDeletion(t)
+
+        t.printTable(testResults)
         t.println("done!")
     }
 
-    private fun Terminal.printTable() {
+    private fun AnnoRepoClient.testContainerCreationAndDeletion(
+        t: Terminal
+    ): Boolean {
+        val containerName = "testcontainer"
+        val r = createContainer(containerName)
+        t.println(green(r.toString()))
+        val deleteResult = deleteContainer(r.containerId, etag = r.eTag)
+        t.println(green(deleteResult.toString()))
+        return true
+    }
+
+    private fun AnnoRepoClient.testAbout(
+        t: Terminal
+    ): Boolean {
+        val about = getAbout()
+        t.println(green(about.toString()))
+        return true
+    }
+
+    private fun Terminal.printTable(testResults: MutableMap<String, Boolean>) {
+//        val rows = testResults.map { name,result -> row(name, failureOrSuccess(result)) }
         println(table {
             header { row("Test", "Result") }
             body {
