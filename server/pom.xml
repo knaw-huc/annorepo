@@ -34,6 +34,12 @@
 
     <dependencies>
         <dependency>
+            <groupId>nl.knaw.huc</groupId>
+            <artifactId>annorepo-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>io.dropwizard</groupId>
             <artifactId>dropwizard-core</artifactId>
         </dependency>

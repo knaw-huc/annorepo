@@ -1,5 +1,9 @@
 package nl.knaw.huc.annorepo.client
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import nl.knaw.huc.annorepo.api.AboutInfo
 import nl.knaw.huc.annorepo.util.extractVersion
 import org.eclipse.jetty.http.HttpStatus
 import org.eclipse.jetty.http.HttpStatus.NO_CONTENT_204
@@ -15,12 +19,15 @@ class AnnoRepoClient(serverURI: URI, private val userAgent: String? = null) {
     private val log = LoggerFactory.getLogger(javaClass)
     private val webTarget: WebTarget = ClientBuilder.newClient()
         .target(serverURI)
+    private val oMapper: ObjectMapper = ObjectMapper().registerKotlinModule()
 
-    fun getAbout(): Map<String, Any> =
-        webTarget.path("about")
+    fun getAbout(): AboutInfo {
+        val json = webTarget.path("about")
             .request()
             .addUserAgent()
-            .get(Map::class.java) as Map<String, Any>
+            .get(String::class.java)
+        return oMapper.readValue(json)
+    }
 
     fun createContainer(
         preferredName: String? = null,
@@ -41,11 +48,6 @@ class AnnoRepoClient(serverURI: URI, private val userAgent: String? = null) {
         return AnnoRepoResponse(created, location, containerId = containerId, eTag = etag)
     }
 
-    private fun extractId(location: String): String {
-        val parts = location.split("/")
-        return parts[parts.size - 2]
-    }
-
     fun deleteContainer(containerName: String, etag: String): Boolean {
         val response = webTarget.path("w3c").path(containerName)
             .request()
@@ -54,6 +56,21 @@ class AnnoRepoClient(serverURI: URI, private val userAgent: String? = null) {
             .delete()
         log.info("{}", response)
         return response.status == NO_CONTENT_204
+    }
+
+    fun getFieldCount(containerName: String): Map<String, Int> {
+        val json = webTarget.path("services").path(containerName).path("fields")
+            .request()
+            .addUserAgent()
+            .get(String::class.java)
+        return oMapper.readValue(json)
+    }
+
+    // private functions
+
+    private fun extractId(location: String): String {
+        val parts = location.split("/")
+        return parts[parts.size - 2]
     }
 
     private fun location(response: Response): String? =
