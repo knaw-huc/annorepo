@@ -1,6 +1,8 @@
 FROM openjdk:18.0.1.1-slim-buster
 
-RUN apt update && apt install curl
+RUN apt update && \
+    apt install -y curl && \
+    rm -rf /var/lib/apt/lists/*
 WORKDIR /apps/annorepo
 COPY ./server/target/annorepo-server-*.jar /apps/annorepo/annorepo-server.jar
 COPY ./k8s/annorepo-server/entrypoint.sh entrypoint.sh
