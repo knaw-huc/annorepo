@@ -1,5 +1,6 @@
 package nl.knaw.huc.annorepo.client
 
+import nl.knaw.huc.annorepo.api.AboutInfo
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
@@ -16,8 +17,8 @@ class AnnoRepoClientTest {
     @Test
     fun `client should connect, and GET about should return a map with at least a version field`() {
         assertThat(client).isNotNull
-        val aboutInfo: Map<String, Any> = client.getAbout()
-        assertThat(aboutInfo).containsKey("version")
+        val aboutInfo: AboutInfo = client.getAbout()
+        assertThat(aboutInfo.version).isNotBlank
         log.info("{}", aboutInfo)
     }
 

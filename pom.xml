@@ -39,6 +39,7 @@
         <h2.version>2.1.214</h2.version>
         <jackson-module-kotlin.version>2.13.3</jackson-module-kotlin.version>
         <jakarta.json.version>2.0.1</jakarta.json.version>
+        <jakarta.ws.rs-api.version>3.1.0</jakarta.ws.rs-api.version>
         <jena.version>4.5.0</jena.version>
         <json-path.version>2.7.0</json-path.version>
         <json-unit-assertj.version>2.35.0</json-unit-assertj.version>

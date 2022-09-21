@@ -13,6 +13,7 @@ import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.AnnotationPage
 import nl.knaw.huc.annorepo.api.ContainerMetadata
+import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
 import nl.knaw.huc.annorepo.api.ResourcePaths.SERVICES
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
@@ -138,7 +139,7 @@ class ServiceResource(
     @Operation(description = "Get a list of the fields used in the annotations in a container")
     @Timed
     @GET
-    @Path("{containerName}/fields")
+    @Path("{containerName}/$FIELDS")
     fun getAnnotationFieldsForContainer(
         @PathParam("containerName") containerName: String
     ): Response {

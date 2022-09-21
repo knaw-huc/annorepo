@@ -4,6 +4,7 @@ object ResourcePaths {
     const val ABOUT = "about"
     const val W3C = "w3c"
     const val LIST = "_list"
+    const val FIELDS = "fields"
     const val SEARCH = "search"
     const val SERVICES = "services"
     const val BATCH = "batch"

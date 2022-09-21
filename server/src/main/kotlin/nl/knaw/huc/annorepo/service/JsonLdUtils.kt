@@ -12,7 +12,7 @@ object JsonLdUtils {
     data class JsonLdReport(val isValid: Boolean = false, val invalidFields: List<String> = emptyList())
 
     fun checkFieldContext(jsonld: String): JsonLdReport {
-        val originalfields = extractFields(jsonld)
+        val originalFields = extractFields(jsonld)
         val reader = StringReader(jsonld)
         val doc = JsonDocument.of(reader)
         val rdf = JsonLd.toRdf(doc).get()

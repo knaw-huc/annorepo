@@ -18,6 +18,7 @@ import nl.knaw.huc.annorepo.api.ContainerPage
 import nl.knaw.huc.annorepo.api.ContainerSpecs
 import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.resources.tools.makeAnnotationETag
 import nl.knaw.huc.annorepo.service.JsonLdUtils
 import nl.knaw.huc.annorepo.service.UriFactory
 import org.bson.Document
@@ -416,8 +417,6 @@ class W3CResource(
     private fun makeContainerETag(containerName: String): EntityTag =
         EntityTag(abs(containerName.hashCode()).toString(), true)
 
-    private fun makeAnnotationETag(containerName: String, annotationName: String): EntityTag =
-        EntityTag(abs("$containerName/$annotationName".hashCode()).toString(), true)
 
     private fun updateFieldCount(containerName: String, fieldsAdded: Set<String>, fieldsDeleted: Set<String>) {
         val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
@@ -429,6 +428,9 @@ class W3CResource(
         }
         for (field in fieldsDeleted.filter { f -> !f.contains("@") }) {
             fieldCounts[field] = fieldCounts.getOrDefault(field, 1) - 1
+            if (fieldCounts[field] == 0) {
+                fieldCounts.remove(field)
+            }
         }
         val newContainerMetadata = containerMetadata.copy(fieldCounts = fieldCounts)
         containerMetadataCollection.replaceOne(eq("name", containerName), newContainerMetadata)

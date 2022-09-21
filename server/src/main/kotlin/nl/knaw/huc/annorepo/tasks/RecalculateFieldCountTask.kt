@@ -20,7 +20,7 @@ import javax.ws.rs.BadRequestException
 class RecalculateFieldCountTask(
     val client: MongoClient,
     configuration: AnnoRepoConfiguration
-) : Task("recalculateFieldCount") {
+) : Task("recalculate-field-count") {
     private val mdb = client.getDatabase(configuration.databaseName)
 
     @Metered
