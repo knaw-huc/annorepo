@@ -8,10 +8,10 @@ docker_domain = registry.diginfra.net/tt
 .make/.version: .make pom.xml
 	mvn help:evaluate -Dexpression=project.version -q -DforceStdout > .make/.version
 
-server/target/annorepo-server-$(shell cat .make/.version).jar: .make/.version  $(shell find server/src -type f) pom.xml server/pom.xml
+server/target/annorepo-server-$(shell cat .make/.version).jar: .make/.version  $(shell find server/src common/src -type f) pom.xml server/pom.xml
 	mvn --projects server --also-make package
 
-client/target/annorepo-client-$(shell cat .make/.version).jar: .make/.version  $(shell find client/src -type f) pom.xml client/pom.xml
+client/target/annorepo-client-$(shell cat .make/.version).jar: .make/.version  $(shell find client/src common/src -type f) pom.xml client/pom.xml
 	mvn --projects client --also-make package
 
 .PHONY: build
