@@ -7,7 +7,7 @@ the [W3C Web Annotation Protocol](https://www.w3.org/TR/2017/REC-annotation-prot
 As the protocol does not specify how to create, update or delete annotation containers, AnnoRep implements endpoints for
 that in a way similar to that used by [elucidate](https://github.com/dlcs/elucidate-server)
 
-The following requests expect the annorepo server to be running locally at `http://localhost:9999/`
+The following requests expect the annorepo server to be running locally at `http://localhost:8080/`
 
 Features marked `(experimental)` are likely to change in the next release.
 
@@ -24,6 +24,8 @@ Features marked `(experimental)` are likely to change in the next release.
 - [Querying](#querying):
   - [Create a query](#create-a-query-experimental)
   - [Get a query result page](#get-a-search-result-page-experimental)
+- [Miscellaneous](#miscellaneous):
+  - [Annotation Field Count](#get-annotation-field-count)
 - [OpenAPI](#openapi)
 - [Server info](#server-info)
 
@@ -36,7 +38,7 @@ Features marked `(experimental)` are likely to change in the next release.
 #### Request
 
 ```
-POST http://localhost:9999/w3c/ HTTP/1.1
+POST http://localhost:8080/w3c/ HTTP/1.1
 
 Accept: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
 Content-Type: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
@@ -59,8 +61,8 @@ Content-Type: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
 ```
 HTTP/1.1 201 Created
 
-Location: http://localhost:9999/w3c/137d2619-7bcd-41c9-abc3-7ec78733993c/
-Content-Location: http://localhost:9999/w3c/137d2619-7bcd-41c9-abc3-7ec78733993c/
+Location: http://localhost:8080/w3c/137d2619-7bcd-41c9-abc3-7ec78733993c/
+Content-Location: http://localhost:8080/w3c/137d2619-7bcd-41c9-abc3-7ec78733993c/
 Vary: Accept
 Link: <http://www.w3.org/ns/ldp#BasicContainer>; rel="type"
 Link: <http://www.w3.org/TR/annotation-protocol>; rel="http://www.w3.org/ns/ldp#constrainedBy"
@@ -74,7 +76,7 @@ Content-Length: 548
     "http://www.w3.org/ns/anno.jsonld",
     "http://www.w3.org/ns/ldp.jsonld"
   ],
-  "id": "http://localhost:9999/w3c/137d2619-7bcd-41c9-abc3-7ec78733993c/",
+  "id": "http://localhost:8080/w3c/137d2619-7bcd-41c9-abc3-7ec78733993c/",
   "type": [
     "BasicContainer",
     "AnnotationCollection"
@@ -82,13 +84,13 @@ Content-Length: 548
   "total": 0,
   "label": "A Container for Web Annotations",
   "first": {
-    "id": "http://localhost:9999/w3c/137d2619-7bcd-41c9-abc3-7ec78733993c/?page=0",
+    "id": "http://localhost:8080/w3c/137d2619-7bcd-41c9-abc3-7ec78733993c/?page=0",
     "type": "AnnotationPage",
-    "partOf": "http://localhost:9999/w3c/137d2619-7bcd-41c9-abc3-7ec78733993c/",
+    "partOf": "http://localhost:8080/w3c/137d2619-7bcd-41c9-abc3-7ec78733993c/",
     "startIndex": 0,
     "items": []
   },
-  "last": "http://localhost:9999/w3c/137d2619-7bcd-41c9-abc3-7ec78733993c/?page=0"
+  "last": "http://localhost:8080/w3c/137d2619-7bcd-41c9-abc3-7ec78733993c/?page=0"
 }
 ```
 
@@ -98,7 +100,7 @@ generate a new one.
 #### Request
 
 ```
-POST http://localhost:9999/w3c/ HTTP/1.1
+POST http://localhost:8080/w3c/ HTTP/1.1
 
 Accept: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
 Content-Type: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
@@ -122,8 +124,8 @@ Slug: "my-container"
 ```
 HTTP/1.1 201 Created
 
-Location: http://localhost:9999/w3c/my-container/
-Content-Location: http://localhost:9999/w3c/my-container/
+Location: http://localhost:8080/w3c/my-container/
+Content-Location: http://localhost:8080/w3c/my-container/
 Vary: Accept
 Link: <http://www.w3.org/ns/ldp#BasicContainer>; rel="type"
 Link: <http://www.w3.org/TR/annotation-protocol>; rel="http://www.w3.org/ns/ldp#constrainedBy"
@@ -137,7 +139,7 @@ Content-Length: 452
     "http://www.w3.org/ns/anno.jsonld",
     "http://www.w3.org/ns/ldp.jsonld"
   ],
-  "id": "http://localhost:9999/w3c/my-container/",
+  "id": "http://localhost:8080/w3c/my-container/",
   "type": [
     "BasicContainer",
     "AnnotationCollection"
@@ -145,13 +147,13 @@ Content-Length: 452
   "total": 0,
   "label": "A Container for Web Annotations",
   "first": {
-    "id": "http://localhost:9999/w3c/my-container/?page=0",
+    "id": "http://localhost:8080/w3c/my-container/?page=0",
     "type": "AnnotationPage",
-    "partOf": "http://localhost:9999/w3c/my-container/",
+    "partOf": "http://localhost:8080/w3c/my-container/",
     "startIndex": 0,
     "items": []
   },
-  "last": "http://localhost:9999/w3c/my-container/?page=0"
+  "last": "http://localhost:8080/w3c/my-container/?page=0"
 }
 ```
 
@@ -160,7 +162,7 @@ Content-Length: 452
 #### Request
 
 ```
-GET http://localhost:9999/w3c/my-container/ HTTP/1.1
+GET http://localhost:8080/w3c/my-container/ HTTP/1.1
 
 Accept: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
 ```
@@ -170,7 +172,7 @@ Accept: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
 ```
 HTTP/1.1 200 OK
 
-Content-Location: http://localhost:9999/w3c/my-container/
+Content-Location: http://localhost:8080/w3c/my-container/
 Vary: Accept
 Link: <http://www.w3.org/ns/ldp#BasicContainer>; rel="type"
 Link: <http://www.w3.org/TR/annotation-protocol/>; rel="http://www.w3.org/ns/ldp#constrainedBy"
@@ -185,7 +187,7 @@ Content-Length: 452
     "http://www.w3.org/ns/anno.jsonld",
     "http://www.w3.org/ns/ldp.jsonld"
   ],
-  "id": "http://localhost:9999/w3c/my-container/",
+  "id": "http://localhost:8080/w3c/my-container/",
   "type": [
     "BasicContainer",
     "AnnotationCollection"
@@ -193,13 +195,13 @@ Content-Length: 452
   "total": 0,
   "label": "A Container for Web Annotations",
   "first": {
-    "id": "http://localhost:9999/w3c/my-container/?page=0",
+    "id": "http://localhost:8080/w3c/my-container/?page=0",
     "type": "AnnotationPage",
-    "partOf": "http://localhost:9999/w3c/my-container/",
+    "partOf": "http://localhost:8080/w3c/my-container/",
     "startIndex": 0,
     "items": []
   },
-  "last": "http://localhost:9999/w3c/my-container/?page=0"
+  "last": "http://localhost:8080/w3c/my-container/?page=0"
 }
 ```
 
@@ -212,7 +214,7 @@ The `If-Match` header must contain the ETag of the container.
 #### Request
 
 ```
-DELETE http://localhost:9999/w3c/my-container/ HTTP/1.1
+DELETE http://localhost:8080/w3c/my-container/ HTTP/1.1
 
 If-Match: "2133202336"
 ```
@@ -234,7 +236,7 @@ As with the container creation, you can let annorepo pick the annotation name:
 #### Request
 
 ```
-POST http://localhost:9999/w3c/my-container/ HTTP/1.1
+POST http://localhost:8080/w3c/my-container/ HTTP/1.1
 
 Accept: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
 Content-Type: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
@@ -256,7 +258,7 @@ Content-Type: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
 ```
 HTTP/1.1 201 CREATED
 
-Location: http://localhost:9999/w3c/my-container/0bb16696-245c-4614-955f-78dec7065f60
+Location: http://localhost:8080/w3c/my-container/0bb16696-245c-4614-955f-78dec7065f60
 Vary: Accept
 Allow: HEAD,DELETE,POST,GET,OPTIONS,PUT
 Link: <http://www.w3.org/ns/ldp#Resource>; rel="type"
@@ -267,7 +269,7 @@ Content-Length: 305
 
 {
    "@context": "http://www.w3.org/ns/anno.jsonld",
-   "id": "http://localhost:9999/w3c/my-container/0bb16696-245c-4614-955f-78dec7065f60",
+   "id": "http://localhost:8080/w3c/my-container/0bb16696-245c-4614-955f-78dec7065f60",
    "type": "Annotation",
    "body": {
       "type": "TextualBody",
@@ -282,7 +284,7 @@ or, you can add a `Slug` header to set the name. When the preferred name is alre
 will pick the name:
 
 ```
-POST http://localhost:9999/w3c/my-container/ HTTP/1.1
+POST http://localhost:8080/w3c/my-container/ HTTP/1.1
 
 Accept: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
 Content-Type: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
@@ -305,7 +307,7 @@ Slug: hello-world
 ```
 HTTP/1.1 201 CREATED
 
-Location: http://localhost:9999/w3c/my-container/hello-world
+Location: http://localhost:8080/w3c/my-container/hello-world
 Vary: Accept
 Allow: HEAD,DELETE,POST,GET,OPTIONS,PUT
 Link: <http://www.w3.org/ns/ldp#Resource>; rel="type"
@@ -316,7 +318,7 @@ Content-Length: 270
 
 {
    "@context": "http://www.w3.org/ns/anno.jsonld",
-   "id": "http://localhost:9999/w3c/my-container/hello-world",
+   "id": "http://localhost:8080/w3c/my-container/hello-world",
    "type": "Annotation",
    "body": {
       "type": "TextualBody",
@@ -332,7 +334,7 @@ Content-Length: 270
 #### Request
 
 ```
-GET http://localhost:9999/w3c/my-container/my-annotation HTTP/1.1
+GET http://localhost:8080/w3c/my-container/my-annotation HTTP/1.1
 
 Accept: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
 ```
@@ -351,7 +353,7 @@ Vary: Accept-Encoding
 Content-Length: 272
 
 {
-   "id": "http://localhost:9999/w3c/my-container/my-annotation",
+   "id": "http://localhost:8080/w3c/my-container/my-annotation",
    "type": "Annotation",
    "body": {
       "type": "TextualBody",
@@ -370,7 +372,7 @@ When updating an annotation, you need to send its ETag in the `If-Match` header.
 #### Request
 
 ```
-PUT http://localhost:9999/w3c/my-container/hello-world HTTP/1.1
+PUT http://localhost:8080/w3c/my-container/hello-world HTTP/1.1
 
 Accept: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
 Content-Type: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
@@ -402,7 +404,7 @@ Content-Type: application/ld+json;profile="http://www.w3.org/ns/anno.jsonld"
 
 {
   "@context": "http://www.w3.org/ns/anno.jsonld",
-  "id": "http://localhost:9999/w3c/my-container/hello-world",
+  "id": "http://localhost:8080/w3c/my-container/hello-world",
   "type": "Annotation",
   "body": {
     "type": "TextualBody",
@@ -420,7 +422,7 @@ When deleting an annotation, you need to send its ETag in the `If-Match` header.
 #### Request
 
 ```
-DELETE http://localhost:9999/w3c/my-container/hello-world HTTP/1.1
+DELETE http://localhost:8080/w3c/my-container/hello-world HTTP/1.1
 
 If-Match: "1303452440"
 ```
@@ -436,7 +438,7 @@ HTTP/1.1 204 No Content
 #### Request
 
 ```
-POST http://localhost:9999/batch/my-container/annotations HTTP/1.1
+POST http://localhost:8080/batch/my-container/annotations HTTP/1.1
 Content-Type: application/json
 
 [
@@ -571,7 +573,7 @@ Content-Length: 23
 #### Request
 
 ```
-POST http://localhost:9999/services/my-container/search HTTP/1.1
+POST http://localhost:8080/services/my-container/search HTTP/1.1
 
 {
   "purpose": "tagging",
@@ -703,7 +705,7 @@ Currently, the following query functions are available:
 ```
 HTTP/1.1 200 OK
 
-location: http://localhost:9999/services/my-container/search/f3da8d25-701c-4e25-b1be-39cd6243dac7
+location: http://localhost:8080/services/my-container/search/f3da8d25-701c-4e25-b1be-39cd6243dac7
 ```
 
 The Location header contains the link to the first search result page.
@@ -715,7 +717,7 @@ The Location header contains the link to the first search result page.
 #### Request
 
 ```
-GET http://localhost:9999/services/my-container/search/f3da8d25-701c-4e25-b1be-39cd6243dac7 HTTP/1.1
+GET http://localhost:8080/services/my-container/search/f3da8d25-701c-4e25-b1be-39cd6243dac7 HTTP/1.1
 ```
 
 #### Response
@@ -727,9 +729,9 @@ Content-Type: application/json
 Vary: Accept-Encoding
 
 {
-  "id": "http://localhost:9999/services/volume-1728/search/d6883433-de41-43fb-93d2-85c1cd9570ee?page=0",
+  "id": "http://localhost:8080/services/volume-1728/search/d6883433-de41-43fb-93d2-85c1cd9570ee?page=0",
   "type": "AnnotationPage",
-  "partOf": "http://localhost:9999/services/volume-1728/search/d6883433-de41-43fb-93d2-85c1cd9570ee",
+  "partOf": "http://localhost:8080/services/volume-1728/search/d6883433-de41-43fb-93d2-85c1cd9570ee",
   "startIndex": 0,
   "items": [
     ....
@@ -741,6 +743,43 @@ The Location header contains the link to the first search result page.
 
 ---
 
+## Miscellaneous
+
+### Get Annotation Field Count
+
+When composing a search query, it helps to know what annotation fields you can search on, and also how many annotations
+contain that field.
+The services/fields endpoint serves this purpose: it will return a map/dictionary of all the annotation fields available
+in the given container, plus the number of annotations that field is used in.
+
+#### Request
+
+```
+GET http://localhost:8080/services/my-container/fields HTTP/1.1
+```
+
+#### Response
+
+```
+HTTP/1.1 200 OK
+
+Content-Type: application/json
+Vary: Accept-Encoding
+
+{
+  "body.id" : 1,
+  "body.type" : 15,
+  "body.value" : 15,
+  "target" : 15,
+  "type" : 15
+}
+```
+
+This response means that, for example, there are 15 annotations in `my-container` with a `target` field, and only 1 with
+a `body.id` field.
+
+---
+
 ## OpenAPI
 
 AnnoRepo provides an [openapi](https://www.openapis.org/) API definition via [swagger](https://swagger.io/)
@@ -748,31 +787,31 @@ AnnoRepo provides an [openapi](https://www.openapis.org/) API definition via [sw
 The basic swagger UI is available via
 
 ```
-GET http://localhost:9999/swagger HTTP/1.1
+GET http://localhost:8080/swagger HTTP/1.1
 ```
 
 and the definition file is available as json via
 
 ```
-GET http://localhost:9999/swagger.json HTTP/1.1
+GET http://localhost:8080/swagger.json HTTP/1.1
 ```
 
 or
 
 ```
-GET http://localhost:9999/openapi.json HTTP/1.1
+GET http://localhost:8080/openapi.json HTTP/1.1
 ```
 
 and as yaml via
 
 ```
-GET http://localhost:9999/swagger.yaml HTTP/1.1
+GET http://localhost:8080/swagger.yaml HTTP/1.1
 ```
 
 or
 
 ```
-GET http://localhost:9999/openapi.yaml HTTP/1.1
+GET http://localhost:8080/openapi.yaml HTTP/1.1
 ```
 
 ---
@@ -784,7 +823,7 @@ GET http://localhost:9999/openapi.yaml HTTP/1.1
 #### Request
 
 ```
-GET http://localhost:9999/about HTTP/1.1
+GET http://localhost:8080/about HTTP/1.1
 ```
 
 #### Response
@@ -800,7 +839,7 @@ Content-Length: 164
    "appName": "AnnoRepo",
    "version": "0.1.0",
    "startedAt": "2022-07-04T10:55:12.399444Z",
-   "baseURI": "http://localhost:9999",
+   "baseURI": "http://localhost:8080",
    "source": "https://github.com/knaw-huc/annorepo"
 }
 ```
