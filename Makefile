@@ -68,7 +68,7 @@ clean:
 
 .PHONY:version-update
 version-update:
-	mvn versions:set && mvn versions:commit
+	mvn versions:set && mvn versions:commit && find . -name dependency-reduced-pom.xml -delete
 
 .PHONY: help
 help:
