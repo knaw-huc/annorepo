@@ -8,9 +8,13 @@ services:
       - AR_MONGODB_URL=mongodb://annorepo_mongodb/
       - AR_DB_NAME=annorepo
       - AR_PAGE_SIZE=100
+    expose:
+      - 2021
+      - 9999
     ports:
       - "2021:8080"
-    image: annorepo:0.1-SNAPSHOT
+      - "9999:8081"
+    image: registry.diginfra.net/tt/annorepo:0.3.0-beta
     networks:
       - annorepo_network
     restart: unless-stopped
@@ -29,6 +33,18 @@ services:
     tty: true
     volumes:
       - annorepo_mongodb_data:/data/db:rw
+
+  annorepo_updater:
+    container_name: annorepo_updater
+    depends_on:
+      - annorepo_server
+    environment:
+      - AR_ADMIN_BACKEND=http://annorepo_server:8081
+    image: annorepo-updater
+    networks:
+      - annorepo_network
+    restart: "no"
+    tty: true
 
 networks:
   annorepo_network:

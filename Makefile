@@ -25,7 +25,7 @@ build-client: .make/.version client/target/annorepo-client-$(shell cat .make/.ve
 
 .PHONY: run-server
 run-server: build-server
-	java -jar server/target/annorepo-server-$(shell cat .make/.version).jar server config.yml
+	java -jar server/target/annorepo-server-	$(shell cat .make/.version).jar server config.yml
 
 .PHONY: run-env
 run-env: build-server
@@ -41,19 +41,25 @@ docker-stop: k8s/local/docker-compose.yml
 
 .make/.docker: .make k8s/annorepo-server/Dockerfile-multistage
 	docker build -t $(tag):$(shell cat .make/.version) -f k8s/annorepo-server/Dockerfile-multistage .
-	@touch .make/.docker
+	@touch $@
 
 .PHONY: docker-image
 docker-image: .make/.docker
 
-.make/.push: build k8s/annorepo-server/Dockerfile
+.make/.push-server: build k8s/annorepo-server/Dockerfile
 	docker build -t $(tag):$(shell cat .make/.version) --platform=linux/amd64 -f k8s/annorepo-server/Dockerfile .
 	docker tag $(tag):$(shell cat .make/.version) $(docker_domain)/$(tag):$(shell cat .make/.version)
 	docker push $(docker_domain)/$(tag):$(shell cat .make/.version)
-	@touch .make/.push
+	@touch $@
+
+.make/.push-updater: k8s/updater/Dockerfile
+	docker build -t $(tag)-updater:$(shell cat .make/.version) --platform=linux/amd64 -f k8s/updater/Dockerfile .
+	docker tag $(tag)-updater:$(shell cat .make/.version) $(docker_domain)/$(tag)-updater:$(shell cat .make/.version)
+	docker push $(docker_domain)/$(tag)-updater:$(shell cat .make/.version)
+	@touch $@
 
 .PHONY: push
-push:   .make/.push
+push:   .make/.push-server .make/.push-updater
 
 .PHONY:clean
 clean:
