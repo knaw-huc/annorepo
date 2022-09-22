@@ -35,6 +35,7 @@ import nl.knaw.huc.annorepo.resources.ServiceResource
 import nl.knaw.huc.annorepo.resources.W3CResource
 import nl.knaw.huc.annorepo.service.LocalDateTimeSerializer
 import nl.knaw.huc.annorepo.tasks.RecalculateFieldCountTask
+import nl.knaw.huc.annorepo.tasks.UpdateTask
 import org.apache.commons.lang3.StringUtils
 import org.litote.kmongo.KMongo
 import org.litote.kmongo.getCollection
@@ -105,7 +106,10 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             register("mongodb", MongoDbHealthCheck(mongoClient))
         }
 
-        environment.admin().addTask(RecalculateFieldCountTask(mongoClient, configuration))
+        environment.admin().apply {
+            addTask(RecalculateFieldCountTask(mongoClient, configuration))
+            addTask(UpdateTask(mongoClient, configuration))
+        }
 
         customizeObjectMapper(environment)
 
