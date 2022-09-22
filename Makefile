@@ -1,6 +1,6 @@
 all: help
-tag = annorepo
-docker_domain = registry.diginfra.net/tt
+TAG = annorepo
+DOCKER_DOMAIN = registry.diginfra.net/tt
 
 .make:
 	mkdir -p .make
@@ -40,22 +40,22 @@ docker-stop: k8s/local/docker-compose.yml
 	cd k8s/local && docker compose down
 
 .make/.docker: .make k8s/annorepo-server/Dockerfile-multistage
-	docker build -t $(tag):$(shell cat .make/.version) -f k8s/annorepo-server/Dockerfile-multistage .
+	docker build -t $(TAG):$(shell cat .make/.version) -f k8s/annorepo-server/Dockerfile-multistage .
 	@touch $@
 
 .PHONY: docker-image
 docker-image: .make/.docker
 
 .make/.push-server: build k8s/annorepo-server/Dockerfile
-	docker build -t $(tag):$(shell cat .make/.version) --platform=linux/amd64 -f k8s/annorepo-server/Dockerfile .
-	docker tag $(tag):$(shell cat .make/.version) $(docker_domain)/$(tag):$(shell cat .make/.version)
-	docker push $(docker_domain)/$(tag):$(shell cat .make/.version)
+	docker build -t $(TAG):$(shell cat .make/.version) --platform=linux/amd64 -f k8s/annorepo-server/Dockerfile .
+	docker tag $(TAG):$(shell cat .make/.version) $(DOCKER_DOMAIN)/$(TAG):$(shell cat .make/.version)
+	docker push $(DOCKER_DOMAIN)/$(TAG):$(shell cat .make/.version)
 	@touch $@
 
 .make/.push-updater: k8s/updater/Dockerfile
-	docker build -t $(tag)-updater:$(shell cat .make/.version) --platform=linux/amd64 -f k8s/updater/Dockerfile .
-	docker tag $(tag)-updater:$(shell cat .make/.version) $(docker_domain)/$(tag)-updater:$(shell cat .make/.version)
-	docker push $(docker_domain)/$(tag)-updater:$(shell cat .make/.version)
+	docker build -t $(TAG)-updater:$(shell cat .make/.version) --platform=linux/amd64 -f k8s/updater/Dockerfile .
+	docker tag $(TAG)-updater:$(shell cat .make/.version) $(DOCKER_DOMAIN)/$(TAG)-updater:$(shell cat .make/.version)
+	docker push $(DOCKER_DOMAIN)/$(TAG)-updater:$(shell cat .make/.version)
 	@touch $@
 
 .PHONY: push
@@ -72,7 +72,7 @@ version-update:
 
 .PHONY: help
 help:
-	@echo "make-tools for $(tag)"
+	@echo "make-tools for $(TAG)"
 	@echo "Please use \`make <target>' where <target> is one of"
 	@echo "  build           to test and build the project"
 	@echo "  build-server    to test and build just the server"
