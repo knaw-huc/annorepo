@@ -2,23 +2,7 @@
 
 ## REST API usage
 
-For the basic annotation CRUD handling, AnnoRepo has a `/w3c/` endpoint that implements part of
-the [W3C Web Annotation Protocol](https://www.w3.org/TR/2017/REC-annotation-protocol-20170223/)
-As the protocol does not specify how to create, update or delete annotation containers, AnnoRep implements endpoints for
-that in a way similar to that used by [elucidate](https://github.com/dlcs/elucidate-server)
-
-The following requests expect the annorepo server to be running locally at `http://localhost:8080/`
-
-Features marked `(experimental)` are likely to change in an upcoming release.
-
-Endpoints marked with 🔒 require authentication, if the server was started with authentication
-enabled (`withAuthentication: true` in [/about](#server-info) ).
-
-Endpoints marked with 🔒🔒 are only available when the server was started with authentication enabled, and require root
-authentication.
-
-`{variable}`s in the Request parts need to be substituted with the appropriate value.
-
+- [General Notes](#general-notes)
 - [Annotation Containers](#annotation-containers):
   - [Create](#creating-an-annotation-container-)
   - [Read](#reading-an-annotation-container-)
@@ -40,6 +24,32 @@ authentication.
   - [Annotation Field Count](#get-annotation-field-count-)
 - [OpenAPI](#openapi)
 - [Server info](#server-info)
+
+---
+
+## General notes
+
+For the basic annotation CRUD handling, AnnoRepo has a `/w3c/` endpoint that implements part of
+the [W3C Web Annotation Protocol](https://www.w3.org/TR/2017/REC-annotation-protocol-20170223/)  
+As the protocol does not specify how to create, update or delete annotation containers, AnnoRep implements endpoints for
+that in a way similar to that used by [elucidate](https://github.com/dlcs/elucidate-server)
+
+- The following requests expect the annorepo server to be running locally at `http://localhost:8080/`
+
+- Features marked `(experimental)` are likely to change in an upcoming release.
+
+- Endpoints marked with 🔒 require authentication if the server was started with authentication
+  enabled (`withAuthentication: true` in [/about](#server-info) ).
+
+- Authentication is done by adding an `Authorization` header to the request:
+  ``` 
+  Authorization: Bearer {apiKey}
+  ```
+
+- Endpoints marked with 🔒🔒 are only available when the server was started with authentication enabled, and require root
+  authentication.
+
+- `{variable}`s in the Request parts need to be substituted with the appropriate value.
 
 ---
 
