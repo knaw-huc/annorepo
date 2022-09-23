@@ -78,7 +78,7 @@ Currently, the docker image is only available from the firewalled registry.digin
 
   `docker run -p 8080:8080 registry.diginfra.net/tt/annorepo`
 
-- Alternatively, check the [docker-compose.yml example](k8s/local/docker-compose.yml) to run mongodb + annorepo using
+- Alternatively, check the [docker-compose.yml example](../k8s/local/docker-compose.yml) to run mongodb + annorepo using
   docker-compose.
 
 ## [API Usage](api-usage.md)
