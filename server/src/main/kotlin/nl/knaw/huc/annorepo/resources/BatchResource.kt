@@ -7,6 +7,8 @@ import com.mongodb.client.model.Filters
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import nl.knaw.huc.annorepo.api.ARConst
+import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
+import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
 import nl.knaw.huc.annorepo.api.ContainerMetadata
@@ -63,7 +65,7 @@ class BatchResource(
         }
         val documents = annotations.mapIndexed { index, annotationMap ->
             val name = annotationIdentifiers[index].annotationName
-            Document("annotation_name", name).append("annotation", Document(annotationMap))
+            Document(ANNOTATION_NAME_FIELD, name).append(ANNOTATION_FIELD, Document(annotationMap))
         }
         container.insertMany(documents)
 

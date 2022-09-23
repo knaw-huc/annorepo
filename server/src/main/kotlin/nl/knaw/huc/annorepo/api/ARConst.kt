@@ -22,4 +22,8 @@ object ARConst {
     const val USER_COLLECTION = "_users"
     const val SECURITY_SCHEME_NAME = "bearerAuth"
 
+    const val ANNOTATION_FIELD = "annotation"
+    const val ANNOTATION_NAME_FIELD = "annotation_name"
+    const val CONTAINER_NAME_FIELD = "name"
+
 }

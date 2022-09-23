@@ -25,7 +25,7 @@ class MongodbTest {
             logger.info("a1")
             val database = client.getDatabase("annorepo")
             val collection = database.getCollection("a84f3029-a222-4b79-a3a1-fadf24d08aad")
-            val a = collection.find(Document("annotation_name", "318df1ca-6e8c-4430-bcda-78f838e30a2b"))
+            val a = collection.find(Document(ANNOTATION_NAME_FIELD, "318df1ca-6e8c-4430-bcda-78f838e30a2b"))
             logger.info("a=$a")
             for (i in a) {
                 logger.info("annotation=${i.toJson()}")
@@ -188,7 +188,7 @@ class MongodbTest {
                     ]
                 }""".trimIndent()
                 val annotationDoc = Document.parse(annotationJson)
-                collection.insertOne(Document("annotation_name", "A$n").append("annotation", annotationDoc))
+                collection.insertOne(Document(ANNOTATION_NAME_FIELD, "A$n").append(ANNOTATION_FIELD, annotationDoc))
             }
             logger.info("$collectionName contains ${collection.countDocuments()} documents.")
 

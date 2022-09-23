@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Hidden
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
+import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.ResourcePaths
@@ -48,8 +49,6 @@ class ListResource(
             uriFactory.containerURL(it).toString()
         }.toList()
 
-    private val field = "annotation_name"
-
     @Operation(description = "Get a list of all the annotation URLs")
     @Timed
     @GET
@@ -60,28 +59,11 @@ class ListResource(
         @Context context: SecurityContext
     ): List<String> =
         mdb.getCollection(containerName).aggregate<Document>(
-            match(exists(field)),
+            match(exists(ANNOTATION_NAME_FIELD)),
         )
-            .map { d -> uriFactory.annotationURL(containerName, d.getString(field)).toString() }
+            .map { d -> uriFactory.annotationURL(containerName, d.getString(ANNOTATION_NAME_FIELD)).toString() }
             .toList()
             .sorted()
             .subList(fromIndex = offset, toIndex = offset + configuration.pageSize)
-
-//    private fun annotationPage(
-//        urls: List<String>,
-//        partOfURL: String,
-//        startIndex: Int
-//    ) = JSONObject(
-//        mapOf(
-//            "@context" to listOf(
-//                "http://www.w3.org/ns/anno.jsonld",
-//                "http://www.w3.org/ns/ldp.jsonld"
-//            ),
-//            "type" to "AnnotationPage",
-//            "as:items" to mapOf("@list" to urls),
-//            "partOf" to partOfURL,
-//            "startIndex" to startIndex
-//        )
-//    ).toMap()
 
 }
