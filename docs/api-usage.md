@@ -9,23 +9,35 @@ that in a way similar to that used by [elucidate](https://github.com/dlcs/elucid
 
 The following requests expect the annorepo server to be running locally at `http://localhost:8080/`
 
-Features marked `(experimental)` are likely to change in the next release.
+Features marked `(experimental)` are likely to change in an upcoming release.
+
+Endpoints marked with 🔒 require authentication, if the server was started with authentication
+enabled (`withAuthentication: true` in [/about](#server-info) ).
+
+Endpoints marked with 🔒🔒 are only available when the server was started with authentication enabled, and require root
+authentication.
+
+`{variable}`s in the Request parts need to be substituted with the appropriate value.
 
 - [Annotation Containers](#annotation-containers):
-  - [Create](#creating-an-annotation-container)
-  - [Read](#reading-an-annotation-container)
-  - [Delete](#deleting-an-annotation-container)
+  - [Create](#creating-an-annotation-container-)
+  - [Read](#reading-an-annotation-container-)
+  - [Delete](#deleting-an-annotation-container-)
 - [Annotations](#annotations):
-  - [Create](#adding-an-annotation-to-a-given-annotation-container)
-  - [Read](#reading-an-annotation)
-  - [Update](#updating-an-annotation)
-  - [Delete](#deleting-an-annotation)
-  - [Batch upload](#uploading-multiple-annotations-to-a-given-annotation-container-experimental)
+  - [Create](#adding-an-annotation-to-a-given-annotation-container-)
+  - [Read](#reading-an-annotation-)
+  - [Update](#updating-an-annotation-)
+  - [Delete](#deleting-an-annotation-)
+  - [Batch upload](#uploading-multiple-annotations-to-a-given-annotation-container---experimental)
 - [Querying](#querying):
-  - [Create a query](#create-a-query-experimental)
-  - [Get a query result page](#get-a-search-result-page-experimental)
+  - [Create a query](#create-a-query---experimental)
+  - [Get a query result page](#get-a-search-result-page---experimental)
+- [Admin](#admin):
+  - [Read users](#get-users-)
+  - [Add users](#add-users-)
+  - [Delete user](#delete-user-)
 - [Miscellaneous](#miscellaneous):
-  - [Annotation Field Count](#get-annotation-field-count)
+  - [Annotation Field Count](#get-annotation-field-count-)
 - [OpenAPI](#openapi)
 - [Server info](#server-info)
 
@@ -33,7 +45,7 @@ Features marked `(experimental)` are likely to change in the next release.
 
 ## Annotation Containers
 
-### Creating an annotation container
+### Creating an annotation container (🔒)
 
 #### Request
 
@@ -157,12 +169,12 @@ Content-Length: 452
 }
 ```
 
-### Reading an annotation container
+### Reading an annotation container (🔒)
 
 #### Request
 
 ```
-GET http://localhost:8080/w3c/my-container/ HTTP/1.1
+GET http://localhost:8080/w3c/{containerName}/ HTTP/1.1
 
 Accept: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
 ```
@@ -205,7 +217,7 @@ Content-Length: 452
 }
 ```
 
-### Deleting an annotation container
+### Deleting an annotation container (🔒)
 
 Deleting an annotation container is only possible if the container doesn't contain any annotations.
 
@@ -214,9 +226,9 @@ The `If-Match` header must contain the ETag of the container.
 #### Request
 
 ```
-DELETE http://localhost:8080/w3c/my-container/ HTTP/1.1
+DELETE http://localhost:8080/w3c/{containerName}/ HTTP/1.1
 
-If-Match: "2133202336"
+If-Match: "{etag}"
 ```
 
 #### Response
@@ -229,14 +241,14 @@ HTTP/1.1 204 No Content
 
 ## Annotations
 
-### Adding an annotation to a given annotation container
+### Adding an annotation to a given annotation container (🔒)
 
 As with the container creation, you can let annorepo pick the annotation name:
 
 #### Request
 
 ```
-POST http://localhost:8080/w3c/my-container/ HTTP/1.1
+POST http://localhost:8080/w3c/{containerName}/ HTTP/1.1
 
 Accept: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
 Content-Type: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
@@ -284,7 +296,7 @@ or, you can add a `Slug` header to set the name. When the preferred name is alre
 will pick the name:
 
 ```
-POST http://localhost:8080/w3c/my-container/ HTTP/1.1
+POST http://localhost:8080/w3c/{containerName}/ HTTP/1.1
 
 Accept: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
 Content-Type: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
@@ -329,12 +341,12 @@ Content-Length: 270
 }
 ```
 
-### Reading an annotation
+### Reading an annotation (🔒)
 
 #### Request
 
 ```
-GET http://localhost:8080/w3c/my-container/my-annotation HTTP/1.1
+GET http://localhost:8080/w3c/{containerName}/{annotationName} HTTP/1.1
 
 Accept: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
 ```
@@ -365,18 +377,18 @@ Content-Length: 272
 }
 ```
 
-### Updating an annotation
+### Updating an annotation (🔒)
 
 When updating an annotation, you need to send its ETag in the `If-Match` header.
 
 #### Request
 
 ```
-PUT http://localhost:8080/w3c/my-container/hello-world HTTP/1.1
+PUT http://localhost:8080/w3c/{containerName}/{annotationName} HTTP/1.1
 
 Accept: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
 Content-Type: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
-If-Match: "1303452440"
+If-Match: "{etag}"
 
 {
   "@context": "http://www.w3.org/ns/anno.jsonld",
@@ -415,16 +427,16 @@ Content-Type: application/ld+json;profile="http://www.w3.org/ns/anno.jsonld"
 }
 ```
 
-### Deleting an annotation
+### Deleting an annotation (🔒)
 
 When deleting an annotation, you need to send its ETag in the `If-Match` header.
 
 #### Request
 
 ```
-DELETE http://localhost:8080/w3c/my-container/hello-world HTTP/1.1
+DELETE http://localhost:8080/w3c/{containerName}/{annotationName} HTTP/1.1
 
-If-Match: "1303452440"
+If-Match: "{etag}"
 ```
 
 #### Response
@@ -433,12 +445,12 @@ If-Match: "1303452440"
 HTTP/1.1 204 No Content
 ```
 
-### Uploading multiple annotations to a given annotation container `(experimental)`
+### Uploading multiple annotations to a given annotation container  (🔒) `(experimental)`
 
 #### Request
 
 ```
-POST http://localhost:8080/batch/my-container/annotations HTTP/1.1
+POST http://localhost:8080/batch/{containerName}/annotations HTTP/1.1
 Content-Type: application/json
 
 [
@@ -568,12 +580,12 @@ Content-Length: 23
 
 ## Querying
 
-### Create a query `(experimental)`
+### Create a query  (🔒) `(experimental)`
 
 #### Request
 
 ```
-POST http://localhost:8080/services/my-container/search HTTP/1.1
+POST http://localhost:8080/services/{containerName}/search HTTP/1.1
 
 {
   "purpose": "tagging",
@@ -712,12 +724,12 @@ The Location header contains the link to the first search result page.
 
 ---
 
-### Get a search result page `(experimental)`
+### Get a search result page  (🔒) `(experimental)`
 
 #### Request
 
 ```
-GET http://localhost:8080/services/my-container/search/f3da8d25-701c-4e25-b1be-39cd6243dac7 HTTP/1.1
+GET http://localhost:8080/services/{containerName}/search/{searchId} HTTP/1.1
 ```
 
 #### Response
@@ -743,9 +755,89 @@ The Location header contains the link to the first search result page.
 
 ---
 
+## Admin
+
+### Get users (🔒🔒)
+
+#### Request
+
+```
+GET http://localhost:8080/admin/users HTTP/1.1
+```
+
+#### Response
+
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+[
+  {
+    "userName" : "user",
+    "apiKey" : "1234567890abcdefghijklmnopqrstuvwxy"
+  },
+  ...
+]
+```
+
+### Add users (🔒🔒)
+
+#### Request
+
+```
+POST http://localhost:8080/admin/users HTTP/1.1
+Content-Type: application/json
+
+[
+  {
+    "userName": "user1",
+    "apiKey": "88bbfbe6cdb3965e55a3a2f0d5286d0e"
+  },
+  {
+    "userName": "user2",
+    "apiKey": "161cbd4930910a4455a830bfb95ebb6c"
+  },
+  ...
+]
+```
+
+#### Response
+
+```
+{
+  "added": [
+    "user1",
+    "user2"
+  ],
+  "rejected": []
+}
+```
+
+Users will be rejected if:
+
+- A user with the given userName already exists.
+- A user with the given apiKey already exists.
+- Either of the fields `userName` or `apiKey` is missing in the request.
+
+### Delete user (🔒🔒)
+
+#### Request
+
+```
+DELETE http://localhost:8080/admin/{userName} HTTP/1.1
+```
+
+#### Response
+
+```
+HTTP/1.1 204 No Content
+```
+
+---
+
 ## Miscellaneous
 
-### Get Annotation Field Count
+### Get Annotation Field Count (🔒)
 
 When composing a search query, it helps to know what annotation fields you can search on, and also how many annotations
 contain that field.
@@ -755,7 +847,7 @@ in the given container, plus the number of annotations that field is used in.
 #### Request
 
 ```
-GET http://localhost:8080/services/my-container/fields HTTP/1.1
+GET http://localhost:8080/services/{containerName}/fields HTTP/1.1
 ```
 
 #### Response
@@ -830,16 +922,16 @@ GET http://localhost:8080/about HTTP/1.1
 
 ```
 HTTP/1.1 200 OK
-
+...
 Content-Type: application/json
-Vary: Accept-Encoding
-Content-Length: 164
+...
 
 {
-   "appName": "AnnoRepo",
-   "version": "0.1.0",
-   "startedAt": "2022-07-04T10:55:12.399444Z",
-   "baseURI": "http://localhost:8080",
-   "source": "https://github.com/knaw-huc/annorepo"
+  "appName" : "AnnoRepo",
+  "version" : "0.3.0-beta",
+  "startedAt" : "2022-09-22T15:30:24.854713Z",
+  "baseURI" : "http://localhost:8080",
+  "withAuthentication" : false,
+  "sourceCode" : "https://github.com/knaw-huc/annorepo"
 }
 ```
