@@ -78,6 +78,12 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         log.info("connected!")
 
         val appVersion = javaClass.getPackage().implementationVersion
+
+        val executorService = environment.lifecycle().executorService("annorepo").build()
+        val managedExecutorService = ManagedExecutorService(executorService)
+        environment.lifecycle().manage(managedExecutorService)
+
+
         environment.jersey().apply {
             register(AboutResource(configuration, name, appVersion))
             register(HomePageResource())
@@ -88,7 +94,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
                 register(JSONPrettyPrintFilter())
             }
             if (configuration.withAuthentication) {
-                register(AdminResource(ARUserDAO(configuration, mongoClient)))
+                register(AdminResource(ARUserDAO(configuration, mongoClient), executorService))
                 register(
                     AuthDynamicFeature(
                         OAuthCredentialAuthFilter.Builder<User>()
@@ -105,7 +111,6 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             register("server", ServerHealthCheck())
             register("mongodb", MongoDbHealthCheck(mongoClient))
         }
-
         environment.admin().apply {
             addTask(RecalculateFieldCountTask(mongoClient, configuration))
             addTask(UpdateTask(mongoClient, configuration))

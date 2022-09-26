@@ -14,6 +14,11 @@ import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.auth.UserDAO
 import nl.knaw.huc.annorepo.auth.UserEntry
 import org.slf4j.LoggerFactory
+import java.net.URI
+import java.util.concurrent.Callable
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
 import javax.annotation.security.PermitAll
 import javax.validation.constraints.NotNull
 import javax.ws.rs.Consumes
@@ -21,6 +26,7 @@ import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.NotAuthorizedException
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -28,13 +34,15 @@ import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.SecurityContext
+import kotlin.random.Random
 
 @Path(ADMIN)
 @Produces(MediaType.APPLICATION_JSON)
 @PermitAll
 @SecurityRequirement(name = SECURITY_SCHEME_NAME)
 class AdminResource(
-    private val userDAO: UserDAO
+    private val userDAO: UserDAO,
+    private val executorService: ExecutorService
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -99,6 +107,54 @@ class AdminResource(
         } else {
             Response.status(Response.Status.NOT_FOUND).entity("no user found with that name").build()
         }
+    }
+
+    val futures = mutableListOf<Future<String>>()
+
+    @Operation(description = "Start a test")
+    @Timed
+    @PUT
+    @Path("test")
+    fun startTest(@Context context: SecurityContext): Response {
+        assertUserIsRoot(context)
+        val callableTask: Callable<String> = Callable<String> {
+            val seconds = Random.nextLong(1L, 30L)
+            println("waiting $seconds seconds")
+            TimeUnit.SECONDS.sleep(seconds)
+            "Task ran for $seconds seconds"
+        }
+        val future = executorService.submit(callableTask)
+        futures.add(future)
+        val location = URI.create("http://localhost:8080/admin/test")
+        return Response.created(location).build()
+    }
+
+    @Operation(description = "Get the test status")
+    @Timed
+    @GET
+    @Path("test")
+    fun getTest(@Context context: SecurityContext): Response {
+        assertUserIsRoot(context)
+        val tasks = mutableListOf<MutableMap<String, String>>()
+        for (f in futures) {
+            val taskInfo = mutableMapOf<String, String>()
+            val status = when {
+                f.isDone -> "done"
+                f.isCancelled -> "cancelled"
+                else -> "running"
+            }
+            taskInfo["status"] = status
+            val result = when {
+                f.isDone -> f.get()
+                else -> null
+            }
+            if (f.isDone) {
+                taskInfo["result"] = f.get()
+            }
+            tasks.add(taskInfo)
+        }
+        val testStatus = mapOf("tasks" to tasks)
+        return Response.ok(testStatus).build()
     }
 
     private fun assertUserIsRoot(context: SecurityContext) {
