@@ -12,7 +12,7 @@ class EnvCommand : Command("env", "Shows the environment variables you can use")
     }
 
     override fun run(bootstrap: Bootstrap<*>?, namespace: Namespace?) {
-        ARConst.EnvironmentVariable.values().forEach { v ->
+        ARConst.EnvironmentVariable.values().sorted().forEach { v ->
             println(v.name)
         }
     }
