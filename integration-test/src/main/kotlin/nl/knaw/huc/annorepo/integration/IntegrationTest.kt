@@ -1,5 +1,6 @@
 package nl.knaw.huc.annorepo.integration
 
+import arrow.core.Either
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.ObjectWriter
 import com.github.ajalt.mordant.rendering.TextColors.blue
@@ -13,7 +14,9 @@ import kotlinx.cli.ArgType
 import kotlinx.cli.required
 import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.client.AnnoRepoClient
+import nl.knaw.huc.annorepo.client.RequestError
 import java.net.URI
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.ws.rs.core.EntityTag
 
 class IntegrationTest {
@@ -38,14 +41,22 @@ class IntegrationTest {
 
     private fun AnnoRepoClient.testAbout(t: Terminal): Boolean =
         runTest(t, "Testing /about") {
-            getAbout().bimap(
-                { error -> println(error) },
-                { aboutInfo ->
-                    t.printJson(aboutInfo)
-                    t.printAssertion("/about info should have a version field", aboutInfo.version.isNotBlank())
-                }
-            )
+            getAbout().thenAssertResponse(t) { aboutInfo ->
+                val passed = AtomicBoolean(true)
+                t.printJson(aboutInfo)
+                t.printAssertion("/about info should have a version field", aboutInfo.version.isNotBlank())
+                passed.get()
+            }
         }
+
+    private fun <T> Either<RequestError, T>.thenAssertResponse(
+        t: Terminal,
+        rightFun: (T) -> Boolean
+    ): Boolean =
+        fold(
+            { error -> t.printError(error); return false },
+            rightFun
+        )
 
     private fun AnnoRepoClient.testContainerCreationAndDeletion(t: Terminal): Boolean =
         runTest(t, "Testing creating and deleting a container") {
@@ -173,6 +184,9 @@ class IntegrationTest {
 
     private fun Terminal.printJson(obj: Any) =
         println(blue(jsonWriter.writeValueAsString(obj)))
+
+    private fun Terminal.printError(obj: Any) =
+        println(red(jsonWriter.writeValueAsString(obj)))
 
     private fun Terminal.printTable(testResults: MutableMap<String, Boolean>) {
 //        val rows = testResults.map { name,result -> row(name, failureOrSuccess(result)) }
