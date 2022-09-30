@@ -1,7 +1,7 @@
 package nl.knaw.huc.annorepo.client
 
-import nl.knaw.huc.annorepo.api.AboutInfo
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.fail
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import java.net.URI
@@ -17,9 +17,13 @@ class AnnoRepoClientTest {
     @Test
     fun `client should connect, and GET about should return a map with at least a version field`() {
         assertThat(client).isNotNull
-        val aboutInfo: AboutInfo = client.getAbout()
-        assertThat(aboutInfo.version).isNotBlank
-        log.info("{}", aboutInfo)
+        client.getAbout().bimap(
+            { error -> fail<String>("Unexpected error: $error") },
+            { aboutInfo ->
+                assertThat(aboutInfo.version).isNotBlank
+                log.info("{}", aboutInfo)
+            }
+        )
     }
 
     @Test

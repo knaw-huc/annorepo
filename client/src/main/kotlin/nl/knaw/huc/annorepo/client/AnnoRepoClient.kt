@@ -6,7 +6,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import nl.knaw.huc.annorepo.api.AboutInfo
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
-import nl.knaw.huc.annorepo.api.IndexConfig
+import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.ResourcePaths.ABOUT
 import nl.knaw.huc.annorepo.api.ResourcePaths.BATCH
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
@@ -153,8 +153,7 @@ class AnnoRepoClient(serverURI: URI, val apiKey: String? = null, private val use
             .post(Entity.json(query))
         log.info("response={}", response)
         val location = response.location
-        val queryId = location.rawPath.split("/").last()
-        return queryId
+        return location.rawPath.split("/").last()
     }
 
     fun getQueryResult(containerName: String, queryId: String, page: Int): Any {
@@ -162,25 +161,29 @@ class AnnoRepoClient(serverURI: URI, val apiKey: String? = null, private val use
             webTarget.path(SERVICES).path(containerName).path("search").path(queryId).queryParam("page", page).request()
         val response = request.withUserAgent()
             .get()
-        val entityJson: String =
-            response.readEntity(String::class.java)
-        return entityJson
+        return response.readEntity(String::class.java)
     }
 
-    fun addIndex(containerName: String, indexConfig: IndexConfig): Any {
+    fun addIndex(containerName: String, fieldName: String, indexType: IndexType): Any {
         val request =
-            webTarget.path(SERVICES).path(containerName).path("indexes").request()
-        val response = request.withUserAgent()
-            .post(Entity.json(indexConfig))
-        return response
+            webTarget.path(SERVICES).path(containerName).path("indexes").path(fieldName).path(indexType.name).request()
+        return request.withUserAgent()
+            .put(null)
     }
 
     fun listIndexes(containerName: String): String {
         val request =
             webTarget.path(SERVICES).path(containerName).path("indexes").request()
-        val response = request.withUserAgent()
+        return request.withUserAgent()
             .get(String::class.java)
-        return response
+    }
+
+    fun deleteIndex(containerName: String, fieldName: String, indexType: IndexType): Boolean {
+        val request =
+            webTarget.path(SERVICES).path(containerName).path("indexes").path(fieldName).path(indexType.name).request()
+        return request.withUserAgent()
+            .delete().status == Response.Status.NO_CONTENT.statusCode
+
     }
 
     // private functions

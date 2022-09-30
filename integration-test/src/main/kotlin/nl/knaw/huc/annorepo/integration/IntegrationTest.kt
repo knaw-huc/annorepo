@@ -11,7 +11,7 @@ import com.github.ajalt.mordant.terminal.Terminal
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.required
-import nl.knaw.huc.annorepo.api.IndexConfig
+import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.client.AnnoRepoClient
 import java.net.URI
 import javax.ws.rs.core.EntityTag
@@ -38,9 +38,13 @@ class IntegrationTest {
 
     private fun AnnoRepoClient.testAbout(t: Terminal): Boolean =
         runTest(t, "Testing /about") {
-            val about = getAbout()
-            t.printJson(about)
-            t.printAssertion("/about info should have a version field", about.version.isNotBlank())
+            getAbout().bimap(
+                { error -> println(error) },
+                { aboutInfo ->
+                    t.printJson(aboutInfo)
+                    t.printAssertion("/about info should have a version field", aboutInfo.version.isNotBlank())
+                }
+            )
         }
 
     private fun AnnoRepoClient.testContainerCreationAndDeletion(t: Terminal): Boolean =
@@ -90,13 +94,16 @@ class IntegrationTest {
                 t.print(resultPageResult)
 
                 t.printStep("add index")
-                val indexConfig = IndexConfig(field = "body")
-                val addIndexResult = this.addIndex(containerName, indexConfig)
+                val addIndexResult = this.addIndex(containerName, "body", IndexType.HASHED)
                 t.print(addIndexResult)
 
                 t.printStep("list indexes")
                 val listIndexResult = this.listIndexes(containerName)
                 t.print(listIndexResult)
+
+                t.printStep("delete index")
+                val deleteIndexResult = this.deleteIndex(containerName, "body", IndexType.HASHED)
+                t.print(deleteIndexResult)
 
                 t.printStep("Deleting annotations")
                 for (annotationData in results.annotationData) {
