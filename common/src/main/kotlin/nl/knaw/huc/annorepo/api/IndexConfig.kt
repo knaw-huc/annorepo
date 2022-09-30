@@ -1,3 +1,5 @@
 package nl.knaw.huc.annorepo.api
 
-data class IndexConfig(val field: String)
+import java.net.URI
+
+data class IndexConfig(val field: String, val type: IndexType, val url: URI)

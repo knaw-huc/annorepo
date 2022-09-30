@@ -7,7 +7,9 @@ import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Aggregates.limit
+import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Filters.eq
+import com.mongodb.client.model.IndexOptions
 import com.mongodb.client.model.Indexes
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
@@ -19,6 +21,7 @@ import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.AnnotationPage
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.IndexConfig
+import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
 import nl.knaw.huc.annorepo.api.ResourcePaths.SERVICES
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
@@ -36,9 +39,11 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.annotation.security.PermitAll
 import javax.ws.rs.BadRequestException
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -180,31 +185,109 @@ class ServiceResource(
     ): Response {
         checkContainerExists(containerName)
         val container = mdb.getCollection(containerName)
-        val body = indexData(container)
+        val body = indexData(container, containerName)
         return Response.ok(body).build()
     }
 
     @Operation(description = "Add an index")
     @Timed
-    @POST
-    @Path("{containerName}/indexes")
+    @PUT
+    @Path("{containerName}/indexes/{fieldName}/{indexType}")
     fun addContainerIndex(
-        @PathParam("containerName") containerName: String, indexConfig: IndexConfig
+        @PathParam("containerName") containerName: String,
+        @PathParam("fieldName") fieldNameParam: String,
+        @PathParam("indexType") indexTypeParam: String
     ): Response {
         checkContainerExists(containerName)
         val container = mdb.getCollection(containerName)
-        container.createIndex(Indexes.hashed("$ANNOTATION_FIELD.${indexConfig.field}"))
-        val body = indexData(container)
-        return Response.ok(body).build()
+
+        val fieldName = "$ANNOTATION_FIELD.${fieldNameParam}"
+        val indexType =
+            IndexType.fromString(indexTypeParam) ?: throw BadRequestException("Unknown indexType $indexTypeParam")
+        val index = when (indexType) {
+            IndexType.HASHED -> Indexes.hashed(fieldName)
+            IndexType.ASCENDING -> Indexes.ascending(fieldName)
+            IndexType.DESCENDING -> Indexes.descending(fieldName)
+            IndexType.TEXT -> Indexes.text(fieldName)
+            else -> throw RuntimeException("Cannot make an index with type $indexType")
+        }
+        val partialFilter = Filters.exists(fieldName)
+        container.createIndex(index, IndexOptions().partialFilterExpression(partialFilter))
+        val location = uriFactory.indexURL(containerName, fieldNameParam, indexTypeParam)
+        return Response.created(location).build()
     }
 
-    private fun indexData(container: MongoCollection<Document>): Map<String, List<String>> {
-        val indexedFields = container.listIndexes()
-            .flatMap { i -> (i["key"] as Map<String, String>).keys }
-            .filter { f -> f.startsWith("$ANNOTATION_FIELD.") }
-            .map { f -> f.replace("$ANNOTATION_FIELD.", "") }
-            .sorted()
-        return mapOf("indexedFields" to indexedFields)
+    @Operation(description = "Get an index definition")
+    @Timed
+    @GET
+    @Path("{containerName}/indexes/{fieldName}/{indexType}")
+    fun getContainerIndexDefinition(
+        @PathParam("containerName") containerName: String,
+        @PathParam("fieldName") fieldName: String,
+        @PathParam("indexType") indexType: String
+    ): Response {
+        checkContainerExists(containerName)
+        val container = mdb.getCollection(containerName)
+        val indexConfig =
+            getIndexConfig(container, containerName, fieldName, indexType)
+        return Response.ok(indexConfig).build()
+    }
+
+    @Operation(description = "Delete a container index")
+    @Timed
+    @DELETE
+    @Path("{containerName}/indexes/{fieldName}/{indexType}")
+    fun deleteContainerIndex(
+        @PathParam("containerName") containerName: String,
+        @PathParam("fieldName") fieldName: String,
+        @PathParam("indexType") indexType: String
+    ): Response {
+        checkContainerExists(containerName)
+        val container = mdb.getCollection(containerName)
+        val indexConfig =
+            getIndexConfig(container, containerName, fieldName, indexType)
+        val indexName = "$ANNOTATION_FIELD.${indexConfig.field}_${indexConfig.type.mongoSuffix}"
+        container.dropIndex(indexName)
+        return Response.noContent().build()
+    }
+
+    private fun getIndexConfig(
+        container: MongoCollection<Document>,
+        containerName: String,
+        fieldName: String,
+        indexType: String
+    ): IndexConfig =
+        indexData(container, containerName)
+            .firstOrNull { it.field == fieldName && it.type == IndexType.fromString(indexType) }
+            ?: throw NotFoundException()
+
+    private fun indexData(container: MongoCollection<Document>, containerName: String): List<IndexConfig> =
+        container.listIndexes()
+            .map { it.toMap().asIndexConfig(containerName) }
+            .filterNotNull()
+            .toList()
+
+    private fun Map<String, Any>.asIndexConfig(containerName: String): IndexConfig? {
+        val name = this["name"].toString()
+        val splitPosition = name.lastIndexOf("_")
+        val field = name.subSequence(0, splitPosition).toString()
+        val typeCode = name.subSequence(startIndex = splitPosition + 1, endIndex = name.lastIndex + 1).toString()
+        val prefix = "$ANNOTATION_FIELD."
+        return when {
+            name.startsWith(prefix) -> {
+                val type = when (typeCode) {
+                    IndexType.HASHED.mongoSuffix -> IndexType.HASHED
+                    IndexType.ASCENDING.mongoSuffix -> IndexType.ASCENDING
+                    IndexType.DESCENDING.mongoSuffix -> IndexType.DESCENDING
+                    IndexType.TEXT.mongoSuffix -> IndexType.TEXT
+                    else -> throw Exception("unexpected index type: $typeCode in $name")
+                }
+                val fieldName = field.replace(prefix, "")
+                IndexConfig(fieldName, type, uriFactory.indexURL(containerName, fieldName, type.name))
+            }
+
+            else -> null
+        }
     }
 
     private fun getQueryCacheItem(searchId: String): QueryCacheItem = queryCache.getIfPresent(searchId)

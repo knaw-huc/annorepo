@@ -11,6 +11,7 @@ import com.github.ajalt.mordant.terminal.Terminal
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.required
+import nl.knaw.huc.annorepo.api.IndexConfig
 import nl.knaw.huc.annorepo.client.AnnoRepoClient
 import java.net.URI
 import javax.ws.rs.core.EntityTag
@@ -55,16 +56,16 @@ class IntegrationTest {
     private fun AnnoRepoClient.testBatchUpload(t: Terminal): Boolean =
         runTest(t, "Testing the batch upload") {
             inTemporaryContainer(this, t) { containerName ->
-                val annotations = listOf(
-                    mapOf(
-                        "body" to "urn:example:body1",
-                        "target" to "urn:example:target1"
-                    ),
-                    mapOf(
-                        "body" to "urn:example:body2",
-                        "target" to "urn:example:target2"
+                val batchSize = 1000
+                val annotations = mutableListOf<Map<String, Any>>()
+                for (i in 1..batchSize) {
+                    annotations.add(
+                        mapOf(
+                            "body" to "urn:example:body$i",
+                            "target" to "urn:example:target$i"
+                        )
                     )
-                )
+                }
                 t.printStep("Batch uploading annotations")
                 t.printJson(annotations)
                 val results = this.batchUpload(containerName, annotations)
@@ -73,13 +74,29 @@ class IntegrationTest {
 //                t.println(green(fc1.toString()))
 
                 t.printAssertion(
-                    "fieldCounts should have body = 2",
-                    fc.getOrDefault("body", 0) == 2
+                    "fieldCounts should have body = $batchSize",
+                    fc.getOrDefault("body", 0) == batchSize
                 )
                 t.printAssertion(
-                    "fieldCounts should have target = 2",
-                    fc.getOrDefault("target", 0) == 2
+                    "fieldCounts should have target = $batchSize",
+                    fc.getOrDefault("target", 0) == batchSize
                 )
+
+                t.printStep("Search for body = urn:example:body42")
+                val query = mapOf("body" to "urn:example:body42")
+                val queryId = this.createQuery(containerName, query)
+
+                val resultPageResult = this.getQueryResult(containerName, queryId, 0)
+                t.print(resultPageResult)
+
+                t.printStep("add index")
+                val indexConfig = IndexConfig(field = "body")
+                val addIndexResult = this.addIndex(containerName, indexConfig)
+                t.print(addIndexResult)
+
+                t.printStep("list indexes")
+                val listIndexResult = this.listIndexes(containerName)
+                t.print(listIndexResult)
 
                 t.printStep("Deleting annotations")
                 for (annotationData in results.annotationData) {
