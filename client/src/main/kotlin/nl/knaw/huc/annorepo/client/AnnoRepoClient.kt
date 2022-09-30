@@ -1,15 +1,20 @@
 package nl.knaw.huc.annorepo.client
 
+import arrow.core.Either
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import nl.knaw.huc.annorepo.api.AboutInfo
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
+import nl.knaw.huc.annorepo.api.IndexConfig
 import nl.knaw.huc.annorepo.api.ResourcePaths.ABOUT
 import nl.knaw.huc.annorepo.api.ResourcePaths.BATCH
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
 import nl.knaw.huc.annorepo.api.ResourcePaths.SERVICES
 import nl.knaw.huc.annorepo.api.ResourcePaths.W3C
+import nl.knaw.huc.annorepo.client.ARResponse.AnnoRepoResponse
+import nl.knaw.huc.annorepo.client.ARResponse.BatchUploadResponse
+import nl.knaw.huc.annorepo.client.RequestError.ConnectionError
 import nl.knaw.huc.annorepo.util.extractVersion
 import org.eclipse.jetty.http.HttpStatus
 import org.eclipse.jetty.http.HttpStatus.NO_CONTENT_204
@@ -21,19 +26,38 @@ import javax.ws.rs.client.Invocation
 import javax.ws.rs.client.WebTarget
 import javax.ws.rs.core.Response
 
-class AnnoRepoClient(serverURI: URI, private val userAgent: String? = null) {
+class AnnoRepoClient(serverURI: URI, val apiKey: String? = null, private val userAgent: String? = null) {
     private val log = LoggerFactory.getLogger(javaClass)
+
     private val webTarget: WebTarget = ClientBuilder.newClient()
         .target(serverURI)
     private val oMapper: ObjectMapper = ObjectMapper().registerKotlinModule()
 
-    fun getAbout(): AboutInfo {
-        val json = webTarget.path(ABOUT)
-            .request()
-            .addUserAgent()
-            .get(String::class.java)
-        return oMapper.readValue(json)
+    var serverVersion: String? = null
+    var serverNeedsAuthentication: Boolean? = null
+
+    init {
+        log.info("checking annorepo server at $serverURI ...")
+        getAbout().bimap(
+            { e -> log.error("error: {}", e) },
+            { aboutInfo ->
+                serverVersion = aboutInfo.version
+                serverNeedsAuthentication = aboutInfo.withAuthentication
+                log.info("$serverURI runs version $serverVersion ; needs authentication: $serverNeedsAuthentication")
+            }
+        )
     }
+
+    fun getAbout(): Either<RequestError, AboutInfo> =
+        try {
+            val json = webTarget.path(ABOUT)
+                .request()
+                .withUserAgent()
+                .get(String::class.java)
+            Either.Right(oMapper.readValue(json))
+        } catch (e: Exception) {
+            Either.Left(ConnectionError(e.message ?: "Connection Error"))
+        }
 
     fun createContainer(
         preferredName: String? = null,
@@ -44,7 +68,7 @@ class AnnoRepoClient(serverURI: URI, private val userAgent: String? = null) {
             request = request.header("slug", preferredName)
         }
         val specs = containerSpecs(label)
-        val response = request.addUserAgent()
+        val response = request.withUserAgent()
             .post(Entity.json(specs))
 //        log.info("response={}", response)
         val created = (response.status == HttpStatus.CREATED_201)
@@ -58,7 +82,7 @@ class AnnoRepoClient(serverURI: URI, private val userAgent: String? = null) {
         val response = webTarget.path(W3C).path(containerName)
             .request()
             .header("if-match", eTag)
-            .addUserAgent()
+            .withUserAgent()
             .delete()
 //        log.info("{}", response)
         return response.status == NO_CONTENT_204
@@ -66,7 +90,7 @@ class AnnoRepoClient(serverURI: URI, private val userAgent: String? = null) {
 
     fun createAnnotation(containerName: String, annotation: Map<String, Any>): AnnoRepoResponse {
         val request = webTarget.path(W3C).path(containerName).request()
-        val response = request.addUserAgent()
+        val response = request.withUserAgent()
             .post(Entity.json(annotation))
 //        log.info("response={}", response)
         val created = (response.status == HttpStatus.CREATED_201)
@@ -85,7 +109,7 @@ class AnnoRepoClient(serverURI: URI, private val userAgent: String? = null) {
         val request = webTarget.path(W3C).path(containerName).path(annotationName).request()
         val response = request
             .header("if-match", eTag)
-            .addUserAgent()
+            .withUserAgent()
             .put(Entity.json(annotation))
 //        log.info("response={}", response)
         val created = (response.status == HttpStatus.OK_200)
@@ -98,7 +122,7 @@ class AnnoRepoClient(serverURI: URI, private val userAgent: String? = null) {
         val response = webTarget.path(W3C).path(containerName).path(annotationName)
             .request()
             .header("if-match", eTag)
-            .addUserAgent()
+            .withUserAgent()
             .delete()
 //        log.info("{}", response)
         return response.status == NO_CONTENT_204
@@ -107,20 +131,56 @@ class AnnoRepoClient(serverURI: URI, private val userAgent: String? = null) {
     fun getFieldCount(containerName: String): Map<String, Int> {
         val json = webTarget.path(SERVICES).path(containerName).path(FIELDS)
             .request()
-            .addUserAgent()
+            .withUserAgent()
             .get(String::class.java)
         return oMapper.readValue(json)
     }
 
     fun batchUpload(containerName: String, annotations: List<Map<String, Any>>): BatchUploadResponse {
         val request = webTarget.path(BATCH).path(containerName).path("annotations").request()
-        val response = request.addUserAgent()
+        val response = request.withUserAgent()
             .post(Entity.json(annotations))
 //        log.info("response={}", response)
         val entityJson: String =
             response.readEntity(String::class.java)
         val annotationData: List<AnnotationIdentifier> = oMapper.readValue(entityJson)
         return BatchUploadResponse(annotationData)
+    }
+
+    fun createQuery(containerName: String, query: Map<String, Any>): String {
+        val request = webTarget.path(SERVICES).path(containerName).path("search").request()
+        val response = request.withUserAgent()
+            .post(Entity.json(query))
+        log.info("response={}", response)
+        val location = response.location
+        val queryId = location.rawPath.split("/").last()
+        return queryId
+    }
+
+    fun getQueryResult(containerName: String, queryId: String, page: Int): Any {
+        val request =
+            webTarget.path(SERVICES).path(containerName).path("search").path(queryId).queryParam("page", page).request()
+        val response = request.withUserAgent()
+            .get()
+        val entityJson: String =
+            response.readEntity(String::class.java)
+        return entityJson
+    }
+
+    fun addIndex(containerName: String, indexConfig: IndexConfig): Any {
+        val request =
+            webTarget.path(SERVICES).path(containerName).path("indexes").request()
+        val response = request.withUserAgent()
+            .post(Entity.json(indexConfig))
+        return response
+    }
+
+    fun listIndexes(containerName: String): String {
+        val request =
+            webTarget.path(SERVICES).path(containerName).path("indexes").request()
+        val response = request.withUserAgent()
+            .get(String::class.java)
+        return response
     }
 
     // private functions
@@ -149,7 +209,7 @@ class AnnoRepoClient(serverURI: URI, private val userAgent: String? = null) {
             null
         }
 
-    private fun Invocation.Builder.addUserAgent(): Invocation.Builder {
+    private fun Invocation.Builder.withUserAgent(): Invocation.Builder {
         val libUA = "${AnnoRepoClient::class.java.name}/${getVersion() ?: ""}"
         val ua = if (userAgent == null) {
             libUA

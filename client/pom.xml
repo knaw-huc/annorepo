@@ -107,6 +107,11 @@
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-http</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.arrow-kt</groupId>
+            <artifactId>arrow-core</artifactId>
+            <version>1.1.2</version>
+        </dependency>
     </dependencies>
 
     <build>
