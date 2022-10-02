@@ -16,6 +16,11 @@
 - [Querying](#querying):
   - [Create a query](#create-a-query---experimental)
   - [Get a query result page](#get-a-search-result-page---experimental)
+- [Indexes](#indexes)
+  - [Add an index](#add-index-)
+  - [Read an index](#read-index-)
+  - [List all indexes](#list-all-indexes-for-a-container-)
+  - [Delete an index](#delete-index-)
 - [Admin](#admin):
   - [Read users](#get-users-)
   - [Add users](#add-users-)
@@ -664,6 +669,8 @@ This json contains the queryable fields:
 - `body.metadata.color`
 - `body.value`
 
+Use the [`fields` endpoint](#get-annotation-field-count-) to see the fields available in the container.
+
 ##### (simple) field query
 
 This matches the given field with the given value.  
@@ -751,9 +758,9 @@ Content-Type: application/json
 Vary: Accept-Encoding
 
 {
-  "id": "http://localhost:8080/services/volume-1728/search/d6883433-de41-43fb-93d2-85c1cd9570ee?page=0",
+  "id": "http://localhost:8080/services/my-container/search/d6883433-de41-43fb-93d2-85c1cd9570ee?page=0",
   "type": "AnnotationPage",
-  "partOf": "http://localhost:8080/services/volume-1728/search/d6883433-de41-43fb-93d2-85c1cd9570ee",
+  "partOf": "http://localhost:8080/services/my-container/search/d6883433-de41-43fb-93d2-85c1cd9570ee",
   "startIndex": 0,
   "items": [
     ....
@@ -762,6 +769,100 @@ Vary: Accept-Encoding
 ```
 
 The Location header contains the link to the first search result page.
+
+---
+
+## Indexes
+
+When some fields are queried often, creating an index on that field will speed up the querying.
+
+### Add index (🔒)
+
+#### Request
+
+```
+PUT http://localhost:8080/services/{containerName}/indexes/{fieldName}/{indexType} HTTP/1.1
+```
+
+(no body required)
+
+Available options for `indexType`:
+
+- `hashed` - for fields used in simple field queries or the extended field queries: `:=`, `:!=`, `:isIn`, `:notIn`
+- `ascending` - for fields used in extended field queries `:<`, `:<=`, `:>`, `:>=`
+- `descending` - for fields used in extended field queries `:<`, `:<=`, `:>`, `:>=`
+
+#### Response
+
+```
+HTTP/1.1 200 OK
+Location: http://localhost:8080/services/my-container/indexes/body.metadata/hashed
+```
+
+---
+
+### Read index (🔒)
+
+#### Request
+
+```
+GET http://localhost:8080/services/{containerName}/indexes/{fieldName}/{indexType} HTTP/1.1
+```
+
+#### Response
+
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "field" : "body.metadata",
+  "type" : "HASHED",
+  "url" : "http://localhost:8080/services/my-container/indexes/body.metadata/hashed"
+}
+```
+
+---
+
+### List all indexes for a container (🔒)
+
+#### Request
+
+```
+GET http://localhost:8080/services/{containerName}/indexes HTTP/1.1
+```
+
+#### Response
+
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+[
+  {
+    "field" : "body.metadata",
+    "type" : "HASHED",
+    "url" : "http://localhost:8080/services/my-container/indexes/body.metadata/hashed"
+  },
+  ...
+]
+```
+
+---
+
+### Delete index (🔒)
+
+#### Request
+
+```
+DELETE http://localhost:8080/services/{containerName}/indexes/{fieldName}/{indexType} HTTP/1.1
+```
+
+#### Response
+
+```
+HTTP/1.1 204 No Content
+```
 
 ---
 
