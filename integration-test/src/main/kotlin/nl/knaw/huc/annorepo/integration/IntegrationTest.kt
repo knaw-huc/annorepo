@@ -16,7 +16,6 @@ import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.client.AnnoRepoClient
 import nl.knaw.huc.annorepo.client.RequestError
 import java.net.URI
-import java.util.concurrent.atomic.AtomicBoolean
 import javax.ws.rs.core.EntityTag
 
 class IntegrationTest {
@@ -42,20 +41,20 @@ class IntegrationTest {
     private fun AnnoRepoClient.testAbout(t: Terminal): Boolean =
         runTest(t, "Testing /about") {
             getAbout().thenAssertResponse(t) { aboutInfo ->
-                val passed = AtomicBoolean(true)
+                val passed = MyBool(true)
                 t.printJson(aboutInfo)
                 t.printAssertion("/about info should have a version field", aboutInfo.version.isNotBlank())
-                passed.get()
+                passed.value
             }
         }
 
     private fun <T> Either<RequestError, T>.thenAssertResponse(
         t: Terminal,
-        rightFun: (T) -> Boolean
+        successFunction: (T) -> Boolean
     ): Boolean =
         fold(
             { error -> t.printError(error); return false },
-            rightFun
+            successFunction
         )
 
     private fun AnnoRepoClient.testContainerCreationAndDeletion(t: Terminal): Boolean =
