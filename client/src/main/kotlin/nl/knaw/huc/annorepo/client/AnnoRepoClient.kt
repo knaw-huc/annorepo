@@ -168,7 +168,7 @@ class AnnoRepoClient(serverURI: URI, val apiKey: String? = null, private val use
         val request =
             webTarget.path(SERVICES).path(containerName).path("indexes").path(fieldName).path(indexType.name).request()
         return request.withUserAgent()
-            .put(null)
+            .put(Entity.json(emptyMap<String, Any>()))
     }
 
     fun listIndexes(containerName: String): String {
