@@ -10,10 +10,12 @@ services:
       - AR_MONGODB_URL=mongodb://admin:ItsVeryVerySecret@annorepo_mongodb/
       - AR_DB_NAME=annorepo
       - AR_PAGE_SIZE=100
+      - AR_WITH_AUTHENTICATION=true
+      - AR_ROOT_API_KEY=9ac93a6a-277a-42f1-bd38-c38ea8ac3c45
     expose:
       - 8080
       - 8081
-    image: registry.diginfra.net/tt/annorepo:0.3.0-beta
+    image: registry.diginfra.net/tt/annorepo:0.3.0
     networks:
       - annorepo_network
       - nginxproxynetwork
@@ -43,7 +45,7 @@ services:
       - annorepo_server
     environment:
       - AR_ADMIN_BACKEND=http://annorepo_server:8081
-    image: registry.diginfra.net/tt/annorepo-updater:0.3.0-beta
+    image: registry.diginfra.net/tt/annorepo-updater:0.3.0
     networks:
       - annorepo_network
     restart: "no"
