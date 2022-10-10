@@ -9,12 +9,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
 
-@SecurityScheme(
-    name = SECURITY_SCHEME_NAME,
-    type = SecuritySchemeType.HTTP,
-    scheme = "bearer",
-    `in` = SecuritySchemeIn.HEADER,
-)
 class AROAuthAuthenticator(private val userDAO: UserDAO) : Authenticator<String, User> {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 

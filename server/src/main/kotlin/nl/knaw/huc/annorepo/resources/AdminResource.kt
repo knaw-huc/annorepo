@@ -2,9 +2,10 @@ package nl.knaw.huc.annorepo.resources
 
 import com.codahale.metrics.annotation.Timed
 import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.enums.ParameterIn
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import io.swagger.v3.oas.annotations.security.SecurityScheme
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.ResourcePaths.ADMIN
 import nl.knaw.huc.annorepo.auth.FIELD_API_KEY
@@ -29,6 +30,14 @@ import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.SecurityContext
 
+// SecurityScheme must be defined in one of the resources
+@SecurityScheme(
+    name = SECURITY_SCHEME_NAME,
+    type = SecuritySchemeType.HTTP,
+    scheme = "bearer",
+    `in` = SecuritySchemeIn.HEADER,
+)
+
 @Path(ADMIN)
 @Produces(MediaType.APPLICATION_JSON)
 @PermitAll
@@ -38,15 +47,7 @@ class AdminResource(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    @Operation(
-        description = "Get username, api-key for all registered users",
-        parameters = [Parameter(
-            name = "Authorization",
-            `in` = ParameterIn.HEADER,
-            description = "The bearer token",
-            required = true
-        )]
-    )
+    @Operation(description = "Get username, api-key for all registered users")
     @Timed
     @GET
     @Path("users")
