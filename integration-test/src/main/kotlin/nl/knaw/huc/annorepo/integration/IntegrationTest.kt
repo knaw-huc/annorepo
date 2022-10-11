@@ -1,6 +1,7 @@
 package nl.knaw.huc.annorepo.integration
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.ObjectWriter
 import com.github.ajalt.mordant.rendering.TextColors.blue
@@ -24,13 +25,18 @@ class IntegrationTest {
         val t = Terminal()
         t.println("Testing server at $server :")
         t.println()
-        val client = AnnoRepoClient(URI.create(server), "annorepo-integration-tester")
+        val client = AnnoRepoClient(
+            serverURI = URI.create(server),
+            apiKey = "root",
+            userAgent = "annorepo-integration-tester"
+        )
         val testResults = mutableMapOf<String, Boolean>()
 
         testResults["testAbout"] = client.testAbout(t)
         testResults["ContainerCreationAndDeletion"] = client.testContainerCreationAndDeletion(t)
         testResults["container field count"] = client.testContainerFieldCount(t)
         testResults["batch upload"] = client.testBatchUpload(t)
+        testResults["admin endpoints"] = client.testAdminEndpoints(t)
         testResults["this test should fail"] = client.testFailure(t)
 
         t.println("Results:")
@@ -82,9 +88,9 @@ class IntegrationTest {
                 }
                 t.printStep("Batch uploading annotations")
                 t.printJson(annotations)
-                val results = this.batchUpload(containerName, annotations)
+                val results = this.batchUpload(containerName, annotations).getOrElse { throw Exception() }
 
-                val fc = getFieldCount(containerName)
+                val fc = getFieldCount(containerName).getOrElse { throw Exception() }
 //                t.println(green(fc1.toString()))
 
                 t.printAssertion(
@@ -98,7 +104,7 @@ class IntegrationTest {
 
                 t.printStep("Search for body = urn:example:body42")
                 val query = mapOf("body" to "urn:example:body42")
-                val queryId = this.createQuery(containerName, query)
+                val queryId = this.createQuery(containerName, query).getOrElse { throw Exception() }
 
                 val resultPageResult = this.getQueryResult(containerName, queryId, 0)
                 t.print(resultPageResult)
@@ -141,10 +147,10 @@ class IntegrationTest {
                 val annotation: Map<String, Any> = mapOf("body" to mapOf("id" to "urn:example:blahblahblah"))
                 t.printStep("Adding annotation with body.id field: ")
                 t.printJson(annotation)
-                val car = createAnnotation(containerName, annotation)
+                val car = createAnnotation(containerName, annotation).getOrElse { throw Exception() }
 //                t.println(green(car.toString()))
 
-                val fc1 = getFieldCount(containerName)
+                val fc1 = getFieldCount(containerName).getOrElse { throw Exception() }
 //                t.println(green(fc1.toString()))
                 t.printAssertion(
                     "fieldCounts should have body.id = 1",
@@ -154,9 +160,14 @@ class IntegrationTest {
                 val newAnnotation: Map<String, Any> = mapOf("body" to "urn:example:blahblahblah")
                 t.printStep("Updating the annotation: ")
                 t.printJson(newAnnotation)
-                val uar = updateAnnotation(containerName, car.containerId, car.eTag, newAnnotation)
+                val uar = updateAnnotation(
+                    containerName,
+                    car.containerId,
+                    car.eTag,
+                    newAnnotation
+                ).getOrElse { throw Exception() }
 
-                val fc2 = getFieldCount(containerName)
+                val fc2 = getFieldCount(containerName).getOrElse { throw Exception() }
                 t.printAssertion(
                     "fieldCounts should not have a body.id field",
                     !fc2.containsKey("body.id")
@@ -172,6 +183,13 @@ class IntegrationTest {
 
                 val fc3 = getFieldCount(containerName)
                 t.printAssertion("fieldCounts should be empty", fc3.isEmpty())
+            }
+        }
+
+    private fun AnnoRepoClient.testAdminEndpoints(t: Terminal): Boolean =
+        runTest(t, "Testing /admin endpoints") {
+            this.getUsers().thenAssertResponse(t) { list ->
+                t.printJson(list); true
             }
         }
 
@@ -216,7 +234,7 @@ class IntegrationTest {
         func: (containerName: String) -> Unit?
     ) {
         t.printStep("Creating container $containerName")
-        val r = ac.createContainer(containerName)
+        val r = ac.createContainer(containerName).getOrElse { throw Exception() }
         try {
             func(r.containerId)
         } finally {

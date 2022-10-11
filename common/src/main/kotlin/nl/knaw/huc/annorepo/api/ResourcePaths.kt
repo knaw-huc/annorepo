@@ -11,6 +11,7 @@ object ResourcePaths {
 
     // sub paths
     const val FIELDS = "fields"
+    const val USERS = "users"
     const val INDEXES = "indexes"
     const val SEARCH = "search"
 }

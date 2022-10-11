@@ -1,5 +1,6 @@
 package nl.knaw.huc.annorepo.client
 
+import arrow.core.getOrElse
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.junit.jupiter.api.Test
@@ -28,24 +29,33 @@ class AnnoRepoClientTest {
 
     @Test
     fun `createContainer without a preferred name should create a container with a generated name`() {
-        val response = client.createContainer()
-        assertThat(response.created).isTrue
-        assertThat(response.location).startsWith(ANNOREPO_BASE_URL)
-        assertThat(response.containerId).isNotNull
-        assertThat(response.eTag).isNotNull
-        client.deleteContainer(response.containerId, response.eTag)
+        client.createContainer().bimap(
+            { error -> fail<String>("Unexpected error: $error") },
+            { response ->
+                assertThat(response.created).isTrue
+                assertThat(response.location).startsWith(ANNOREPO_BASE_URL)
+                assertThat(response.containerId).isNotNull
+                assertThat(response.eTag).isNotNull
+                client.deleteContainer(response.containerId, response.eTag)
+            }
+
+        )
     }
 
     @Test
     fun `createContainer with a preferred name should create a container with the preferred name`() {
         val preferredName = "container-name" + Random.nextInt()
-        val response = client.createContainer(preferredName)
-        assertThat(response.created).isTrue
-        assertThat(response.location).endsWith("/$preferredName/")
-        assertThat(response.containerId).isEqualTo(preferredName)
-        assertThat(response.eTag).isNotNull
-        val ok = client.deleteContainer(preferredName, response.eTag)
-        assertThat(ok).isTrue
+        client.createContainer(preferredName).bimap(
+            { error -> fail<String>("Unexpected error: $error") },
+            { response ->
+                assertThat(response.created).isTrue
+                assertThat(response.location).endsWith("/$preferredName/")
+                assertThat(response.containerId).isEqualTo(preferredName)
+                assertThat(response.eTag).isNotNull
+                val ok = client.deleteContainer(preferredName, response.eTag).getOrElse { throw Exception() }
+                assertThat(ok).isTrue
+            }
+        )
     }
 
 }

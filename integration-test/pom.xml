@@ -37,6 +37,12 @@
             <artifactId>kotlinx-cli-jvm</artifactId>
             <version>${kotlinx-cli-jvm.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>RELEASE</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

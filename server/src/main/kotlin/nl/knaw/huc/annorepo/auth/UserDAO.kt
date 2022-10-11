@@ -1,5 +1,7 @@
 package nl.knaw.huc.annorepo.auth
 
+import nl.knaw.huc.annorepo.api.UserEntry
+
 interface UserDAO {
     fun userForApiKey(apiKey: String?): User?
     fun addUserEntries(userEntries: List<UserEntry>): UserAddResults
@@ -7,4 +9,3 @@ interface UserDAO {
     fun deleteUsersByName(userNames: Collection<String>): Boolean
 }
 
-data class UserEntry(val userName: String, val apiKey: String)

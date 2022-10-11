@@ -2,6 +2,7 @@ package nl.knaw.huc.annorepo.client
 
 import nl.knaw.huc.annorepo.api.AboutInfo
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
+import javax.ws.rs.core.MultivaluedMap
 
 sealed class ARResponse {
     data class AboutResponse(val aboutInfo: AboutInfo? = null) : ARResponse()
@@ -11,10 +12,18 @@ sealed class ARResponse {
 }
 
 sealed class RequestError(val errorMessage: String) {
-    data class NotAuthorized(val message: String, val headers: List<String>, val responseString: String) :
+    data class NotAuthorized(
+        val message: String,
+        val headers: MultivaluedMap<String, Any>,
+        val responseString: String
+    ) :
         RequestError(message)
 
-    data class UnexpectedResponse(val message: String, val headers: List<String>, val responseString: String) :
+    data class UnexpectedResponse(
+        val message: String,
+        val headers: MultivaluedMap<String, Any>,
+        val responseString: String
+    ) :
         RequestError(message)
 
     data class ConnectionError(val message: String) : RequestError(message)
