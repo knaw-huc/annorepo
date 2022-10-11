@@ -5,6 +5,7 @@ import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Indexes
 import com.mongodb.client.model.Projections
 import nl.knaw.huc.annorepo.api.ARConst.USER_COLLECTION
+import nl.knaw.huc.annorepo.api.UserEntry
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import org.bson.Document
 import org.litote.kmongo.excludeId

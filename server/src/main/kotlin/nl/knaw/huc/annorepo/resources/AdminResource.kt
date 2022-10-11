@@ -5,12 +5,12 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.ResourcePaths.ADMIN
+import nl.knaw.huc.annorepo.api.UserEntry
 import nl.knaw.huc.annorepo.auth.FIELD_API_KEY
 import nl.knaw.huc.annorepo.auth.FIELD_USER_NAME
 import nl.knaw.huc.annorepo.auth.RejectedUserEntry
 import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.auth.UserDAO
-import nl.knaw.huc.annorepo.auth.UserEntry
 import org.slf4j.LoggerFactory
 import javax.annotation.security.PermitAll
 import javax.validation.constraints.NotNull
