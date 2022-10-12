@@ -2,6 +2,7 @@ package nl.knaw.huc.annorepo.integration
 
 import arrow.core.Either
 import arrow.core.getOrElse
+import arrow.core.getOrHandle
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.ObjectWriter
 import com.github.ajalt.mordant.rendering.TextColors.blue
@@ -87,7 +88,7 @@ class IntegrationTest {
                     )
                 }
                 t.printStep("Batch uploading annotations")
-                t.printJson(annotations)
+//                t.printJson(annotations)
                 val results = this.batchUpload(containerName, annotations).getOrElse { throw Exception() }
 
                 val fc = getFieldCount(containerName).getOrElse { throw Exception() }
@@ -130,7 +131,7 @@ class IntegrationTest {
                     )
                 }
 
-                val fc2 = getFieldCount(containerName)
+                val fc2 = getFieldCount(containerName).getOrElse { throw RuntimeException() }
                 t.printAssertion("fieldCounts should be empty", fc2.isEmpty())
 
             }
@@ -141,7 +142,7 @@ class IntegrationTest {
     private fun AnnoRepoClient.testContainerFieldCount(t: Terminal): Boolean =
         runTest(t, "Testing the annotation field counter") {
             inTemporaryContainer(this, t) { containerName ->
-                val fc0 = getFieldCount(containerName)
+                val fc0 = getFieldCount(containerName).getOrElse { throw RuntimeException() }
                 t.printAssertion("Initially, fieldCounts should be empty", fc0.isEmpty())
 
                 val annotation: Map<String, Any> = mapOf("body" to mapOf("id" to "urn:example:blahblahblah"))
@@ -165,7 +166,7 @@ class IntegrationTest {
                     car.containerId,
                     car.eTag,
                     newAnnotation
-                ).getOrElse { throw Exception() }
+                ).getOrHandle { er -> t.printJson(er); throw RuntimeException() }
 
                 val fc2 = getFieldCount(containerName).getOrElse { throw Exception() }
                 t.printAssertion(
@@ -181,7 +182,9 @@ class IntegrationTest {
                 val dr = deleteAnnotation(containerName, uar.containerId, uar.eTag)
 //                t.println(dr)
 
-                val fc3 = getFieldCount(containerName)
+                val fc3 =
+                    getFieldCount(containerName).getOrHandle { er -> t.printJson(er); throw RuntimeException(er.errorMessage) }
+
                 t.printAssertion("fieldCounts should be empty", fc3.isEmpty())
             }
         }

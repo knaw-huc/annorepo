@@ -19,7 +19,6 @@
         <mainClass>nl.knaw.huc.annorepo.integration.IntegrationTest</mainClass>
     </properties>
 
-
     <dependencies>
         <dependency>
             <groupId>nl.knaw.huc</groupId>

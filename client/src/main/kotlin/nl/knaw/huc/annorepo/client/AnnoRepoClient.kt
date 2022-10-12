@@ -30,9 +30,11 @@ import javax.ws.rs.client.Invocation
 import javax.ws.rs.client.WebTarget
 import javax.ws.rs.core.Response
 
-typealias ResponseHandlerMap<T> = Map<Response.Status, (Response) -> Either<RequestError, T>>
-
-class AnnoRepoClient(serverURI: URI, val apiKey: String? = null, private val userAgent: String? = null) {
+class AnnoRepoClient @JvmOverloads constructor(
+    serverURI: URI,
+    val apiKey: String? = null,
+    private val userAgent: String? = null
+) {
     private val log = LoggerFactory.getLogger(javaClass)
 
     private val webTarget: WebTarget =
@@ -92,6 +94,7 @@ class AnnoRepoClient(serverURI: URI, val apiKey: String? = null, private val use
                     val eTag = eTag(response) ?: ""
                     Either.Right(
                         AnnoRepoResponse(
+                            r = response,
                             created = true,
                             location = location,
                             containerId = containerId,
@@ -123,7 +126,7 @@ class AnnoRepoClient(serverURI: URI, val apiKey: String? = null, private val use
                     val annotationName = extractAnnotationName(location)
                     val eTag = eTag(response) ?: ""
                     Either.Right(
-                        AnnoRepoResponse(true, location, containerId = annotationName, eTag = eTag)
+                        AnnoRepoResponse(response, true, location, containerId = annotationName, eTag = eTag)
                     )
                 }
             )
@@ -141,11 +144,11 @@ class AnnoRepoClient(serverURI: URI, val apiKey: String? = null, private val use
                 .header("if-match", eTag),
             entity = Entity.json(annotation),
             responseHandlers = mapOf(
-                Response.Status.NO_CONTENT to { response ->
+                Response.Status.OK to { response ->
                     val location = location(response) ?: ""
                     val newEtag = eTag(response) ?: ""
                     Either.Right(
-                        AnnoRepoResponse(false, location, containerId = annotationName, eTag = newEtag)
+                        AnnoRepoResponse(response, false, location, containerId = annotationName, eTag = newEtag)
                     )
                 }
             )
@@ -185,7 +188,7 @@ class AnnoRepoClient(serverURI: URI, val apiKey: String? = null, private val use
                     val entityJson: String =
                         response.readEntity(String::class.java)
                     val annotationData: List<AnnotationIdentifier> = oMapper.readValue(entityJson)
-                    Either.Right(BatchUploadResponse(annotationData))
+                    Either.Right(BatchUploadResponse(response, annotationData))
                 }
             )
         )
