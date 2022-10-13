@@ -44,6 +44,7 @@
         <json-path.version>2.7.0</json-path.version>
         <json-unit-assertj.version>2.35.0</json-unit-assertj.version>
         <json.version>20220320</json.version>
+        <junit-jupiter.version>5.9.0</junit-jupiter.version>
         <kmongo.version>4.7.1</kmongo.version>
         <kotlinx-cli-jvm.version>0.3.5</kotlinx-cli-jvm.version>
         <mockito-kotlin.version>4.0.0</mockito-kotlin.version>
