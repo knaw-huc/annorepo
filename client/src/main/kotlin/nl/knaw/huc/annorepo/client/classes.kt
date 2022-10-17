@@ -6,33 +6,68 @@ import nl.knaw.huc.annorepo.api.AnnotationIdentifier
 import javax.ws.rs.core.MultivaluedMap
 import javax.ws.rs.core.Response
 
-sealed class ARResponse(val response: Response) {
-    data class AboutResponse(val r: Response, val aboutInfo: AboutInfo? = null) : ARResponse(r)
-    data class BatchUploadResponse(val r: Response, val annotationData: List<AnnotationIdentifier>) : ARResponse(r)
-    data class AnnoRepoResponse(
-        val r: Response,
+sealed class ARResult {
+    abstract val response: Response
+
+    data class GetAboutResult(
+        override val response: Response,
+        val aboutInfo: AboutInfo
+    ) : ARResult()
+
+    data class BatchUploadResult(
+        override val response: Response,
+        val annotationData: List<AnnotationIdentifier>
+    ) : ARResult()
+
+    data class AnnoRepoResult(
+        override val response: Response,
         val created: Boolean,
         val location: String,
         val containerId: String,
         val eTag: String
-    ) : ARResponse(r)
+    ) : ARResult()
+
+    data class GetQueryInfoResult(
+        override val response: Response,
+    ) : ARResult()
+
+    data class GetContainerResult(
+        override val response: Response,
+    ) : ARResult()
+
+    data class GetContainerMetadataResult(
+        override val response: Response,
+        val metadata: Map<String, Any>
+    ) : ARResult()
+
+    data class AddUsersResult(
+        override val response: Response,
+    ) : ARResult()
+
+    data class DeleteUserResult(
+        override val response: Response,
+    ) : ARResult()
 
 }
 
-sealed class RequestError(val errorMessage: String) {
+sealed class RequestError {
+    abstract val message: String
+
     data class NotAuthorized(
-        val message: String,
+        override val message: String,
         val headers: MultivaluedMap<String, Any>,
         val responseString: String
-    ) : RequestError(message)
+    ) : RequestError()
 
     data class UnexpectedResponse(
-        val message: String,
+        override val message: String,
         val headers: MultivaluedMap<String, Any>,
         val responseString: String
-    ) : RequestError(message)
+    ) : RequestError()
 
-    data class ConnectionError(val message: String) : RequestError(message)
+    data class ConnectionError(
+        override val message: String
+    ) : RequestError()
 }
 
 typealias ResponseHandlerMap<T> = Map<Response.Status, (Response) -> Either<RequestError, T>>

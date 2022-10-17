@@ -15,20 +15,22 @@ import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.required
 import nl.knaw.huc.annorepo.api.IndexType
+import nl.knaw.huc.annorepo.api.UserEntry
 import nl.knaw.huc.annorepo.client.AnnoRepoClient
 import nl.knaw.huc.annorepo.client.RequestError
 import java.net.URI
 import javax.ws.rs.core.EntityTag
 
 class IntegrationTest {
+    private val jsonWriter: ObjectWriter = ObjectMapper().writerWithDefaultPrettyPrinter()
 
-    fun testServer(server: String) {
+    fun testServer(serverURI: String, apiKey: String?) {
         val t = Terminal()
-        t.println("Testing server at $server :")
+        t.println("Testing server at $serverURI :")
         t.println()
         val client = AnnoRepoClient(
-            serverURI = URI.create(server),
-            apiKey = "root",
+            serverURI = URI.create(serverURI),
+            apiKey = apiKey,
             userAgent = "annorepo-integration-tester"
         )
         val testResults = mutableMapOf<String, Boolean>()
@@ -47,7 +49,8 @@ class IntegrationTest {
 
     private fun AnnoRepoClient.testAbout(t: Terminal): Boolean =
         runTest(t, "Testing /about") {
-            getAbout().thenAssertResponse(t) { aboutInfo ->
+            getAbout().thenAssertResponse(t) { aboutResult ->
+                val aboutInfo = aboutResult.aboutInfo
                 val passed = MyBool(true)
                 t.printJson(aboutInfo)
                 t.printAssertion("/about info should have a version field", aboutInfo.version.isNotBlank())
@@ -71,7 +74,7 @@ class IntegrationTest {
 
     private fun AnnoRepoClient.testFailure(t: Terminal): Boolean =
         runTest(t, "A failing test") {
-            throw Exception("Don't worry, this should happen")
+            throw Exception("This exception was intentionally thrown.")
         }
 
     private fun AnnoRepoClient.testBatchUpload(t: Terminal): Boolean =
@@ -91,7 +94,7 @@ class IntegrationTest {
 //                t.printJson(annotations)
                 val results = this.batchUpload(containerName, annotations).getOrElse { throw Exception() }
 
-                val fc = getFieldCount(containerName).getOrElse { throw Exception() }
+                val fc = getFieldInfo(containerName).getOrElse { throw Exception() }
 //                t.println(green(fc1.toString()))
 
                 t.printAssertion(
@@ -108,19 +111,31 @@ class IntegrationTest {
                 val queryId = this.createQuery(containerName, query).getOrElse { throw Exception() }
 
                 val resultPageResult = this.getQueryResult(containerName, queryId, 0)
-                t.print(resultPageResult)
+                t.println(resultPageResult)
+
+                t.printStep("get query info")
+                val getQueryInfoResult = this.getQueryInfo(containerName, queryId)
+                t.println(getQueryInfoResult)
+
+                t.printStep("get container")
+                val getContainerResult = this.getContainer(containerName)
+                t.println(getContainerResult)
+
+                t.printStep("get container metadata")
+                val getContainerMetadataResult = this.getContainerMetadata(containerName)
+                t.println(getContainerMetadataResult)
 
                 t.printStep("add index")
                 val addIndexResult = this.addIndex(containerName, "body", IndexType.HASHED)
-                t.print(addIndexResult)
+                t.println(addIndexResult)
 
                 t.printStep("list indexes")
                 val listIndexResult = this.listIndexes(containerName)
-                t.print(listIndexResult)
+                t.println(listIndexResult)
 
                 t.printStep("delete index")
                 val deleteIndexResult = this.deleteIndex(containerName, "body", IndexType.HASHED)
-                t.print(deleteIndexResult)
+                t.println(deleteIndexResult)
 
                 t.printStep("Deleting annotations")
                 for (annotationData in results.annotationData) {
@@ -131,18 +146,16 @@ class IntegrationTest {
                     )
                 }
 
-                val fc2 = getFieldCount(containerName).getOrElse { throw RuntimeException() }
+                val fc2 = getFieldInfo(containerName).getOrElse { throw RuntimeException() }
                 t.printAssertion("fieldCounts should be empty", fc2.isEmpty())
 
             }
         }
 
-    private val jsonWriter: ObjectWriter = ObjectMapper().writerWithDefaultPrettyPrinter()
-
     private fun AnnoRepoClient.testContainerFieldCount(t: Terminal): Boolean =
         runTest(t, "Testing the annotation field counter") {
             inTemporaryContainer(this, t) { containerName ->
-                val fc0 = getFieldCount(containerName).getOrElse { throw RuntimeException() }
+                val fc0 = getFieldInfo(containerName).getOrElse { throw RuntimeException() }
                 t.printAssertion("Initially, fieldCounts should be empty", fc0.isEmpty())
 
                 val annotation: Map<String, Any> = mapOf("body" to mapOf("id" to "urn:example:blahblahblah"))
@@ -151,7 +164,7 @@ class IntegrationTest {
                 val car = createAnnotation(containerName, annotation).getOrElse { throw Exception() }
 //                t.println(green(car.toString()))
 
-                val fc1 = getFieldCount(containerName).getOrElse { throw Exception() }
+                val fc1 = getFieldInfo(containerName).getOrElse { throw Exception() }
 //                t.println(green(fc1.toString()))
                 t.printAssertion(
                     "fieldCounts should have body.id = 1",
@@ -168,7 +181,7 @@ class IntegrationTest {
                     newAnnotation
                 ).getOrHandle { er -> t.printJson(er); throw RuntimeException() }
 
-                val fc2 = getFieldCount(containerName).getOrElse { throw Exception() }
+                val fc2 = getFieldInfo(containerName).getOrElse { throw Exception() }
                 t.printAssertion(
                     "fieldCounts should not have a body.id field",
                     !fc2.containsKey("body.id")
@@ -179,11 +192,10 @@ class IntegrationTest {
                 )
 
                 t.printStep("Deleting the annotation")
-                val dr = deleteAnnotation(containerName, uar.containerId, uar.eTag)
-//                t.println(dr)
+                deleteAnnotation(containerName, uar.containerId, uar.eTag)
 
                 val fc3 =
-                    getFieldCount(containerName).getOrHandle { er -> t.printJson(er); throw RuntimeException(er.errorMessage) }
+                    getFieldInfo(containerName).getOrHandle { er -> t.printJson(er); throw RuntimeException(er.message) }
 
                 t.printAssertion("fieldCounts should be empty", fc3.isEmpty())
             }
@@ -191,9 +203,44 @@ class IntegrationTest {
 
     private fun AnnoRepoClient.testAdminEndpoints(t: Terminal): Boolean =
         runTest(t, "Testing /admin endpoints") {
+            var numberOfUsers = 0
+            t.printStep("Getting the list of users")
             this.getUsers().thenAssertResponse(t) { list ->
-                t.printJson(list); true
+                numberOfUsers = list.size
+                t.println("$numberOfUsers users")
+                t.printJson(list)
+                true
             }
+
+            val userName = "username1"
+            t.printStep("Adding a user")
+            this.addUsers(listOf(UserEntry(userName, "apiKey1"))).thenAssertResponse(t) { response ->
+                t.printJson(response.response.status)
+                true
+            }
+
+            t.printStep("Getting the new list of users")
+            this.getUsers().thenAssertResponse(t) { list ->
+                t.printJson(list)
+                val newNumberOfUsers = list.size
+                t.printAssertion("Number of users should be 1 higher", (newNumberOfUsers == numberOfUsers + 1))
+                true
+            }
+
+            t.printStep("Deleting a user")
+            this.deleteUser(userName).thenAssertResponse(t) { response ->
+                t.printJson(response.response.status)
+                true
+            }
+
+            t.printStep("Getting the list of users again")
+            this.getUsers().thenAssertResponse(t) { list ->
+                t.printJson(list)
+                val newNumberOfUsers = list.size
+                t.printAssertion("Number of users should be back to the original", (newNumberOfUsers == numberOfUsers))
+                true
+            }
+
         }
 
     private fun Terminal.printAssertion(message: String, assertion: Boolean) =
@@ -263,13 +310,18 @@ class IntegrationTest {
         @JvmStatic
         fun main(args: Array<String>) {
             val parser = ArgParser("annorepo-test-server")
-            val server by parser.option(
+            val serverURL by parser.option(
                 ArgType.String,
                 shortName = "s",
                 description = "URL of the AnnoRepo server to test."
             ).required()
+            val apiKey by parser.option(
+                ArgType.String,
+                shortName = "k",
+                description = "api-key of the user to test as."
+            )
             parser.parse(args)
-            IntegrationTest().testServer(server)
+            IntegrationTest().testServer(serverURL, apiKey)
         }
     }
 }

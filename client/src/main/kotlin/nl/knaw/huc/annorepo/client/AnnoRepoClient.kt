@@ -5,19 +5,26 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import nl.knaw.huc.annorepo.api.AboutInfo
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
 import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.ResourcePaths.ABOUT
 import nl.knaw.huc.annorepo.api.ResourcePaths.ADMIN
 import nl.knaw.huc.annorepo.api.ResourcePaths.BATCH
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
+import nl.knaw.huc.annorepo.api.ResourcePaths.INDEXES
+import nl.knaw.huc.annorepo.api.ResourcePaths.INFO
+import nl.knaw.huc.annorepo.api.ResourcePaths.METADATA
+import nl.knaw.huc.annorepo.api.ResourcePaths.SEARCH
 import nl.knaw.huc.annorepo.api.ResourcePaths.SERVICES
 import nl.knaw.huc.annorepo.api.ResourcePaths.USERS
 import nl.knaw.huc.annorepo.api.ResourcePaths.W3C
 import nl.knaw.huc.annorepo.api.UserEntry
-import nl.knaw.huc.annorepo.client.ARResponse.AnnoRepoResponse
-import nl.knaw.huc.annorepo.client.ARResponse.BatchUploadResponse
+import nl.knaw.huc.annorepo.client.ARResult.AddUsersResult
+import nl.knaw.huc.annorepo.client.ARResult.AnnoRepoResult
+import nl.knaw.huc.annorepo.client.ARResult.BatchUploadResult
+import nl.knaw.huc.annorepo.client.ARResult.DeleteUserResult
+import nl.knaw.huc.annorepo.client.ARResult.GetAboutResult
+import nl.knaw.huc.annorepo.client.ARResult.GetQueryInfoResult
 import nl.knaw.huc.annorepo.client.RequestError.ConnectionError
 import nl.knaw.huc.annorepo.util.extractVersion
 import org.glassfish.jersey.client.filter.EncodingFilter
@@ -30,20 +37,25 @@ import javax.ws.rs.client.Invocation
 import javax.ws.rs.client.WebTarget
 import javax.ws.rs.core.Response
 
+/**
+ * Client to access annorepo servers.
+ *
+ * @constructor
+ * @param serverURI the server *URI*
+ * @param apiKey the api-key for authentication (optional)
+ * @param userAgent the string to identify this client in the User-Agent header (optional)
+ *
+ */
 class AnnoRepoClient @JvmOverloads constructor(
-    serverURI: URI,
-    val apiKey: String? = null,
-    private val userAgent: String? = null
+    serverURI: URI, val apiKey: String? = null, private val userAgent: String? = null
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    private val webTarget: WebTarget =
-        ClientBuilder.newClient()
-            .apply {
-                register(GZipEncoder::class.java)
-                register(EncodingFilter::class.java)
-            }
-            .target(serverURI)
+    private val webTarget: WebTarget = ClientBuilder.newClient().apply {
+        register(GZipEncoder::class.java)
+        register(EncodingFilter::class.java)
+    }.target(serverURI)
+
     private val oMapper: ObjectMapper = ObjectMapper().registerKotlinModule()
 
     var serverVersion: String? = null
@@ -56,7 +68,8 @@ class AnnoRepoClient @JvmOverloads constructor(
                 log.error("error: {}", e)
                 throw RuntimeException("Unable to connect to annorepo server")
             },
-            { aboutInfo ->
+            { getAboutResult ->
+                val aboutInfo = getAboutResult.aboutInfo
                 serverVersion = aboutInfo.version
                 serverNeedsAuthentication = aboutInfo.withAuthentication
                 log.info("$serverURI runs version $serverVersion ; needs authentication: $serverNeedsAuthentication")
@@ -64,22 +77,30 @@ class AnnoRepoClient @JvmOverloads constructor(
         )
     }
 
-    fun getAbout(): Either<RequestError, AboutInfo> =
-        doGet(
-            request = webTarget.path(ABOUT)
-                .request(),
-            responseHandlers = mapOf(
-                Response.Status.OK to { response: Response ->
-                    val json = response.readEntity(String::class.java);
-                    Either.Right(oMapper.readValue(json))
-                }
-            )
-        )
+    /**
+     * Get some information about the server
+     *
+     * @return
+     */
+    fun getAbout(): Either<RequestError, GetAboutResult> = doGet(
+        request = webTarget.path(ABOUT).request(),
+        responseHandlers = mapOf(Response.Status.OK to { response: Response ->
+            val json = response.readEntity(String::class.java);
+            Either.Right(GetAboutResult(response, oMapper.readValue(json)))
+        })
+    )
 
+    /**
+     * Create an annotation container
+     *
+     * @param preferredName
+     * @param label
+     * @return
+     */
     fun createContainer(
         preferredName: String? = null,
         label: String = "A container for web annotations"
-    ): Either<RequestError, AnnoRepoResponse> {
+    ): Either<RequestError, AnnoRepoResult> {
         var request = webTarget.path(W3C).request()
         if (preferredName != null) {
             request = request.header("slug", preferredName)
@@ -87,130 +108,205 @@ class AnnoRepoClient @JvmOverloads constructor(
         return doPost(
             request = request,
             entity = Entity.json(containerSpecs(label)),
-            responseHandlers = mapOf(
-                Response.Status.CREATED to { response ->
-                    val location = location(response) ?: ""
-                    val containerId = extractContainerName(location)
-                    val eTag = eTag(response) ?: ""
-                    Either.Right(
-                        AnnoRepoResponse(
-                            r = response,
-                            created = true,
-                            location = location,
-                            containerId = containerId,
-                            eTag = eTag
-                        )
+            responseHandlers = mapOf(Response.Status.CREATED to { response ->
+                val location = location(response) ?: ""
+                val containerId = extractContainerName(location)
+                val eTag = eTag(response) ?: ""
+                Either.Right(
+                    AnnoRepoResult(
+                        response = response,
+                        created = true,
+                        location = location,
+                        containerId = containerId,
+                        eTag = eTag
                     )
-                }
-            )
+                )
+            })
         )
     }
 
-    fun deleteContainer(containerName: String, eTag: String): Either<RequestError, Boolean> =
-        doDelete(
-            request = webTarget.path(W3C).path(containerName)
-                .request()
-                .header("if-match", eTag),
+    /**
+     * Get an annotation container
+     *
+     * @param containerName
+     * @return
+     */
+    fun getContainer(
+        containerName: String
+    ): Either<RequestError, ARResult.GetContainerResult> =
+        doGet(
+            request = webTarget.path(W3C).path(containerName).request(),
             responseHandlers = mapOf(
-                Response.Status.NO_CONTENT to { Either.Right(true) }
-            )
+                Response.Status.OK to { response ->
+                    Either.Right(
+                        ARResult.GetContainerResult(
+                            response = response
+                        )
+                    )
+                })
         )
 
-    fun createAnnotation(containerName: String, annotation: Map<String, Any>): Either<RequestError, AnnoRepoResponse> =
+    /**
+     * Get annotation container metadata
+     *
+     * @param containerName
+     * @return
+     */
+    fun getContainerMetadata(
+        containerName: String
+    ): Either<RequestError, ARResult.GetContainerMetadataResult> =
+        doGet(
+            request = webTarget.path(SERVICES).path(containerName).path(METADATA).request(),
+            responseHandlers = mapOf(
+                Response.Status.OK to { response ->
+                    val json = response.readEntity(String::class.java)
+                    val metadata: Map<String, Any> = oMapper.readValue(json)
+                    Either.Right(
+                        ARResult.GetContainerMetadataResult(
+                            response = response,
+                            metadata = metadata
+                        )
+                    )
+                })
+        )
+
+    /**
+     * Delete an annotation container
+     *
+     * @param containerName
+     * @param eTag
+     * @return
+     */
+    fun deleteContainer(containerName: String, eTag: String): Either<RequestError, Boolean> =
+        doDelete(
+            request = webTarget.path(W3C).path(containerName).request().header("if-match", eTag),
+            responseHandlers = mapOf(Response.Status.NO_CONTENT to { Either.Right(true) })
+        )
+
+    /**
+     * Create annotation
+     *
+     * @param containerName
+     * @param annotation
+     * @return
+     */
+    fun createAnnotation(containerName: String, annotation: Map<String, Any>): Either<RequestError, AnnoRepoResult> =
         doPost(
             request = webTarget.path(W3C).path(containerName).request(),
             entity = Entity.json(annotation),
-            responseHandlers = mapOf(
-                Response.Status.CREATED to { response ->
-                    val location = location(response) ?: ""
-                    val annotationName = extractAnnotationName(location)
-                    val eTag = eTag(response) ?: ""
-                    Either.Right(
-                        AnnoRepoResponse(response, true, location, containerId = annotationName, eTag = eTag)
-                    )
-                }
-            )
+            responseHandlers = mapOf(Response.Status.CREATED to { response ->
+                val location = location(response) ?: ""
+                val annotationName = extractAnnotationName(location)
+                val eTag = eTag(response) ?: ""
+                Either.Right(
+                    AnnoRepoResult(response, true, location, containerId = annotationName, eTag = eTag)
+                )
+            })
         )
 
+    /**
+     * Update annotation
+     *
+     * @param containerName
+     * @param annotationName
+     * @param eTag
+     * @param annotation
+     * @return
+     */
     fun updateAnnotation(
-        containerName: String,
-        annotationName: String,
-        eTag: String,
-        annotation: Map<String, Any>
-    ): Either<RequestError, AnnoRepoResponse> =
+        containerName: String, annotationName: String, eTag: String, annotation: Map<String, Any>
+    ): Either<RequestError, AnnoRepoResult> =
         doPut(
-            request = webTarget.path(W3C).path(containerName).path(annotationName)
-                .request()
-                .header("if-match", eTag),
+            request = webTarget.path(W3C).path(containerName).path(annotationName).request().header("if-match", eTag),
             entity = Entity.json(annotation),
-            responseHandlers = mapOf(
-                Response.Status.OK to { response ->
-                    val location = location(response) ?: ""
-                    val newEtag = eTag(response) ?: ""
-                    Either.Right(
-                        AnnoRepoResponse(response, false, location, containerId = annotationName, eTag = newEtag)
-                    )
-                }
-            )
+            responseHandlers = mapOf(Response.Status.OK to { response ->
+                val location = location(response) ?: ""
+                val newEtag = eTag(response) ?: ""
+                Either.Right(
+                    AnnoRepoResult(response, false, location, containerId = annotationName, eTag = newEtag)
+                )
+            })
         )
 
+    /**
+     * Delete annotation
+     *
+     * @param containerName
+     * @param annotationName
+     * @param eTag
+     * @return
+     */
     fun deleteAnnotation(containerName: String, annotationName: String, eTag: String): Either<RequestError, Boolean> =
         doDelete(
-            request = webTarget.path(W3C).path(containerName).path(annotationName)
-                .request()
+            request = webTarget.path(W3C).path(containerName).path(annotationName).request()
                 .header("if-match", eTag),
-            responseHandlers = mapOf(
-                Response.Status.NO_CONTENT to { Either.Right(true) }
-            )
+            responseHandlers = mapOf(Response.Status.NO_CONTENT to { Either.Right(true) })
         )
 
-    fun getFieldCount(containerName: String): Either<RequestError, Map<String, Int>> =
+    /**
+     * Get field info
+     *
+     * @param containerName
+     * @return
+     */
+    fun getFieldInfo(containerName: String): Either<RequestError, Map<String, Int>> =
         doGet(
-            request = webTarget.path(SERVICES).path(containerName).path(FIELDS)
-                .request(),
-            responseHandlers = mapOf(
-                Response.Status.OK to { response ->
-                    val json = response.readEntity(String::class.java)
-                    Either.Right(oMapper.readValue(json))
-                }
-            )
+            request = webTarget.path(SERVICES).path(containerName).path(FIELDS).request(),
+            responseHandlers = mapOf(Response.Status.OK to { response ->
+                val json = response.readEntity(String::class.java)
+                Either.Right(oMapper.readValue(json))
+            })
         )
 
+    /**
+     * Batch upload
+     *
+     * @param containerName
+     * @param annotations
+     * @return
+     */
     fun batchUpload(
-        containerName: String,
-        annotations: List<Map<String, Any>>
-    ): Either<RequestError, BatchUploadResponse> =
+        containerName: String, annotations: List<Map<String, Any>>
+    ): Either<RequestError, BatchUploadResult> =
         doPost(
             request = webTarget.path(BATCH).path(containerName).path("annotations").request(),
             entity = Entity.json(annotations),
-            responseHandlers = mapOf(
-                Response.Status.OK to { response ->
-                    val entityJson: String =
-                        response.readEntity(String::class.java)
-                    val annotationData: List<AnnotationIdentifier> = oMapper.readValue(entityJson)
-                    Either.Right(BatchUploadResponse(response, annotationData))
-                }
-            )
+            responseHandlers = mapOf(Response.Status.OK to { response ->
+                val entityJson: String = response.readEntity(String::class.java)
+                val annotationData: List<AnnotationIdentifier> = oMapper.readValue(entityJson)
+                Either.Right(BatchUploadResult(response, annotationData))
+            })
         )
 
+    /**
+     * Create query
+     *
+     * @param containerName
+     * @param query
+     * @return
+     */
     fun createQuery(containerName: String, query: Map<String, Any>): Either<RequestError, String> =
         doPost(
-            request = webTarget.path(SERVICES).path(containerName).path("search")
-                .request(),
+            request = webTarget.path(SERVICES).path(containerName).path(SEARCH).request(),
             entity = Entity.json(query),
-            responseHandlers = mapOf(
-                Response.Status.CREATED to { response ->
-                    val location = response.location
-                    Either.Right(location.rawPath.split("/").last())
-                }
-            )
+            responseHandlers = mapOf(Response.Status.CREATED to { response ->
+                val location = response.location
+                Either.Right(location.rawPath.split("/").last())
+            })
         )
 
+    /**
+     * Get query result
+     *
+     * @param containerName
+     * @param queryId
+     * @param page
+     * @return
+     */
     fun getQueryResult(containerName: String, queryId: String, page: Int): Either<RequestError, String> =
         doGet(
-            request = webTarget.path(SERVICES).path(containerName).path("search").path(queryId)
-                .queryParam("page", page)
-                .request(),
+            request = webTarget.path(SERVICES).path(containerName).path(SEARCH).path(queryId)
+                .queryParam("page", page).request(),
             responseHandlers = mapOf(
                 Response.Status.OK to { response ->
                     Either.Right(response.readEntity(String::class.java))
@@ -218,95 +314,136 @@ class AnnoRepoClient @JvmOverloads constructor(
             )
         )
 
+    /**
+     * Get query info
+     *
+     * @param containerName
+     * @param queryId
+     * @return
+     */
+    fun getQueryInfo(containerName: String, queryId: String): Either<RequestError, GetQueryInfoResult> =
+        doGet(
+            request = webTarget.path(SERVICES).path(containerName).path(SEARCH).path(queryId).path(INFO)
+                .request(),
+            responseHandlers = mapOf(
+                Response.Status.OK to { response ->
+                    Either.Right(GetQueryInfoResult(response))
+                }
+            )
+        )
+
+    /**
+     * Add index
+     *
+     * @param containerName
+     * @param fieldName
+     * @param indexType
+     * @return
+     */
     fun addIndex(containerName: String, fieldName: String, indexType: IndexType): Either<RequestError, Response> =
         doPut(
-            request = webTarget.path(SERVICES).path(containerName).path("indexes").path(fieldName).path(indexType.name)
-                .request(),
+            request = webTarget.path(SERVICES).path(containerName).path(INDEXES).path(fieldName)
+                .path(indexType.name).request(),
             entity = Entity.json(emptyMap<String, Any>()),
-            responseHandlers = mapOf(
-                Response.Status.CREATED to { response -> Either.Right(response) }
-            )
+            responseHandlers = mapOf(Response.Status.CREATED to { response -> Either.Right(response) })
         )
 
+    /**
+     * List indexes
+     *
+     * @param containerName
+     * @return
+     */
     fun listIndexes(containerName: String): Either<RequestError, String> =
         doGet(
-            request = webTarget.path(SERVICES).path(containerName).path("indexes")
-                .request(),
-            responseHandlers = mapOf(
-                Response.Status.OK to { response ->
-                    Either.Right(response.readEntity(String::class.java))
-                }
-            )
+            request = webTarget.path(SERVICES).path(containerName).path(INDEXES).request(),
+            responseHandlers = mapOf(Response.Status.OK to { response ->
+                Either.Right(response.readEntity(String::class.java))
+            })
         )
 
+    /**
+     * Delete index
+     *
+     * @param containerName
+     * @param fieldName
+     * @param indexType
+     * @return
+     */
     fun deleteIndex(containerName: String, fieldName: String, indexType: IndexType): Either<RequestError, Boolean> =
         doDelete(
-            request = webTarget.path(SERVICES).path(containerName).path("indexes").path(fieldName).path(indexType.name)
-                .request(),
-            responseHandlers = mapOf(
-                Response.Status.NO_CONTENT to { Either.Right(true) }
-            )
+            request = webTarget.path(SERVICES).path(containerName).path(INDEXES).path(fieldName)
+                .path(indexType.name).request(),
+            responseHandlers = mapOf(Response.Status.NO_CONTENT to { Either.Right(true) })
         )
 
-    fun getUsers(): Either<RequestError, List<UserEntry>> =
-        doGet(
-            request = webTarget.path(ADMIN).path(USERS)
-                .request(),
-            responseHandlers = mapOf(
-                Response.Status.OK to { response ->
-                    val json = response.readEntity(String::class.java)
-                    val userEntryList = oMapper.readValue(json, object : TypeReference<List<UserEntry>>() {})
-                    Either.Right(userEntryList)
-                }
-            )
+    /**
+     * Get users
+     *
+     * @return
+     */
+    fun getUsers(): Either<RequestError, List<UserEntry>> = doGet(
+        request = webTarget.path(ADMIN).path(USERS).request(),
+        responseHandlers = mapOf(Response.Status.OK to { response ->
+            val json = response.readEntity(String::class.java)
+            val userEntryList = oMapper.readValue(json, object : TypeReference<List<UserEntry>>() {})
+            Either.Right(userEntryList)
+        })
+    )
+
+    /**
+     * Add users
+     *
+     * @param users
+     * @return
+     */
+    fun addUsers(users: List<UserEntry>): Either<RequestError, AddUsersResult> =
+        doPost(
+            request = webTarget.path(ADMIN).path(USERS).request(),
+            entity = Entity.json(users),
+            responseHandlers = mapOf(Response.Status.OK to { response ->
+                Either.Right(AddUsersResult(response))
+            })
+        )
+
+    /**
+     * Delete user
+     *
+     * @param userName
+     * @return
+     */
+    fun deleteUser(userName: String): Either<RequestError, DeleteUserResult> =
+        doDelete(
+            request = webTarget.path(ADMIN).path(USERS).path(userName).request(),
+            responseHandlers = mapOf(Response.Status.NO_CONTENT to { response ->
+                Either.Right(DeleteUserResult(response))
+            })
         )
 
     // private functions
     private fun <T> doGet(
-        request: Invocation.Builder,
-        responseHandlers: ResponseHandlerMap<T>
-    ): Either<RequestError, T> =
-        doRequest {
-            request
-                .withHeaders()
-                .get()
-                .processResponseWith(responseHandlers)
-        }
+        request: Invocation.Builder, responseHandlers: ResponseHandlerMap<T>
+    ): Either<RequestError, T> = doRequest {
+        request.withHeaders().get().processResponseWith(responseHandlers)
+    }
 
     private fun <T> doPost(
-        request: Invocation.Builder,
-        entity: Entity<*>,
-        responseHandlers: ResponseHandlerMap<T>
-    ): Either<RequestError, T> =
-        doRequest {
-            request
-                .withHeaders()
-                .post(entity)
-                .processResponseWith(responseHandlers)
-        }
+        request: Invocation.Builder, entity: Entity<*>, responseHandlers: ResponseHandlerMap<T>
+    ): Either<RequestError, T> = doRequest {
+        request.withHeaders().post(entity).processResponseWith(responseHandlers)
+    }
 
     private fun <T> doPut(
-        request: Invocation.Builder,
-        entity: Entity<*>,
-        responseHandlers: ResponseHandlerMap<T>
-    ): Either<RequestError, T> =
-        doRequest {
-            request
-                .withHeaders()
-                .put(entity)
-                .processResponseWith(responseHandlers)
-        }
+        request: Invocation.Builder, entity: Entity<*>, responseHandlers: ResponseHandlerMap<T>
+    ): Either<RequestError, T> = doRequest {
+        request.withHeaders().put(entity).processResponseWith(responseHandlers)
+    }
 
     private fun <T> doDelete(
-        request: Invocation.Builder,
-        responseHandlers: ResponseHandlerMap<T>
-    ): Either<RequestError, T> =
-        doRequest {
-            request
-                .withHeaders()
-                .delete()
-                .processResponseWith(responseHandlers)
-        }
+        request: Invocation.Builder, responseHandlers: ResponseHandlerMap<T>
+    ): Either<RequestError, T> = doRequest {
+        request.withHeaders().delete().processResponseWith(responseHandlers)
+    }
 
     private fun <T> Response.processResponseWith(
         responseHandlers: Map<Response.Status, (Response) -> Either<RequestError, T>>
@@ -319,23 +456,21 @@ class AnnoRepoClient @JvmOverloads constructor(
         }
     }
 
-    private fun unauthorizedResponse(response: Response): Either.Left<RequestError> =
-        Either.Left(
-            RequestError.NotAuthorized(
-                message = "Not authorized to make this call; check your apiKey",
-                headers = response.headers,
-                responseString = response.readEntity(String::class.java)
-            )
+    private fun unauthorizedResponse(response: Response): Either.Left<RequestError> = Either.Left(
+        RequestError.NotAuthorized(
+            message = "Not authorized to make this call; check your apiKey",
+            headers = response.headers,
+            responseString = response.readEntity(String::class.java)
         )
+    )
 
-    private fun unexpectedResponse(response: Response): Either.Left<RequestError> =
-        Either.Left(
-            RequestError.UnexpectedResponse(
-                message = "Unexpected status: ${response.status}",
-                headers = response.headers,
-                responseString = response.readEntity(String::class.java)
-            )
+    private fun unexpectedResponse(response: Response): Either.Left<RequestError> = Either.Left(
+        RequestError.UnexpectedResponse(
+            message = "Unexpected status: ${response.status}",
+            headers = response.headers,
+            responseString = response.readEntity(String::class.java)
         )
+    )
 
     private fun extractContainerName(location: String): String {
         val parts = location.split("/")
@@ -347,26 +482,22 @@ class AnnoRepoClient @JvmOverloads constructor(
         return parts[parts.size - 1]
     }
 
-    private fun location(response: Response): String? =
-        response.firstHeader("location")
+    private fun location(response: Response): String? = response.firstHeader("location")
 
-    private fun eTag(response: Response): String? =
-        response.firstHeader("etag")
+    private fun eTag(response: Response): String? = response.firstHeader("etag")
 
-    private fun <R> doRequest(requestHandler: () -> Either<RequestError, R>): Either<RequestError, R> =
-        try {
-            requestHandler()
-        } catch (e: Exception) {
-            Either.Left(ConnectionError(e.message ?: "Connection Error"))
-        }
+    private fun <R> doRequest(requestHandler: () -> Either<RequestError, R>): Either<RequestError, R> = try {
+        requestHandler()
+    } catch (e: Exception) {
+        Either.Left(ConnectionError(e.message ?: "Connection Error"))
+    }
 
-    private fun Response.firstHeader(key: String): String? =
-        if (headers.containsKey(key)) {
-            val locations: MutableList<Any> = headers[key]!!
-            locations[0].toString()
-        } else {
-            null
-        }
+    private fun Response.firstHeader(key: String): String? = if (headers.containsKey(key)) {
+        val locations: MutableList<Any> = headers[key]!!
+        locations[0].toString()
+    } else {
+        null
+    }
 
     private fun Invocation.Builder.withHeaders(): Invocation.Builder {
         val libUA = "${AnnoRepoClient::class.java.name}/${getVersion() ?: ""}"
@@ -375,9 +506,7 @@ class AnnoRepoClient @JvmOverloads constructor(
         } else {
             "$userAgent ( using $libUA )"
         }
-        var builder = header("User-Agent", ua)
-            .header("Accept-Encoding", "gzip")
-            .header("Content-Encoding", "gzip")
+        var builder = header("User-Agent", ua).header("Accept-Encoding", "gzip").header("Content-Encoding", "gzip")
 
         if (serverNeedsAuthentication != null && serverNeedsAuthentication!!) {
             builder = builder.header("Authorization", "Bearer $apiKey")
@@ -387,17 +516,12 @@ class AnnoRepoClient @JvmOverloads constructor(
 
     private fun containerSpecs(label: String) = mapOf(
         "@context" to listOf(
-            "http://www.w3.org/ns/anno.jsonld",
-            "http://www.w3.org/ns/ldp.jsonld"
-        ),
-        "type" to listOf(
-            "BasicContainer",
-            "AnnotationCollection"
-        ),
-        "label" to label
+            "http://www.w3.org/ns/anno.jsonld", "http://www.w3.org/ns/ldp.jsonld"
+        ), "type" to listOf(
+            "BasicContainer", "AnnotationCollection"
+        ), "label" to label
     )
 
-    private fun getVersion(): String? =
-        this.javaClass.extractVersion()
+    private fun getVersion(): String? = this.javaClass.extractVersion()
 
 }
