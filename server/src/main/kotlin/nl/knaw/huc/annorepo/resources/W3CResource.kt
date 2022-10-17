@@ -140,7 +140,6 @@ class W3CResource(
         @Context req: Request,
         @Context context: SecurityContext
     ): Response {
-        log.debug("delete Container $containerName")
         val eTag = makeContainerETag(containerName)
         val valid = req.evaluatePreconditions(eTag)
         val containerPage = getContainerPage(containerName, 0, configuration.pageSize)
