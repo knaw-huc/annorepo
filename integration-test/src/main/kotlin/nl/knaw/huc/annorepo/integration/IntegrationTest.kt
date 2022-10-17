@@ -49,7 +49,7 @@ class IntegrationTest {
 
     private fun AnnoRepoClient.testAbout(t: Terminal): Boolean =
         runTest(t, "Testing /about") {
-            getAbout().thenAssertResponse(t) { aboutResult ->
+            getAbout().thenAssertResult(t) { aboutResult ->
                 val aboutInfo = aboutResult.aboutInfo
                 val passed = MyBool(true)
                 t.printJson(aboutInfo)
@@ -58,7 +58,7 @@ class IntegrationTest {
             }
         }
 
-    private fun <T> Either<RequestError, T>.thenAssertResponse(
+    private fun <T> Either<RequestError, T>.thenAssertResult(
         t: Terminal,
         successFunction: (T) -> Boolean
     ): Boolean =
@@ -99,22 +99,22 @@ class IntegrationTest {
 
                 t.printAssertion(
                     "fieldCounts should have body = $batchSize",
-                    fc.getOrDefault("body", 0) == batchSize
+                    fc.fieldInfo.getOrDefault("body", 0) == batchSize
                 )
                 t.printAssertion(
                     "fieldCounts should have target = $batchSize",
-                    fc.getOrDefault("target", 0) == batchSize
+                    fc.fieldInfo.getOrDefault("target", 0) == batchSize
                 )
 
                 t.printStep("Search for body = urn:example:body42")
                 val query = mapOf("body" to "urn:example:body42")
-                val queryId = this.createQuery(containerName, query).getOrElse { throw Exception() }
+                val createQueryResult = this.createQuery(containerName, query).getOrElse { throw Exception() }
 
-                val resultPageResult = this.getQueryResult(containerName, queryId, 0)
+                val resultPageResult = this.getQueryResultPage(containerName, createQueryResult.queryId, 0)
                 t.println(resultPageResult)
 
                 t.printStep("get query info")
-                val getQueryInfoResult = this.getQueryInfo(containerName, queryId)
+                val getQueryInfoResult = this.getQueryInfo(containerName, createQueryResult.queryId)
                 t.println(getQueryInfoResult)
 
                 t.printStep("get container")
@@ -139,15 +139,21 @@ class IntegrationTest {
 
                 t.printStep("Deleting annotations")
                 for (annotationData in results.annotationData) {
-                    val dar = deleteAnnotation(
+                    deleteAnnotation(
                         containerName = annotationData.containerName,
                         annotationName = annotationData.annotationName,
                         eTag = EntityTag(annotationData.etag, true).toString()
-                    )
+                    ).thenAssertResult(t) { deleteAnnotationResult ->
+                        t.printAssertion(
+                            "annotation has been deleted",
+                            deleteAnnotationResult.response.cookies.isEmpty()
+                        )
+                        true
+                    }
                 }
 
                 val fc2 = getFieldInfo(containerName).getOrElse { throw RuntimeException() }
-                t.printAssertion("fieldCounts should be empty", fc2.isEmpty())
+                t.printAssertion("fieldCounts should be empty", fc2.fieldInfo.isEmpty())
 
             }
         }
@@ -156,7 +162,7 @@ class IntegrationTest {
         runTest(t, "Testing the annotation field counter") {
             inTemporaryContainer(this, t) { containerName ->
                 val fc0 = getFieldInfo(containerName).getOrElse { throw RuntimeException() }
-                t.printAssertion("Initially, fieldCounts should be empty", fc0.isEmpty())
+                t.printAssertion("Initially, fieldCounts should be empty", fc0.fieldInfo.isEmpty())
 
                 val annotation: Map<String, Any> = mapOf("body" to mapOf("id" to "urn:example:blahblahblah"))
                 t.printStep("Adding annotation with body.id field: ")
@@ -168,15 +174,15 @@ class IntegrationTest {
 //                t.println(green(fc1.toString()))
                 t.printAssertion(
                     "fieldCounts should have body.id = 1",
-                    fc1.getOrDefault("body.id", 0) == 1
+                    fc1.fieldInfo.getOrDefault("body.id", 0) == 1
                 )
 
                 val newAnnotation: Map<String, Any> = mapOf("body" to "urn:example:blahblahblah")
                 t.printStep("Updating the annotation: ")
                 t.printJson(newAnnotation)
                 val uar = updateAnnotation(
-                    containerName,
-                    car.containerId,
+                    car.containerName,
+                    car.annotationName,
                     car.eTag,
                     newAnnotation
                 ).getOrHandle { er -> t.printJson(er); throw RuntimeException() }
@@ -184,20 +190,20 @@ class IntegrationTest {
                 val fc2 = getFieldInfo(containerName).getOrElse { throw Exception() }
                 t.printAssertion(
                     "fieldCounts should not have a body.id field",
-                    !fc2.containsKey("body.id")
+                    !fc2.fieldInfo.containsKey("body.id")
                 )
                 t.printAssertion(
                     "fieldCounts should have body = 1",
-                    fc2.getOrDefault("body", 0) == 1
+                    fc2.fieldInfo.getOrDefault("body", 0) == 1
                 )
 
                 t.printStep("Deleting the annotation")
-                deleteAnnotation(containerName, uar.containerId, uar.eTag)
+                deleteAnnotation(containerName, uar.containerName, uar.eTag)
 
                 val fc3 =
                     getFieldInfo(containerName).getOrHandle { er -> t.printJson(er); throw RuntimeException(er.message) }
 
-                t.printAssertion("fieldCounts should be empty", fc3.isEmpty())
+                t.printAssertion("fieldCounts should be empty", fc3.fieldInfo.isEmpty())
             }
         }
 
@@ -205,7 +211,8 @@ class IntegrationTest {
         runTest(t, "Testing /admin endpoints") {
             var numberOfUsers = 0
             t.printStep("Getting the list of users")
-            this.getUsers().thenAssertResponse(t) { list ->
+            this.getUsers().thenAssertResult(t) { result ->
+                val list = result.userEntries
                 numberOfUsers = list.size
                 t.println("$numberOfUsers users")
                 t.printJson(list)
@@ -214,13 +221,14 @@ class IntegrationTest {
 
             val userName = "username1"
             t.printStep("Adding a user")
-            this.addUsers(listOf(UserEntry(userName, "apiKey1"))).thenAssertResponse(t) { response ->
+            this.addUsers(listOf(UserEntry(userName, "apiKey1"))).thenAssertResult(t) { response ->
                 t.printJson(response.response.status)
                 true
             }
 
             t.printStep("Getting the new list of users")
-            this.getUsers().thenAssertResponse(t) { list ->
+            this.getUsers().thenAssertResult(t) { result ->
+                val list = result.userEntries
                 t.printJson(list)
                 val newNumberOfUsers = list.size
                 t.printAssertion("Number of users should be 1 higher", (newNumberOfUsers == numberOfUsers + 1))
@@ -228,13 +236,14 @@ class IntegrationTest {
             }
 
             t.printStep("Deleting a user")
-            this.deleteUser(userName).thenAssertResponse(t) { response ->
+            this.deleteUser(userName).thenAssertResult(t) { response ->
                 t.printJson(response.response.status)
                 true
             }
 
             t.printStep("Getting the list of users again")
-            this.getUsers().thenAssertResponse(t) { list ->
+            this.getUsers().thenAssertResult(t) { result ->
+                val list = result.userEntries
                 t.printJson(list)
                 val newNumberOfUsers = list.size
                 t.printAssertion("Number of users should be back to the original", (newNumberOfUsers == numberOfUsers))
@@ -286,10 +295,10 @@ class IntegrationTest {
         t.printStep("Creating container $containerName")
         val r = ac.createContainer(containerName).getOrElse { throw Exception() }
         try {
-            func(r.containerId)
+            func(r.containerName)
         } finally {
             t.printStep("Deleting container $containerName")
-            val deleteResult = ac.deleteContainer(r.containerId, eTag = r.eTag)
+            val deleteResult = ac.deleteContainer(r.containerName, eTag = r.eTag)
         }
     }
 
