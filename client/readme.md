@@ -84,8 +84,8 @@ for example: `fold`, where you provide functions to deal with the left and right
 
 ```kotlin
 client.getAbout().fold(
-        { error -> println(error) },
-        { result -> println(result) }
+    { error -> println(error) },
+    { result -> println(result) }
 )
 ```
 
@@ -93,14 +93,15 @@ client.getAbout().fold(
 
 ```java
 Boolean success=client.getAbout().fold(
-        error->{
+    error->{
         System.out.println(error.toString());
         return false;
-        },
-        result->{
+    },
+    result->{
         System.out.println(result.toString());
         return true;
-        }
+    }
+)
 ```
 
 ## Get information about the server
@@ -114,7 +115,7 @@ val result = client.getAbout()
 **Java**
 
 ```java
-Either<RequestError, GetAboutResult>aboutResult=client.getAbout();
+Either<RequestError, GetAboutResult> aboutResult = client.getAbout();
 ```
 
 ## Annotation containers
@@ -135,7 +136,7 @@ val result = client.createContainer(preferredName, label)
 **Java**
 
 ```java
-Either<RequestError, CreateContainerResult> result=client.createContainer(preferredName,label);
+Either<RequestError, CreateContainerResult> result = client.createContainer(preferredName,label);
 ```
 
 On a succeeding call, the CreateContainerResult contains:
