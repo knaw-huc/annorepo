@@ -9,6 +9,10 @@
     <artifactId>annorepo-client</artifactId>
     <packaging>jar</packaging>
     <name>AnnoRepo Client</name>
+    <description>A client for connecting to an AnnoRepo server and wrapping the communication with the
+        endpoints
+    </description>
+    <url>https://knaw-huc.github.io/annorepo/client</url>
 
     <parent>
         <groupId>nl.knaw.huc</groupId>
@@ -113,13 +117,13 @@
             <version>${json-unit-assertj.version}</version>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
 
-    <build>
-        <plugins>
-
-        </plugins>
-    </build>
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
 
 </project>

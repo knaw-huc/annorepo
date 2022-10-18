@@ -1,4 +1,7 @@
-# AnnoRepo Java Client
+# AnnoRepoClient
+
+A Java/Kotlin client for connecting to an AnnoRepo server and wrapping the communication with the
+endpoints.
 
 ## Installation
 
@@ -9,9 +12,9 @@ Add the following to your `pom.xml`
 ```xml
 
 <dependency>
-    <groupId>nl.knaw.huc</groupId>
-    <artifactId>annorepo-client</artifactId>
-    <version>${project.version}</version>
+        <groupId>nl.knaw.huc</groupId>
+        <artifactId>annorepo-client</artifactId>
+        <version>${annorepo.version}</version>
 </dependency>
 ```
 
@@ -21,9 +24,9 @@ Add the following to your `pom.xml`
 
 ```kotlin
 val client = AnnoRepoClient(
-    serverURI = URI.create("http://localhost:8080"),
-    apiKey = apiKey,
-    userAgent = "name to identity this client in the User-Agent header"
+        serverURI = URI.create("http://localhost:8080"),
+        apiKey = apiKey,
+        userAgent = "name to identity this client in the User-Agent header"
 )
 ```
 
@@ -81,8 +84,8 @@ for example: `fold`, where you provide functions to deal with the left and right
 
 ```kotlin
 client.getAbout().fold(
-    { error -> println(error) },
-    { result -> println(result) }
+        { error -> println(error) },
+        { result -> println(result) }
 )
 ```
 

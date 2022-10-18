@@ -70,6 +70,12 @@ clean:
 version-update:
 	mvn versions:set && mvn versions:commit && find . -name dependency-reduced-pom.xml -delete
 
+.make/.deploy: build-client
+	mvn --projects client --also-make deploy
+
+.PHONY: deploy
+deploy:	.make/.deploy
+
 .PHONY: help
 help:
 	@echo "make-tools for $(TAG)"
@@ -85,4 +91,5 @@ help:
 	@echo "  push            to push the linux/amd64 docker image to registry.diginfra.net"
 	@echo "  clean           to remove generated files"
 	@echo "  version-update  to update the project version"
+	@echo "  deploy			 to deploy annorepo-client and annorepo-common"
 	@echo

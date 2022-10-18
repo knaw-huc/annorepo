@@ -80,7 +80,7 @@ class AnnoRepoClient @JvmOverloads constructor(
         getAbout().bimap(
             { e ->
                 log.error("error: {}", e)
-                throw RuntimeException("Unable to connect to annorepo server")
+                throw RuntimeException("Unable to connect to annorepo server at $serverURI")
             },
             { getAboutResult ->
                 val aboutInfo = getAboutResult.aboutInfo
