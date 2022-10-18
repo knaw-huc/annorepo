@@ -108,14 +108,14 @@ class IntegrationTest {
 
                 t.printStep("Search for body = urn:example:body42")
                 val query = mapOf("body" to "urn:example:body42")
-                val createQueryResult = this.createQuery(containerName, query).getOrElse { throw Exception() }
+                val createSearchResult = this.createSearch(containerName, query).getOrElse { throw Exception() }
 
-                val resultPageResult = this.getQueryResultPage(containerName, createQueryResult.queryId, 0)
+                val resultPageResult = this.getSearchResultPage(containerName, createSearchResult.queryId, 0)
                 t.println(resultPageResult)
 
-                t.printStep("get query info")
-                val getQueryInfoResult = this.getQueryInfo(containerName, createQueryResult.queryId)
-                t.println(getQueryInfoResult)
+                t.printStep("get search info")
+                val getSearchInfoResult = this.getSearchInfo(containerName, createSearchResult.queryId)
+                t.println(getSearchInfoResult)
 
                 t.printStep("get container")
                 val getContainerResult = this.getContainer(containerName)

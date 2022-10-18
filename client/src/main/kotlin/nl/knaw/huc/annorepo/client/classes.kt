@@ -3,6 +3,8 @@ package nl.knaw.huc.annorepo.client
 import arrow.core.Either
 import nl.knaw.huc.annorepo.api.AboutInfo
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
+import nl.knaw.huc.annorepo.api.AnnotationPage
+import nl.knaw.huc.annorepo.api.SearchInfo
 import nl.knaw.huc.annorepo.api.UserEntry
 import java.net.URI
 import javax.ws.rs.core.MultivaluedMap
@@ -65,18 +67,20 @@ sealed class ARResult {
         val annotationData: List<AnnotationIdentifier>
     ) : ARResult()
 
-    data class CreateQueryResult(
+    data class CreateSearchResult(
         override val response: Response,
         val location: URI,
         val queryId: String
     ) : ARResult()
 
-    data class GetQueryInfoResult(
+    data class GetSearchInfoResult(
         override val response: Response,
+        val searchInfo: SearchInfo
     ) : ARResult()
 
-    data class QueryResultPageResult(
+    data class GetSearchResultPageResult(
         override val response: Response,
+        val annotationPage: AnnotationPage
     ) : ARResult()
 
     data class AddIndexResult(

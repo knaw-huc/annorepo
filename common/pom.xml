@@ -24,6 +24,12 @@
             <artifactId>jakarta.ws.rs-api</artifactId>
             <version>${jakarta.ws.rs-api.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>${jackson-annotations.version}</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <licenses>

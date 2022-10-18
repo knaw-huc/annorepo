@@ -24,6 +24,7 @@ import nl.knaw.huc.annorepo.api.IndexConfig
 import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
 import nl.knaw.huc.annorepo.api.ResourcePaths.SERVICES
+import nl.knaw.huc.annorepo.api.SearchInfo
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
 import nl.knaw.huc.annorepo.resources.tools.AnnotationList
@@ -135,8 +136,13 @@ class ServiceResource(
     ): Response {
         checkContainerExists(containerName)
         val queryCacheItem = getQueryCacheItem(searchId)
-        val info = mapOf("query" to queryCacheItem.queryMap, "hits" to queryCacheItem.count)
-        return Response.ok(info).build()
+//        val info = mapOf("query" to queryCacheItem.queryMap, "hits" to queryCacheItem.count)
+        val query = queryCacheItem.queryMap as Map<String, Any>
+        val searchInfo = SearchInfo(
+            query = query,
+            hits = queryCacheItem.count
+        )
+        return Response.ok(searchInfo).build()
     }
 
     @Operation(description = "Get a list of the fields used in the annotations in a container")
@@ -309,6 +315,7 @@ class ServiceResource(
         }
 
         return AnnotationPage(
+            context = listOf(ARConst.ANNO_JSONLD_URL),
             id = searchPageUri(searchUri, page),
             partOf = searchUri.toString(),
             startIndex = startIndex,

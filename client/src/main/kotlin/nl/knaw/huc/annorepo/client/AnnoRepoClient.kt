@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
+import nl.knaw.huc.annorepo.api.AnnotationPage
 import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.ResourcePaths.ABOUT
 import nl.knaw.huc.annorepo.api.ResourcePaths.ADMIN
@@ -18,6 +19,7 @@ import nl.knaw.huc.annorepo.api.ResourcePaths.SEARCH
 import nl.knaw.huc.annorepo.api.ResourcePaths.SERVICES
 import nl.knaw.huc.annorepo.api.ResourcePaths.USERS
 import nl.knaw.huc.annorepo.api.ResourcePaths.W3C
+import nl.knaw.huc.annorepo.api.SearchInfo
 import nl.knaw.huc.annorepo.api.UserEntry
 import nl.knaw.huc.annorepo.client.ARResult.AddIndexResult
 import nl.knaw.huc.annorepo.client.ARResult.AddUsersResult
@@ -25,7 +27,7 @@ import nl.knaw.huc.annorepo.client.ARResult.AnnotationFieldInfoResult
 import nl.knaw.huc.annorepo.client.ARResult.BatchUploadResult
 import nl.knaw.huc.annorepo.client.ARResult.CreateAnnotationResult
 import nl.knaw.huc.annorepo.client.ARResult.CreateContainerResult
-import nl.knaw.huc.annorepo.client.ARResult.CreateQueryResult
+import nl.knaw.huc.annorepo.client.ARResult.CreateSearchResult
 import nl.knaw.huc.annorepo.client.ARResult.DeleteAnnotationResult
 import nl.knaw.huc.annorepo.client.ARResult.DeleteContainerResult
 import nl.knaw.huc.annorepo.client.ARResult.DeleteIndexResult
@@ -33,9 +35,9 @@ import nl.knaw.huc.annorepo.client.ARResult.DeleteUserResult
 import nl.knaw.huc.annorepo.client.ARResult.GetAboutResult
 import nl.knaw.huc.annorepo.client.ARResult.GetContainerMetadataResult
 import nl.knaw.huc.annorepo.client.ARResult.GetContainerResult
-import nl.knaw.huc.annorepo.client.ARResult.GetQueryInfoResult
+import nl.knaw.huc.annorepo.client.ARResult.GetSearchInfoResult
+import nl.knaw.huc.annorepo.client.ARResult.GetSearchResultPageResult
 import nl.knaw.huc.annorepo.client.ARResult.ListIndexesResult
-import nl.knaw.huc.annorepo.client.ARResult.QueryResultPageResult
 import nl.knaw.huc.annorepo.client.ARResult.UsersResult
 import nl.knaw.huc.annorepo.client.RequestError.ConnectionError
 import nl.knaw.huc.annorepo.util.extractVersion
@@ -344,7 +346,7 @@ class AnnoRepoClient @JvmOverloads constructor(
      * @param query
      * @return
      */
-    fun createQuery(containerName: String, query: Map<String, Any>): Either<RequestError, CreateQueryResult> =
+    fun createSearch(containerName: String, query: Map<String, Any>): Either<RequestError, CreateSearchResult> =
         doPost(
             request = webTarget.path(SERVICES).path(containerName).path(SEARCH).request(),
             entity = Entity.json(query),
@@ -353,7 +355,7 @@ class AnnoRepoClient @JvmOverloads constructor(
                     val location = response.location
                     val queryId = location.rawPath.split("/").last()
                     Either.Right(
-                        CreateQueryResult(response = response, location = location, queryId = queryId)
+                        CreateSearchResult(response = response, location = location, queryId = queryId)
                     )
                 })
         )
@@ -366,20 +368,23 @@ class AnnoRepoClient @JvmOverloads constructor(
      * @param page
      * @return
      */
-    fun getQueryResultPage(
+    fun getSearchResultPage(
         containerName: String,
         queryId: String,
         page: Int
-    ): Either<RequestError, QueryResultPageResult> =
+    ): Either<RequestError, GetSearchResultPageResult> =
         doGet(
             request = webTarget.path(SERVICES).path(containerName).path(SEARCH).path(queryId)
                 .queryParam("page", page)
                 .request(),
             responseHandlers = mapOf(
                 Response.Status.OK to { response ->
+                    val json = response.readEntityAsJsonString()
+                    val annotationPage: AnnotationPage = oMapper.readValue(json)
                     Either.Right(
-                        QueryResultPageResult(
-                            response = response
+                        GetSearchResultPageResult(
+                            response = response,
+                            annotationPage = annotationPage
                         )
                     )
                 }
@@ -393,13 +398,17 @@ class AnnoRepoClient @JvmOverloads constructor(
      * @param queryId
      * @return
      */
-    fun getQueryInfo(containerName: String, queryId: String): Either<RequestError, GetQueryInfoResult> =
+    fun getSearchInfo(containerName: String, queryId: String): Either<RequestError, GetSearchInfoResult> =
         doGet(
             request = webTarget.path(SERVICES).path(containerName).path(SEARCH).path(queryId).path(INFO)
                 .request(),
             responseHandlers = mapOf(
                 Response.Status.OK to { response ->
-                    Either.Right(GetQueryInfoResult(response))
+                    val json = response.readEntityAsJsonString()
+                    val searchInfo: SearchInfo = oMapper.readValue(json)
+                    Either.Right(
+                        GetSearchInfoResult(response, searchInfo)
+                    )
                 }
             )
         )
