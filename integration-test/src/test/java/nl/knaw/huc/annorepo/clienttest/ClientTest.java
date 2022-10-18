@@ -1,16 +1,10 @@
 package nl.knaw.huc.annorepo.clienttest;
 
-import arrow.core.Either;
-import nl.knaw.huc.annorepo.client.ARResult;
-import nl.knaw.huc.annorepo.client.AnnoRepoClient;
-import nl.knaw.huc.annorepo.client.RequestError;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.commons.logging.Logger;
 import org.junit.platform.commons.logging.LoggerFactory;
 
 import java.net.URI;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * The type Client test.
@@ -26,23 +20,23 @@ public class ClientTest {
      */
     @Test
     public void testClient() {
-        AnnoRepoClient client = new AnnoRepoClient(BASE_URI);
-        AnnoRepoClient client2 = new AnnoRepoClient(BASE_URI, apiKey);
-        AnnoRepoClient client3 = new AnnoRepoClient(BASE_URI, apiKey, "test-client");
-        String serverVersion = client.getServerVersion();
-        Boolean serverNeedsAuthentication = client.getServerNeedsAuthentication();
-        Either<RequestError, ARResult.GetAboutResult> aboutResult = client.getAbout();
-        boolean success = client.getAbout().fold(
-                e -> {
-                    System.out.println(e.toString());
-                    return false;
-                },
-                a -> {
-                    System.out.println(a.toString());
-                    return true;
-                }
-        );
-        assertTrue(success);
+//        AnnoRepoClient client = new AnnoRepoClient(BASE_URI);
+//        AnnoRepoClient client2 = new AnnoRepoClient(BASE_URI, apiKey);
+//        AnnoRepoClient client3 = new AnnoRepoClient(BASE_URI, apiKey, "test-client");
+//        String serverVersion = client.getServerVersion();
+//        Boolean serverNeedsAuthentication = client.getServerNeedsAuthentication();
+//        Either<RequestError, ARResult.GetAboutResult> aboutResult = client.getAbout();
+//        boolean success = client.getAbout().fold(
+//                e -> {
+//                    System.out.println(e.toString());
+//                    return false;
+//                },
+//                a -> {
+//                    System.out.println(a.toString());
+//                    return true;
+//                }
+//        );
+//        assertTrue(success);
     }
 
     /**

@@ -12,9 +12,9 @@ Add the following to your `pom.xml`
 ```xml
 
 <dependency>
-        <groupId>nl.knaw.huc</groupId>
-        <artifactId>annorepo-client</artifactId>
-        <version>${annorepo.version}</version>
+    <groupId>nl.knaw.huc</groupId>
+    <artifactId>annorepo-client</artifactId>
+    <version>${annorepo.version}</version>
 </dependency>
 ```
 
@@ -24,9 +24,9 @@ Add the following to your `pom.xml`
 
 ```kotlin
 val client = AnnoRepoClient(
-        serverURI = URI.create("http://localhost:8080"),
-        apiKey = apiKey,
-        userAgent = "name to identity this client in the User-Agent header"
+    serverURI = URI.create("http://localhost:8080"),
+    apiKey = apiKey,
+    userAgent = "name to identity this client in the User-Agent header"
 )
 ```
 
@@ -101,7 +101,6 @@ Boolean success=client.getAbout().fold(
         System.out.println(result.toString());
         return true;
         }
-        );
 ```
 
 ## Get information about the server
