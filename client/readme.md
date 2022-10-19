@@ -238,6 +238,9 @@ On a succeeding call, the CreateContainerResult contains:
 
 **Kotlin:**
 
+Construct the query as a (nested) map.
+When successful, the call returns a createSearchResult, which contains the queryId to be used in getting the result pages.
+
 ```kotlin
 val query = mapOf("body" to "urn:example:body42")
 val createSearchResult = this.createSearch(containerName = containerName, query = query)
@@ -255,9 +258,36 @@ val createSearchResult = this.createSearch(containerName = containerName, query 
 ```kotlin
 val resultPageResult = this.getSearchResultPage(
     containerName = containerName,
-    queryId = createSearchResult.value.queryId,
+    queryId = queryId,
     page = 0
 )
+```
+
+**Java**
+
+```java
+```
+
+### Filtering Container Annotations
+
+This function combines creating the search and iterating over the search result pages and extracting the annotations from those pages into a sequence.
+Since there could be unexpected response from the server, the sequence returned is one of `Either<RequestError, FilterContainerAnnotationsResult>`
+
+
+**Kotlin:**
+
+```kotlin
+val query = mapOf("body.type" to "Page")
+val filterContainerAnnotationsResult: FilterContainerAnnotationsResult? =
+    this.filterContainerAnnotations(containerName, query2).orNull()
+filterContainerAnnotationsResult?.let {
+    it.annotations.forEach { item ->
+        item.fold(
+            { error: RequestError -> handleError(error) },
+            { annotation: Map<String, Any> -> handleSuccess(annotation) }
+        )
+    }
+}
 ```
 
 **Java**
@@ -270,6 +300,10 @@ val resultPageResult = this.getSearchResultPage(
 **Kotlin:**
 
 ```kotlin
+val getSearchInfoResult = this.getSearchInfo(
+    containerName = containerName,
+    queryId = queryId
+)
 ```
 
 **Java**
@@ -284,6 +318,7 @@ val resultPageResult = this.getSearchResultPage(
 **Kotlin:**
 
 ```kotlin
+val addIndexResult = this.addIndex(containerName, fieldName, indexType)
 ```
 
 **Java**
@@ -308,6 +343,7 @@ val resultPageResult = this.getSearchResultPage(
 **Kotlin:**
 
 ```kotlin
+val listIndexResult = this.listIndexes(containerName)
 ```
 
 **Java**
@@ -320,6 +356,7 @@ val resultPageResult = this.getSearchResultPage(
 **Kotlin:**
 
 ```kotlin
+val deleteIndexResult = this.deleteIndex(containerName, fieldName, indexType)
 ```
 
 **Java**

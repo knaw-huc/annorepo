@@ -16,7 +16,9 @@ import kotlinx.cli.ArgType
 import kotlinx.cli.required
 import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.UserEntry
+import nl.knaw.huc.annorepo.client.ARResult
 import nl.knaw.huc.annorepo.client.AnnoRepoClient
+import nl.knaw.huc.annorepo.client.FilterContainerAnnotationsResult
 import nl.knaw.huc.annorepo.client.RequestError
 import java.net.URI
 import javax.ws.rs.core.EntityTag
@@ -63,7 +65,7 @@ class IntegrationTest {
         successFunction: (T) -> Boolean
     ): Boolean =
         fold(
-            { error -> t.printError(error); return false },
+            { error -> t.printError(error.message); return false },
             successFunction
         )
 
@@ -80,35 +82,41 @@ class IntegrationTest {
     private fun AnnoRepoClient.testBatchUpload(t: Terminal): Boolean =
         runTest(t, "Testing the batch upload") {
             inTemporaryContainer(this, t) { containerName ->
-                val batchSize = 1000
+                val batchSize = 314
                 val annotations = mutableListOf<Map<String, Any>>()
                 for (i in 1..batchSize) {
                     annotations.add(
                         mapOf(
-                            "body" to "urn:example:body$i",
+                            "type" to "Annotation",
+                            "body" to mapOf(
+                                "type" to "Page", "id" to "urn:example:body$i"
+                            ),
                             "target" to "urn:example:target$i"
                         )
                     )
                 }
                 t.printStep("Batch uploading annotations")
 //                t.printJson(annotations)
-                val results = this.batchUpload(containerName, annotations).getOrElse { throw Exception() }
+                val results: ARResult.BatchUploadResult =
+                    this.batchUpload(containerName, annotations).getOrElse { throw Exception() }
 
                 val fc = getFieldInfo(containerName).getOrElse { throw Exception() }
 //                t.println(green(fc1.toString()))
 
                 t.printAssertion(
-                    "fieldCounts should have body = $batchSize",
-                    fc.fieldInfo.getOrDefault("body", 0) == batchSize
+                    "fieldCounts should have body.id = $batchSize",
+                    fc.fieldInfo.getOrDefault("body.id", 0) == batchSize
                 )
                 t.printAssertion(
                     "fieldCounts should have target = $batchSize",
                     fc.fieldInfo.getOrDefault("target", 0) == batchSize
                 )
 
-                t.printStep("Search for body = urn:example:body42")
-                val query = mapOf("body" to "urn:example:body42")
-                val createSearchResult = this.createSearch(containerName = containerName, query = query).getOrElse { throw Exception() }
+                t.printStep("Search for body.id = urn:example:body42")
+                val query = mapOf("body.id" to "urn:example:body42")
+                val createSearchResult: ARResult.CreateSearchResult =
+                    this.createSearch(containerName = containerName, query = query)
+                        .getOrElse { throw Exception() }
 
                 val resultPageResult = this.getSearchResultPage(
                     containerName = containerName,
@@ -136,6 +144,10 @@ class IntegrationTest {
                 val addIndexResult = this.addIndex(containerName, "body", IndexType.HASHED)
                 t.println(addIndexResult)
 
+                t.printStep("get index")
+                val getIndexResult = this.getIndex(containerName, "body", IndexType.HASHED)
+                t.println(getIndexResult)
+
                 t.printStep("list indexes")
                 val listIndexResult = this.listIndexes(containerName)
                 t.println(listIndexResult)
@@ -144,24 +156,38 @@ class IntegrationTest {
                 val deleteIndexResult = this.deleteIndex(containerName, "body", IndexType.HASHED)
                 t.println(deleteIndexResult)
 
+                t.printStep("using filterContainerAnnotations")
+                val query2 = mapOf("body.type" to "Page")
+                val filterContainerAnnotationsResult: FilterContainerAnnotationsResult? =
+                    this.filterContainerAnnotations(containerName, query2).orNull()
+                filterContainerAnnotationsResult?.let {
+                    it.annotations.forEach { item ->
+                        item.fold(
+                            { error: RequestError -> print(error) },
+                            { annotation: Map<String, Any> -> print(annotation) }
+                        )
+                    }
+                }
+
                 t.printStep("Deleting annotations")
+                var annotationsDeleted = 0
                 for (annotationData in results.annotationData) {
                     deleteAnnotation(
                         containerName = annotationData.containerName,
                         annotationName = annotationData.annotationName,
                         eTag = EntityTag(annotationData.etag, true).toString()
-                    ).thenAssertResult(t) { deleteAnnotationResult ->
-                        t.printAssertion(
-                            "annotation has been deleted",
-                            deleteAnnotationResult.response.cookies.isEmpty()
-                        )
+                    ).thenAssertResult(t) {
+                        annotationsDeleted += 1
                         true
                     }
                 }
+                t.printAssertion(
+                    "$batchSize annotations have been deleted",
+                    annotationsDeleted == batchSize
+                )
 
                 val fc2 = getFieldInfo(containerName).getOrElse { throw RuntimeException() }
                 t.printAssertion("fieldCounts should be empty", fc2.fieldInfo.isEmpty())
-
             }
         }
 

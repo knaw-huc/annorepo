@@ -4,10 +4,10 @@ import arrow.core.Either
 import nl.knaw.huc.annorepo.api.AboutInfo
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
 import nl.knaw.huc.annorepo.api.AnnotationPage
+import nl.knaw.huc.annorepo.api.IndexConfig
 import nl.knaw.huc.annorepo.api.SearchInfo
 import nl.knaw.huc.annorepo.api.UserEntry
 import java.net.URI
-import javax.ws.rs.core.MultivaluedMap
 import javax.ws.rs.core.Response
 
 sealed class ARResult {
@@ -87,6 +87,11 @@ sealed class ARResult {
         override val response: Response,
     ) : ARResult()
 
+    data class GetIndexResult(
+        override val response: Response,
+        val indexConfig: IndexConfig
+    ) : ARResult()
+
     data class ListIndexesResult(
         override val response: Response,
         val indexes: List<Map<String, Any>>
@@ -116,13 +121,13 @@ sealed class RequestError {
 
     data class NotAuthorized(
         override val message: String,
-        val headers: MultivaluedMap<String, Any>,
+        val response: Response,
         val responseString: String
     ) : RequestError()
 
     data class UnexpectedResponse(
         override val message: String,
-        val headers: MultivaluedMap<String, Any>,
+        val response: Response,
         val responseString: String
     ) : RequestError()
 
@@ -133,4 +138,7 @@ sealed class RequestError {
 
 typealias ResponseHandlerMap<T> = Map<Response.Status, (Response) -> Either<RequestError, T>>
 
-
+data class FilterContainerAnnotationsResult(
+    val queryId: String,
+    val annotations: Sequence<Either<RequestError, Map<String, Any>>>
+)
