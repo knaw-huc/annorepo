@@ -270,8 +270,8 @@ val resultPageResult = this.getSearchResultPage(
 
 ### Filtering Container Annotations
 
-This function combines creating the search and iterating over the search result pages and extracting the annotations from those pages into a sequence.
-Since there could be unexpected response from the server, the sequence returned is one of `Either<RequestError, FilterContainerAnnotationsResult>`
+This function combines creating the search and iterating over the search result pages and extracting the annotations from those pages into a stream.
+Since there could be unexpected response from the server, the stream returned is one of `Either<RequestError, FilterContainerAnnotationsResult>`
 
 
 **Kotlin:**
@@ -293,6 +293,20 @@ filterContainerAnnotationsResult?.let {
 **Java**
 
 ```java
+Map<String, ?> query = Map.of("body.type", "Resolution");
+client.filterContainerAnnotations("my-container", query).fold(
+        error -> {
+            System.out.println(error.toString());
+            return false;
+        },
+        result -> {
+            result.getAnnotations().limit(5).forEach(item -> {
+                System.out.println(item.orNull());
+                System.out.println();
+            });
+            return true;
+        }
+)
 ```
 
 ### Retrieving search information

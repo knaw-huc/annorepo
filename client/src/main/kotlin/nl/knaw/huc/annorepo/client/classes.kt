@@ -8,6 +8,7 @@ import nl.knaw.huc.annorepo.api.IndexConfig
 import nl.knaw.huc.annorepo.api.SearchInfo
 import nl.knaw.huc.annorepo.api.UserEntry
 import java.net.URI
+import java.util.stream.Stream
 import javax.ws.rs.core.Response
 
 sealed class ARResult {
@@ -140,5 +141,5 @@ typealias ResponseHandlerMap<T> = Map<Response.Status, (Response) -> Either<Requ
 
 data class FilterContainerAnnotationsResult(
     val queryId: String,
-    val annotations: Sequence<Either<RequestError, Map<String, Any>>>
+    val annotations: Stream<Either<RequestError, Map<String, Any>>>
 )

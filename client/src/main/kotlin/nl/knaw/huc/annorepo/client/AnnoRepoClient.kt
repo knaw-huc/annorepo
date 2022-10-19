@@ -53,6 +53,7 @@ import javax.ws.rs.client.Entity
 import javax.ws.rs.client.Invocation
 import javax.ws.rs.client.WebTarget
 import javax.ws.rs.core.Response
+import kotlin.streams.asStream
 
 private const val IF_MATCH = "if-match"
 
@@ -394,7 +395,7 @@ class AnnoRepoClient @JvmOverloads constructor(
                 Either.Right(
                     FilterContainerAnnotationsResult(
                         queryId = queryId,
-                        annotations = annotationSequence
+                        annotations = annotationSequence.asStream()
                     )
                 )
             }
