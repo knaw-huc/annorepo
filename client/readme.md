@@ -234,11 +234,13 @@ On a succeeding call, the CreateContainerResult contains:
 
 ## Querying a container
 
-### Creating the query
+### Creating the search
 
 **Kotlin:**
 
 ```kotlin
+val query = mapOf("body" to "urn:example:body42")
+val createSearchResult = this.createSearch(containerName = containerName, query = query)
 ```
 
 **Java**
@@ -251,6 +253,11 @@ On a succeeding call, the CreateContainerResult contains:
 **Kotlin:**
 
 ```kotlin
+val resultPageResult = this.getSearchResultPage(
+    containerName = containerName,
+    queryId = createSearchResult.value.queryId,
+    page = 0
+)
 ```
 
 **Java**
@@ -258,7 +265,7 @@ On a succeeding call, the CreateContainerResult contains:
 ```java
 ```
 
-### Retrieving query information
+### Retrieving search information
 
 **Kotlin:**
 
