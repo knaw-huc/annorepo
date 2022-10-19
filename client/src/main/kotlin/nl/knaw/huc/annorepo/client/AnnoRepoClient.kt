@@ -249,12 +249,13 @@ class AnnoRepoClient @JvmOverloads constructor(
      */
     fun updateAnnotation(
         containerName: String, annotationName: String, eTag: String, annotation: Map<String, Any>
-    ): Either<RequestError, CreateAnnotationResult> =
-        doPut(
-            request = webTarget.path(W3C).path(containerName).path(annotationName).request().header(IF_MATCH, eTag),
+    ): Either<RequestError, CreateAnnotationResult> {
+        val path = webTarget.path(W3C).path(containerName).path(annotationName)
+        val location = path.uri
+        return doPut(
+            request = path.request().header(IF_MATCH, eTag),
             entity = Entity.json(annotation),
             responseHandlers = mapOf(Response.Status.OK to { response ->
-                val location = response.location()!!
                 val newEtag = response.eTag() ?: ""
                 Either.Right(
                     CreateAnnotationResult(
@@ -267,6 +268,7 @@ class AnnoRepoClient @JvmOverloads constructor(
                 )
             })
         )
+    }
 
     /**
      * Delete annotation
@@ -606,7 +608,8 @@ class AnnoRepoClient @JvmOverloads constructor(
     private fun <R> doRequest(requestHandler: () -> Either<RequestError, R>): Either<RequestError, R> = try {
         requestHandler()
     } catch (e: Exception) {
-        Either.Left(ConnectionError(e.message ?: "Connection Error"))
+        e.printStackTrace()
+        Either.Left(ConnectionError(e.message ?: e.javaClass.name))
     }
 
     private fun Response.firstHeader(key: String): String? = if (headers.containsKey(key)) {
