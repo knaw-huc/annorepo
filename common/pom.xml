@@ -7,12 +7,12 @@
     <parent>
         <groupId>nl.knaw.huc</groupId>
         <artifactId>annorepo</artifactId>
-        <version>0.3.2-beta</version>
+        <version>0.3.3-beta</version>
     </parent>
 
     <groupId>nl.knaw.huc</groupId>
     <artifactId>annorepo-common</artifactId>
-    <version>0.3.2-beta</version>
+    <version>0.3.3-beta</version>
 
     <name>AnnoRepo common: shared libraries/classes/methods</name>
     <description>Shared libraries/classes/methods for AnnoRepo</description>
