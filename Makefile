@@ -72,6 +72,7 @@ version-update:
 
 .make/.deploy: build-client
 	mvn --projects client --also-make deploy
+	@touch $@
 
 .PHONY: deploy
 deploy:	.make/.deploy
