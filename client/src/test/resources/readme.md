@@ -11,8 +11,8 @@ Add the following to your `pom.xml`
 
 ```xml
 <dependency>
-    <groupId>nl.knaw.huc</groupId>
-    <artifactId>annorepo-client</artifactId>
+    <groupId>${project.groupId}</groupId>
+    <artifactId>${project.artifactId}</artifactId>
     <version>${project.version}</version>
 </dependency>
 ```
