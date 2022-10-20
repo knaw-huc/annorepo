@@ -1,5 +1,6 @@
 package nl.knaw.huc.annorepo.auth
 
+import nl.knaw.huc.annorepo.api.UserAddResults
 import nl.knaw.huc.annorepo.api.UserEntry
 
 interface UserDAO {

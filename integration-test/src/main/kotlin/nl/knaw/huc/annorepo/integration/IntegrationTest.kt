@@ -37,22 +37,6 @@ class IntegrationTest {
         )
         val testResults = mutableMapOf<String, Boolean>()
 
-        client.getUsers().fold(
-            { error: RequestError -> println(error) },
-            { result: ARResult.UsersResult ->
-                result.userEntries.forEach { ue: UserEntry ->
-                    val userName: String = ue.userName
-                    val apiKey: String = ue.apiKey
-                }
-            }
-        )
-
-        val deletionSucceeded = client.deleteUser(userName = "xxx").isRight()
-
-
-
-
-
         testResults["testAbout"] = client.testAbout(t)
         testResults["ContainerCreationAndDeletion"] = client.testContainerCreationAndDeletion(t)
         testResults["container field count"] = client.testContainerFieldCount(t)
@@ -78,7 +62,7 @@ class IntegrationTest {
 
     private fun <T> Either<RequestError, T>.thenAssertResult(
         t: Terminal,
-        successFunction: (T) -> Boolean
+        successFunction: (T) -> Boolean,
     ): Boolean =
         fold(
             { error -> t.printError(error.message); return false },
@@ -191,7 +175,7 @@ class IntegrationTest {
                     deleteAnnotation(
                         containerName = annotationData.containerName,
                         annotationName = annotationData.annotationName,
-                        eTag = EntityTag(annotationData.etag, true).toString()
+                        eTag = EntityTag(annotationData.eTag, true).toString()
                     ).thenAssertResult(t) {
                         annotationsDeleted += 1
                         true
@@ -341,7 +325,7 @@ class IntegrationTest {
         ac: AnnoRepoClient,
         t: Terminal,
         containerName: String? = "tmp-container",
-        func: (containerName: String) -> Unit?
+        func: (containerName: String) -> Unit?,
     ) {
         t.printStep("Creating container $containerName")
         val r = ac.createContainer(containerName).getOrElse { throw Exception() }
