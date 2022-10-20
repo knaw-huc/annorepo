@@ -47,6 +47,7 @@ import nl.knaw.huc.annorepo.client.RequestError.ConnectionError
 import nl.knaw.huc.annorepo.util.extractVersion
 import org.glassfish.jersey.client.filter.EncodingFilter
 import org.glassfish.jersey.message.GZipEncoder
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.URI
 import javax.ws.rs.client.ClientBuilder
@@ -70,29 +71,28 @@ private const val IF_MATCH = "if-match"
 class AnnoRepoClient @JvmOverloads constructor(
     serverURI: URI, val apiKey: String? = null, private val userAgent: String? = null,
 ) {
-    private val log = LoggerFactory.getLogger(javaClass)
 
     private val webTarget: WebTarget = ClientBuilder.newClient().apply {
         register(GZipEncoder::class.java)
         register(EncodingFilter::class.java)
     }.target(serverURI)
 
-    private val oMapper: ObjectMapper = ObjectMapper().registerKotlinModule()
-
-    var serverVersion: String? = null
+    lateinit var serverVersion: String
     var serverNeedsAuthentication: Boolean? = null
 
     init {
         log.info("checking annorepo server at $serverURI ...")
-        getAbout().bimap({ e ->
-            log.error("error: {}", e)
-            throw RuntimeException("Unable to connect to annorepo server at $serverURI")
-        }, { getAboutResult ->
-            val aboutInfo = getAboutResult.aboutInfo
-            serverVersion = aboutInfo.version
-            serverNeedsAuthentication = aboutInfo.withAuthentication
-            log.info("$serverURI runs version $serverVersion ; needs authentication: $serverNeedsAuthentication")
-        })
+        getAbout().bimap(
+            { e ->
+                log.error("error: {}", e)
+                throw RuntimeException("Unable to connect to annorepo server at $serverURI")
+            },
+            { getAboutResult ->
+                val aboutInfo = getAboutResult.aboutInfo
+                serverVersion = aboutInfo.version
+                serverNeedsAuthentication = aboutInfo.withAuthentication
+                log.info("$serverURI runs version $serverVersion ; needs authentication: $serverNeedsAuthentication")
+            })
     }
 
     /**
@@ -104,7 +104,7 @@ class AnnoRepoClient @JvmOverloads constructor(
         request = webTarget.path(ABOUT).request(),
         responseHandlers = mapOf(Response.Status.OK to { response: Response ->
             val json = response.readEntityAsJsonString();
-            Either.Right(GetAboutResult(response, oMapper.readValue(json)))
+            Either.Right(GetAboutResult(response, Companion.oMapper.readValue(json)))
         })
     )
 
@@ -169,7 +169,7 @@ class AnnoRepoClient @JvmOverloads constructor(
         request = webTarget.path(SERVICES).path(containerName).path(METADATA).request(),
         responseHandlers = mapOf(Response.Status.OK to { response ->
             val json = response.readEntityAsJsonString()
-            val metadata: Map<String, Any> = oMapper.readValue(json)
+            val metadata: Map<String, Any> = Companion.oMapper.readValue(json)
             Either.Right(
                 GetContainerMetadataResult(
                     response = response, metadata = metadata
@@ -289,7 +289,7 @@ class AnnoRepoClient @JvmOverloads constructor(
             val json = response.readEntityAsJsonString()
             Either.Right(
                 AnnotationFieldInfoResult(
-                    response = response, fieldInfo = oMapper.readValue(json)
+                    response = response, fieldInfo = Companion.oMapper.readValue(json)
                 )
             )
         })
@@ -309,7 +309,7 @@ class AnnoRepoClient @JvmOverloads constructor(
         entity = Entity.json(annotations),
         responseHandlers = mapOf(Response.Status.OK to { response ->
             val entityJson: String = response.readEntityAsJsonString()
-            val annotationData: List<AnnotationIdentifier> = oMapper.readValue(entityJson)
+            val annotationData: List<AnnotationIdentifier> = Companion.oMapper.readValue(entityJson)
             Either.Right(
                 BatchUploadResult(response, annotationData)
             )
@@ -351,7 +351,7 @@ class AnnoRepoClient @JvmOverloads constructor(
                 .request(), responseHandlers = mapOf(
                 Response.Status.OK to { response ->
                     val json = response.readEntityAsJsonString()
-                    val annotationPage: AnnotationPage = oMapper.readValue(json)
+                    val annotationPage: AnnotationPage = Companion.oMapper.readValue(json)
                     Either.Right(
                         GetSearchResultPageResult(
                             response = response, annotationPage = annotationPage
@@ -372,7 +372,7 @@ class AnnoRepoClient @JvmOverloads constructor(
             request = webTarget.path(SERVICES).path(containerName).path(SEARCH).path(queryId).path(INFO).request(),
             responseHandlers = mapOf(Response.Status.OK to { response ->
                 val json = response.readEntityAsJsonString()
-                val searchInfo: SearchInfo = oMapper.readValue(json)
+                val searchInfo: SearchInfo = Companion.oMapper.readValue(json)
                 Either.Right(
                     GetSearchInfoResult(response, searchInfo)
                 )
@@ -455,7 +455,7 @@ class AnnoRepoClient @JvmOverloads constructor(
             request = webTarget.path(SERVICES).path(containerName).path(INDEXES).path(fieldName).path(indexType.name)
                 .request(), responseHandlers = mapOf(Response.Status.OK to { response ->
                 val json = response.readEntityAsJsonString()
-                val indexConfig: IndexConfig = oMapper.readValue(json)
+                val indexConfig: IndexConfig = Companion.oMapper.readValue(json)
                 Either.Right(
                     GetIndexResult(response, indexConfig)
                 )
@@ -472,7 +472,7 @@ class AnnoRepoClient @JvmOverloads constructor(
         request = webTarget.path(SERVICES).path(containerName).path(INDEXES).request(),
         responseHandlers = mapOf(Response.Status.OK to { response ->
             val jsonString = response.readEntityAsJsonString()
-            val indexes: List<Map<String, Any>> = oMapper.readValue(jsonString)
+            val indexes: List<Map<String, Any>> = Companion.oMapper.readValue(jsonString)
             Either.Right(
                 ListIndexesResult(
                     response = response, indexes = indexes
@@ -507,7 +507,7 @@ class AnnoRepoClient @JvmOverloads constructor(
         request = webTarget.path(ADMIN).path(USERS).request(),
         responseHandlers = mapOf(Response.Status.OK to { response ->
             val json = response.readEntityAsJsonString()
-            val userEntryList = oMapper.readValue(json, object : TypeReference<List<UserEntry>>() {})
+            val userEntryList = Companion.oMapper.readValue(json, object : TypeReference<List<UserEntry>>() {})
             Either.Right(
                 UsersResult(
                     response = response, userEntries = userEntryList
@@ -528,7 +528,7 @@ class AnnoRepoClient @JvmOverloads constructor(
         responseHandlers = mapOf(
             Response.Status.OK to { response ->
                 val json = response.readEntityAsJsonString()
-                val userAddResults: UserAddResults = oMapper.readValue(json)
+                val userAddResults: UserAddResults = Companion.oMapper.readValue(json)
                 Either.Right(
                     AddUsersResult(
                         response = response,
@@ -663,5 +663,33 @@ class AnnoRepoClient @JvmOverloads constructor(
     )
 
     private fun getVersion(): String? = this.javaClass.extractVersion()
+
+    companion object {
+        private val log: Logger = LoggerFactory.getLogger(AnnoRepoClient::class.java)
+
+        @JvmStatic
+        @JvmOverloads
+        fun create(serverURL: String, apiKey: String? = null, userAgent: String? = null): AnnoRepoClient? =
+            create(URI.create(serverURL), apiKey, userAgent)
+
+        @JvmStatic
+        @JvmOverloads
+        fun create(serverURI: URI, apiKey: String? = null, userAgent: String? = null): AnnoRepoClient? =
+            try {
+                val annoRepoClient = AnnoRepoClient(serverURI = serverURI, apiKey = apiKey, userAgent = userAgent)
+                if (annoRepoClient.serverNeedsAuthentication!! && apiKey == null) {
+                    log.warn(
+                        "The server at $serverURI has authentication enabled," +
+                                " and you did not provide an apiKey." +
+                                " You'll only be able to access the endpoints that don't require authentication."
+                    )
+                }
+                annoRepoClient
+            } catch (e: RuntimeException) {
+                null
+            }
+
+        private val oMapper: ObjectMapper = ObjectMapper().registerKotlinModule()
+    }
 
 }
