@@ -13,7 +13,7 @@ Add the following to your `pom.xml`
 <dependency>
     <groupId>nl.knaw.huc</groupId>
     <artifactId>annorepo-client</artifactId>
-    <version>0.3.3-beta</version>
+    <version>${project.version}</version>
 </dependency>
 ```
 

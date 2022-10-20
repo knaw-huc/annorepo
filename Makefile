@@ -21,7 +21,7 @@ build: .make/.version server/target/annorepo-server-$(shell cat .make/.version).
 build-server: .make/.version server/target/annorepo-server-$(shell cat .make/.version).jar
 
 .PHONY: build-client
-build-client: .make/.version client/target/annorepo-client-$(shell cat .make/.version).jar
+build-client: .make/.version client/target/annorepo-client-$(shell cat .make/.version).jar client/readme.md
 
 .PHONY: run-server
 run-server: build-server
@@ -76,6 +76,10 @@ version-update:
 
 .PHONY: deploy
 deploy:	.make/.deploy
+
+client/readme.md: client/src/main/resources/readme.md
+	mvn --projects client --also-make resources:resources
+	mv client/target/classes/readme.md client/readme.md
 
 .PHONY: help
 help:
