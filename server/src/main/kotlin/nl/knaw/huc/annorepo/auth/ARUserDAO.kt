@@ -5,6 +5,8 @@ import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Indexes
 import com.mongodb.client.model.Projections
 import nl.knaw.huc.annorepo.api.ARConst.USER_COLLECTION
+import nl.knaw.huc.annorepo.api.RejectedUserEntry
+import nl.knaw.huc.annorepo.api.UserAddResults
 import nl.knaw.huc.annorepo.api.UserEntry
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import org.bson.Document
@@ -14,8 +16,6 @@ import org.litote.kmongo.findOne
 const val FIELD_API_KEY = "apiKey"
 const val FIELD_USER_NAME = "userName"
 
-data class RejectedUserEntry(val userEntry: Map<String, String>, val reason: String)
-data class UserAddResults(val added: List<String>, val rejected: List<RejectedUserEntry>)
 
 class ARUserDAO(
     private val configuration: AnnoRepoConfiguration, mongoClient: MongoClient

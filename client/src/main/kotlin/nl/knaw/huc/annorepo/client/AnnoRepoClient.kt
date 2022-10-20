@@ -22,6 +22,7 @@ import nl.knaw.huc.annorepo.api.ResourcePaths.SERVICES
 import nl.knaw.huc.annorepo.api.ResourcePaths.USERS
 import nl.knaw.huc.annorepo.api.ResourcePaths.W3C
 import nl.knaw.huc.annorepo.api.SearchInfo
+import nl.knaw.huc.annorepo.api.UserAddResults
 import nl.knaw.huc.annorepo.api.UserEntry
 import nl.knaw.huc.annorepo.client.ARResult.AddIndexResult
 import nl.knaw.huc.annorepo.client.ARResult.AddUsersResult
@@ -524,11 +525,18 @@ class AnnoRepoClient @JvmOverloads constructor(
     fun addUsers(users: List<UserEntry>): Either<RequestError, AddUsersResult> = doPost(
         request = webTarget.path(ADMIN).path(USERS).request(),
         entity = Entity.json(users),
-        responseHandlers = mapOf(Response.Status.OK to { response ->
-            Either.Right(
-                AddUsersResult(response)
-            )
-        })
+        responseHandlers = mapOf(
+            Response.Status.OK to { response ->
+                val json = response.readEntityAsJsonString()
+                val userAddResults: UserAddResults = oMapper.readValue(json)
+                Either.Right(
+                    AddUsersResult(
+                        response = response,
+                        accepted = userAddResults.added,
+                        rejected = userAddResults.rejected
+                    )
+                )
+            })
     )
 
     /**

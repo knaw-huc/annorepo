@@ -383,6 +383,7 @@ val deleteIndexResult = this.deleteIndex(containerName, fieldName, indexType)
 **Kotlin:**
 
 ```kotlin
+val fieldInfoResult = client.getFieldInfo(containerName)
 ```
 
 **Java**
@@ -400,11 +401,33 @@ The root api-key is required for these calls.
 **Kotlin:**
 
 ```kotlin
+val userEntries = listOf(UserEntry(userName, apiKey))
+client.addUsers(userEntries).fold(
+    { error -> println(error.message) },
+    { result -> 
+        val accepted = result.accepted
+        val rejected = result.rejected
+        doSomething(accepted, rejected)
+    }
+)
 ```
 
 **Java**
 
 ```java
+List<UserEntry> userEntries = List.of(new UserEntry("userName", "apiKey"));
+client.addUsers(userEntrirs).fold(
+        error -> 
+            System.out.println(error.getMessage());
+            return false;
+        },
+        result -> {
+            List<String> accepted = result.getAccepted();
+            List<RejectedUserEntry> rejected = result.getRejected();
+            doSomething(accepted,rejected);
+            return true;
+        }
+);
 ```
 
 ### Retrieving users
@@ -412,11 +435,37 @@ The root api-key is required for these calls.
 **Kotlin:**
 
 ```kotlin
+client.getUsers().fold(
+    { error: RequestError -> println(error) },
+    { result: ARResult.UsersResult ->
+        result.userEntries.forEach { ue: UserEntry ->
+            val userName: String = ue.userName
+            val apiKey: String = ue.apiKey
+            doSomething(userName, apiKey)
+        }
+    }
+)
 ```
 
 **Java**
 
 ```java
+client.getUsers().fold(
+        error -> {
+            System.out.println(error.getMessage());
+            return false;
+        },
+        result -> {
+            List<UserEntry> userEntries = result.getUserEntries();
+            for (UserEntry ue : userEntries) {
+                String userName = ue.getUserName();
+                String apiKey = ue.getApiKey();
+                doSomething(userName, apiKey);
+            }
+            return true;
+        }
+);
+
 ```
 
 ### Deleting a user
@@ -424,9 +473,11 @@ The root api-key is required for these calls.
 **Kotlin:**
 
 ```kotlin
+val deletionSucceeded = client.deleteUser(userName).isRight()
 ```
 
 **Java**
 
 ```java
+Boolean deletionSucceeded = client.deleteUser(userName).isRight();
 ```

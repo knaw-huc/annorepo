@@ -37,6 +37,22 @@ class IntegrationTest {
         )
         val testResults = mutableMapOf<String, Boolean>()
 
+        client.getUsers().fold(
+            { error: RequestError -> println(error) },
+            { result: ARResult.UsersResult ->
+                result.userEntries.forEach { ue: UserEntry ->
+                    val userName: String = ue.userName
+                    val apiKey: String = ue.apiKey
+                }
+            }
+        )
+
+        val deletionSucceeded = client.deleteUser(userName = "xxx").isRight()
+
+
+
+
+
         testResults["testAbout"] = client.testAbout(t)
         testResults["ContainerCreationAndDeletion"] = client.testContainerCreationAndDeletion(t)
         testResults["container field count"] = client.testContainerFieldCount(t)
@@ -254,10 +270,12 @@ class IntegrationTest {
 
             val userName = "username1"
             t.printStep("Adding a user")
-            this.addUsers(listOf(UserEntry(userName, "apiKey1"))).thenAssertResult(t) { response ->
-                t.printJson(response.response.status)
+            this.addUsers(listOf(UserEntry(userName, "apiKey1"))).thenAssertResult(t) { result ->
+                t.printJson(result.accepted)
+                t.printJson(result.rejected)
                 true
             }
+
 
             t.printStep("Getting the new list of users")
             this.getUsers().thenAssertResult(t) { result ->

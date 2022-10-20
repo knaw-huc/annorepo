@@ -5,6 +5,7 @@ import nl.knaw.huc.annorepo.api.AboutInfo
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
 import nl.knaw.huc.annorepo.api.AnnotationPage
 import nl.knaw.huc.annorepo.api.IndexConfig
+import nl.knaw.huc.annorepo.api.RejectedUserEntry
 import nl.knaw.huc.annorepo.api.SearchInfo
 import nl.knaw.huc.annorepo.api.UserEntry
 import java.net.URI
@@ -104,6 +105,8 @@ sealed class ARResult {
 
     data class AddUsersResult(
         override val response: Response,
+        val accepted: List<String>,
+        val rejected: List<RejectedUserEntry>
     ) : ARResult()
 
     data class UsersResult(
