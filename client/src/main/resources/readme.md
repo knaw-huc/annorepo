@@ -52,7 +52,7 @@ val serverVersion = client.serverVersion
 **Java**
 
 ```java
-String serverVersion=client.getServerVersion();
+String serverVersion = client.getServerVersion();
 ```
 
 as well as whether this server requires authentication:
@@ -66,7 +66,7 @@ val serverNeedsAuthentication = client.serverNeedsAuthentication
 **Java**
 
 ```java
-Boolean serverNeedsAuthentication=client.getServerNeedsAuthentication();
+Boolean serverNeedsAuthentication = client.getServerNeedsAuthentication();
 ```
 
 ## General information about the endpoint calls
