@@ -103,8 +103,8 @@ class AnnoRepoClient @JvmOverloads constructor(
     fun getAbout(): Either<RequestError, GetAboutResult> = doGet(
         request = webTarget.path(ABOUT).request(),
         responseHandlers = mapOf(Response.Status.OK to { response: Response ->
-            val json = response.readEntityAsJsonString();
-            Either.Right(GetAboutResult(response, Companion.oMapper.readValue(json)))
+            val json = response.readEntityAsJsonString()
+            Either.Right(GetAboutResult(response, oMapper.readValue(json)))
         })
     )
 
@@ -169,7 +169,7 @@ class AnnoRepoClient @JvmOverloads constructor(
         request = webTarget.path(SERVICES).path(containerName).path(METADATA).request(),
         responseHandlers = mapOf(Response.Status.OK to { response ->
             val json = response.readEntityAsJsonString()
-            val metadata: Map<String, Any> = Companion.oMapper.readValue(json)
+            val metadata: Map<String, Any> = oMapper.readValue(json)
             Either.Right(
                 GetContainerMetadataResult(
                     response = response, metadata = metadata
@@ -289,7 +289,7 @@ class AnnoRepoClient @JvmOverloads constructor(
             val json = response.readEntityAsJsonString()
             Either.Right(
                 AnnotationFieldInfoResult(
-                    response = response, fieldInfo = Companion.oMapper.readValue(json)
+                    response = response, fieldInfo = oMapper.readValue(json)
                 )
             )
         })
@@ -309,7 +309,7 @@ class AnnoRepoClient @JvmOverloads constructor(
         entity = Entity.json(annotations),
         responseHandlers = mapOf(Response.Status.OK to { response ->
             val entityJson: String = response.readEntityAsJsonString()
-            val annotationData: List<AnnotationIdentifier> = Companion.oMapper.readValue(entityJson)
+            val annotationData: List<AnnotationIdentifier> = oMapper.readValue(entityJson)
             Either.Right(
                 BatchUploadResult(response, annotationData)
             )
@@ -351,7 +351,7 @@ class AnnoRepoClient @JvmOverloads constructor(
                 .request(), responseHandlers = mapOf(
                 Response.Status.OK to { response ->
                     val json = response.readEntityAsJsonString()
-                    val annotationPage: AnnotationPage = Companion.oMapper.readValue(json)
+                    val annotationPage: AnnotationPage = oMapper.readValue(json)
                     Either.Right(
                         GetSearchResultPageResult(
                             response = response, annotationPage = annotationPage
@@ -372,7 +372,7 @@ class AnnoRepoClient @JvmOverloads constructor(
             request = webTarget.path(SERVICES).path(containerName).path(SEARCH).path(queryId).path(INFO).request(),
             responseHandlers = mapOf(Response.Status.OK to { response ->
                 val json = response.readEntityAsJsonString()
-                val searchInfo: SearchInfo = Companion.oMapper.readValue(json)
+                val searchInfo: SearchInfo = oMapper.readValue(json)
                 Either.Right(
                     GetSearchInfoResult(response, searchInfo)
                 )
@@ -455,7 +455,7 @@ class AnnoRepoClient @JvmOverloads constructor(
             request = webTarget.path(SERVICES).path(containerName).path(INDEXES).path(fieldName).path(indexType.name)
                 .request(), responseHandlers = mapOf(Response.Status.OK to { response ->
                 val json = response.readEntityAsJsonString()
-                val indexConfig: IndexConfig = Companion.oMapper.readValue(json)
+                val indexConfig: IndexConfig = oMapper.readValue(json)
                 Either.Right(
                     GetIndexResult(response, indexConfig)
                 )
@@ -472,7 +472,7 @@ class AnnoRepoClient @JvmOverloads constructor(
         request = webTarget.path(SERVICES).path(containerName).path(INDEXES).request(),
         responseHandlers = mapOf(Response.Status.OK to { response ->
             val jsonString = response.readEntityAsJsonString()
-            val indexes: List<Map<String, Any>> = Companion.oMapper.readValue(jsonString)
+            val indexes: List<Map<String, Any>> = oMapper.readValue(jsonString)
             Either.Right(
                 ListIndexesResult(
                     response = response, indexes = indexes
@@ -507,7 +507,7 @@ class AnnoRepoClient @JvmOverloads constructor(
         request = webTarget.path(ADMIN).path(USERS).request(),
         responseHandlers = mapOf(Response.Status.OK to { response ->
             val json = response.readEntityAsJsonString()
-            val userEntryList = Companion.oMapper.readValue(json, object : TypeReference<List<UserEntry>>() {})
+            val userEntryList = oMapper.readValue(json, object : TypeReference<List<UserEntry>>() {})
             Either.Right(
                 UsersResult(
                     response = response, userEntries = userEntryList
@@ -528,7 +528,7 @@ class AnnoRepoClient @JvmOverloads constructor(
         responseHandlers = mapOf(
             Response.Status.OK to { response ->
                 val json = response.readEntityAsJsonString()
-                val userAddResults: UserAddResults = Companion.oMapper.readValue(json)
+                val userAddResults: UserAddResults = oMapper.readValue(json)
                 Either.Right(
                     AddUsersResult(
                         response = response,

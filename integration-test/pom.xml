@@ -10,7 +10,6 @@
         <version>0.3.4-beta</version>
     </parent>
 
-    <groupId>nl.knaw.huc</groupId>
     <artifactId>annorepo-integration-test</artifactId>
     <name>AnnoRepo IntegrationTest</name>
     <version>0.3.4-beta</version>
