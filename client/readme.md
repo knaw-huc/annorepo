@@ -279,7 +279,7 @@ Since there could be unexpected response from the server, the stream returned is
 ```kotlin
 val query = mapOf("body.type" to "Page")
 val filterContainerAnnotationsResult: FilterContainerAnnotationsResult? =
-    this.filterContainerAnnotations(containerName, query2).orNull()
+    this.filterContainerAnnotations(containerName, query).orNull()
 filterContainerAnnotationsResult?.let {
     it.annotations.forEach { item ->
         item.fold(
@@ -415,16 +415,17 @@ client.addUsers(userEntries).fold(
 **Java**
 
 ```java
-List<UserEntry> userEntries = List.of(new UserEntry("userName", "apiKey"));
-client.addUsers(userEntrirs).fold(
-        error -> 
-            System.out.println(error.getMessage());
+String userName = "userName";
+List<UserEntry> userEntries = List.of(new UserEntry(userName, "apiKey"));
+client.addUsers(userEntries).fold(
+        (RequestError error) -> {
+            handleError(error);
             return false;
         },
-        result -> {
+        (ARResult.AddUsersResult result) -> {
             List<String> accepted = result.getAccepted();
             List<RejectedUserEntry> rejected = result.getRejected();
-            doSomething(accepted,rejected);
+            doSomethingWith(accepted, rejected);
             return true;
         }
 );
@@ -451,21 +452,16 @@ client.getUsers().fold(
 
 ```java
 client.getUsers().fold(
-        error -> {
-            System.out.println(error.getMessage());
+        (RequestError error) -> {
+            handleError(error);
             return false;
         },
-        result -> {
+        (ARResult.UsersResult result) -> {
             List<UserEntry> userEntries = result.getUserEntries();
-            for (UserEntry ue : userEntries) {
-                String userName = ue.getUserName();
-                String apiKey = ue.getApiKey();
-                doSomething(userName, apiKey);
-            }
+            doSomethingWith(userEntries);
             return true;
         }
 );
-
 ```
 
 ### Deleting a user

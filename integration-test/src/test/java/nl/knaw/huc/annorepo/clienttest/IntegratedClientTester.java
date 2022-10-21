@@ -1,7 +1,11 @@
 package nl.knaw.huc.annorepo.clienttest;
 
 import nl.knaw.huc.annorepo.api.AboutInfo;
+import nl.knaw.huc.annorepo.api.RejectedUserEntry;
+import nl.knaw.huc.annorepo.api.UserEntry;
+import nl.knaw.huc.annorepo.client.ARResult;
 import nl.knaw.huc.annorepo.client.AnnoRepoClient;
+import nl.knaw.huc.annorepo.client.RequestError;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
@@ -10,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
+import java.util.List;
 
 import static nl.knaw.huc.annorepo.clienttest.Util.INTEGRATION_TEST;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,7 +26,7 @@ public class IntegratedClientTester {
     private static Logger log = LoggerFactory.getLogger(IntegratedClientTester.class);
     public static final String BASE_URL = "http://localhost:8080";
     private static final URI BASE_URI = URI.create(BASE_URL);
-    private static final String apiKey = "";
+    private static final String apiKey = "root";
     static AnnoRepoClient client;
 
     @BeforeAll
@@ -89,6 +94,55 @@ public class IntegratedClientTester {
         public void testFailingCreate() {
             AnnoRepoClient client = AnnoRepoClient.create(URI.create("http://nothingtoseehere"));
             assertThat(client).isNull();
+        }
+    }
+
+    @Nested
+    public class AdminTests {
+        @Test
+        public void testUserCreateAndDelete() {
+            String userName = "userName";
+            List<UserEntry> userEntries = List.of(new UserEntry(userName, "apiKey"));
+            client.addUsers(userEntries).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    (ARResult.AddUsersResult result) -> {
+                        List<String> accepted = result.getAccepted();
+                        List<RejectedUserEntry> rejected = result.getRejected();
+                        doSomethingWith(accepted, rejected);
+                        return true;
+                    }
+            );
+            boolean deletionSuccess = client.deleteUser(userName).isRight();
+            assertThat(deletionSuccess).isTrue();
+        }
+
+        @Test
+        public void testGetUsers() {
+            client.getUsers().fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    (ARResult.UsersResult result) -> {
+                        List<UserEntry> userEntries = result.getUserEntries();
+                        doSomethingWith(userEntries);
+                        return true;
+                    }
+            );
+        }
+
+    }
+
+    private static void handleError(RequestError error) {
+        System.out.println(error.getMessage());
+    }
+
+    private void doSomethingWith(Object... objects) {
+        for (Object o : objects) {
+            log.info("{}", o);
         }
     }
 
