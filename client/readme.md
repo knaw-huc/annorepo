@@ -14,7 +14,7 @@ Add the following to your `pom.xml`
 <dependency>
     <groupId>nl.knaw.huc</groupId>
     <artifactId>annorepo-client</artifactId>
-    <version>0.3.4-beta</version>
+    <version>0.3.5-beta</version>
 </dependency>
 ```
 
@@ -279,7 +279,7 @@ Since there could be unexpected response from the server, the stream returned is
 ```kotlin
 val query = mapOf("body.type" to "Page")
 val filterContainerAnnotationsResult: FilterContainerAnnotationsResult? =
-    this.filterContainerAnnotations(containerName, query).orNull()
+    this.filterContainerAnnotations(containerName, query2).orNull()
 filterContainerAnnotationsResult?.let {
     it.annotations.forEach { item ->
         item.fold(
@@ -389,18 +389,6 @@ val fieldInfoResult = client.getFieldInfo(containerName)
 **Java**
 
 ```java
-String containerName = "my-container";
-client.getFieldInfo(containerName).fold(
-        (RequestError error) -> {
-            handleError(error);
-            return false;
-        },
-        result -> {
-            Map<String, Integer> fieldInfo = result.getFieldInfo();
-            doSomethingWith(fieldInfo);
-            return true;
-        }
-);
 ```
 
 ## User administration
@@ -427,17 +415,16 @@ client.addUsers(userEntries).fold(
 **Java**
 
 ```java
-String userName = "userName";
-List<UserEntry> userEntries = List.of(new UserEntry(userName, "apiKey"));
-client.addUsers(userEntries).fold(
-        (RequestError error) -> {
-            handleError(error);
+List<UserEntry> userEntries = List.of(new UserEntry("userName", "apiKey"));
+client.addUsers(userEntrirs).fold(
+        error -> 
+            System.out.println(error.getMessage());
             return false;
         },
-        (ARResult.AddUsersResult result) -> {
+        result -> {
             List<String> accepted = result.getAccepted();
             List<RejectedUserEntry> rejected = result.getRejected();
-            doSomethingWith(accepted, rejected);
+            doSomething(accepted,rejected);
             return true;
         }
 );
@@ -464,16 +451,21 @@ client.getUsers().fold(
 
 ```java
 client.getUsers().fold(
-        (RequestError error) -> {
-            handleError(error);
+        error -> {
+            System.out.println(error.getMessage());
             return false;
         },
-        (ARResult.UsersResult result) -> {
+        result -> {
             List<UserEntry> userEntries = result.getUserEntries();
-            doSomethingWith(userEntries);
+            for (UserEntry ue : userEntries) {
+                String userName = ue.getUserName();
+                String apiKey = ue.getApiKey();
+                doSomething(userName, apiKey);
+            }
             return true;
         }
 );
+
 ```
 
 ### Deleting a user
