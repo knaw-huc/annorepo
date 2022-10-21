@@ -44,12 +44,12 @@ import nl.knaw.huc.annorepo.client.ARResult.GetSearchResultPageResult
 import nl.knaw.huc.annorepo.client.ARResult.ListIndexesResult
 import nl.knaw.huc.annorepo.client.ARResult.UsersResult
 import nl.knaw.huc.annorepo.client.RequestError.ConnectionError
-import nl.knaw.huc.annorepo.util.extractVersion
 import org.glassfish.jersey.client.filter.EncodingFilter
 import org.glassfish.jersey.message.GZipEncoder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.URI
+import java.util.*
 import javax.ws.rs.client.ClientBuilder
 import javax.ws.rs.client.Entity
 import javax.ws.rs.client.Invocation
@@ -640,7 +640,7 @@ class AnnoRepoClient @JvmOverloads constructor(
     }
 
     private fun Invocation.Builder.withHeaders(): Invocation.Builder {
-        val libUA = "${AnnoRepoClient::class.java.name}/${getVersion() ?: ""}"
+        val libUA = "${AnnoRepoClient::class.java.name}/${classVersion ?: ""}"
         val ua = if (userAgent == null) {
             libUA
         } else {
@@ -662,10 +662,15 @@ class AnnoRepoClient @JvmOverloads constructor(
         ), "label" to label
     )
 
-    private fun getVersion(): String? = this.javaClass.extractVersion()
-
     companion object {
         private val log: Logger = LoggerFactory.getLogger(AnnoRepoClient::class.java)
+        private val oMapper: ObjectMapper = ObjectMapper().registerKotlinModule()
+        private const val PROPERTY_FILE = "annorepo-client.properties"
+
+        private val classVersion: String by lazy {
+            val resourceAsStream = AnnoRepoClient::class.java.getResourceAsStream(PROPERTY_FILE)
+            PropertyResourceBundle(resourceAsStream).getString("version")
+        }
 
         @JvmStatic
         @JvmOverloads
@@ -689,7 +694,6 @@ class AnnoRepoClient @JvmOverloads constructor(
                 null
             }
 
-        private val oMapper: ObjectMapper = ObjectMapper().registerKotlinModule()
     }
 
 }
