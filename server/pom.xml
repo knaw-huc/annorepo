@@ -238,7 +238,10 @@
                                 <exclude>META-INF/LICENSE</exclude>
                                 <exclude>META-INF/NOTICE</exclude>
                                 <exclude>META-INF/versions/*/*.class</exclude>
+                                <exclude>META-INF/maven/*/*/pom.properties</exclude>
+                                <exclude>META-INF/maven/*/*/pom.xml</exclude>
                                 <exclude>about.html</exclude>
+                                <exclude>.placeholder</exclude>
                                 <exclude>module-info.class</exclude>
                             </excludes>
                         </filter>
