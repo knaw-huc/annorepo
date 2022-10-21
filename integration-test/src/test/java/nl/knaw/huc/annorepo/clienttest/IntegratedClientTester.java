@@ -1,5 +1,7 @@
 package nl.knaw.huc.annorepo.clienttest;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.knaw.huc.annorepo.api.AboutInfo;
 import nl.knaw.huc.annorepo.api.RejectedUserEntry;
 import nl.knaw.huc.annorepo.api.UserEntry;
@@ -15,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 import static nl.knaw.huc.annorepo.clienttest.Util.INTEGRATION_TEST;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -98,6 +101,25 @@ public class IntegratedClientTester {
     }
 
     @Nested
+    public class FieldInfoTests {
+        @Test
+        public void testFieldInfo() {
+            String containerName = "volume-1728";
+            client.getFieldInfo(containerName).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    result -> {
+                        Map<String, Integer> fieldInfo = result.getFieldInfo();
+                        doSomethingWith(fieldInfo);
+                        return true;
+                    }
+            );
+        }
+    }
+
+    @Nested
     public class AdminTests {
         @Test
         public void testUserCreateAndDelete() {
@@ -142,7 +164,11 @@ public class IntegratedClientTester {
 
     private void doSomethingWith(Object... objects) {
         for (Object o : objects) {
-            log.info("{}", o);
+            try {
+                log.info("{}", new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(o));
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -150,7 +176,7 @@ public class IntegratedClientTester {
     public void testAbout() {
         var getAboutResult = client.getAbout().orNull();
         AboutInfo aboutInfo = getAboutResult.getAboutInfo();
-        log.info("aboutInfo={}", aboutInfo);
+        doSomethingWith(aboutInfo);
         assertThat(aboutInfo).isNotNull();
         assertThat(aboutInfo.getAppName()).isEqualTo("AnnoRepo");
     }

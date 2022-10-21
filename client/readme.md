@@ -389,6 +389,18 @@ val fieldInfoResult = client.getFieldInfo(containerName)
 **Java**
 
 ```java
+String containerName = "my-container";
+client.getFieldInfo(containerName).fold(
+        (RequestError error) -> {
+            handleError(error);
+            return false;
+        },
+        result -> {
+            Map<String, Integer> fieldInfo = result.getFieldInfo();
+            doSomethingWith(fieldInfo);
+            return true;
+        }
+);
 ```
 
 ## User administration
