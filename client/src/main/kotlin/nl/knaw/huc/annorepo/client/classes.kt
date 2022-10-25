@@ -144,5 +144,5 @@ typealias ResponseHandlerMap<T> = Map<Response.Status, (Response) -> Either<Requ
 
 data class FilterContainerAnnotationsResult(
     val queryId: String,
-    val annotations: Stream<Either<RequestError, Map<String, Any>>>
+    val annotations: Stream<Either<RequestError, String>>
 )

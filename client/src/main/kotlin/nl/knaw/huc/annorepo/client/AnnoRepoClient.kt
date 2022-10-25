@@ -404,7 +404,7 @@ class AnnoRepoClient @JvmOverloads constructor(
     private fun annotationSequence(
         containerName: String,
         queryId: String,
-    ): Sequence<Either<RequestError, Map<String, Any>>> =
+    ): Sequence<Either<RequestError, String>> =
         sequence {
             var page = 0
             var goOn = true
@@ -416,7 +416,10 @@ class AnnoRepoClient @JvmOverloads constructor(
                             false
                         },
                         { result ->
-                            yieldAll(result.annotationPage.items.map { Either.Right(it) })
+                            yieldAll(result.annotationPage.items.map {
+                                val jsonString = oMapper.writeValueAsString(it)
+                                Either.Right(jsonString)
+                            })
                             result.annotationPage.next != null
                         }
                     )

@@ -1,5 +1,6 @@
 package nl.knaw.huc.annorepo.clienttest;
 
+import arrow.core.Either;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.knaw.huc.annorepo.api.AboutInfo;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -99,6 +101,38 @@ public class IntegratedClientJavaTester {
         public void testFailingCreate() {
             AnnoRepoClient client = AnnoRepoClient.create(URI.create("http://nothingtoseehere"));
             assertThat(client).isNull();
+        }
+    }
+
+    @Nested
+    public class SearchTests {
+        @Test
+        public void testFilterContainerAnnotations() {
+            String containerName = "volume-1728";
+            Map<String, Object> query = Map.of("body.type", "Page");
+            client.filterContainerAnnotations(containerName, query).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    result -> {
+                        Stream<Either<RequestError, String>> annotations = result.getAnnotations();
+                        annotations.forEach((a) -> {
+                            a.fold(
+                                    e -> {
+                                        System.out.println(e);
+                                        return false;
+                                    },
+                                    r -> {
+                                        System.out.println(r);
+                                        return true;
+                                    }
+                            );
+                        });
+                        return true;
+                    }
+
+            );
         }
     }
 

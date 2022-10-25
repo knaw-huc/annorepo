@@ -164,7 +164,7 @@ class IntegrationTest {
                     it.annotations.forEach { item ->
                         item.fold(
                             { error: RequestError -> print(error) },
-                            { annotation: Map<String, Any> -> print(annotation) }
+                            { annotation: String -> print(annotation) }
                         )
                     }
                 }
