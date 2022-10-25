@@ -1,3 +1,4 @@
+import arrow.core.Either
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import nl.knaw.huc.annorepo.api.UserEntry
@@ -6,6 +7,7 @@ import nl.knaw.huc.annorepo.client.ARResult.AnnotationFieldInfoResult
 import nl.knaw.huc.annorepo.client.ARResult.UsersResult
 import nl.knaw.huc.annorepo.client.AnnoRepoClient
 import nl.knaw.huc.annorepo.client.AnnoRepoClient.Companion.create
+import nl.knaw.huc.annorepo.client.FilterContainerAnnotationsResult
 import nl.knaw.huc.annorepo.client.RequestError
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
@@ -89,6 +91,33 @@ class IntegratedClientKotlinTester {
     }
 
     @Nested
+    inner class SearchTests {
+        @Test
+        fun testFilterContainerAnnotations() {
+            val containerName = "volume-1728"
+            val query = mapOf("body.type" to "Page")
+            client.filterContainerAnnotations(containerName, query).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    false
+                }
+            ) { (_, annotations): FilterContainerAnnotationsResult ->
+                annotations.forEach { a: Either<RequestError, String> ->
+                    a.fold(
+                        { e: RequestError ->
+                            println(e)
+                        },
+                        { r: String ->
+                            println(r)
+                        }
+                    )
+                }
+                true
+            }
+        }
+    }
+
+    @Nested
     inner class FieldInfoTests {
         @Test
         fun testFieldInfo() {
@@ -97,11 +126,12 @@ class IntegratedClientKotlinTester {
                 { error: RequestError ->
                     handleError(error)
                     false
+                },
+                { (_, fieldInfo): AnnotationFieldInfoResult ->
+                    doSomethingWith(fieldInfo)
+                    true
                 }
-            ) { (_, fieldInfo): AnnotationFieldInfoResult ->
-                doSomethingWith(fieldInfo)
-                true
-            }
+            )
         }
     }
 
@@ -115,11 +145,12 @@ class IntegratedClientKotlinTester {
                 { error: RequestError ->
                     handleError(error)
                     false
+                },
+                { (_, accepted, rejected): AddUsersResult ->
+                    doSomethingWith(accepted, rejected)
+                    true
                 }
-            ) { (_, accepted, rejected): AddUsersResult ->
-                doSomethingWith(accepted, rejected)
-                true
-            }
+            )
             val deletionSuccess: Boolean = client.deleteUser(userName).isRight()
             assertThat(deletionSuccess).isTrue
         }
@@ -130,11 +161,12 @@ class IntegratedClientKotlinTester {
                 { error: RequestError ->
                     handleError(error)
                     false
+                },
+                { (_, userEntries): UsersResult ->
+                    doSomethingWith(userEntries)
+                    true
                 }
-            ) { (_, userEntries): UsersResult ->
-                doSomethingWith(userEntries)
-                true
-            }
+            )
         }
     }
 
