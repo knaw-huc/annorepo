@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import java.net.URI
+import java.util.stream.Stream
 
 class IntegratedClientKotlinTester {
     //    Intentionally not named ClientTest, so mvn test will skip these integration tests
@@ -97,22 +98,44 @@ class IntegratedClientKotlinTester {
             val containerName = "volume-1728"
             val query = mapOf("body.type" to "Page")
             client.filterContainerAnnotations(containerName, query).fold(
-                { error: RequestError ->
-                    handleError(error)
-                    false
+                { error: RequestError -> handleError(error) },
+                { (searchId, annotations): FilterContainerAnnotationsResult ->
+                    annotations.forEach { a: Either<RequestError, String> ->
+                        a.fold(
+                            { e: RequestError -> handleError(e) },
+                            { jsonString: String -> doSomethingWith(searchId, jsonString) }
+                        )
+                    }
                 }
-            ) { (_, annotations): FilterContainerAnnotationsResult ->
-                annotations.forEach { a: Either<RequestError, String> ->
-                    a.fold(
-                        { e: RequestError ->
-                            println(e)
-                        },
-                        { r: String ->
-                            println(r)
-                        }
-                    )
+            )
+        }
+
+        @Test
+        fun testFilterContainerAnnotations2() {
+            val containerName = "volume-1728"
+            val query = mapOf("body.type" to "Page")
+
+            val e: Either<RequestError, List<String>> =
+                client.filterContainerAnnotations2(containerName, query).flatten()
+            when (e) {
+                is Either.Left -> println(e.value)
+                is Either.Right -> println(e.value.size)
+            }
+        }
+
+        private fun Stream<Either<RequestError, String>>.flatten(): Either<RequestError, List<String>> {
+            val list: MutableList<String> = mutableListOf()
+            var error: RequestError? = null
+            forEach { e ->
+                when (e) {
+                    is Either.Left -> error = e.value
+                    is Either.Right -> list.add(e.value)
                 }
-                true
+            }
+            return if (error == null) {
+                Either.Right(list.toList())
+            } else {
+                Either.Left(error!!)
             }
         }
     }
@@ -125,11 +148,9 @@ class IntegratedClientKotlinTester {
             client.getFieldInfo(containerName).fold(
                 { error: RequestError ->
                     handleError(error)
-                    false
                 },
                 { (_, fieldInfo): AnnotationFieldInfoResult ->
                     doSomethingWith(fieldInfo)
-                    true
                 }
             )
         }

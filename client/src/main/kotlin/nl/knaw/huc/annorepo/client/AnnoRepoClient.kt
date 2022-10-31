@@ -50,6 +50,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.util.*
+import java.util.stream.Stream
 import javax.ws.rs.client.ClientBuilder
 import javax.ws.rs.client.Entity
 import javax.ws.rs.client.Invocation
@@ -400,6 +401,25 @@ class AnnoRepoClient @JvmOverloads constructor(
                     )
                 )
             }
+
+    /**
+     * Create query
+     *
+     * @param containerName
+     * @param query
+     * @return
+     */
+    fun filterContainerAnnotations2(
+        containerName: String, query: Map<String, Any>,
+    ): Stream<Either<RequestError, String>> {
+        return createSearch(containerName, query).fold(
+            { e -> Stream.of(Either.Left(e)) },
+            { createSearchResult ->
+                val queryId = createSearchResult.queryId
+                annotationSequence(containerName, queryId).asStream()
+            }
+        )
+    }
 
     private fun annotationSequence(
         containerName: String,
