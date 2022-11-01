@@ -3,9 +3,7 @@ package nl.knaw.huc.annorepo.clienttest;
 import arrow.core.Either;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import nl.knaw.huc.annorepo.api.AboutInfo;
-import nl.knaw.huc.annorepo.api.RejectedUserEntry;
-import nl.knaw.huc.annorepo.api.UserEntry;
+import nl.knaw.huc.annorepo.api.*;
 import nl.knaw.huc.annorepo.client.ARResult;
 import nl.knaw.huc.annorepo.client.AnnoRepoClient;
 import nl.knaw.huc.annorepo.client.RequestError;
@@ -18,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -105,7 +104,103 @@ public class IntegratedClientJavaTester {
     }
 
     @Nested
+    public class ContainerTests {
+        @Test
+        public void testCreateContainer() {
+            String preferredName = "my-container";
+            String label = "A container for all my annotations";
+            Boolean success = client.createContainer(preferredName, label).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    (ARResult.CreateContainerResult result) -> {
+                        String containerName = result.getContainerName();
+                        URI location = result.getLocation();
+                        String eTag = result.getETag();
+                        doSomethingWith(containerName, location, eTag);
+                        return true;
+                    }
+            );
+            assertThat(success).isTrue();
+        }
+    }
+
+    @Nested
     public class SearchTests {
+
+        @Test
+        public void testCreateSearch() {
+            String containerName = "volume-1728";
+            Map<String, Object> query = Map.of("body.type", "Page");
+            Boolean success = client.createSearch(containerName, query).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    (ARResult.CreateSearchResult result) -> {
+                        URI location = result.getLocation();
+                        String queryId = result.getQueryId();
+                        doSomethingWith(location, queryId);
+                        return true;
+                    }
+            );
+            assertThat(success).isTrue();
+        }
+
+        @Test
+        public void testGetSearchResultPage() {
+            String containerName = "volume-1728";
+            Map<String, Object> query = Map.of("body.type", "Page");
+            Optional<String> optionalQueryId = client.createSearch(containerName, query).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return Optional.empty();
+                    },
+                    (ARResult.CreateSearchResult result) -> Optional.of(result.getQueryId())
+            );
+            optionalQueryId.ifPresent(queryId -> {
+                client.getSearchResultPage(containerName, queryId, 0).fold(
+                        (RequestError error) -> {
+                            handleError(error);
+                            return false;
+                        },
+                        result -> {
+                            AnnotationPage annotationPage = result.getAnnotationPage();
+                            doSomethingWith(annotationPage);
+                            return true;
+                        }
+                );
+            });
+        }
+
+        @Test
+        public void testGetSearchInfo() {
+            String containerName = "volume-1728";
+            Map<String, Object> query = Map.of("body.type", "Page");
+            Optional<String> optionalQueryId = client.createSearch(containerName, query).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return Optional.empty();
+                    },
+                    (ARResult.CreateSearchResult result) -> Optional.of(result.getQueryId())
+            );
+            optionalQueryId.ifPresent(queryId -> {
+                Boolean success = client.getSearchInfo(containerName, queryId).fold(
+                        (RequestError error) -> {
+                            handleError(error);
+                            return false;
+                        },
+                        result -> {
+                            SearchInfo searchInfo = result.getSearchInfo();
+                            doSomethingWith(searchInfo);
+                            return true;
+                        }
+                );
+                assertThat(success).isTrue();
+            });
+        }
+
         @Test
         public void testFilterContainerAnnotations() {
             String containerName = "volume-1728";
@@ -133,6 +228,75 @@ public class IntegratedClientJavaTester {
                     }
 
             );
+        }
+    }
+
+    @Nested
+    public class IndexTests {
+        @Test
+        public void testIndexCreation() {
+            String containerName = "volume-1728";
+            String fieldName = "body.type";
+            IndexType indexType = IndexType.HASHED;
+            Boolean success = client.addIndex(containerName, fieldName, indexType).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    result -> true
+            );
+            assertThat(success).isTrue();
+        }
+
+        @Test
+        public void testGetIndex() {
+            String containerName = "volume-1728";
+            String fieldName = "body.type";
+            IndexType indexType = IndexType.HASHED;
+            Boolean success = client.getIndex(containerName, fieldName, indexType).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    (ARResult.GetIndexResult result) -> {
+                        IndexConfig indexConfig = result.getIndexConfig();
+                        doSomethingWith(indexConfig);
+                        return true;
+                    }
+            );
+            assertThat(success).isTrue();
+        }
+
+        @Test
+        public void testListIndexes() {
+            String containerName = "volume-1728";
+            Boolean success = client.listIndexes(containerName).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    (ARResult.ListIndexesResult result) -> {
+                        List<IndexConfig> indexes = result.getIndexes();
+                        doSomethingWith(indexes);
+                        return true;
+                    }
+            );
+            assertThat(success).isTrue();
+        }
+
+        @Test
+        public void testDeleteIndex() {
+            String containerName = "volume-1728";
+            String fieldName = "body.type";
+            IndexType indexType = IndexType.HASHED;
+            Boolean success = client.deleteIndex(containerName, fieldName, indexType).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    (ARResult.DeleteIndexResult result) -> true
+            );
+            assertThat(success).isTrue();
         }
     }
 

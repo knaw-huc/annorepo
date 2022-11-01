@@ -1,9 +1,14 @@
 import arrow.core.Either
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
+import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.UserEntry
+import nl.knaw.huc.annorepo.client.ARResult.AddIndexResult
 import nl.knaw.huc.annorepo.client.ARResult.AddUsersResult
 import nl.knaw.huc.annorepo.client.ARResult.AnnotationFieldInfoResult
+import nl.knaw.huc.annorepo.client.ARResult.DeleteIndexResult
+import nl.knaw.huc.annorepo.client.ARResult.GetIndexResult
+import nl.knaw.huc.annorepo.client.ARResult.ListIndexesResult
 import nl.knaw.huc.annorepo.client.ARResult.UsersResult
 import nl.knaw.huc.annorepo.client.AnnoRepoClient
 import nl.knaw.huc.annorepo.client.AnnoRepoClient.Companion.create
@@ -141,17 +146,78 @@ class IntegratedClientKotlinTester {
     }
 
     @Nested
+    inner class IndexTests {
+        @Test
+        fun testIndexCreation() {
+            val containerName = "volume-1728"
+            val fieldName = "body.type"
+            val indexType = IndexType.HASHED
+            val success = client.addIndex(containerName, fieldName, indexType).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    false
+                },
+                { result: AddIndexResult -> true }
+            )
+            assertThat(success).isTrue
+        }
+
+        @Test
+        fun testGetIndex() {
+            val containerName = "volume-1728"
+            val fieldName = "body.type"
+            val indexType = IndexType.HASHED
+            val success = client.getIndex(containerName, fieldName, indexType).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    false
+                }, { (_, indexConfig): GetIndexResult ->
+                    doSomethingWith(indexConfig)
+                    true
+                }
+            )
+            assertThat(success).isTrue
+        }
+
+        @Test
+        fun testListIndexes() {
+            val containerName = "volume-1728"
+            val success = client.listIndexes(containerName).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    false
+                }, { (_, indexes): ListIndexesResult ->
+                    doSomethingWith(indexes)
+                    true
+                }
+            )
+            assertThat(success).isTrue
+        }
+
+        @Test
+        fun testDeleteIndex() {
+            val containerName = "volume-1728"
+            val fieldName = "body.type"
+            val indexType = IndexType.HASHED
+            val success = client.deleteIndex(containerName, fieldName, indexType).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    false
+                },
+                { result: DeleteIndexResult -> true }
+            )
+            assertThat(success).isTrue
+        }
+    }
+
+    @Nested
     inner class FieldInfoTests {
         @Test
         fun testFieldInfo() {
             val containerName = "volume-1728"
             client.getFieldInfo(containerName).fold(
-                { error: RequestError ->
-                    handleError(error)
-                },
-                { (_, fieldInfo): AnnotationFieldInfoResult ->
-                    doSomethingWith(fieldInfo)
-                }
+                { error: RequestError -> handleError(error) },
+                { (_, fieldInfo): AnnotationFieldInfoResult -> doSomethingWith(fieldInfo) }
             )
         }
     }

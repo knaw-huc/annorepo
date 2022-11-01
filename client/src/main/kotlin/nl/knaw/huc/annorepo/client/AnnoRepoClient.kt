@@ -112,12 +112,13 @@ class AnnoRepoClient @JvmOverloads constructor(
     /**
      * Create an annotation container
      *
-     * @param preferredName
-     * @param label
+     * @param preferredName the preferred name of the container. May be overridden by the server
+     * @param label a short, human-readable description of this container
      * @return
      */
     fun createContainer(
-        preferredName: String? = null, label: String = "A container for web annotations",
+        preferredName: String? = null,
+        label: String = "A container for web annotations",
     ): Either<RequestError, CreateContainerResult> {
         var request = webTarget.path(W3C).request()
         if (preferredName != null) {
@@ -495,7 +496,7 @@ class AnnoRepoClient @JvmOverloads constructor(
         request = webTarget.path(SERVICES).path(containerName).path(INDEXES).request(),
         responseHandlers = mapOf(Response.Status.OK to { response ->
             val jsonString = response.readEntityAsJsonString()
-            val indexes: List<Map<String, Any>> = oMapper.readValue(jsonString)
+            val indexes: List<IndexConfig> = oMapper.readValue(jsonString)
             Either.Right(
                 ListIndexesResult(
                     response = response, indexes = indexes

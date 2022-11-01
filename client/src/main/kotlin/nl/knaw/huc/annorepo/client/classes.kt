@@ -17,24 +17,33 @@ sealed class ARResult {
 
     data class GetAboutResult(
         override val response: Response,
-        val aboutInfo: AboutInfo
+        val aboutInfo: AboutInfo,
     ) : ARResult()
 
+    /**
+     * Result of a successful call to [nl.knaw.huc.annorepo.client.AnnoRepoClient#createContainer(String,String)]
+     *
+     * @property response
+     * @property location The URI of the created container.
+     * @property containerName The name given to this container.
+     * @property eTag The eTag of the container; required when calling {@link nl.knaw.huc.annorepo.client.AnnoRepoClient#deleteContainer(String,String) AnnoRepoClient.deleteContainer()}
+     * @constructor Create empty Create container result
+     */
     data class CreateContainerResult(
         override val response: Response,
         val location: URI,
         val containerName: String,
-        val eTag: String
+        val eTag: String,
     ) : ARResult()
 
     data class GetContainerResult(
         override val response: Response,
-        val eTag: String
+        val eTag: String,
     ) : ARResult()
 
     data class GetContainerMetadataResult(
         override val response: Response,
-        val metadata: Map<String, Any>
+        val metadata: Map<String, Any>,
     ) : ARResult()
 
     data class DeleteContainerResult(
@@ -46,13 +55,13 @@ sealed class ARResult {
         val location: URI,
         val containerName: String,
         val annotationName: String,
-        val eTag: String
+        val eTag: String,
     ) : ARResult()
 
     data class GetAnnotationResult(
         override val response: Response,
         val eTag: String,
-        val annotation: Map<String, Any>
+        val annotation: Map<String, Any>,
     ) : ARResult()
 
     data class DeleteAnnotationResult(
@@ -61,28 +70,28 @@ sealed class ARResult {
 
     data class AnnotationFieldInfoResult(
         override val response: Response,
-        val fieldInfo: Map<String, Int>
+        val fieldInfo: Map<String, Int>,
     ) : ARResult()
 
     data class BatchUploadResult(
         override val response: Response,
-        val annotationData: List<AnnotationIdentifier>
+        val annotationData: List<AnnotationIdentifier>,
     ) : ARResult()
 
     data class CreateSearchResult(
         override val response: Response,
         val location: URI,
-        val queryId: String
+        val queryId: String,
     ) : ARResult()
 
     data class GetSearchInfoResult(
         override val response: Response,
-        val searchInfo: SearchInfo
+        val searchInfo: SearchInfo,
     ) : ARResult()
 
     data class GetSearchResultPageResult(
         override val response: Response,
-        val annotationPage: AnnotationPage
+        val annotationPage: AnnotationPage,
     ) : ARResult()
 
     data class AddIndexResult(
@@ -91,12 +100,12 @@ sealed class ARResult {
 
     data class GetIndexResult(
         override val response: Response,
-        val indexConfig: IndexConfig
+        val indexConfig: IndexConfig,
     ) : ARResult()
 
     data class ListIndexesResult(
         override val response: Response,
-        val indexes: List<Map<String, Any>>
+        val indexes: List<IndexConfig>,
     ) : ARResult()
 
     data class DeleteIndexResult(
@@ -106,7 +115,7 @@ sealed class ARResult {
     data class AddUsersResult(
         override val response: Response,
         val accepted: List<String>,
-        val rejected: List<RejectedUserEntry>
+        val rejected: List<RejectedUserEntry>,
     ) : ARResult()
 
     data class UsersResult(
@@ -126,17 +135,17 @@ sealed class RequestError {
     data class NotAuthorized(
         override val message: String,
         val response: Response,
-        val responseString: String
+        val responseString: String,
     ) : RequestError()
 
     data class UnexpectedResponse(
         override val message: String,
         val response: Response,
-        val responseString: String
+        val responseString: String,
     ) : RequestError()
 
     data class ConnectionError(
-        override val message: String
+        override val message: String,
     ) : RequestError()
 }
 
@@ -144,5 +153,5 @@ typealias ResponseHandlerMap<T> = Map<Response.Status, (Response) -> Either<Requ
 
 data class FilterContainerAnnotationsResult(
     val queryId: String,
-    val annotations: Stream<Either<RequestError, String>>
+    val annotations: Stream<Either<RequestError, String>>,
 )

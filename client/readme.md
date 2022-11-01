@@ -136,7 +136,21 @@ val result = client.createContainer(preferredName, label)
 **Java**
 
 ```java
-Either<RequestError, CreateContainerResult> result = client.createContainer(preferredName,label);
+String preferredName = "my-container";
+String label = "A container for all my annotations";
+Boolean success = client.createContainer(preferredName, label).fold(
+    (RequestError error) -> {
+        handleError(error);
+        return false;
+    },
+    (ARResult.CreateContainerResult result) -> {
+        String containerName = result.getContainerName();
+        URI location = result.getLocation();
+        String eTag = result.getETag();
+        doSomethingWith(containerName, location, eTag);
+        return true;
+    }
+);
 ```
 
 On a succeeding call, the CreateContainerResult contains:
@@ -249,6 +263,20 @@ val createSearchResult = this.createSearch(containerName = containerName, query 
 **Java**
 
 ```java
+String containerName = "volume-1728";
+Map<String, Object> query = Map.of("body.type", "Page");
+Boolean success = client.createSearch(containerName, query).fold(
+        (RequestError error) -> {
+            handleError(error);
+            return false;
+        },
+        (ARResult.CreateSearchResult result) -> {
+            URI location = result.getLocation();
+            String queryId = result.getQueryId();
+            doSomethingWith(location, queryId);
+            return true;
+        }
+);
 ```
 
 ### Retrieving a result page
@@ -266,6 +294,28 @@ val resultPageResult = this.getSearchResultPage(
 **Java**
 
 ```java
+String containerName = "volume-1728";
+Map<String, Object> query = Map.of("body.type", "Page");
+Optional<String> optionalQueryId = client.createSearch(containerName, query).fold(
+        (RequestError error) -> {
+            handleError(error);
+            return Optional.empty();
+        },
+        (ARResult.CreateSearchResult result) -> Optional.of(result.getQueryId())
+);
+optionalQueryId.ifPresent(queryId -> {
+    client.getSearchResultPage(containerName, queryId, 0).fold(
+            (RequestError error) -> {
+                handleError(error);
+                return false;
+            },
+            result -> {
+                AnnotationPage annotationPage = result.getAnnotationPage();
+                doSomethingWith(annotationPage);
+                return true;
+            }
+    );
+});
 ```
 
 ### Filtering Container Annotations
@@ -323,6 +373,28 @@ val getSearchInfoResult = this.getSearchInfo(
 **Java**
 
 ```java
+String containerName = "volume-1728";
+Map<String, Object> query = Map.of("body.type", "Page");
+Optional<String> optionalQueryId = client.createSearch(containerName, query).fold(
+        (RequestError error) -> {
+            handleError(error);
+            return Optional.empty();
+        },
+        (ARResult.CreateSearchResult result) -> Optional.of(result.getQueryId())
+);
+optionalQueryId.ifPresent(queryId -> {
+    Boolean success = client.getSearchInfo(containerName, queryId).fold(
+            (RequestError error) -> {
+                handleError(error);
+                return false;
+            },
+            result -> {
+                SearchInfo searchInfo = result.getSearchInfo();
+                doSomethingWith(searchInfo);
+                return true;
+            }
+    );
+});
 ```
 
 ## Indexes
@@ -332,12 +404,31 @@ val getSearchInfoResult = this.getSearchInfo(
 **Kotlin:**
 
 ```kotlin
-val addIndexResult = this.addIndex(containerName, fieldName, indexType)
+val containerName = "volume-1728"
+val fieldName = "body.type"
+val indexType = IndexType.HASHED
+val success = client.addIndex(containerName, fieldName, indexType).fold(
+    { error: RequestError ->
+        handleError(error)
+        false
+    },
+    { result: AddIndexResult -> true }
+)
 ```
 
 **Java**
 
 ```java
+String containerName = "volume-1728";
+String fieldName = "body.type";
+IndexType indexType = IndexType.HASHED;
+client.addIndex(containerName, fieldName, indexType).fold(
+        (RequestError error) -> {
+            handleError(error);
+            return false;
+        },
+        result -> true
+);
 ```
 
 ### Retrieving index information
@@ -345,11 +436,37 @@ val addIndexResult = this.addIndex(containerName, fieldName, indexType)
 **Kotlin:**
 
 ```kotlin
+val containerName = "volume-1728"
+val fieldName = "body.type"
+val indexType = IndexType.HASHED
+val success = client.getIndex(containerName, fieldName, indexType).fold(
+    { error: RequestError ->
+        handleError(error)
+        false
+    }, { (_, indexConfig): GetIndexResult ->
+        doSomethingWith(indexConfig)
+        true
+    }
+)
 ```
 
 **Java**
 
 ```java
+String containerName = "volume-1728";
+String fieldName = "body.type";
+IndexType indexType = IndexType.HASHED;
+Boolean success = client.getIndex(containerName, fieldName, indexType).fold(
+        (RequestError error) -> {
+            handleError(error);
+            return false;
+        },
+        (ARResult.GetIndexResult result) -> {
+            IndexConfig indexConfig = result.getIndexConfig();
+            doSomethingWith(indexConfig);
+            return true;
+        }
+);
 ```
 
 ### Listing all indexes for a container
@@ -357,12 +474,33 @@ val addIndexResult = this.addIndex(containerName, fieldName, indexType)
 **Kotlin:**
 
 ```kotlin
-val listIndexResult = this.listIndexes(containerName)
+val containerName = "volume-1728"
+val success = client.listIndexes(containerName).fold(
+    { error: RequestError ->
+        handleError(error)
+        false
+    }, { (_, indexes): ListIndexesResult ->
+        doSomethingWith(indexes)
+        true
+    }
+)
 ```
 
 **Java**
 
 ```java
+String containerName = "volume-1728";
+Boolean success = client.listIndexes(containerName).fold(
+        (RequestError error) -> {
+            handleError(error);
+            return false;
+        },
+        (ARResult.ListIndexesResult result) -> {
+            List<IndexConfig> indexes = result.getIndexes();
+            doSomethingWith(indexes);
+            return true;
+        }
+);
 ```
 
 ### Deleting an index
@@ -370,12 +508,31 @@ val listIndexResult = this.listIndexes(containerName)
 **Kotlin:**
 
 ```kotlin
-val deleteIndexResult = this.deleteIndex(containerName, fieldName, indexType)
+val containerName = "volume-1728"
+val fieldName = "body.type"
+val indexType = IndexType.HASHED
+val success = client.deleteIndex(containerName, fieldName, indexType).fold(
+    { error: RequestError ->
+        handleError(error)
+        false
+    },
+    { result: DeleteIndexResult -> true }
+)
 ```
 
 **Java**
 
 ```java
+String containerName = "volume-1728";
+String fieldName = "body.type";
+IndexType indexType = IndexType.HASHED;
+Boolean success = client.deleteIndex(containerName,fieldName,indexType).fold(
+        (RequestError error) -> {
+            handleError(error);
+            return false;
+        },
+        (ARResult.DeleteIndexResult result) -> true
+);
 ```
 
 ## Retrieving information about the fields used in container annotations
@@ -383,12 +540,26 @@ val deleteIndexResult = this.deleteIndex(containerName, fieldName, indexType)
 **Kotlin:**
 
 ```kotlin
-val fieldInfoResult = client.getFieldInfo(containerName)
+client.getFieldInfo(containerName).fold(
+    { error: RequestError -> handleError(error) },
+    { (_, fieldInfo): AnnotationFieldInfoResult -> doSomethingWith(fieldInfo) }
+)
 ```
 
 **Java**
 
 ```java
+client.getFieldInfo(containerName).fold(
+        (RequestError error) -> {
+            handleError(error);
+            return false;
+        },
+        result -> {
+            Map<String, Integer> fieldInfo = result.getFieldInfo();
+            doSomethingWith(fieldInfo);
+            return true;
+        }
+);
 ```
 
 ## User administration
