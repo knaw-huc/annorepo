@@ -1,3 +1,4 @@
+
 import arrow.core.Either
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -14,12 +15,12 @@ import nl.knaw.huc.annorepo.client.AnnoRepoClient
 import nl.knaw.huc.annorepo.client.AnnoRepoClient.Companion.create
 import nl.knaw.huc.annorepo.client.FilterContainerAnnotationsResult
 import nl.knaw.huc.annorepo.client.RequestError
+import nl.knaw.huc.annorepo.client.untangled
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import java.net.URI
-import java.util.stream.Stream
 
 class IntegratedClientKotlinTester {
     //    Intentionally not named ClientTest, so mvn test will skip these integration tests
@@ -121,28 +122,13 @@ class IntegratedClientKotlinTester {
             val query = mapOf("body.type" to "Page")
 
             val e: Either<RequestError, List<String>> =
-                client.filterContainerAnnotations2(containerName, query).flatten()
+                client.filterContainerAnnotations2(containerName, query).untangled()
             when (e) {
                 is Either.Left -> println(e.value)
                 is Either.Right -> println(e.value.size)
             }
         }
 
-        private fun Stream<Either<RequestError, String>>.flatten(): Either<RequestError, List<String>> {
-            val list: MutableList<String> = mutableListOf()
-            var error: RequestError? = null
-            forEach { e ->
-                when (e) {
-                    is Either.Left -> error = e.value
-                    is Either.Right -> list.add(e.value)
-                }
-            }
-            return if (error == null) {
-                Either.Right(list.toList())
-            } else {
-                Either.Left(error!!)
-            }
-        }
     }
 
     @Nested

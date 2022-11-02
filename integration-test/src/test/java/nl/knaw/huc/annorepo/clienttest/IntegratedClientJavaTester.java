@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.core.EntityTag;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
@@ -123,6 +124,27 @@ public class IntegratedClientJavaTester {
                     }
             );
             assertThat(success).isTrue();
+        }
+
+        @Test
+        public void testGetContainer() {
+            Either<RequestError, Boolean> either = client.createContainer()
+                    .map(
+                            (ARResult.CreateContainerResult result) -> {
+                                String containerName = result.getContainerName();
+                                client.getContainer(containerName).map(
+                                        (ARResult.GetContainerResult result2) -> {
+                                            String eTag1 = result2.getETag();
+                                            String entity = result2.getEntity();
+                                            EntityTag entityTag = result2.getResponse().getEntityTag();
+                                            doSomethingWith(eTag1, entity, entityTag);
+                                            return true;
+                                        }
+                                );
+                                return true;
+                            }
+                    );
+            assertThat(either).isInstanceOf(Either.Right.class);
         }
     }
 

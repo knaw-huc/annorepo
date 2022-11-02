@@ -50,7 +50,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.util.*
-import java.util.stream.Stream
 import javax.ws.rs.client.ClientBuilder
 import javax.ws.rs.client.Entity
 import javax.ws.rs.client.Invocation
@@ -116,6 +115,7 @@ class AnnoRepoClient @JvmOverloads constructor(
      * @param label a short, human-readable description of this container
      * @return
      */
+    @JvmOverloads
     fun createContainer(
         preferredName: String? = null,
         label: String = "A container for web annotations",
@@ -151,9 +151,12 @@ class AnnoRepoClient @JvmOverloads constructor(
     ): Either<RequestError, GetContainerResult> = doGet(
         request = webTarget.path(W3C).path(containerName).request(),
         responseHandlers = mapOf(Response.Status.OK to { response ->
+            val json = response.readEntityAsJsonString()
             Either.Right(
                 GetContainerResult(
-                    response = response, eTag = response.entityTag.value
+                    response = response,
+                    eTag = response.eTag().toString(),
+                    entity = json
                 )
             )
         })
@@ -412,15 +415,14 @@ class AnnoRepoClient @JvmOverloads constructor(
      */
     fun filterContainerAnnotations2(
         containerName: String, query: Map<String, Any>,
-    ): Stream<Either<RequestError, String>> {
-        return createSearch(containerName, query).fold(
-            { e -> Stream.of(Either.Left(e)) },
+    ): Sequence<Either<RequestError, String>> =
+        createSearch(containerName, query).fold(
+            { e -> sequenceOf(Either.Left(e)) },
             { createSearchResult ->
                 val queryId = createSearchResult.queryId
-                annotationSequence(containerName, queryId).asStream()
+                annotationSequence(containerName, queryId)
             }
         )
-    }
 
     private fun annotationSequence(
         containerName: String,

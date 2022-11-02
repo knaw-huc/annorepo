@@ -61,12 +61,12 @@ docker-image: .make/.docker
 .PHONY: push
 push:   .make/.push-server .make/.push-updater
 
-.PHONY:clean
+.PHONY: clean
 clean:
 	rm -rf .make
 	mvn clean
 
-.PHONY:version-update
+.PHONY: version-update
 version-update:
 	mvn versions:set && mvn versions:commit && find . -name dependency-reduced-pom.xml -delete
 	make client/readme.md
