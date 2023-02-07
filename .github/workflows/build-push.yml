@@ -13,8 +13,8 @@ env:
   REGISTRY_FQDN: ghcr.io
   REGISTRY_USERNAME: ${{ github.actor }}
   REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-  IMAGE_NAME: ${{ github.repository }}
-  IMAGE_FILE: ./Dockerfile
+  IMAGE_NAME: annorepo
+  IMAGE_FILE: k8s/annorepo-server/Dockerfile-multistage
 
 jobs:
   build-and-push-image:
