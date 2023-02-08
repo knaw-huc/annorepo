@@ -7,5 +7,14 @@
       "name": "AnnoRepo API Usage",
       "url": "https://knaw-huc.github.io/annorepo/docs/api-usage.html"
     }
-  ]
+  ],
+  "funding": {
+      "@type": "Grant",
+      "name": "CLARIAH-PLUS (NWO grant 184.034.023)",
+      "funder": {
+          "@type": "Organization",
+          "name": "NWO", 
+          "url": "https://www.nwo.nl"
+      }
+  }
 }
