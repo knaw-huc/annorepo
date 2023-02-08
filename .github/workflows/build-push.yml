@@ -15,6 +15,8 @@ env:
   REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
   IMAGE_NAME: annorepo
   IMAGE_FILE: k8s/annorepo-server/Dockerfile-multistage
+  IMAGE_NAME2: annorepo-updater
+  IMAGE_FILE2: k8s/updater/Dockerfile
 
 jobs:
   build-and-push-image:
@@ -34,16 +36,30 @@ jobs:
           username: ${{ env.REGISTRY_USERNAME }}
           password: ${{ env.REGISTRY_PASSWORD }}
 
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
+      - name: Extract metadata (tags, labels) for Docker (server)
+        id: meta-server
         uses: docker/metadata-action@v4.1.1
         with:
           images: ${{ env.REGISTRY_FQDN }}/${{ env.IMAGE_NAME }}
 
-      - name: Build and push Docker image
+      - name: Build and push Docker image (server)
         uses: docker/build-push-action@v3.2.0
         with:
           file: ${{ env.IMAGE_FILE }}
           labels: ${{ steps.meta.outputs.labels }}
-          push: true
           tags: ${{ steps.meta.outputs.tags }}
+          push: true
+
+      - name: Extract metadata (tags, labels) for Docker (updater)
+        id: meta-updater
+        uses: docker/metadata-action@v4.1.1
+        with:
+          images: ${{ env.REGISTRY_FQDN }}/${{ env.IMAGE_NAME2 }}
+
+      - name: Build and push Docker image (updater) 
+        uses: docker/build-push-action@v3.2.0
+        with:
+          file: ${{ env.IMAGE_FILE2 }}
+          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta.outputs.tags }}
+          push: true
