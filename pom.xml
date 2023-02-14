@@ -24,7 +24,7 @@
         <!-- Timestamp settings for use in properties file -->
         <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ss'Z'</maven.build.timestamp.format>
 
-        <kotlin.version>1.7.20</kotlin.version>
+        <kotlin.version>1.8.0</kotlin.version>
         <java.version>17</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
@@ -56,6 +56,8 @@
         <mongodb.version>4.7.1</mongodb.version>
         <mordant.version>2.0.0-beta2</mordant.version>
         <problem.version>0.27.1</problem.version>
+        <slf4j.version>2.0.3</slf4j.version>
+        <log4j.version>1.2.17</log4j.version>
         <swagger-annotations.version>1.6.6</swagger-annotations.version>
         <titanium-json-ld.version>1.3.1</titanium-json-ld.version>
         <wagon-ssh.version>3.4.3</wagon-ssh.version>
