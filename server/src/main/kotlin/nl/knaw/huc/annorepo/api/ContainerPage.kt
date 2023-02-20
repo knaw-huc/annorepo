@@ -3,8 +3,6 @@ package nl.knaw.huc.annorepo.api
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonPropertyOrder
-import nl.knaw.huc.annorepo.api.ARConst.ANNO_JSONLD_URL
-import nl.knaw.huc.annorepo.api.ARConst.LDP_JSONLD_URL
 
 @JsonPropertyOrder("@context", "id", "type", "total", "label", "modified", "first", "last")
 @JsonInclude(JsonInclude.Include.NON_NULL)

@@ -8,10 +8,10 @@ import com.mongodb.client.model.Filters.eq
 import com.mongodb.client.model.ReplaceOptions
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
-import nl.knaw.huc.annorepo.api.ARConst.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
@@ -73,7 +73,7 @@ class W3CResource(
     fun createContainer(
         containerSpecs: ContainerSpecs,
         @HeaderParam("slug") slug: String?,
-        @Context context: SecurityContext
+        @Context context: SecurityContext,
     ): Response {
         log.debug("$containerSpecs")
         var containerName = slug ?: UUID.randomUUID().toString()
@@ -104,7 +104,7 @@ class W3CResource(
     fun readContainer(
         @PathParam("containerName") containerName: String,
         @QueryParam("page") page: Int? = null,
-        @Context context: SecurityContext
+        @Context context: SecurityContext,
     ): Response {
         log.debug("read Container $containerName, page $page")
         val containerPage = getContainerPage(containerName, page ?: 0, configuration.pageSize)
@@ -138,7 +138,7 @@ class W3CResource(
     fun deleteContainer(
         @PathParam("containerName") containerName: String,
         @Context req: Request,
-        @Context context: SecurityContext
+        @Context context: SecurityContext,
     ): Response {
         val eTag = makeContainerETag(containerName)
         val valid = req.evaluatePreconditions(eTag)
@@ -183,7 +183,7 @@ class W3CResource(
         @HeaderParam("slug") slug: String?,
         @PathParam("containerName") containerName: String,
         annotationJson: String,
-        @Context context: SecurityContext
+        @Context context: SecurityContext,
     ): Response {
 //        log.debug("annotation=\n$annotationJson")
         var name = slug ?: UUID.randomUUID().toString()
@@ -231,7 +231,7 @@ class W3CResource(
     fun readAnnotation(
         @PathParam("containerName") containerName: String,
         @PathParam("annotationName") annotationName: String,
-        @Context context: SecurityContext
+        @Context context: SecurityContext,
     ): Response {
         log.debug("read annotation $annotationName in container $containerName")
         val container = mdb.getCollection(containerName)
@@ -270,7 +270,7 @@ class W3CResource(
         @PathParam("annotationName") annotationName: String,
         @Context req: Request,
         @Context context: SecurityContext,
-        annotationJson: String
+        annotationJson: String,
     ): Response {
         log.debug("annotation=\n$annotationJson")
         val eTag = makeAnnotationETag(containerName, annotationName)
@@ -317,7 +317,7 @@ class W3CResource(
         @PathParam("containerName") containerName: String,
         @PathParam("annotationName") annotationName: String,
         @Context req: Request,
-        @Context context: SecurityContext
+        @Context context: SecurityContext,
     ): Response {
         log.debug("delete annotation $annotationName in container $containerName")
         val eTag = makeAnnotationETag(containerName, annotationName)
@@ -347,7 +347,7 @@ class W3CResource(
     }
 
     private fun AnnotationData.contentWithAssignedId(
-        containerName: String, annotationName: String
+        containerName: String, annotationName: String,
     ): Any? {
         val assignedId = uriFactory.annotationURL(containerName, annotationName)
         var jo = JSON.parse(content)

@@ -4,12 +4,12 @@ import java.net.URI
 
 data class RejectedUserEntry(
     val userEntry: Map<String, String>,
-    val reason: String
+    val reason: String,
 )
 
 data class UserAddResults(
     val added: List<String>,
-    val rejected: List<RejectedUserEntry>
+    val rejected: List<RejectedUserEntry>,
 )
 
 data class AboutInfo(
@@ -18,27 +18,29 @@ data class AboutInfo(
     val startedAt: String,
     val baseURI: String,
     val withAuthentication: Boolean,
-    val sourceCode: String = "https://github.com/knaw-huc/annorepo"
+    val sourceCode: String = "https://github.com/knaw-huc/annorepo",
 )
 
 data class AnnotationIdentifier(
     val annotationName: String,
     val containerName: String,
-    val eTag: String
+    val eTag: String,
 )
 
 data class IndexConfig(
     val field: String,
     val type: IndexType,
-    val url: URI
+    val url: URI,
 )
 
 data class SearchInfo(
     val query: Map<String, Any>,
-    val hits: Int
+    val hits: Int,
 )
 
 data class UserEntry(
     val userName: String,
     val apiKey: String,
 )
+
+class MissingTargetException : Exception("WebAnnotation must have 1 or more targets")

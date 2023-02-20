@@ -3,9 +3,9 @@ package nl.knaw.huc.annorepo.resources
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
-import nl.knaw.huc.annorepo.api.ARConst.ANNO_JSONLD_URL
-import nl.knaw.huc.annorepo.api.ARConst.LDP_JSONLD_URL
+import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ContainerSpecs
+import nl.knaw.huc.annorepo.api.LDP_JSONLD_URL
 import org.junit.jupiter.api.Test
 
 internal class ContainerSpecsTest {

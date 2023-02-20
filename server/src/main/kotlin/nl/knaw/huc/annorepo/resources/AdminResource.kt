@@ -32,7 +32,7 @@ import javax.ws.rs.core.SecurityContext
 @PermitAll
 @SecurityRequirement(name = SECURITY_SCHEME_NAME)
 class AdminResource(
-    private val userDAO: UserDAO
+    private val userDAO: UserDAO,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -53,7 +53,7 @@ class AdminResource(
     @Consumes(MediaType.APPLICATION_JSON)
     fun addUsers(
         @Context context: SecurityContext,
-        @NotNull body: List<Map<String, String>>
+        @NotNull body: List<Map<String, String>>,
     ): Response {
         assertUserIsRoot(context)
         val correctEntries = mutableListOf<UserEntry>()

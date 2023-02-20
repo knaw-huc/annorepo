@@ -146,6 +146,48 @@ public class IntegratedClientJavaTester {
                     );
             assertThat(either).isInstanceOf(Either.Right.class);
         }
+
+        @Test
+        public void testDeleteContainer() {
+            Either<RequestError, Boolean> either = client.createContainer()
+                    .map(
+                            (ARResult.CreateContainerResult result) -> {
+                                String containerName = result.getContainerName();
+                                String eTag = result.getETag();
+                                client.deleteContainer(containerName, eTag).map(
+                                        (ARResult.DeleteContainerResult result2) -> true
+                                );
+                                return true;
+                            }
+                    );
+            assertThat(either).isInstanceOf(Either.Right.class);
+        }
+    }
+
+    @Nested
+    public class AnnotationTests {
+        @Test
+        public void testCreateAnnotation() {
+            String containerName = "my-container";
+            WebAnnotation annotation = new WebAnnotation.Builder()
+                    .withBody("http://example.org/annotation1")
+                    .withTarget("http://example.org/target")
+                    .build();
+            client.createAnnotation(containerName, annotation).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    (ARResult.CreateAnnotationResult result) -> {
+                        URI location = result.getLocation();
+                        String eTag = result.getETag();
+                        String annotationName = result.getAnnotationName();
+                        doSomethingWith(annotationName, location, eTag);
+                        return true;
+                    }
+            );
+        }
+
     }
 
     @Nested

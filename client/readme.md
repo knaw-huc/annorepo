@@ -156,6 +156,7 @@ On a succeeding call, the CreateContainerResult contains:
 **Java**
 
 ```java
+Either<RequestError, ARResult.GetContainerResult> result = client.getContainer(containerName);
 ```
 
 ### Deleting a container
@@ -168,6 +169,7 @@ On a succeeding call, the CreateContainerResult contains:
 **Java**
 
 ```java
+Either<RequestError, ARResult.DeleteContainerResult> result2 = client.deleteContainer(containerName, eTag);
 ```
 
 ## Annotations

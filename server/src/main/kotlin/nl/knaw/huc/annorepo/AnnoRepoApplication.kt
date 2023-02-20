@@ -31,6 +31,7 @@ import nl.knaw.huc.annorepo.resources.AboutResource
 import nl.knaw.huc.annorepo.resources.AdminResource
 import nl.knaw.huc.annorepo.resources.BatchResource
 import nl.knaw.huc.annorepo.resources.HomePageResource
+import nl.knaw.huc.annorepo.resources.ListResource
 import nl.knaw.huc.annorepo.resources.ServiceResource
 import nl.knaw.huc.annorepo.resources.W3CResource
 import nl.knaw.huc.annorepo.service.LocalDateTimeSerializer
@@ -98,7 +99,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
                     )
                 )
             }
-//            register(ListResource(configuration, mongoClient))
+            register(ListResource(configuration, mongoClient))
 //            register(RuntimeExceptionMapper())
         }
         environment.healthChecks().apply {

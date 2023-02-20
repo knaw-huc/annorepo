@@ -209,7 +209,7 @@ class AnnoRepoClient @JvmOverloads constructor(
      * @return
      */
     fun createAnnotation(
-        containerName: String, annotation: Map<String, Any>,
+        containerName: String, annotation: Any,
     ): Either<RequestError, CreateAnnotationResult> = doPost(
         request = webTarget.path(W3C).path(containerName).request(),
         entity = Entity.json(annotation),
@@ -666,7 +666,7 @@ class AnnoRepoClient @JvmOverloads constructor(
     }
 
     private fun Invocation.Builder.withHeaders(): Invocation.Builder {
-        val libUA = "${AnnoRepoClient::class.java.name}/${classVersion ?: ""}"
+        val libUA = "${AnnoRepoClient::class.java.name}/${classVersion}"
         val ua = if (userAgent == null) {
             libUA
         } else {

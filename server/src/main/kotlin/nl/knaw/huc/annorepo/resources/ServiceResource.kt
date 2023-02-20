@@ -13,6 +13,7 @@ import com.mongodb.client.model.IndexOptions
 import com.mongodb.client.model.Indexes
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
@@ -60,7 +61,7 @@ import javax.ws.rs.core.UriBuilder
 @PermitAll
 @SecurityRequirement(name = SECURITY_SCHEME_NAME)
 class ServiceResource(
-    private val configuration: AnnoRepoConfiguration, client: MongoClient
+    private val configuration: AnnoRepoConfiguration, client: MongoClient,
 ) {
     private val uriFactory = UriFactory(configuration)
     private val mdb = client.getDatabase(configuration.databaseName)
@@ -79,7 +80,7 @@ class ServiceResource(
     fun createSearch(
         @PathParam("containerName") containerName: String,
         queryJson: String,
-        @Context context: SecurityContext
+        @Context context: SecurityContext,
     ): Response {
         checkContainerExists(containerName)
         val queryMap = JSON.parse(queryJson)
@@ -106,7 +107,7 @@ class ServiceResource(
         @PathParam("containerName") containerName: String,
         @PathParam("searchId") searchId: String,
         @QueryParam("page") page: Int = 0,
-        @Context context: SecurityContext
+        @Context context: SecurityContext,
     ): Response {
         checkContainerExists(containerName)
 
@@ -132,7 +133,7 @@ class ServiceResource(
     fun getSearchInfo(
         @PathParam("containerName") containerName: String,
         @PathParam("searchId") searchId: String,
-        @Context context: SecurityContext
+        @Context context: SecurityContext,
     ): Response {
         checkContainerExists(containerName)
         val queryCacheItem = getQueryCacheItem(searchId)
@@ -150,7 +151,7 @@ class ServiceResource(
     @GET
     @Path("{containerName}/$FIELDS")
     fun getAnnotationFieldsForContainer(
-        @PathParam("containerName") containerName: String
+        @PathParam("containerName") containerName: String,
     ): Response {
         checkContainerExists(containerName)
         val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(ARConst.CONTAINER_METADATA_COLLECTION)
@@ -164,7 +165,7 @@ class ServiceResource(
     @GET
     @Path("{containerName}/metadata")
     fun getMetadataForContainer(
-        @PathParam("containerName") containerName: String
+        @PathParam("containerName") containerName: String,
     ): Response {
         checkContainerExists(containerName)
         val container = mdb.getCollection(containerName)
@@ -187,7 +188,7 @@ class ServiceResource(
     @GET
     @Path("{containerName}/indexes")
     fun getContainerIndexes(
-        @PathParam("containerName") containerName: String
+        @PathParam("containerName") containerName: String,
     ): Response {
         checkContainerExists(containerName)
         val container = mdb.getCollection(containerName)
@@ -202,7 +203,7 @@ class ServiceResource(
     fun addContainerIndex(
         @PathParam("containerName") containerName: String,
         @PathParam("fieldName") fieldNameParam: String,
-        @PathParam("indexType") indexTypeParam: String
+        @PathParam("indexType") indexTypeParam: String,
     ): Response {
         checkContainerExists(containerName)
         val container = mdb.getCollection(containerName)
@@ -230,7 +231,7 @@ class ServiceResource(
     fun getContainerIndexDefinition(
         @PathParam("containerName") containerName: String,
         @PathParam("fieldName") fieldName: String,
-        @PathParam("indexType") indexType: String
+        @PathParam("indexType") indexType: String,
     ): Response {
         checkContainerExists(containerName)
         val container = mdb.getCollection(containerName)
@@ -246,7 +247,7 @@ class ServiceResource(
     fun deleteContainerIndex(
         @PathParam("containerName") containerName: String,
         @PathParam("fieldName") fieldName: String,
-        @PathParam("indexType") indexType: String
+        @PathParam("indexType") indexType: String,
     ): Response {
         checkContainerExists(containerName)
         val container = mdb.getCollection(containerName)
@@ -261,7 +262,7 @@ class ServiceResource(
         container: MongoCollection<Document>,
         containerName: String,
         fieldName: String,
-        indexType: String
+        indexType: String,
     ): IndexConfig =
         indexData(container, containerName)
             .firstOrNull { it.field == fieldName && it.type == IndexType.fromString(indexType) }
@@ -300,7 +301,7 @@ class ServiceResource(
         ?: throw NotFoundException("No search results found for this search id. The search might have expired.")
 
     private fun buildAnnotationPage(
-        searchUri: URI, annotations: AnnotationList, page: Int, total: Int
+        searchUri: URI, annotations: AnnotationList, page: Int, total: Int,
     ): AnnotationPage {
         val prevPage = if (page > 0) {
             page - 1
@@ -315,7 +316,7 @@ class ServiceResource(
         }
 
         return AnnotationPage(
-            context = listOf(ARConst.ANNO_JSONLD_URL),
+            context = listOf(ANNO_JSONLD_URL),
             id = searchPageUri(searchUri, page),
             partOf = searchUri.toString(),
             startIndex = startIndex,

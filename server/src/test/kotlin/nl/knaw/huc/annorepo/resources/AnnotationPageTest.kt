@@ -3,7 +3,7 @@ package nl.knaw.huc.annorepo.resources
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
-import nl.knaw.huc.annorepo.api.ARConst.ANNO_JSONLD_URL
+import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.AnnotationPage
 import org.junit.jupiter.api.Test
 

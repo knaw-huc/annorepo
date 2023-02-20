@@ -32,7 +32,7 @@ import javax.ws.rs.core.SecurityContext
 @PermitAll
 @SecurityRequirement(name = SECURITY_SCHEME_NAME)
 class ListResource(
-    private val configuration: AnnoRepoConfiguration, client: MongoClient
+    private val configuration: AnnoRepoConfiguration, client: MongoClient,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
     private val uriFactory = UriFactory(configuration)
@@ -43,11 +43,11 @@ class ListResource(
     @GET
     @Path("containers")
     fun getContainerURLs(@Context context: SecurityContext): List<String> =
-        mdb.listCollectionNames().filter {
-            it != CONTAINER_METADATA_COLLECTION
-        }.map {
-            uriFactory.containerURL(it).toString()
-        }.toList()
+        mdb.listCollectionNames()
+            .filter { it != CONTAINER_METADATA_COLLECTION }
+            .map { uriFactory.containerURL(it).toString() }
+            .sorted()
+            .toList()
 
     @Operation(description = "Get a list of all the annotation URLs")
     @Timed
@@ -56,7 +56,7 @@ class ListResource(
     fun getAnnotationURLs(
         @PathParam("containerName") containerName: String,
         @QueryParam("start") offset: Int = 0,
-        @Context context: SecurityContext
+        @Context context: SecurityContext,
     ): List<String> =
         mdb.getCollection(containerName).aggregate<Document>(
             match(exists(ANNOTATION_NAME_FIELD)),
