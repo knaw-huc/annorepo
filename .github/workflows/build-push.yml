@@ -13,10 +13,10 @@ env:
   REGISTRY_FQDN: ghcr.io
   REGISTRY_USERNAME: ${{ github.actor }}
   REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-  IMAGE_NAME: annorepo
-  IMAGE_FILE: k8s/annorepo-server/Dockerfile-multistage
-  IMAGE_NAME2: annorepo-updater
-  IMAGE_FILE2: k8s/updater/Dockerfile
+  SERVER_IMAGE_NAME: annorepo
+  SERVER_IMAGE_FILE: k8s/annorepo-server/Dockerfile-multistage
+  UPDATER_IMAGE_NAME: annorepo-updater
+  UPDATER_IMAGE_FILE: k8s/updater/Dockerfile
 
 jobs:
   build-and-push-image:
@@ -40,12 +40,12 @@ jobs:
         id: meta-server
         uses: docker/metadata-action@v4.1.1
         with:
-          images: ${{ env.REGISTRY_FQDN }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY_FQDN }}/${{ env.SERVER_IMAGE_NAME }}
 
       - name: Build and push Docker image (server)
         uses: docker/build-push-action@v3.2.0
         with:
-          file: ${{ env.IMAGE_FILE }}
+          file: ${{ env.SERVER_IMAGE_FILE }}
           labels: ${{ steps.meta.outputs.labels }}
           tags: ${{ steps.meta.outputs.tags }}
           push: true
@@ -54,12 +54,12 @@ jobs:
         id: meta-updater
         uses: docker/metadata-action@v4.1.1
         with:
-          images: ${{ env.REGISTRY_FQDN }}/${{ env.IMAGE_NAME2 }}
+          images: ${{ env.REGISTRY_FQDN }}/${{ env.UPDATER_IMAGE_NAME }}
 
       - name: Build and push Docker image (updater) 
         uses: docker/build-push-action@v3.2.0
         with:
-          file: ${{ env.IMAGE_FILE2 }}
+          file: ${{ env.UPDATER_IMAGE_FILE }}
           labels: ${{ steps.meta.outputs.labels }}
           tags: ${{ steps.meta.outputs.tags }}
           push: true
