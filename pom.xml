@@ -6,7 +6,7 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>nl.knaw.huc</groupId>
+    <groupId>oi.github.knaw-huc</groupId>
     <artifactId>annorepo</artifactId>
     <version>0.3.6-SNAPSHOT</version>
     <packaging>pom</packaging>
