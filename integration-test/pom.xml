@@ -7,12 +7,12 @@
     <parent>
         <groupId>nl.knaw.huc</groupId>
         <artifactId>annorepo</artifactId>
-        <version>0.3.6-beta</version>
+        <version>0.3.6-SNAPSHOT</version>
     </parent>
 
     <artifactId>annorepo-integration-test</artifactId>
     <name>AnnoRepo IntegrationTest</name>
-    <version>0.3.6-beta</version>
+    <version>0.3.6-SNAPSHOT</version>
 
     <properties>
         <mainClass>nl.knaw.huc.annorepo.integration.IntegrationTest</mainClass>
