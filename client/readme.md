@@ -12,7 +12,7 @@ Add the following to your `pom.xml`
 
 ```xml
 <dependency>
-    <groupId>nl.knaw.huc</groupId>
+    <groupId>io.github.knaw-huc</groupId>
     <artifactId>annorepo-client</artifactId>
     <version>0.3.6-SNAPSHOT</version>
 </dependency>

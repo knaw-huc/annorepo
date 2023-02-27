@@ -73,14 +73,15 @@ version-update:
 	make client/readme.md
 
 .make/.deploy: build-client
-	mvn --projects client --also-make deploy
+	export GPG_TTY=$(tty)
+	mvn --projects client --also-make deploy -P release
 	@touch $@
 
 .PHONY: deploy
 deploy:	.make/.deploy
 
 .make/.dokka: $(shell find */src -type f) pom.xml */pom.xml
-	mvn dokka:dokka
+	mvn dokka:dokka --projects client --also-make
 	rm -rf client/dokka
 	mv client/target/dokka client/dokka
 	rm -rf common/dokka
