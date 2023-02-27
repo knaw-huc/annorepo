@@ -1,13 +1,21 @@
-
 import arrow.core.Either
+import arrow.core.Either.Right
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.UserEntry
+import nl.knaw.huc.annorepo.api.WebAnnotation
 import nl.knaw.huc.annorepo.client.ARResult.AddIndexResult
 import nl.knaw.huc.annorepo.client.ARResult.AddUsersResult
 import nl.knaw.huc.annorepo.client.ARResult.AnnotationFieldInfoResult
+import nl.knaw.huc.annorepo.client.ARResult.BatchUploadResult
+import nl.knaw.huc.annorepo.client.ARResult.CreateAnnotationResult
+import nl.knaw.huc.annorepo.client.ARResult.CreateContainerResult
+import nl.knaw.huc.annorepo.client.ARResult.DeleteAnnotationResult
+import nl.knaw.huc.annorepo.client.ARResult.DeleteContainerResult
 import nl.knaw.huc.annorepo.client.ARResult.DeleteIndexResult
+import nl.knaw.huc.annorepo.client.ARResult.GetAnnotationResult
+import nl.knaw.huc.annorepo.client.ARResult.GetContainerResult
 import nl.knaw.huc.annorepo.client.ARResult.GetIndexResult
 import nl.knaw.huc.annorepo.client.ARResult.ListIndexesResult
 import nl.knaw.huc.annorepo.client.ARResult.UsersResult
@@ -98,6 +106,148 @@ class IntegratedClientKotlinTester {
     }
 
     @Nested
+    class ContainerTests {
+        @Test
+        fun testCreateContainer() {
+            val preferredName = "my-container"
+            val label = "A container for all my annotations"
+            val success = client.createContainer(preferredName, label).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    false
+                }
+            ) { (_, location, containerName, eTag): CreateContainerResult ->
+                doSomethingWith(containerName, location, eTag)
+                true
+            }
+            assertThat(success).isTrue
+        }
+
+        @Test
+        fun testGetContainer() {
+            val either = client.createContainer()
+                .map { (_, _, containerName): CreateContainerResult ->
+                    client.getContainer(containerName)
+                        .map { (response, entity, eTag1): GetContainerResult ->
+                            val entityTag = response.entityTag
+                            doSomethingWith(eTag1, entity, entityTag)
+                            true
+                        }
+                    true
+                }
+            assertThat(either).isInstanceOf(
+                Right::class.java
+            )
+        }
+
+        @Test
+        fun testDeleteContainer() {
+            val either = client.createContainer()
+                .map { (_, _, containerName, eTag): CreateContainerResult ->
+                    client.deleteContainer(containerName, eTag)
+                        .map { _: DeleteContainerResult -> true }
+                    true
+                }
+            assertThat(either).isInstanceOf(
+                Right::class.java
+            )
+        }
+    }
+
+    @Nested
+    class AnnotationTests {
+        @Test
+        fun testCreateAnnotation() {
+            val containerName = "my-container"
+            val annotation = WebAnnotation.Builder()
+                .withBody("http://example.org/annotation1")
+                .withTarget("http://example.org/target")
+                .build()
+            client.createAnnotation(containerName, annotation).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    false
+                }
+            ) { (_, location, _, annotationName, eTag): CreateAnnotationResult ->
+                doSomethingWith(annotationName, location, eTag)
+                true
+            }
+        }
+
+        @Test
+        fun testReadAnnotation() {
+            val containerName = "my-container"
+            val annotationName = "my-annotation"
+            client.getAnnotation(containerName, annotationName).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    false
+                }
+            ) { (_, eTag, annotation): GetAnnotationResult ->
+                doSomethingWith(annotation, eTag)
+                true
+            }
+        }
+
+        @Test
+        fun testUpdateAnnotation() {
+            val containerName = "my-container"
+            val annotationName = "my-annotation"
+            val eTag = "abcde"
+            val updatedAnnotation = WebAnnotation.Builder()
+                .withBody("http://example.org/annotation2")
+                .withTarget("http://example.org/target")
+                .build()
+            client.updateAnnotation(containerName, annotationName, eTag, updatedAnnotation)
+                .fold(
+                    { error: RequestError ->
+                        handleError(error)
+                        false
+                    }
+                ) { (_, location, _, _, newETag): CreateAnnotationResult ->
+                    doSomethingWith(annotationName, location, newETag)
+                    true
+                }
+        }
+
+        @Test
+        fun testDeleteAnnotation() {
+            val containerName = "my-container"
+            val annotationName = "my-annotation"
+            val eTag = "abcdefg"
+            val success = client.deleteAnnotation(containerName, annotationName, eTag).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    false
+                }
+            ) { _: DeleteAnnotationResult -> true }
+        }
+
+        @Test
+        fun testBatchUpload() {
+            val containerName = "my-container"
+            val annotation1 = WebAnnotation.Builder()
+                .withBody("http://example.org/annotation1")
+                .withTarget("http://example.org/target1")
+                .build()
+            val annotation2 = WebAnnotation.Builder()
+                .withBody("http://example.org/annotation2")
+                .withTarget("http://example.org/target2")
+                .build()
+            val annotations = java.util.List.of(annotation1, annotation2)
+            val success = client.batchUpload(containerName, annotations).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    false
+                }
+            ) { (_, annotationIdentifiers): BatchUploadResult ->
+                doSomethingWith(annotationIdentifiers)
+                true
+            }
+        }
+    }
+
+    @Nested
     inner class SearchTests {
         @Test
         fun testFilterContainerAnnotations() {
@@ -125,7 +275,7 @@ class IntegratedClientKotlinTester {
                 client.filterContainerAnnotations2(containerName, query).untangled()
             when (e) {
                 is Either.Left -> println(e.value)
-                is Either.Right -> println(e.value.size)
+                is Right -> println(e.value.size)
             }
         }
 

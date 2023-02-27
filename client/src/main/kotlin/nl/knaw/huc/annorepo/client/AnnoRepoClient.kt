@@ -36,6 +36,7 @@ import nl.knaw.huc.annorepo.client.ARResult.DeleteContainerResult
 import nl.knaw.huc.annorepo.client.ARResult.DeleteIndexResult
 import nl.knaw.huc.annorepo.client.ARResult.DeleteUserResult
 import nl.knaw.huc.annorepo.client.ARResult.GetAboutResult
+import nl.knaw.huc.annorepo.client.ARResult.GetAnnotationResult
 import nl.knaw.huc.annorepo.client.ARResult.GetContainerMetadataResult
 import nl.knaw.huc.annorepo.client.ARResult.GetContainerResult
 import nl.knaw.huc.annorepo.client.ARResult.GetIndexResult
@@ -230,6 +231,31 @@ class AnnoRepoClient @JvmOverloads constructor(
     )
 
     /**
+     * Read annotation
+     *
+     * @param containerName
+     * @param annotation
+     * @return
+     */
+    fun getAnnotation(
+        containerName: String, annotationName: String,
+    ): Either<RequestError, GetAnnotationResult> = doGet(
+        request = webTarget.path(W3C).path(containerName).path(annotationName).request(),
+        responseHandlers = mapOf(Response.Status.OK to { response ->
+            val eTag = response.eTag() ?: ""
+            val json = response.readEntityAsJsonString()
+            val annotation: Map<String, Any> = oMapper.readValue(json)
+            Either.Right(
+                GetAnnotationResult(
+                    response = response,
+                    eTag = eTag,
+                    annotation = annotation,
+                )
+            )
+        })
+    )
+
+    /**
      * Update annotation
      *
      * @param containerName
@@ -239,7 +265,7 @@ class AnnoRepoClient @JvmOverloads constructor(
      * @return
      */
     fun updateAnnotation(
-        containerName: String, annotationName: String, eTag: String, annotation: Map<String, Any>,
+        containerName: String, annotationName: String, eTag: String, annotation: Any,
     ): Either<RequestError, CreateAnnotationResult> {
         val path = webTarget.path(W3C).path(containerName).path(annotationName)
         val location = path.uri
@@ -247,14 +273,14 @@ class AnnoRepoClient @JvmOverloads constructor(
             request = path.request().header(IF_MATCH, eTag),
             entity = Entity.json(annotation),
             responseHandlers = mapOf(Response.Status.OK to { response ->
-                val newEtag = response.eTag() ?: ""
+                val newETag = response.eTag() ?: ""
                 Either.Right(
                     CreateAnnotationResult(
                         response = response,
                         location = location,
                         containerName = containerName,
                         annotationName = annotationName,
-                        eTag = newEtag
+                        eTag = newETag
                     )
                 )
             })
@@ -275,9 +301,7 @@ class AnnoRepoClient @JvmOverloads constructor(
         request = webTarget.path(W3C).path(containerName).path(annotationName).request().header(IF_MATCH, eTag),
         responseHandlers = mapOf(Response.Status.NO_CONTENT to { response ->
             Either.Right(
-                DeleteAnnotationResult(
-                    response
-                )
+                DeleteAnnotationResult(response)
             )
         })
     )
@@ -308,7 +332,7 @@ class AnnoRepoClient @JvmOverloads constructor(
      * @return
      */
     fun batchUpload(
-        containerName: String, annotations: List<Map<String, Any>>,
+        containerName: String, annotations: List<Any>,
     ): Either<RequestError, BatchUploadResult> = doPost(
         request = webTarget.path(BATCH).path(containerName).path("annotations").request(),
         entity = Entity.json(annotations),

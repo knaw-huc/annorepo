@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.knaw.huc.annorepo.api.*;
 import nl.knaw.huc.annorepo.client.ARResult;
+import nl.knaw.huc.annorepo.client.ARResult.GetSearchResultPageResult;
 import nl.knaw.huc.annorepo.client.AnnoRepoClient;
 import nl.knaw.huc.annorepo.client.RequestError;
 import org.junit.jupiter.api.BeforeAll;
@@ -188,6 +189,86 @@ public class IntegratedClientJavaTester {
             );
         }
 
+        @Test
+        public void testReadAnnotation() {
+            String containerName = "my-container";
+            String annotationName = "my-annotation";
+            client.getAnnotation(containerName, annotationName).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    (ARResult.GetAnnotationResult result) -> {
+                        String eTag = result.getETag();
+                        Map<String, Object> annotation = result.getAnnotation();
+                        doSomethingWith(annotation, eTag);
+                        return true;
+                    }
+            );
+        }
+
+        @Test
+        public void testUpdateAnnotation() {
+            String containerName = "my-container";
+            String annotationName = "my-annotation";
+            String eTag = "abcde";
+            WebAnnotation updatedAnnotation = new WebAnnotation.Builder()
+                    .withBody("http://example.org/annotation2")
+                    .withTarget("http://example.org/target")
+                    .build();
+            client.updateAnnotation(containerName, annotationName, eTag, updatedAnnotation).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    (ARResult.CreateAnnotationResult result) -> {
+                        URI location = result.getLocation();
+                        String newETag = result.getETag();
+                        doSomethingWith(annotationName, location, newETag);
+                        return true;
+                    }
+            );
+        }
+
+        @Test
+        public void testDeleteAnnotation() {
+            String containerName = "my-container";
+            String annotationName = "my-annotation";
+            String eTag = "abcdefg";
+            Boolean success = client.deleteAnnotation(containerName, annotationName, eTag).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    (ARResult.DeleteAnnotationResult result) -> true
+            );
+        }
+
+        @Test
+        public void testBatchUpload() {
+            String containerName = "my-container";
+            WebAnnotation annotation1 = new WebAnnotation.Builder()
+                    .withBody("http://example.org/annotation1")
+                    .withTarget("http://example.org/target1")
+                    .build();
+            WebAnnotation annotation2 = new WebAnnotation.Builder()
+                    .withBody("http://example.org/annotation2")
+                    .withTarget("http://example.org/target2")
+                    .build();
+
+            List<WebAnnotation> annotations = List.of(annotation1, annotation2);
+            Boolean success = client.batchUpload(containerName, annotations).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    (ARResult.BatchUploadResult result) -> {
+                        List<AnnotationIdentifier> annotationIdentifiers = result.getAnnotationData();
+                        doSomethingWith(annotationIdentifiers);
+                        return true;
+                    }
+            );
+        }
     }
 
     @Nested
@@ -229,7 +310,7 @@ public class IntegratedClientJavaTester {
                             handleError(error);
                             return false;
                         },
-                        result -> {
+                        (GetSearchResultPageResult result) -> {
                             AnnotationPage annotationPage = result.getAnnotationPage();
                             doSomethingWith(annotationPage);
                             return true;
