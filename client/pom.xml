@@ -15,7 +15,7 @@
     <url>https://knaw-huc.github.io/annorepo/client</url>
 
     <parent>
-        <groupId>oi.github.knaw-huc</groupId>
+        <groupId>io.github.knaw-huc</groupId>
         <artifactId>annorepo</artifactId>
         <version>0.3.6-SNAPSHOT</version>
     </parent>
@@ -39,7 +39,7 @@
             <version>${kotlin.version}</version>
         </dependency>
         <dependency>
-            <groupId>oi.github.knaw-huc</groupId>
+            <groupId>io.github.knaw-huc</groupId>
             <artifactId>annorepo-common</artifactId>
             <version>${project.version}</version>
         </dependency>

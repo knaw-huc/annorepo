@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>oi.github.knaw-huc</groupId>
+        <groupId>io.github.knaw-huc</groupId>
         <artifactId>annorepo</artifactId>
         <version>0.3.6-SNAPSHOT</version>
     </parent>
@@ -20,7 +20,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>oi.github.knaw-huc</groupId>
+            <groupId>io.github.knaw-huc</groupId>
             <artifactId>annorepo-client</artifactId>
             <version>${project.version}</version>
         </dependency>
