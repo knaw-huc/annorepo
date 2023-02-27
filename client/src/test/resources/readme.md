@@ -129,7 +129,17 @@ Parameters:
 **Kotlin:**
 
 ```kotlin
-val result = client.createContainer(preferredName, label)
+val preferredName = "my-container"
+val label = "A container for all my annotations"
+val success = client.createContainer(preferredName, label).fold(
+    { error: RequestError ->
+        handleError(error)
+        false
+    }
+) { (_, location, containerName, eTag): CreateContainerResult ->
+    doSomethingWith(containerName, location, eTag)
+    true
+}
 ```
 
 **Java**
@@ -164,6 +174,16 @@ On a succeeding call, the `CreateContainerResult` contains:
 **Kotlin:**
 
 ```kotlin
+val either = client.createContainer()
+    .map { (_, _, containerName): CreateContainerResult ->
+        client.getContainer(containerName)
+            .map { (response, entity, eTag1): GetContainerResult ->
+                val entityTag = response.entityTag
+                doSomethingWith(eTag1, entity, entityTag)
+                true
+            }
+        true
+    }
 ```
 
 **Java**
@@ -186,6 +206,8 @@ client.getContainer(containerName).map(
 **Kotlin:**
 
 ```kotlin
+client.deleteContainer(containerName, eTag)
+    .map { result: DeleteContainerResult -> true }
 ```
 
 **Java**
@@ -203,6 +225,20 @@ client.deleteContainer(containerName, eTag).map(
 **Kotlin:**
 
 ```kotlin
+val containerName = "my-container"
+val annotation = WebAnnotation.Builder()
+    .withBody("http://example.org/annotation1")
+    .withTarget("http://example.org/target")
+    .build()
+client.createAnnotation(containerName, annotation).fold(
+    { error: RequestError ->
+        handleError(error)
+        false
+    }
+) { (_, location, _, annotationName, eTag): CreateAnnotationResult ->
+    doSomethingWith(annotationName, location, eTag)
+    true
+}
 ```
 
 **Java**
@@ -233,6 +269,17 @@ client.createAnnotation(containerName, annotation).fold(
 **Kotlin:**
 
 ```kotlin
+val containerName = "my-container"
+val annotationName = "my-annotation"
+client.getAnnotation(containerName, annotationName).fold(
+    { error: RequestError ->
+        handleError(error)
+        false
+    }
+) { (_, eTag, annotation): GetAnnotationResult ->
+    doSomethingWith(annotation, eTag)
+    true
+}
 ```
 
 **Java**
@@ -259,6 +306,23 @@ client.getAnnotation(containerName, annotationName).fold(
 **Kotlin:**
 
 ```kotlin
+val containerName = "my-container"
+val annotationName = "my-annotation"
+val eTag = "abcde"
+val updatedAnnotation = WebAnnotation.Builder()
+    .withBody("http://example.org/annotation2")
+    .withTarget("http://example.org/target")
+    .build()
+client.updateAnnotation(containerName, annotationName, eTag, updatedAnnotation)
+    .fold(
+        { error: RequestError ->
+            handleError(error)
+            false
+        }
+    ) { (_, location, _, _, newETag): CreateAnnotationResult ->
+        doSomethingWith(annotationName, location, newETag)
+        true
+    }
 ```
 
 **Java**
@@ -290,6 +354,15 @@ client.updateAnnotation(containerName, annotationName, eTag, updatedAnnotation).
 **Kotlin:**
 
 ```kotlin
+val containerName = "my-container"
+val annotationName = "my-annotation"
+val eTag = "abcdefg"
+val success = client.deleteAnnotation(containerName, annotationName, eTag).fold(
+    { error: RequestError ->
+        handleError(error)
+        false
+    }
+) { _: DeleteAnnotationResult -> true }
 ```
 
 **Java**
@@ -312,6 +385,25 @@ Boolean success = client.deleteAnnotation(containerName, annotationName, eTag).f
 **Kotlin:**
 
 ```kotlin
+val containerName = "my-container"
+val annotation1 = WebAnnotation.Builder()
+    .withBody("http://example.org/annotation1")
+    .withTarget("http://example.org/target1")
+    .build()
+val annotation2 = WebAnnotation.Builder()
+    .withBody("http://example.org/annotation2")
+    .withTarget("http://example.org/target2")
+    .build()
+val annotations = java.util.List.of(annotation1, annotation2)
+val success = client.batchUpload(containerName, annotations).fold(
+    { error: RequestError ->
+        handleError(error)
+        false
+    }
+) { (_, annotationIdentifiers): BatchUploadResult ->
+    doSomethingWith(annotationIdentifiers)
+    true
+}
 ```
 
 **Java**
@@ -478,7 +570,16 @@ Boolean success = client.getSearchInfo(containerName, queryId).fold(
 **Kotlin:**
 
 ```kotlin
-val addIndexResult = this.addIndex(containerName, fieldName, indexType)
+val containerName = "volume-1728"
+val fieldName = "body.type"
+val indexType = IndexType.HASHED
+val success = client.addIndex(containerName, fieldName, indexType).fold(
+    { error: RequestError ->
+        handleError(error)
+        false
+    },
+    { result: AddIndexResult -> true }
+)
 ```
 
 **Java**
@@ -501,6 +602,18 @@ Boolean success = client.addIndex(containerName, fieldName, indexType).fold(
 **Kotlin:**
 
 ```kotlin
+val containerName = "volume-1728"
+val fieldName = "body.type"
+val indexType = IndexType.HASHED
+val success = client.getIndex(containerName, fieldName, indexType).fold(
+    { error: RequestError ->
+        handleError(error)
+        false
+    }, { (_, indexConfig): GetIndexResult ->
+        doSomethingWith(indexConfig)
+        true
+    }
+)
 ```
 
 **Java**
@@ -527,7 +640,16 @@ Boolean success = client.getIndex(containerName, fieldName, indexType).fold(
 **Kotlin:**
 
 ```kotlin
-val listIndexResult = this.listIndexes(containerName)
+val containerName = "volume-1728"
+val success = client.listIndexes(containerName).fold(
+    { error: RequestError ->
+        handleError(error)
+        false
+    }, { (_, indexes): ListIndexesResult ->
+        doSomethingWith(indexes)
+        true
+    }
+)
 ```
 
 **Java**
@@ -552,7 +674,16 @@ Boolean success = client.listIndexes(containerName).fold(
 **Kotlin:**
 
 ```kotlin
-val deleteIndexResult = this.deleteIndex(containerName, fieldName, indexType)
+val containerName = "volume-1728"
+val fieldName = "body.type"
+val indexType = IndexType.HASHED
+val success = client.deleteIndex(containerName, fieldName, indexType).fold(
+    { error: RequestError ->
+        handleError(error)
+        false
+    },
+    { result: DeleteIndexResult -> true }
+)
 ```
 
 **Java**
@@ -576,7 +707,11 @@ Boolean success = client.deleteIndex(containerName, fieldName, indexType).fold(
 **Kotlin:**
 
 ```kotlin
-val fieldInfoResult = client.getFieldInfo(containerName)
+val containerName = "volume-1728"
+client.getFieldInfo(containerName).fold(
+    { error: RequestError -> handleError(error) },
+    { (_, fieldInfo): AnnotationFieldInfoResult -> doSomethingWith(fieldInfo) }
+)
 ```
 
 **Java**
