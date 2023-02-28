@@ -49,7 +49,7 @@
         <kmongo.version>4.7.1</kmongo.version>
         <kotlinx-cli-jvm.version>0.3.5</kotlinx-cli-jvm.version>
         <mongodb.version>4.7.1</mongodb.version>
-        <mordant.version>2.0.0-beta2</mordant.version>
+        <mordant.version>2.0.0-beta11</mordant.version>
         <problem.version>0.27.1</problem.version>
         <slf4j.version>2.0.3</slf4j.version>
         <log4j.version>1.2.17</log4j.version>

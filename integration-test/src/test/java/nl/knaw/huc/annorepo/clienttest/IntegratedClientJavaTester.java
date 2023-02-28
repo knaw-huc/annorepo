@@ -304,19 +304,17 @@ public class IntegratedClientJavaTester {
                     },
                     (ARResult.CreateSearchResult result) -> Optional.of(result.getQueryId())
             );
-            optionalQueryId.ifPresent(queryId -> {
-                client.getSearchResultPage(containerName, queryId, 0).fold(
-                        (RequestError error) -> {
-                            handleError(error);
-                            return false;
-                        },
-                        (GetSearchResultPageResult result) -> {
-                            AnnotationPage annotationPage = result.getAnnotationPage();
-                            doSomethingWith(annotationPage);
-                            return true;
-                        }
-                );
-            });
+            optionalQueryId.ifPresent(queryId -> client.getSearchResultPage(containerName, queryId, 0).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    (GetSearchResultPageResult result) -> {
+                        AnnotationPage annotationPage = result.getAnnotationPage();
+                        doSomethingWith(annotationPage);
+                        return true;
+                    }
+            ));
         }
 
         @Test
@@ -357,18 +355,16 @@ public class IntegratedClientJavaTester {
                     },
                     result -> {
                         Stream<Either<RequestError, String>> annotations = result.getAnnotations();
-                        annotations.forEach((a) -> {
-                            a.fold(
-                                    e -> {
-                                        System.out.println(e);
-                                        return false;
-                                    },
-                                    r -> {
-                                        System.out.println(r);
-                                        return true;
-                                    }
-                            );
-                        });
+                        annotations.forEach((a) -> a.fold(
+                                e -> {
+                                    System.out.println(e);
+                                    return false;
+                                },
+                                r -> {
+                                    System.out.println(r);
+                                    return true;
+                                }
+                        ));
                         return true;
                     }
 

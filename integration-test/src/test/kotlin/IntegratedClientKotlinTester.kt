@@ -106,7 +106,7 @@ class IntegratedClientKotlinTester {
     }
 
     @Nested
-    class ContainerTests {
+    inner class ContainerTests {
         @Test
         fun testCreateContainer() {
             val preferredName = "my-container"
@@ -155,7 +155,7 @@ class IntegratedClientKotlinTester {
     }
 
     @Nested
-    class AnnotationTests {
+    inner class AnnotationTests {
         @Test
         fun testCreateAnnotation() {
             val containerName = "my-container"
@@ -234,7 +234,7 @@ class IntegratedClientKotlinTester {
                 .withBody("http://example.org/annotation2")
                 .withTarget("http://example.org/target2")
                 .build()
-            val annotations = java.util.List.of(annotation1, annotation2)
+            val annotations = listOf(annotation1, annotation2)
             val success = client.batchUpload(containerName, annotations).fold(
                 { error: RequestError ->
                     handleError(error)
