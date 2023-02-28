@@ -97,7 +97,7 @@ class AnnoRepoClient @JvmOverloads constructor(
     }
 
     /**
-     * Get some information about the server
+     * Get about
      *
      * @return
      */
@@ -346,7 +346,7 @@ class AnnoRepoClient @JvmOverloads constructor(
     )
 
     /**
-     * Create query
+     * Create search
      *
      * @param containerName
      * @param query
@@ -365,7 +365,7 @@ class AnnoRepoClient @JvmOverloads constructor(
     )
 
     /**
-     * Get query result
+     * Get search result page
      *
      * @param containerName
      * @param queryId
@@ -390,7 +390,7 @@ class AnnoRepoClient @JvmOverloads constructor(
         )
 
     /**
-     * Get query info
+     * Get search info
      *
      * @param containerName
      * @param queryId
@@ -409,7 +409,7 @@ class AnnoRepoClient @JvmOverloads constructor(
         )
 
     /**
-     * Create query
+     * Filter container annotations
      *
      * @param containerName
      * @param query
@@ -431,7 +431,7 @@ class AnnoRepoClient @JvmOverloads constructor(
             }
 
     /**
-     * Create query
+     * Filter container annotations2
      *
      * @param containerName
      * @param query
