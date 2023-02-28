@@ -11,7 +11,9 @@
     <version>0.3.7-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>AnnoRepo</name>
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>Implementation of W3C Web Annotation Protocol (root project)</description>
+    <url>https://knaw-huc.github.io/annorepo/</url>
 
     <modules>
         <module>common</module>
@@ -187,6 +189,15 @@
         <url>https://di.huc.knaw.nl/</url>
     </organization>
 
+    <developers>
+        <developer>
+            <name>Bram Buitendijk</name>
+            <email>bram.buitendijk@di.huc.knaw.nl</email>
+            <organization>HuC DI</organization>
+            <organizationUrl>https://di.huc.knaw.nl/</organizationUrl>
+        </developer>
+    </developers>
+
     <distributionManagement>
         <snapshotRepository>
             <id>ossrh</id>
@@ -196,6 +207,8 @@
 
     <scm>
         <connection>scm:git:git@github.com:knaw-huc/annorepo.git</connection>
+        <developerConnection>scm:git:ssh://github.com:knaw-huc/annorepo.git</developerConnection>
+        <url>http://github.com/knaw-huc/annorepo/tree/main</url>
         <tag>HEAD</tag>
     </scm>
 

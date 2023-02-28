@@ -13,7 +13,7 @@
     <artifactId>annorepo-common</artifactId>
     <version>0.3.7-SNAPSHOT</version>
 
-    <name>AnnoRepo common: shared libraries/classes/methods</name>
+    <name>${project.groupId}:${project.artifactId}</name>
     <description>Shared libraries/classes/methods for AnnoRepo</description>
     <url>https://knaw-huc.github.io/annorepo/common</url>
     <properties>

@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>annorepo-integration-test</artifactId>
-    <name>AnnoRepo IntegrationTest</name>
+    <name>${project.groupId}:${project.artifactId}</name>
     <version>0.3.7-SNAPSHOT</version>
 
     <properties>

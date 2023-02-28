@@ -8,7 +8,8 @@
 
     <artifactId>annorepo-server</artifactId>
     <packaging>jar</packaging>
-    <name>AnnoRepo Server</name>
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>A back-end server for storing and querying W3C Web Annotations</description>
 
     <parent>
         <groupId>io.github.knaw-huc</groupId>
