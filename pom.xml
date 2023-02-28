@@ -153,11 +153,17 @@
                 <artifactId>dokka-maven-plugin</artifactId>
                 <version>${dokka.version}</version>
                 <executions>
+<!--                    <execution>-->
+<!--                        <phase>pre-site</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>dokka</goal>-->
+<!--                            <goal>javadoc</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
                     <execution>
-                        <phase>pre-site</phase>
+                        <id>attach-javadocs</id>
+                        <phase>verify</phase>
                         <goals>
-                            <goal>dokka</goal>
-                            <goal>javadoc</goal>
                             <goal>javadocJar</goal>
                         </goals>
                     </execution>
@@ -256,7 +262,7 @@
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
-                                <phase>deploy</phase>
+                                <phase>verify</phase>
                                 <goals>
                                     <goal>sign</goal>
                                 </goals>
