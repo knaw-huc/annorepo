@@ -14,9 +14,9 @@ env:
   REGISTRY_FQDN: ghcr.io
   REGISTRY_USERNAME: ${{ github.actor }}
   REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-  SERVER_IMAGE_NAME: annorepo
+  SERVER_IMAGE_NAME: knaw-huc/annorepo-server
   SERVER_IMAGE_FILE: k8s/annorepo-server/Dockerfile-multistage
-  UPDATER_IMAGE_NAME: annorepo-updater
+  UPDATER_IMAGE_NAME: knaw-huc/annorepo-updater
   UPDATER_IMAGE_FILE: k8s/updater/Dockerfile
 
 jobs:
