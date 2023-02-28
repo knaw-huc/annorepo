@@ -73,6 +73,7 @@
                         <filter>
                             <artifact>*:*</artifact>
                             <excludes>
+                                <exclude>.placeholder</exclude>
                                 <exclude>META-INF/*.DSA</exclude>
                                 <exclude>META-INF/*.MF</exclude>
                                 <exclude>META-INF/*.RSA</exclude>
@@ -83,6 +84,9 @@
                                 <exclude>META-INF/DEPENDENCIES</exclude>
                                 <exclude>META-INF/LICENSE</exclude>
                                 <exclude>META-INF/NOTICE</exclude>
+                                <exclude>META-INF/arrow-core.kotlin_module</exclude>
+                                <exclude>META-INF/maven/*/*/pom.properties</exclude>
+                                <exclude>META-INF/maven/*/*/pom.xml</exclude>
                                 <exclude>META-INF/versions/*/*.class</exclude>
                                 <exclude>about.html</exclude>
                                 <exclude>module-info.class</exclude>

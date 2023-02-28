@@ -83,7 +83,7 @@ class AnnoRepoClient @JvmOverloads constructor(
 
     init {
         log.info("checking annorepo server at $serverURI ...")
-        getAbout().bimap(
+        getAbout().fold(
             { e ->
                 log.error("error: {}", e)
                 throw RuntimeException("Unable to connect to annorepo server at $serverURI")
@@ -234,7 +234,7 @@ class AnnoRepoClient @JvmOverloads constructor(
      * Read annotation
      *
      * @param containerName
-     * @param annotation
+     * @param annotationName
      * @return
      */
     fun getAnnotation(
