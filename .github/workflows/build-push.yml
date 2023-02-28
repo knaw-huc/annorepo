@@ -2,6 +2,7 @@ name: build-image
 
 on:
   push:
+    branches: [main]
     tags:
     - '*'
     - '**'
