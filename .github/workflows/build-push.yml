@@ -61,6 +61,6 @@ jobs:
         uses: docker/build-push-action@v3.2.0
         with:
           file: ${{ env.UPDATER_IMAGE_FILE }}
-          labels: ${{ steps.meta.outputs.labels }}
-          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta-updater.outputs.labels }}
+          tags: ${{ steps.meta-updater.outputs.tags }}
           push: true
