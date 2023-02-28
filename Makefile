@@ -74,6 +74,7 @@ version-update:
 
 .make/.deploy: build-client
 	export GPG_TTY=$(tty)
+	mvn install
 	mvn --projects client --also-make dokka:javadocJar
 	mvn --projects client --also-make package gpg:sign deploy -P release
 	@touch $@
