@@ -2,6 +2,9 @@ FROM maven:3.8.5 as builder
 
 WORKDIR /build/
 COPY ./server /build/server
+COPY ./client /build/client
+COPY ./common /build/common
+COPY ./integration-test /build/integration-test
 COPY ./pom.xml /build/
 RUN mvn --projects server --no-transfer-progress --batch-mode --update-snapshots --also-make package
 
