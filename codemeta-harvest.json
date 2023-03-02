@@ -8,6 +8,22 @@
       "url": "https://knaw-huc.github.io/annorepo/docs/api-usage.html"
     }
   ],
+  "producer": {
+    "@id": "https://huc.knaw.nl",
+    "@type": "Organization",
+    "name": "KNAW Humanities Cluster",
+    "url": "https://huc.knaw.nl",
+    "parentOrganization": {
+        "@id": "https://knaw.nl",
+        "@type": "Organization",
+        "name": "KNAW",
+        "url": "https://knaw.nl",
+        "location": {
+            "@type": "Place",
+            "name": "Amsterdam"
+        }
+    }
+  },
   "funding": {
       "@type": "Grant",
       "name": "CLARIAH-PLUS (NWO grant 184.034.023)",
@@ -16,5 +32,8 @@
           "name": "NWO", 
           "url": "https://www.nwo.nl"
       }
+  },
+  "targetProduct": {
+        "@type": "WebAPI"
   }
 }
