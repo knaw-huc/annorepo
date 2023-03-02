@@ -32,5 +32,8 @@
           "name": "NWO", 
           "url": "https://www.nwo.nl"
       }
+  },
+  "targetProduct": {
+        "@type": "WebAPI"
   }
 }
