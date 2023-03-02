@@ -11,7 +11,7 @@
     <version>0.3.8-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>${project.groupId}:${project.artifactId}</name>
+    <name>AnnoRepo</name>
     <description>Implementation of W3C Web Annotation Protocol (root project)</description>
     <url>https://knaw-huc.github.io/annorepo/</url>
 
