@@ -219,8 +219,11 @@ class IntegratedClientKotlinTester {
                 { error: RequestError ->
                     handleError(error)
                     false
-                }
-            ) { _: DeleteAnnotationResult -> true }
+                },
+                { _: DeleteAnnotationResult -> true }
+            )
+            assertThat(success).isTrue
+
         }
 
         @Test
@@ -239,11 +242,13 @@ class IntegratedClientKotlinTester {
                 { error: RequestError ->
                     handleError(error)
                     false
+                },
+                { (_, annotationIdentifiers): BatchUploadResult ->
+                    doSomethingWith(annotationIdentifiers)
+                    true
                 }
-            ) { (_, annotationIdentifiers): BatchUploadResult ->
-                doSomethingWith(annotationIdentifiers)
-                true
-            }
+            )
+            assertThat(success).isTrue
         }
     }
 
@@ -293,7 +298,7 @@ class IntegratedClientKotlinTester {
                     handleError(error)
                     false
                 },
-                { result: AddIndexResult -> true }
+                { _: AddIndexResult -> true }
             )
             assertThat(success).isTrue
         }
@@ -340,7 +345,7 @@ class IntegratedClientKotlinTester {
                     handleError(error)
                     false
                 },
-                { result: DeleteIndexResult -> true }
+                { _: DeleteIndexResult -> true }
             )
             assertThat(success).isTrue
         }
@@ -395,7 +400,7 @@ class IntegratedClientKotlinTester {
 
     @Test
     fun testAbout() {
-        val getAboutResult = client.getAbout().orNull()
+        val getAboutResult = client.getAbout().getOrNull()
         val aboutInfo = getAboutResult!!.aboutInfo
         doSomethingWith(aboutInfo)
         assertThat(aboutInfo).isNotNull

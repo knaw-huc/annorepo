@@ -515,7 +515,7 @@ public class IntegratedClientJavaTester {
 
     @Test
     public void testAbout() {
-        var getAboutResult = client.getAbout().orNull();
+        var getAboutResult = client.getAbout().getOrNull();
         AboutInfo aboutInfo = getAboutResult.getAboutInfo();
         doSomethingWith(aboutInfo);
         assertThat(aboutInfo).isNotNull();

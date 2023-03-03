@@ -159,7 +159,7 @@ class IntegrationTest {
                 t.printStep("using filterContainerAnnotations")
                 val query2 = mapOf("body.type" to "Page")
                 val filterContainerAnnotationsResult: FilterContainerAnnotationsResult? =
-                    this.filterContainerAnnotations(containerName, query2).orNull()
+                    this.filterContainerAnnotations(containerName, query2).getOrNull()
                 filterContainerAnnotationsResult?.let {
                     it.annotations.forEach { item ->
                         item.fold(
@@ -334,6 +334,7 @@ class IntegrationTest {
         } finally {
             t.printStep("Deleting container $containerName")
             val deleteResult = ac.deleteContainer(r.containerName, eTag = r.eTag)
+            assert(deleteResult.isRight())
         }
     }
 
