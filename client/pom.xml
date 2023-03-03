@@ -8,7 +8,7 @@
 
     <artifactId>annorepo-client</artifactId>
     <packaging>jar</packaging>
-    <name>${project.groupId}:${project.artifactId}</name>
+    <name>AnnoRepo Client</name>
     <description>A client for connecting to an AnnoRepo server and wrapping the communication with the
         endpoints
     </description>
