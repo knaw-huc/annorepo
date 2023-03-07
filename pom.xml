@@ -44,7 +44,7 @@
         <jackson-annotations.version>2.13.3</jackson-annotations.version>
         <jakarta.json.version>2.0.1</jakarta.json.version>
         <jakarta.ws.rs-api.version>3.1.0</jakarta.ws.rs-api.version>
-        <jena.version>4.5.0</jena.version>
+        <jena.version>4.7.0</jena.version>
         <json.version>20220320</json.version>
         <kmongo.version>4.7.1</kmongo.version>
         <kotlinx-cli-jvm.version>0.3.5</kotlinx-cli-jvm.version>
