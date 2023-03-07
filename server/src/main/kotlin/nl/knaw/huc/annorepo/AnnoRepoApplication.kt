@@ -19,6 +19,7 @@ import nl.knaw.huc.annorepo.api.ARConst.APP_NAME
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.api.ARConst.EnvironmentVariable
 import nl.knaw.huc.annorepo.api.ContainerMetadata
+import nl.knaw.huc.annorepo.auth.ARContainerUserDAO
 import nl.knaw.huc.annorepo.auth.AROAuthAuthenticator
 import nl.knaw.huc.annorepo.auth.ARUserDAO
 import nl.knaw.huc.annorepo.auth.User
@@ -83,7 +84,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             register(AboutResource(configuration, name, appVersion))
             register(HomePageResource())
             register(W3CResource(configuration, mongoClient))
-            register(ServiceResource(configuration, mongoClient))
+            register(ServiceResource(configuration, mongoClient, ARContainerUserDAO(configuration, mongoClient)))
             register(BatchResource(configuration, mongoClient))
             if (configuration.prettyPrint) {
                 register(JSONPrettyPrintFilter())

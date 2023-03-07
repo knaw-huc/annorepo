@@ -18,6 +18,7 @@ object ARConst {
     const val ANNOTATION_MEDIA_TYPE = """application/ld+json;profile="$ANNO_JSONLD_URL""""
     const val CONTAINER_METADATA_COLLECTION = "_containerMetadata"
     const val USER_COLLECTION = "_users"
+    const val CONTAINER_USER_COLLECTION = "_container_users"
     const val SECURITY_SCHEME_NAME = "BearerAuth"
 
     const val ANNOTATION_FIELD = "annotation"

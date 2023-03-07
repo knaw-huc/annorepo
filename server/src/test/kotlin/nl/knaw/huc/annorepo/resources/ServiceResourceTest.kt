@@ -10,14 +10,20 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.junit5.MockKExtension
+import nl.knaw.huc.annorepo.api.Role
+import nl.knaw.huc.annorepo.auth.ContainerUserDAO
+import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
 import org.bson.Document
+import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
 import java.net.URI
+import java.security.Principal
+import javax.ws.rs.NotAuthorizedException
 import javax.ws.rs.core.SecurityContext
 
 @ExtendWith(MockKExtension::class)
@@ -59,6 +65,55 @@ class ServiceResourceTest {
         log.info("searchResponse.entity={}", searchResponse.entity)
     }
 
+    @Test
+    fun `readContainerUsers returns something when the user is authorized in the container`() {
+        val userName = "adminUser"
+        every { mockContainerUserDAO.getUserRole(containerName, userName) } returns Role.ADMIN
+        every { userPrincipal.name } returns userName
+        every { securityContext.userPrincipal } returns userPrincipal
+        val response = resource.readContainerUsers(containerName, securityContext)
+        log.info("response={}", response)
+        assertThat(response.status).isEqualTo(200)
+    }
+
+    @Test
+    fun `readContainerUsers returns something when the user is root`() {
+        every { securityContext.userPrincipal } returns RootUser()
+        val response = resource.readContainerUsers(containerName, securityContext)
+        log.info("response={}", response)
+        assertThat(response.status).isEqualTo(200)
+    }
+
+    @Test
+    fun `readContainerUsers fails when the user is not admin`() {
+        val userName = "root"
+        every { mockContainerUserDAO.getUserRole(containerName, userName) } returns Role.GUEST
+        every { userPrincipal.name } returns userName
+        every { securityContext.userPrincipal } returns userPrincipal
+        try {
+            val response = resource.readContainerUsers(containerName, securityContext)
+            log.info("response={}", response)
+            fail()
+        } catch (e: NotAuthorizedException) {
+            assertThat(e.message).isEqualTo("HTTP 401 Unauthorized")
+        }
+    }
+
+    @Test
+    fun `readContainerUsers fails when the user is not connected to the container`() {
+        val userName = "root"
+        every { mockContainerUserDAO.getUserRole(containerName, userName) } returns null
+        every { userPrincipal.name } returns userName
+        every { securityContext.userPrincipal } returns userPrincipal
+        try {
+            val response = resource.readContainerUsers(containerName, securityContext)
+            log.info("response={}", response)
+            fail()
+        } catch (e: NotAuthorizedException) {
+            assertThat(e.message).isEqualTo("HTTP 401 Unauthorized")
+        }
+    }
+
     companion object {
         const val containerName = "containername"
         private const val baseURL = "https://annorepo.net"
@@ -69,6 +124,9 @@ class ServiceResourceTest {
 
         @MockK
         lateinit var securityContext: SecurityContext
+
+        @MockK
+        lateinit var userPrincipal: Principal
 
         @MockK
         lateinit var client: MongoClient
@@ -84,6 +142,9 @@ class ServiceResourceTest {
 
         @RelaxedMockK
         lateinit var mongoCursor: MongoCursor<String>
+
+        @RelaxedMockK
+        lateinit var mockContainerUserDAO: ContainerUserDAO
 
         private lateinit var resource: ServiceResource
         private val log = LoggerFactory.getLogger(ServiceResourceTest::class.java)
@@ -102,7 +163,7 @@ class ServiceResourceTest {
             every { collectionNames.iterator() } returns mongoCursor
             every { mongoCursor.hasNext() } returns true
             every { mongoCursor.next() } returns containerName
-            resource = ServiceResource(config, client)
+            resource = ServiceResource(config, client, mockContainerUserDAO)
         }
     }
 }
