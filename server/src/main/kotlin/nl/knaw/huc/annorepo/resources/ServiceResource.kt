@@ -25,7 +25,10 @@ import nl.knaw.huc.annorepo.api.IndexConfig
 import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
 import nl.knaw.huc.annorepo.api.ResourcePaths.SERVICES
+import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.api.SearchInfo
+import nl.knaw.huc.annorepo.auth.ContainerUserDAO
+import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
 import nl.knaw.huc.annorepo.resources.tools.AnnotationList
@@ -37,12 +40,14 @@ import org.litote.kmongo.findOne
 import org.litote.kmongo.getCollection
 import org.slf4j.LoggerFactory
 import java.net.URI
+import java.security.Principal
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.annotation.security.PermitAll
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
+import javax.ws.rs.NotAuthorizedException
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
@@ -61,7 +66,9 @@ import javax.ws.rs.core.UriBuilder
 @PermitAll
 @SecurityRequirement(name = SECURITY_SCHEME_NAME)
 class ServiceResource(
-    private val configuration: AnnoRepoConfiguration, client: MongoClient,
+    private val configuration: AnnoRepoConfiguration,
+    client: MongoClient,
+    private val containerUserDAO: ContainerUserDAO,
 ) {
     private val uriFactory = UriFactory(configuration)
     private val mdb = client.getDatabase(configuration.databaseName)
@@ -72,6 +79,31 @@ class ServiceResource(
     private val queryCache: Cache<String, QueryCacheItem> =
         Caffeine.newBuilder().expireAfterAccess(1, TimeUnit.HOURS).maximumSize(1000).build()
     private val log = LoggerFactory.getLogger(javaClass)
+
+    @Operation(description = "Show the users with access to this container")
+    @Timed
+    @GET
+    @Path("{containerName}/users")
+    fun readContainerUsers(
+        @PathParam("containerName") containerName: String,
+        @Context context: SecurityContext,
+    ): Response {
+        checkContainerExists(containerName)
+        checkUserHasAdminRightsInThisContainer(context.userPrincipal, containerName)
+        return Response.ok().build()
+    }
+
+    private fun checkUserHasAdminRightsInThisContainer(userPrincipal: Principal, containerName: String) {
+        if (userPrincipal is RootUser) {
+            return
+        }
+        val userName = userPrincipal.name
+        val role = containerUserDAO.getUserRole(containerName, userName)
+        if (role == Role.ADMIN) {
+            return
+        }
+        throw NotAuthorizedException("User $userName does not have access rights to this endpoint")
+    }
 
     @Operation(description = "Find annotations in the given container matching the given query")
     @Timed

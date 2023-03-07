@@ -43,4 +43,10 @@ data class UserEntry(
     val apiKey: String,
 )
 
+data class UserAccessEntry(
+    val userName: String,
+    val containerName: String,
+    val role: Role,
+)
+
 class MissingTargetException : Exception("WebAnnotation must have 1 or more targets")
