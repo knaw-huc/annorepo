@@ -1,4 +1,4 @@
-FROM openjdk:18.0.1.1-slim-buster
+FROM openjdk:20-rc-jdk-slim
 
 RUN apt update && \
     apt install -y curl && \
