@@ -8,7 +8,7 @@ COPY ./integration-test /build/integration-test
 COPY ./pom.xml /build/
 RUN mvn --projects server --no-transfer-progress --batch-mode --update-snapshots --also-make package
 
-FROM openjdk:18.0.1.1-slim-buster
+FROM openjdk:20-rc-jdk-slim
 
 WORKDIR /apps/annorepo
 COPY --from=builder /build/server/target/annorepo-server-*.jar /apps/annorepo/annorepo-server.jar
