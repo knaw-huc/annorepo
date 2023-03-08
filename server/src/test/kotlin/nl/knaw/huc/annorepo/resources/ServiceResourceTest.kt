@@ -18,6 +18,7 @@ import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
 import org.bson.Document
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
@@ -47,7 +48,7 @@ class ServiceResourceTest {
                     }
                 }
         """.trimIndent()
-
+        useEditorUser()
         val response = resource.createSearch(containerName, queryJson, context = securityContext)
         log.info("result={}", response)
         val locations = response.headers["location"] as List<*>
@@ -65,52 +66,47 @@ class ServiceResourceTest {
         log.info("searchResponse.entity={}", searchResponse.entity)
     }
 
-    @Test
-    fun `readContainerUsers returns something when the user is authorized in the container`() {
-        val userName = "adminUser"
-        every { mockContainerUserDAO.getUserRole(containerName, userName) } returns Role.ADMIN
-        every { userPrincipal.name } returns userName
-        every { securityContext.userPrincipal } returns userPrincipal
-        val response = resource.readContainerUsers(containerName, securityContext)
-        log.info("response={}", response)
-        assertThat(response.status).isEqualTo(200)
-    }
+    @Nested
+    inner class ReadContainerUsersTest {
 
-    @Test
-    fun `readContainerUsers returns something when the user is root`() {
-        every { securityContext.userPrincipal } returns RootUser()
-        val response = resource.readContainerUsers(containerName, securityContext)
-        log.info("response={}", response)
-        assertThat(response.status).isEqualTo(200)
-    }
-
-    @Test
-    fun `readContainerUsers fails when the user is not admin`() {
-        val userName = "root"
-        every { mockContainerUserDAO.getUserRole(containerName, userName) } returns Role.GUEST
-        every { userPrincipal.name } returns userName
-        every { securityContext.userPrincipal } returns userPrincipal
-        try {
-            val response = resource.readContainerUsers(containerName, securityContext)
-            log.info("response={}", response)
-            fail()
-        } catch (e: NotAuthorizedException) {
-            assertThat(e.message).isEqualTo("HTTP 401 Unauthorized")
+        @Test
+        fun `readContainerUsers returns something when the user is authorized in the container`() {
+            useAdminUser()
+            assertReadContainerUsersSucceeds()
         }
-    }
 
-    @Test
-    fun `readContainerUsers fails when the user is not connected to the container`() {
-        val userName = "root"
-        every { mockContainerUserDAO.getUserRole(containerName, userName) } returns null
-        every { userPrincipal.name } returns userName
-        every { securityContext.userPrincipal } returns userPrincipal
-        try {
+        @Test
+        fun `readContainerUsers returns something when the user is root`() {
+            useRootUser()
+            assertReadContainerUsersSucceeds()
+        }
+
+        @Test
+        fun `readContainerUsers fails when the user is not admin`() {
+            useGuestUser()
+            assertReadContainerUsersFails()
+        }
+
+        @Test
+        fun `readContainerUsers fails when the user is not connected to the container`() {
+            useUserWithoutContainerAccess()
+            assertReadContainerUsersFails()
+        }
+
+        private fun assertReadContainerUsersSucceeds() {
             val response = resource.readContainerUsers(containerName, securityContext)
             log.info("response={}", response)
-            fail()
-        } catch (e: NotAuthorizedException) {
-            assertThat(e.message).isEqualTo("HTTP 401 Unauthorized")
+            assertThat(response.status).isEqualTo(200)
+        }
+
+        private fun assertReadContainerUsersFails() {
+            try {
+                val response = resource.readContainerUsers(containerName, securityContext)
+                log.info("response={}", response)
+                fail()
+            } catch (e: NotAuthorizedException) {
+                assertThat(e.message).isEqualTo("HTTP 401 Unauthorized")
+            }
         }
     }
 
@@ -164,6 +160,32 @@ class ServiceResourceTest {
             every { mongoCursor.hasNext() } returns true
             every { mongoCursor.next() } returns containerName
             resource = ServiceResource(config, client, mockContainerUserDAO)
+        }
+
+        private fun useRootUser() {
+            every { securityContext.userPrincipal } returns RootUser()
+        }
+
+        private fun useAdminUser() {
+            useUserWithRole("admin", Role.ADMIN)
+        }
+
+        private fun useEditorUser() {
+            useUserWithRole("editor", Role.EDITOR)
+        }
+
+        private fun useGuestUser() {
+            useUserWithRole("guest", Role.GUEST)
+        }
+
+        private fun useUserWithoutContainerAccess() {
+            useUserWithRole("anonymous", null)
+        }
+
+        private fun useUserWithRole(userName: String, role: Role?) {
+            every { mockContainerUserDAO.getUserRole(containerName, userName) } returns role
+            every { userPrincipal.name } returns userName
+            every { securityContext.userPrincipal } returns userPrincipal
         }
     }
 }

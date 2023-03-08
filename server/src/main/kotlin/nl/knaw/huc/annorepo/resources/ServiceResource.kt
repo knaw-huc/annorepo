@@ -25,13 +25,12 @@ import nl.knaw.huc.annorepo.api.IndexConfig
 import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
 import nl.knaw.huc.annorepo.api.ResourcePaths.SERVICES
-import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.api.SearchInfo
 import nl.knaw.huc.annorepo.auth.ContainerUserDAO
-import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
 import nl.knaw.huc.annorepo.resources.tools.AnnotationList
+import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.QueryCacheItem
 import nl.knaw.huc.annorepo.service.UriFactory
 import org.bson.Document
@@ -40,14 +39,12 @@ import org.litote.kmongo.findOne
 import org.litote.kmongo.getCollection
 import org.slf4j.LoggerFactory
 import java.net.URI
-import java.security.Principal
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.annotation.security.PermitAll
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
-import javax.ws.rs.NotAuthorizedException
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
@@ -79,6 +76,7 @@ class ServiceResource(
     private val queryCache: Cache<String, QueryCacheItem> =
         Caffeine.newBuilder().expireAfterAccess(1, TimeUnit.HOURS).maximumSize(1000).build()
     private val log = LoggerFactory.getLogger(javaClass)
+    private val containerAccessChecker = ContainerAccessChecker(containerUserDAO)
 
     @Operation(description = "Show the users with access to this container")
     @Timed
@@ -88,21 +86,27 @@ class ServiceResource(
         @PathParam("containerName") containerName: String,
         @Context context: SecurityContext,
     ): Response {
-        checkContainerExists(containerName)
-        checkUserHasAdminRightsInThisContainer(context.userPrincipal, containerName)
-        return Response.ok().build()
+        checkUserHasAdminRightsInThisContainer(context, containerName)
+
+        val users = containerUserDAO.getUsersForContainer(containerName)
+        return Response.ok(users).build()
     }
 
-    private fun checkUserHasAdminRightsInThisContainer(userPrincipal: Principal, containerName: String) {
-        if (userPrincipal is RootUser) {
-            return
+    @Operation(description = "Add users with given role to this container")
+    @Timed
+    @POST
+    @Path("{containerName}/users")
+    fun addContainerUsers(
+        @PathParam("containerName") containerName: String,
+        @Context context: SecurityContext,
+        containerUsers: List<ContainerUserEntry>,
+    ): Response {
+        checkUserHasAdminRightsInThisContainer(context, containerName)
+
+        for (user in containerUsers) {
+            containerUserDAO.addContainerUser(containerName, user.userName, user.role)
         }
-        val userName = userPrincipal.name
-        val role = containerUserDAO.getUserRole(containerName, userName)
-        if (role == Role.ADMIN) {
-            return
-        }
-        throw NotAuthorizedException("User $userName does not have access rights to this endpoint")
+        return Response.ok().build()
     }
 
     @Operation(description = "Find annotations in the given container matching the given query")
@@ -114,7 +118,8 @@ class ServiceResource(
         queryJson: String,
         @Context context: SecurityContext,
     ): Response {
-        checkContainerExists(containerName)
+        checkUserHasReadRightsInThisContainer(context, containerName)
+
         val queryMap = JSON.parse(queryJson)
         if (queryMap is HashMap<*, *>) {
             val aggregateStages =
@@ -141,7 +146,7 @@ class ServiceResource(
         @QueryParam("page") page: Int = 0,
         @Context context: SecurityContext,
     ): Response {
-        checkContainerExists(containerName)
+        checkUserHasReadRightsInThisContainer(context, containerName)
 
         val queryCacheItem = getQueryCacheItem(searchId)
         val aggregateStages = queryCacheItem.aggregateStages.toMutableList().apply {
@@ -167,7 +172,8 @@ class ServiceResource(
         @PathParam("searchId") searchId: String,
         @Context context: SecurityContext,
     ): Response {
-        checkContainerExists(containerName)
+        checkUserHasReadRightsInThisContainer(context, containerName)
+
         val queryCacheItem = getQueryCacheItem(searchId)
 //        val info = mapOf("query" to queryCacheItem.queryMap, "hits" to queryCacheItem.count)
         val query = queryCacheItem.queryMap as Map<String, Any>
@@ -184,8 +190,10 @@ class ServiceResource(
     @Path("{containerName}/$FIELDS")
     fun getAnnotationFieldsForContainer(
         @PathParam("containerName") containerName: String,
+        @Context context: SecurityContext,
     ): Response {
-        checkContainerExists(containerName)
+        checkUserHasReadRightsInThisContainer(context, containerName)
+
         val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(ARConst.CONTAINER_METADATA_COLLECTION)
         val containerMetadata: ContainerMetadata =
             containerMetadataCollection.findOne(eq(CONTAINER_NAME_FIELD, containerName))!!
@@ -198,8 +206,10 @@ class ServiceResource(
     @Path("{containerName}/metadata")
     fun getMetadataForContainer(
         @PathParam("containerName") containerName: String,
+        @Context context: SecurityContext,
     ): Response {
-        checkContainerExists(containerName)
+        checkUserHasReadRightsInThisContainer(context, containerName)
+
         val container = mdb.getCollection(containerName)
         val containerMetadataStore = mdb.getCollection<ContainerMetadata>(ARConst.CONTAINER_METADATA_COLLECTION)
         val meta = containerMetadataStore.findOne { eq(CONTAINER_NAME_FIELD, containerName) }!!
@@ -221,8 +231,10 @@ class ServiceResource(
     @Path("{containerName}/indexes")
     fun getContainerIndexes(
         @PathParam("containerName") containerName: String,
+        @Context context: SecurityContext,
     ): Response {
-        checkContainerExists(containerName)
+        checkUserHasReadRightsInThisContainer(context, containerName)
+
         val container = mdb.getCollection(containerName)
         val body = indexData(container, containerName)
         return Response.ok(body).build()
@@ -236,8 +248,10 @@ class ServiceResource(
         @PathParam("containerName") containerName: String,
         @PathParam("fieldName") fieldNameParam: String,
         @PathParam("indexType") indexTypeParam: String,
+        @Context context: SecurityContext,
     ): Response {
-        checkContainerExists(containerName)
+        checkUserHasAdminRightsInThisContainer(context, containerName)
+
         val container = mdb.getCollection(containerName)
 
         val fieldName = "$ANNOTATION_FIELD.${fieldNameParam}"
@@ -264,8 +278,10 @@ class ServiceResource(
         @PathParam("containerName") containerName: String,
         @PathParam("fieldName") fieldName: String,
         @PathParam("indexType") indexType: String,
+        @Context context: SecurityContext,
     ): Response {
-        checkContainerExists(containerName)
+        checkUserHasAdminRightsInThisContainer(context, containerName)
+
         val container = mdb.getCollection(containerName)
         val indexConfig =
             getIndexConfig(container, containerName, fieldName, indexType)
@@ -280,8 +296,10 @@ class ServiceResource(
         @PathParam("containerName") containerName: String,
         @PathParam("fieldName") fieldName: String,
         @PathParam("indexType") indexType: String,
+        @Context context: SecurityContext,
     ): Response {
-        checkContainerExists(containerName)
+        checkUserHasAdminRightsInThisContainer(context, containerName)
+
         val container = mdb.getCollection(containerName)
         val indexConfig =
             getIndexConfig(container, containerName, fieldName, indexType)
@@ -356,6 +374,16 @@ class ServiceResource(
             prev = if (prevPage != null) searchPageUri(searchUri, prevPage) else null,
             next = if (nextPage != null) searchPageUri(searchUri, nextPage) else null
         )
+    }
+
+    private fun checkUserHasAdminRightsInThisContainer(context: SecurityContext, containerName: String) {
+        checkContainerExists(containerName)
+        containerAccessChecker.checkUserHasAdminRightsInThisContainer(context.userPrincipal, containerName)
+    }
+
+    private fun checkUserHasReadRightsInThisContainer(context: SecurityContext, containerName: String) {
+        checkContainerExists(containerName)
+        containerAccessChecker.checkUserHasReadRightsInThisContainer(context.userPrincipal, containerName)
     }
 
     private fun checkContainerExists(containerName: String) {
