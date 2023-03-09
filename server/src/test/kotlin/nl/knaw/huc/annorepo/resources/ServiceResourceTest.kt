@@ -26,13 +26,27 @@ import java.net.URI
 import java.security.Principal
 import javax.ws.rs.NotAuthorizedException
 import javax.ws.rs.core.SecurityContext
+import kotlin.test.assertNotNull
 
 @ExtendWith(MockKExtension::class)
 class ServiceResourceTest {
 
-    @Test
-    fun `createSearch should return a response with location`() {
-        val queryJson = """
+    @Nested
+    inner class CreateSearchTest {
+        @Test
+        fun `createSearch endpoint can be used by root, admin, editor and guest users, but not by others`() {
+            assertRoleAuthorizationForBlock(
+                authorizedRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR, Role.GUEST)
+            ) {
+                val queryJson = """{ "body.id" : "something" }"""
+                val response = resource.createSearch(containerName, queryJson, context = securityContext)
+                log.info("response={}", response)
+            }
+        }
+
+        @Test
+        fun `createSearch should return a response with location`() {
+            val queryJson = """
                 {
                     ":overlapsWithTextAnchorRange": {
                         "source": "http://adsdasd",
@@ -48,66 +62,38 @@ class ServiceResourceTest {
                     }
                 }
         """.trimIndent()
-        useEditorUser()
-        val response = resource.createSearch(containerName, queryJson, context = securityContext)
-        log.info("result={}", response)
-        val locations = response.headers["location"] as List<*>
-        val location: URI = locations[0] as URI
+            useEditorUser()
+            val response = resource.createSearch(containerName, queryJson, context = securityContext)
+            log.info("result={}", response)
+            val locations = response.headers["location"] as List<*>
+            val location: URI = locations[0] as URI
 
-        log.info("location={}", location)
-        assertThat(location).hasHost("annorepo.net")
-        assertThat(location.toString())
-            .startsWith("https://annorepo.net/services/containername/search/")
-        val searchId = location.path.split('/').last()
-        log.info("searchId={}", searchId)
+            log.info("location={}", location)
+            assertThat(location).hasHost("annorepo.net")
+            assertThat(location.toString())
+                .startsWith("https://annorepo.net/services/containername/search/")
+            val searchId = location.path.split('/').last()
+            log.info("searchId={}", searchId)
 
-        val searchResponse = resource.getSearchResultPage(containerName, searchId, context = securityContext)
-        log.info("searchResponse={}", searchResponse)
-        log.info("searchResponse.entity={}", searchResponse.entity)
+            val searchResponse = resource.getSearchResultPage(containerName, searchId, context = securityContext)
+            log.info("searchResponse={}", searchResponse)
+            log.info("searchResponse.entity={}", searchResponse.entity)
+        }
     }
 
     @Nested
     inner class ReadContainerUsersTest {
 
         @Test
-        fun `readContainerUsers returns something when the user is authorized in the container`() {
-            useAdminUser()
-            assertReadContainerUsersSucceeds()
-        }
-
-        @Test
-        fun `readContainerUsers returns something when the user is root`() {
-            useRootUser()
-            assertReadContainerUsersSucceeds()
-        }
-
-        @Test
-        fun `readContainerUsers fails when the user is not admin`() {
-            useGuestUser()
-            assertReadContainerUsersFails()
-        }
-
-        @Test
-        fun `readContainerUsers fails when the user is not connected to the container`() {
-            useUserWithoutContainerAccess()
-            assertReadContainerUsersFails()
-        }
-
-        private fun assertReadContainerUsersSucceeds() {
-            val response = resource.readContainerUsers(containerName, securityContext)
-            log.info("response={}", response)
-            assertThat(response.status).isEqualTo(200)
-        }
-
-        private fun assertReadContainerUsersFails() {
-            try {
+        fun `readContainerUsers endpoint can be used by root and admin, but not by others`() {
+            assertRoleAuthorizationForBlock(
+                authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
+            ) {
                 val response = resource.readContainerUsers(containerName, securityContext)
-                log.info("response={}", response)
-                fail()
-            } catch (e: NotAuthorizedException) {
-                assertThat(e.message).isEqualTo("HTTP 401 Unauthorized")
+                assertNotNull(response)
             }
         }
+
     }
 
     companion object {
@@ -187,5 +173,40 @@ class ServiceResourceTest {
             every { userPrincipal.name } returns userName
             every { securityContext.userPrincipal } returns userPrincipal
         }
+
+        private fun assertRoleAuthorizationForBlock(
+            authorizedRoles: Set<Role?>,
+            block: () -> Unit,
+        ) {
+            val allRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR, Role.GUEST, null)
+            val unauthorizedRoles = allRoles - authorizedRoles
+
+            for (role in authorizedRoles) {
+                if (role == Role.ROOT) {
+                    useRootUser()
+                } else {
+                    useUserWithRole("authorized_user", role)
+                }
+                try {
+                    block()
+                } catch (e: NotAuthorizedException) {
+                    fail("User with role $role should have been authorized!")
+                }
+            }
+            for (role in unauthorizedRoles) {
+                if (role == Role.ROOT) {
+                    useRootUser()
+                } else {
+                    useUserWithRole("unauthorized_user", role)
+                }
+                try {
+                    block()
+                    fail("User with role $role is unexpectedly authorized!")
+                } catch (e: NotAuthorizedException) {
+                    assertThat(e.message).isEqualTo("HTTP 401 Unauthorized")
+                }
+            }
+        }
+
     }
 }

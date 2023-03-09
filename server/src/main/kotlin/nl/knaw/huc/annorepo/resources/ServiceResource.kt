@@ -381,6 +381,11 @@ class ServiceResource(
         containerAccessChecker.checkUserHasAdminRightsInThisContainer(context.userPrincipal, containerName)
     }
 
+    private fun checkUserHasEditRightsInThisContainer(context: SecurityContext, containerName: String) {
+        checkContainerExists(containerName)
+        containerAccessChecker.checkUserHasEditRightsInThisContainer(context.userPrincipal, containerName)
+    }
+
     private fun checkUserHasReadRightsInThisContainer(context: SecurityContext, containerName: String) {
         checkContainerExists(containerName)
         containerAccessChecker.checkUserHasReadRightsInThisContainer(context.userPrincipal, containerName)
