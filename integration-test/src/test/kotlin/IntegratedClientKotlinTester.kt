@@ -2,13 +2,16 @@ import arrow.core.Either
 import arrow.core.Either.Right
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
+import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.IndexType
+import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.api.UserEntry
 import nl.knaw.huc.annorepo.api.WebAnnotation
 import nl.knaw.huc.annorepo.client.ARResult.AddIndexResult
 import nl.knaw.huc.annorepo.client.ARResult.AddUsersResult
 import nl.knaw.huc.annorepo.client.ARResult.AnnotationFieldInfoResult
 import nl.knaw.huc.annorepo.client.ARResult.BatchUploadResult
+import nl.knaw.huc.annorepo.client.ARResult.ContainerUsersResult
 import nl.knaw.huc.annorepo.client.ARResult.CreateAnnotationResult
 import nl.knaw.huc.annorepo.client.ARResult.CreateContainerResult
 import nl.knaw.huc.annorepo.client.ARResult.DeleteAnnotationResult
@@ -405,6 +408,35 @@ class IntegratedClientKotlinTester {
         doSomethingWith(aboutInfo)
         assertThat(aboutInfo).isNotNull
         assertThat(aboutInfo.appName).isEqualTo("AnnoRepo")
+    }
+
+    @Nested
+    inner class ContainerUsersTests {
+        @Test
+        fun testAddingContainerUsers() {
+            val containerName = "republic-1728"
+            client.getContainerUsers(containerName).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    false
+                },
+                { (_, containerUserEntries): ContainerUsersResult ->
+                    doSomethingWith(containerUserEntries)
+                    true
+                }
+            )
+            val containerUserEntries = listOf(ContainerUserEntry("user1", Role.GUEST))
+            client.addContainerUsers(containerName, containerUserEntries).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    false
+                },
+                { (_, containerUserEntries): ContainerUsersResult ->
+                    doSomethingWith(containerUserEntries)
+                    true
+                }
+            )
+        }
     }
 
     companion object {

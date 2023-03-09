@@ -10,6 +10,7 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.junit5.MockKExtension
+import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.auth.RootUser
@@ -285,6 +286,7 @@ class ServiceResourceTest {
             every { config.databaseName } returns databaseName
             every { config.pageSize } returns 10
             every { config.rangeSelectorType } returns "something"
+            every { config.withAuthentication } returns true
             every { client.getDatabase(databaseName) } returns mongoDatabase
             every { mongoDatabase.getCollection(containerName) } returns mongoCollection
             every { mongoDatabase.listCollectionNames() } returns collectionNames

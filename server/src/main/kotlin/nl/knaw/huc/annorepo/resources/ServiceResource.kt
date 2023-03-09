@@ -21,6 +21,7 @@ import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.AnnotationPage
 import nl.knaw.huc.annorepo.api.ContainerMetadata
+import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.IndexConfig
 import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
@@ -101,12 +102,15 @@ class ServiceResource(
         @Context context: SecurityContext,
         containerUsers: List<ContainerUserEntry>,
     ): Response {
+        log.info("containerUsers={}", containerUsers)
         checkUserHasAdminRightsInThisContainer(context, containerName)
 
         for (user in containerUsers) {
+            containerUserDAO.removeContainerUser(containerName, user.userName)
             containerUserDAO.addContainerUser(containerName, user.userName, user.role)
         }
-        return Response.ok().build()
+        val users = containerUserDAO.getUsersForContainer(containerName)
+        return Response.ok(users).build()
     }
 
     @Operation(description = "Remove the user with the given userName from this container")
@@ -392,17 +396,23 @@ class ServiceResource(
 
     private fun checkUserHasAdminRightsInThisContainer(context: SecurityContext, containerName: String) {
         checkContainerExists(containerName)
-        containerAccessChecker.checkUserHasAdminRightsInThisContainer(context.userPrincipal, containerName)
+        if (configuration.withAuthentication) {
+            containerAccessChecker.checkUserHasAdminRightsInThisContainer(context.userPrincipal, containerName)
+        }
     }
 
     private fun checkUserHasEditRightsInThisContainer(context: SecurityContext, containerName: String) {
         checkContainerExists(containerName)
-        containerAccessChecker.checkUserHasEditRightsInThisContainer(context.userPrincipal, containerName)
+        if (configuration.withAuthentication) {
+            containerAccessChecker.checkUserHasEditRightsInThisContainer(context.userPrincipal, containerName)
+        }
     }
 
     private fun checkUserHasReadRightsInThisContainer(context: SecurityContext, containerName: String) {
         checkContainerExists(containerName)
-        containerAccessChecker.checkUserHasReadRightsInThisContainer(context.userPrincipal, containerName)
+        if (configuration.withAuthentication) {
+            containerAccessChecker.checkUserHasReadRightsInThisContainer(context.userPrincipal, containerName)
+        }
     }
 
     private fun checkContainerExists(containerName: String) {
