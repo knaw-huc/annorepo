@@ -109,6 +109,20 @@ class ServiceResource(
         return Response.ok().build()
     }
 
+    @Operation(description = "Remove the user with the given userName from this container")
+    @Timed
+    @DELETE
+    @Path("{containerName}/users/{userName}")
+    fun deleteContainerUser(
+        @PathParam("containerName") containerName: String,
+        @PathParam("userName") userName: String,
+        @Context context: SecurityContext,
+    ): Response {
+        checkUserHasAdminRightsInThisContainer(context, containerName)
+        containerUserDAO.removeContainerUser(containerName, userName)
+        return Response.ok().build()
+    }
+
     @Operation(description = "Find annotations in the given container matching the given query")
     @Timed
     @POST

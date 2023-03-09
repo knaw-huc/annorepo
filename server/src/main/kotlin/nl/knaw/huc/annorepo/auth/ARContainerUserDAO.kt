@@ -19,4 +19,8 @@ class ARContainerUserDAO(configuration: AnnoRepoConfiguration, mongoClient: Mong
     override fun getUsersForContainer(containerName: String): List<String> {
         TODO("Not yet implemented")
     }
+
+    override fun removeContainerUser(containerName: String, userName: String) {
+        TODO("Not yet implemented")
+    }
 }

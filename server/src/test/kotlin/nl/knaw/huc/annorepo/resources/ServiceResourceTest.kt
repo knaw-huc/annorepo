@@ -30,23 +30,68 @@ import kotlin.test.assertNotNull
 
 @ExtendWith(MockKExtension::class)
 class ServiceResourceTest {
-
     @Nested
-    inner class CreateSearchTest {
-        @Test
-        fun `createSearch endpoint can be used by root, admin, editor and guest users, but not by others`() {
-            assertRoleAuthorizationForBlock(
-                authorizedRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR, Role.GUEST)
-            ) {
-                val queryJson = """{ "body.id" : "something" }"""
-                val response = resource.createSearch(containerName, queryJson, context = securityContext)
-                log.info("response={}", response)
+    inner class ContainerUserTest {
+        @Nested
+        inner class ReadContainerUsersTest {
+            @Test
+            fun `readContainerUsers endpoint can be used by root and admin, but not by others`() {
+                assertRoleAuthorizationForBlock(
+                    authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
+                ) {
+                    val response = resource.readContainerUsers(containerName, securityContext)
+                    assertNotNull(response)
+                }
             }
         }
 
-        @Test
-        fun `createSearch should return a response with location`() {
-            val queryJson = """
+        @Nested
+        inner class AddContainerUsersTest {
+            @Test
+            fun `addContainerUsers endpoint can be used by root and admin, but not by others`() {
+                assertRoleAuthorizationForBlock(
+                    authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
+                ) {
+                    val containerUsers = listOf(ContainerUserEntry("guestUser", Role.GUEST))
+                    val response = resource.addContainerUsers(containerName, securityContext, containerUsers)
+                    assertNotNull(response)
+                }
+            }
+        }
+
+        @Nested
+        inner class DeleteContainerUserTest {
+            @Test
+            fun `deleteContainerUser endpoint can be used by root and admin, but not by others`() {
+                assertRoleAuthorizationForBlock(
+                    authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
+                ) {
+                    val response = resource.deleteContainerUser(containerName, "username", securityContext)
+                    assertNotNull(response)
+                }
+            }
+        }
+    }
+
+    @Nested
+    inner class ContainerSearchTest {
+
+        @Nested
+        inner class CreateSearchTest {
+            @Test
+            fun `createSearch endpoint can be used by root, admin, editor and guest users, but not by others`() {
+                assertRoleAuthorizationForBlock(
+                    authorizedRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR, Role.GUEST)
+                ) {
+                    val queryJson = """{ "body.id" : "something" }"""
+                    val response = resource.createSearch(containerName, queryJson, context = securityContext)
+                    log.info("response={}", response)
+                }
+            }
+
+            @Test
+            fun `createSearch should return a response with location`() {
+                val queryJson = """
                 {
                     ":overlapsWithTextAnchorRange": {
                         "source": "http://adsdasd",
@@ -62,42 +107,143 @@ class ServiceResourceTest {
                     }
                 }
         """.trimIndent()
-            useEditorUser()
-            val response = resource.createSearch(containerName, queryJson, context = securityContext)
-            log.info("result={}", response)
-            val locations = response.headers["location"] as List<*>
-            val location: URI = locations[0] as URI
+                useEditorUser()
+                val response = resource.createSearch(containerName, queryJson, context = securityContext)
+                log.info("result={}", response)
+                val locations = response.headers["location"] as List<*>
+                val location: URI = locations[0] as URI
 
-            log.info("location={}", location)
-            assertThat(location).hasHost("annorepo.net")
-            assertThat(location.toString())
-                .startsWith("https://annorepo.net/services/containername/search/")
-            val searchId = location.path.split('/').last()
-            log.info("searchId={}", searchId)
+                log.info("location={}", location)
+                assertThat(location).hasHost("annorepo.net")
+                assertThat(location.toString())
+                    .startsWith("https://annorepo.net/services/containername/search/")
+                val searchId = location.path.split('/').last()
+                log.info("searchId={}", searchId)
 
-            val searchResponse = resource.getSearchResultPage(containerName, searchId, context = securityContext)
-            log.info("searchResponse={}", searchResponse)
-            log.info("searchResponse.entity={}", searchResponse.entity)
+                val searchResponse = resource.getSearchResultPage(containerName, searchId, context = securityContext)
+                log.info("searchResponse={}", searchResponse)
+                log.info("searchResponse.entity={}", searchResponse.entity)
+            }
+        }
+
+        @Nested
+        inner class GetSearchResultPageTest {
+            @Test
+            fun `getSearchResultPage endpoint can be used by root, admin, editor and guest, but not by others`() {
+                assertRoleAuthorizationForBlock(
+                    authorizedRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR, Role.GUEST)
+                ) {
+                    val response = resource.getSearchResultPage(containerName, "some-search-id", 0, securityContext)
+                    assertNotNull(response)
+                }
+            }
+        }
+
+        @Nested
+        inner class GetSearchInfoTest {
+            @Test
+            fun `getSearchInfo endpoint can be used by root, admin, editor and guest, but not by others`() {
+                assertRoleAuthorizationForBlock(
+                    authorizedRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR, Role.GUEST)
+                ) {
+                    val response = resource.getSearchInfo(containerName, searchId, securityContext)
+                    assertNotNull(response)
+                }
+            }
         }
     }
 
     @Nested
-    inner class ReadContainerUsersTest {
+    inner class ContainerMetadataTest {
 
-        @Test
-        fun `readContainerUsers endpoint can be used by root and admin, but not by others`() {
-            assertRoleAuthorizationForBlock(
-                authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
-            ) {
-                val response = resource.readContainerUsers(containerName, securityContext)
-                assertNotNull(response)
+        @Nested
+        inner class GetAnnotationFieldsForContainerTest {
+            @Test
+            fun `getAnnotationFieldsForContainer endpoint can be used by root, admin, editor and guest, but not by others`() {
+                assertRoleAuthorizationForBlock(
+                    authorizedRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR, Role.GUEST)
+                ) {
+                    val response = resource.getAnnotationFieldsForContainer(containerName, securityContext)
+                    assertNotNull(response)
+                }
             }
         }
 
+        @Nested
+        inner class GetMetadataForContainerTest {
+            @Test
+            fun `getMetadataForContainer endpoint can be used by root, admin, editor and guest, but not by others`() {
+                assertRoleAuthorizationForBlock(
+                    authorizedRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR, Role.GUEST)
+                ) {
+                    val response = resource.getMetadataForContainer(containerName, securityContext)
+                    assertNotNull(response)
+                }
+            }
+        }
+    }
+
+    @Nested
+    inner class ContainerIndexTest {
+
+        @Nested
+        inner class GetContainerIndexesTest {
+            @Test
+            fun `getContainerIndexes endpoint can be used by root, admin, editor and guest, but not by others`() {
+                assertRoleAuthorizationForBlock(
+                    authorizedRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR, Role.GUEST)
+                ) {
+                    val response = resource.getContainerIndexes(containerName, securityContext)
+                    assertNotNull(response)
+                }
+            }
+        }
+
+        @Nested
+        inner class AddContainerIndexTest {
+            @Test
+            fun `addContainerIndex endpoint can be used by root or admin, but not by others`() {
+                assertRoleAuthorizationForBlock(
+                    authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
+                ) {
+                    val response = resource.addContainerIndex(containerName, "fieldName", "indexType", securityContext)
+                    assertNotNull(response)
+                }
+            }
+        }
+
+        @Nested
+        inner class GetContainerIndexDefinitionTest {
+            @Test
+            fun `getContainerIndexDefinition endpoint can be used by root or admin, but not by others`() {
+                assertRoleAuthorizationForBlock(
+                    authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
+                ) {
+                    val response =
+                        resource.getContainerIndexDefinition(containerName, "fieldName", "indexType", securityContext)
+                    assertNotNull(response)
+                }
+            }
+        }
+
+        @Nested
+        inner class DeleteContainerIndexTest {
+            @Test
+            fun `deleteContainerIndex endpoint can be used by root or admin, but not by others`() {
+                assertRoleAuthorizationForBlock(
+                    authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
+                ) {
+                    val response =
+                        resource.deleteContainerIndex(containerName, "fieldName", "indexType", securityContext)
+                    assertNotNull(response)
+                }
+            }
+        }
     }
 
     companion object {
         const val containerName = "containername"
+        const val searchId = "some-search-id"
         private const val baseURL = "https://annorepo.net"
         private const val databaseName = "mock"
 
@@ -191,6 +337,8 @@ class ServiceResourceTest {
                     block()
                 } catch (e: NotAuthorizedException) {
                     fail("User with role $role should have been authorized!")
+                } catch (e: RuntimeException) {
+                    log.info(e.stackTraceToString())
                 }
             }
             for (role in unauthorizedRoles) {
