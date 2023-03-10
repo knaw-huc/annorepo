@@ -1,4 +1,4 @@
-package nl.knaw.huc.annorepo.resources
+package nl.knaw.huc.annorepo.resources.tools
 
 import io.swagger.v3.oas.annotations.ExternalDocumentation
 import io.swagger.v3.oas.annotations.OpenAPIDefinition
