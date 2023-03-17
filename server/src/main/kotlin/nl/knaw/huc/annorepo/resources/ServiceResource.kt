@@ -13,20 +13,13 @@ import com.mongodb.client.model.IndexOptions
 import com.mongodb.client.model.Indexes
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
-import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
-import nl.knaw.huc.annorepo.api.ARConst
+import nl.knaw.huc.annorepo.api.*
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
-import nl.knaw.huc.annorepo.api.AnnotationPage
-import nl.knaw.huc.annorepo.api.ContainerMetadata
-import nl.knaw.huc.annorepo.api.ContainerUserEntry
-import nl.knaw.huc.annorepo.api.IndexConfig
-import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
 import nl.knaw.huc.annorepo.api.ResourcePaths.SERVICES
-import nl.knaw.huc.annorepo.api.SearchInfo
 import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
@@ -43,21 +36,8 @@ import java.net.URI
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.annotation.security.PermitAll
-import javax.ws.rs.BadRequestException
-import javax.ws.rs.DELETE
-import javax.ws.rs.GET
-import javax.ws.rs.NotFoundException
-import javax.ws.rs.POST
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.Context
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.SecurityContext
-import javax.ws.rs.core.UriBuilder
+import javax.ws.rs.*
+import javax.ws.rs.core.*
 
 @Path(SERVICES)
 @Produces(MediaType.APPLICATION_JSON)
@@ -67,9 +47,8 @@ class ServiceResource(
     private val configuration: AnnoRepoConfiguration,
     client: MongoClient,
     private val containerUserDAO: ContainerUserDAO,
-) {
+) : AbstractContainerResource(configuration, client, ContainerAccessChecker(containerUserDAO)) {
     private val uriFactory = UriFactory(configuration)
-    private val mdb = client.getDatabase(configuration.databaseName)
 
     private val paginationStage = limit(configuration.pageSize)
     private val aggregateStageGenerator = AggregateStageGenerator(configuration)
@@ -77,7 +56,6 @@ class ServiceResource(
     private val queryCache: Cache<String, QueryCacheItem> =
         Caffeine.newBuilder().expireAfterAccess(1, TimeUnit.HOURS).maximumSize(1000).build()
     private val log = LoggerFactory.getLogger(javaClass)
-    private val containerAccessChecker = ContainerAccessChecker(containerUserDAO)
 
     @Operation(description = "Show the users with access to this container")
     @Timed
@@ -392,33 +370,6 @@ class ServiceResource(
             prev = if (prevPage != null) searchPageUri(searchUri, prevPage) else null,
             next = if (nextPage != null) searchPageUri(searchUri, nextPage) else null
         )
-    }
-
-    private fun checkUserHasAdminRightsInThisContainer(context: SecurityContext, containerName: String) {
-        checkContainerExists(containerName)
-        if (configuration.withAuthentication) {
-            containerAccessChecker.checkUserHasAdminRightsInThisContainer(context.userPrincipal, containerName)
-        }
-    }
-
-    private fun checkUserHasEditRightsInThisContainer(context: SecurityContext, containerName: String) {
-        checkContainerExists(containerName)
-        if (configuration.withAuthentication) {
-            containerAccessChecker.checkUserHasEditRightsInThisContainer(context.userPrincipal, containerName)
-        }
-    }
-
-    private fun checkUserHasReadRightsInThisContainer(context: SecurityContext, containerName: String) {
-        checkContainerExists(containerName)
-        if (configuration.withAuthentication) {
-            containerAccessChecker.checkUserHasReadRightsInThisContainer(context.userPrincipal, containerName)
-        }
-    }
-
-    private fun checkContainerExists(containerName: String) {
-        if (!mdb.listCollectionNames().contains(containerName)) {
-            throw BadRequestException("Annotation Container '$containerName' not found")
-        }
     }
 
     private fun searchPageUri(searchUri: URI, page: Int) =

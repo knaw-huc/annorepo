@@ -8,49 +8,40 @@ import com.mongodb.client.model.Filters.eq
 import com.mongodb.client.model.ReplaceOptions
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
-import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
+import nl.knaw.huc.annorepo.api.*
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
-import nl.knaw.huc.annorepo.api.AnnotationData
-import nl.knaw.huc.annorepo.api.ContainerMetadata
-import nl.knaw.huc.annorepo.api.ContainerPage
-import nl.knaw.huc.annorepo.api.ContainerSpecs
-import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.makeAnnotationETag
 import nl.knaw.huc.annorepo.service.JsonLdUtils
 import nl.knaw.huc.annorepo.service.UriFactory
 import org.bson.Document
 import org.eclipse.jetty.util.ajax.JSON
-import org.litote.kmongo.aggregate
-import org.litote.kmongo.findOne
-import org.litote.kmongo.getCollection
-import org.litote.kmongo.json
-import org.litote.kmongo.replaceOneWithFilter
+import org.litote.kmongo.*
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.*
 import javax.annotation.security.PermitAll
-import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.Context
-import javax.ws.rs.core.EntityTag
+import javax.ws.rs.*
+import javax.ws.rs.core.*
 import javax.ws.rs.core.MediaType.APPLICATION_JSON
-import javax.ws.rs.core.Request
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.SecurityContext
+import kotlin.collections.HashMap
+import kotlin.collections.Map
+import kotlin.collections.MutableMap
+import kotlin.collections.Set
+import kotlin.collections.contains
+import kotlin.collections.emptySet
+import kotlin.collections.filter
+import kotlin.collections.get
+import kotlin.collections.listOf
+import kotlin.collections.set
+import kotlin.collections.toList
+import kotlin.collections.toMutableMap
 import kotlin.math.abs
 
 @Path(ResourcePaths.W3C)
@@ -58,13 +49,13 @@ import kotlin.math.abs
 @PermitAll
 @SecurityRequirement(name = SECURITY_SCHEME_NAME)
 class W3CResource(
-    val configuration: AnnoRepoConfiguration,
+    private val configuration: AnnoRepoConfiguration,
     client: MongoClient,
-) {
+    containerAccessChecker: ContainerAccessChecker,
+) : AbstractContainerResource(configuration, client, containerAccessChecker) {
 
     private val log = LoggerFactory.getLogger(javaClass)
     private val uriFactory = UriFactory(configuration)
-    private val mdb = client.getDatabase(configuration.databaseName)
 
     @Operation(description = "Create an Annotation Container")
     @Timed
@@ -107,6 +98,8 @@ class W3CResource(
         @Context context: SecurityContext,
     ): Response {
         log.debug("read Container $containerName, page $page")
+        checkUserHasReadRightsInThisContainer(context, containerName)
+
         val containerPage = getContainerPage(containerName, page ?: 0, configuration.pageSize)
         val uri = uriFactory.containerURL(containerName)
         val eTag = makeContainerETag(containerName)
@@ -140,6 +133,8 @@ class W3CResource(
         @Context req: Request,
         @Context context: SecurityContext,
     ): Response {
+        checkUserHasAdminRightsInThisContainer(context, containerName)
+
         val eTag = makeContainerETag(containerName)
         val valid = req.evaluatePreconditions(eTag)
         val containerPage = getContainerPage(containerName, 0, configuration.pageSize)
@@ -186,6 +181,8 @@ class W3CResource(
         @Context context: SecurityContext,
     ): Response {
 //        log.debug("annotation=\n$annotationJson")
+        checkUserHasEditRightsInThisContainer(context, containerName)
+
         var name = slug ?: UUID.randomUUID().toString()
         val container = mdb.getCollection(containerName)
         val existingAnnotationDocument = container.find(Document(ANNOTATION_NAME_FIELD, name)).first()
@@ -234,6 +231,8 @@ class W3CResource(
         @Context context: SecurityContext,
     ): Response {
         log.debug("read annotation $annotationName in container $containerName")
+        checkUserHasReadRightsInThisContainer(context, containerName)
+
         val container = mdb.getCollection(containerName)
         val annotationDocument =
             container.find(Document(ANNOTATION_NAME_FIELD, annotationName))
@@ -273,6 +272,8 @@ class W3CResource(
         annotationJson: String,
     ): Response {
         log.debug("annotation=\n$annotationJson")
+        checkUserHasEditRightsInThisContainer(context, containerName)
+
         val eTag = makeAnnotationETag(containerName, annotationName)
         req.evaluatePreconditions(eTag)
             ?: return Response.status(Response.Status.PRECONDITION_FAILED)
@@ -320,6 +321,8 @@ class W3CResource(
         @Context context: SecurityContext,
     ): Response {
         log.debug("delete annotation $annotationName in container $containerName")
+        checkUserHasEditRightsInThisContainer(context, containerName)
+
         val eTag = makeAnnotationETag(containerName, annotationName)
         req.evaluatePreconditions(eTag)
             ?: return Response.status(Response.Status.PRECONDITION_FAILED)

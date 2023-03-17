@@ -1,14 +1,10 @@
 package nl.knaw.huc.annorepo.resources
 
-import com.mongodb.client.MongoClient
-import com.mongodb.client.MongoCollection
-import com.mongodb.client.MongoCursor
-import com.mongodb.client.MongoDatabase
-import com.mongodb.client.MongoIterable
+import com.mongodb.client.*
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.ContainerSpecs
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
-import nl.knaw.huc.annorepo.resources.ServiceResourceTest.Companion.securityContext
+import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -17,6 +13,7 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import javax.ws.rs.core.Response
+import javax.ws.rs.core.SecurityContext
 
 class W3CResourceTest {
 
@@ -32,7 +29,11 @@ class W3CResourceTest {
     private val client: MongoClient = mock {
         on { getDatabase(anyString()) }.doReturn(mdb)
     }
-    private val configuration: AnnoRepoConfiguration = mock()
+    private val configuration: AnnoRepoConfiguration = mock() {
+        on { databaseName }.doReturn("annorepo")
+    }
+    private val containerAccessChecker: ContainerAccessChecker = mock()
+    private val securityContext: SecurityContext = mock()
 
     @Disabled
     @Test
@@ -40,7 +41,12 @@ class W3CResourceTest {
         configuration.databaseName = "annorepo"
         println(configuration.databaseName)
         println(client.getDatabase(configuration.databaseName))
-        val r = W3CResource(client = client, configuration = configuration)
+        val r =
+            W3CResource(
+                client = client,
+                configuration = configuration,
+                containerAccessChecker = containerAccessChecker
+            )
         val response = r.createContainer(
             containerSpecs = ContainerSpecs(
                 context = mutableListOf(),

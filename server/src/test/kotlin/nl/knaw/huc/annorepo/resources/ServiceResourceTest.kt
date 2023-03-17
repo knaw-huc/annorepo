@@ -1,10 +1,6 @@
 package nl.knaw.huc.annorepo.resources
 
-import com.mongodb.client.MongoClient
-import com.mongodb.client.MongoCollection
-import com.mongodb.client.MongoCursor
-import com.mongodb.client.MongoDatabase
-import com.mongodb.client.MongoIterable
+import com.mongodb.client.*
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
@@ -273,7 +269,7 @@ class ServiceResourceTest {
         lateinit var mongoCursor: MongoCursor<String>
 
         @RelaxedMockK
-        lateinit var mockContainerUserDAO: ContainerUserDAO
+        lateinit var containerUserDAO: ContainerUserDAO
 
         private lateinit var resource: ServiceResource
         private val log = LoggerFactory.getLogger(ServiceResourceTest::class.java)
@@ -293,7 +289,7 @@ class ServiceResourceTest {
             every { collectionNames.iterator() } returns mongoCursor
             every { mongoCursor.hasNext() } returns true
             every { mongoCursor.next() } returns containerName
-            resource = ServiceResource(config, client, mockContainerUserDAO)
+            resource = ServiceResource(config, client, containerUserDAO)
         }
 
         private fun useRootUser() {
@@ -317,7 +313,7 @@ class ServiceResourceTest {
         }
 
         private fun useUserWithRole(userName: String, role: Role?) {
-            every { mockContainerUserDAO.getUserRole(containerName, userName) } returns role
+            every { containerUserDAO.getUserRole(containerName, userName) } returns role
             every { userPrincipal.name } returns userName
             every { securityContext.userPrincipal } returns userPrincipal
         }
