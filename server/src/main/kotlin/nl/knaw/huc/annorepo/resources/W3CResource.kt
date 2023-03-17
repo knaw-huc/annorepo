@@ -15,6 +15,7 @@ import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
+import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.makeAnnotationETag
@@ -44,6 +45,10 @@ import kotlin.collections.toList
 import kotlin.collections.toMutableMap
 import kotlin.math.abs
 
+private const val ETAG_MISMATCH = "Etag does not match"
+private const val RESOURCE_LINK = "http://www.w3.org/ns/ldp#Resource"
+private const val ANNOTATION_LINK = "http://www.w3.org/ns/ldp#Annotation"
+
 @Path(ResourcePaths.W3C)
 @Produces(ANNOTATION_MEDIA_TYPE)
 @PermitAll
@@ -51,8 +56,8 @@ import kotlin.math.abs
 class W3CResource(
     private val configuration: AnnoRepoConfiguration,
     client: MongoClient,
-    containerAccessChecker: ContainerAccessChecker,
-) : AbstractContainerResource(configuration, client, containerAccessChecker) {
+    private val containerUserDAO: ContainerUserDAO,
+) : AbstractContainerResource(configuration, client, ContainerAccessChecker(containerUserDAO)) {
 
     private val log = LoggerFactory.getLogger(javaClass)
     private val uriFactory = UriFactory(configuration)
@@ -74,6 +79,10 @@ class W3CResource(
         }
         mdb.createCollection(containerName)
         setupCollectionMetadata(containerName, containerSpecs.label)
+        if (configuration.withAuthentication) {
+            val userName = context.userPrincipal.name
+            containerUserDAO.addContainerUser(containerName, userName, Role.ADMIN)
+        }
         val containerData = getContainerPage(containerName, 0, configuration.pageSize)
         val uri = uriFactory.containerURL(containerName)
         val eTag = makeContainerETag(containerName)
@@ -141,7 +150,7 @@ class W3CResource(
         return when {
             valid == null -> {
                 Response.status(Response.Status.PRECONDITION_FAILED)
-                    .entity("Etag does not match")
+                    .entity(ETAG_MISMATCH)
                     .build()
             }
 
@@ -213,8 +222,8 @@ class W3CResource(
         return Response.created(uri)
             .header("Vary", "Accept")
             .allow("POST", "PUT", "GET", "DELETE", "OPTIONS", "HEAD")
-            .link("http://www.w3.org/ns/ldp#Resource", "type")
-            .link("http://www.w3.org/ns/ldp#Annotation", "type")
+            .link(RESOURCE_LINK, "type")
+            .link(ANNOTATION_LINK, "type")
             .tag(eTag)
             .entity(entity)
             .build()
@@ -251,8 +260,8 @@ class W3CResource(
             Response.ok(entity)
                 .header("Vary", "Accept")
                 .allow("POST", "PUT", "GET", "DELETE", "OPTIONS", "HEAD")
-                .link("http://www.w3.org/ns/ldp#Resource", "type")
-                .link("http://www.w3.org/ns/ldp#Annotation", "type")
+                .link(RESOURCE_LINK, "type")
+                .link(ANNOTATION_LINK, "type")
                 .lastModified(annotationData.modified)
                 .tag(eTag)
                 .build()
@@ -277,7 +286,7 @@ class W3CResource(
         val eTag = makeAnnotationETag(containerName, annotationName)
         req.evaluatePreconditions(eTag)
             ?: return Response.status(Response.Status.PRECONDITION_FAILED)
-                .entity("Etag does not match")
+                .entity(ETAG_MISMATCH)
                 .build()
         val annotationDocument = Document.parse(annotationJson)
         val newFields = JsonLdUtils.extractFields(annotationJson)
@@ -303,8 +312,8 @@ class W3CResource(
         return Response.ok(entity)
             .header("Vary", "Accept")
             .allow("POST", "PUT", "GET", "DELETE", "OPTIONS", "HEAD")
-            .link("http://www.w3.org/ns/ldp#Resource", "type")
-            .link("http://www.w3.org/ns/ldp#Annotation", "type")
+            .link(RESOURCE_LINK, "type")
+            .link(ANNOTATION_LINK, "type")
             .tag(eTag)
             .entity(entity)
             .build()
@@ -326,7 +335,7 @@ class W3CResource(
         val eTag = makeAnnotationETag(containerName, annotationName)
         req.evaluatePreconditions(eTag)
             ?: return Response.status(Response.Status.PRECONDITION_FAILED)
-                .entity("Etag does not match")
+                .entity(ETAG_MISMATCH)
                 .build()
 
         val container = mdb.getCollection(containerName)

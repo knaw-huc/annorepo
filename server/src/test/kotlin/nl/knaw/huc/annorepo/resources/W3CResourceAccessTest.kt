@@ -11,7 +11,6 @@ import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
-import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
 import org.bson.Document
 import org.junit.jupiter.api.Assertions.fail
@@ -190,7 +189,7 @@ class W3CResourceAccessTest {
             every { collectionNames.iterator() } returns mongoCursor
             every { mongoCursor.hasNext() } returns true
             every { mongoCursor.next() } returns containerName
-            resource = W3CResource(config, client, ContainerAccessChecker(containerUserDAO))
+            resource = W3CResource(config, client, containerUserDAO)
         }
 
         private fun useRootUser() {

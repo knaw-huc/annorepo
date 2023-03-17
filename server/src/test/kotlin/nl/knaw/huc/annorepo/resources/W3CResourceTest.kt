@@ -3,8 +3,8 @@ package nl.knaw.huc.annorepo.resources
 import com.mongodb.client.*
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.ContainerSpecs
+import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
-import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -32,7 +32,7 @@ class W3CResourceTest {
     private val configuration: AnnoRepoConfiguration = mock {
         on { databaseName }.doReturn("annorepo")
     }
-    private val containerAccessChecker: ContainerAccessChecker = mock()
+    private val containerUserDAO: ContainerUserDAO = mock()
     private val securityContext: SecurityContext = mock()
 
     @Disabled
@@ -45,7 +45,7 @@ class W3CResourceTest {
             W3CResource(
                 client = client,
                 configuration = configuration,
-                containerAccessChecker = containerAccessChecker
+                containerUserDAO = containerUserDAO
             )
         val response = r.createContainer(
             containerSpecs = ContainerSpecs(
