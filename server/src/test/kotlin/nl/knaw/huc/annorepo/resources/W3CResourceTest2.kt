@@ -30,33 +30,98 @@ import kotlin.test.assertNotNull
 class W3CResourceTest2 {
     @Nested
     inner class ContainerTest {
-        @Nested
-        inner class CreateContainerTest {
 
-            @Test
-            fun `readContainer endpoint can be used by root, admin, editor and guest, but not by others`() {
-                assertRoleAuthorizationForBlock(
-                    authorizedRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR, Role.GUEST)
-                ) {
-                    val response =
-                        resource.readContainer(containerName = containerName, page = 0, context = securityContext)
-                    assertNotNull(response)
-                }
+        @Test
+        fun `readContainer endpoint can be used by root, admin, editor and guest, but not by others`() {
+            assertRoleAuthorizationForBlock(
+                authorizedRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR, Role.GUEST)
+            ) {
+                val response =
+                    resource.readContainer(containerName = containerName, page = 0, context = securityContext)
+                assertNotNull(response)
             }
+        }
 
-            @Test
-            fun `deleteContainer endpoint can be used by root and admin, but not by others`() {
-                assertRoleAuthorizationForBlock(
-                    authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
-                ) {
-                    val response =
-                        resource.deleteContainer(
-                            containerName = containerName,
-                            req = request,
-                            context = securityContext
-                        )
-                    assertNotNull(response)
-                }
+        @Test
+        fun `deleteContainer endpoint can be used by root and admin, but not by others`() {
+            assertRoleAuthorizationForBlock(
+                authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
+            ) {
+                val response =
+                    resource.deleteContainer(
+                        containerName = containerName,
+                        req = request,
+                        context = securityContext
+                    )
+                assertNotNull(response)
+            }
+        }
+    }
+
+    @Nested
+    inner class AnnotationTest {
+
+        @Test
+        fun `createAnnotation endpoint can be used by root, admin and editor, but not by others`() {
+            assertRoleAuthorizationForBlock(
+                authorizedRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR)
+            ) {
+                val response =
+                    resource.createAnnotation(
+                        slug = "slug",
+                        containerName = containerName,
+                        annotationJson = "",
+                        context = securityContext
+                    )
+                assertNotNull(response)
+            }
+        }
+
+        @Test
+        fun `readAnnotation endpoint can be used by root, admin, editor and guest, but not by others`() {
+            assertRoleAuthorizationForBlock(
+                authorizedRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR, Role.GUEST)
+            ) {
+                val response =
+                    resource.readAnnotation(
+                        containerName = containerName,
+                        annotationName = "annotation",
+                        context = securityContext
+                    )
+                assertNotNull(response)
+            }
+        }
+
+        @Test
+        fun `updateAnnotation endpoint can be used by root, admin and editor, but not by others`() {
+            assertRoleAuthorizationForBlock(
+                authorizedRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR)
+            ) {
+                val response =
+                    resource.updateAnnotation(
+                        containerName = containerName,
+                        annotationName = "annotation",
+                        annotationJson = "",
+                        req = request,
+                        context = securityContext
+                    )
+                assertNotNull(response)
+            }
+        }
+
+        @Test
+        fun `deleteAnnotation endpoint can be used by root, admin and editor, but not by others`() {
+            assertRoleAuthorizationForBlock(
+                authorizedRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR)
+            ) {
+                val response =
+                    resource.deleteAnnotation(
+                        containerName = containerName,
+                        annotationName = "annotation",
+                        req = request,
+                        context = securityContext
+                    )
+                assertNotNull(response)
             }
         }
     }
@@ -132,21 +197,21 @@ class W3CResourceTest2 {
             every { securityContext.userPrincipal } returns RootUser()
         }
 
-        private fun useAdminUser() {
-            useUserWithRole("admin", Role.ADMIN)
-        }
-
-        private fun useEditorUser() {
-            useUserWithRole("editor", Role.EDITOR)
-        }
-
-        private fun useGuestUser() {
-            useUserWithRole("guest", Role.GUEST)
-        }
-
-        private fun useUserWithoutContainerAccess() {
-            useUserWithRole("anonymous", null)
-        }
+//        private fun useAdminUser() {
+//            useUserWithRole("admin", Role.ADMIN)
+//        }
+//
+//        private fun useEditorUser() {
+//            useUserWithRole("editor", Role.EDITOR)
+//        }
+//
+//        private fun useGuestUser() {
+//            useUserWithRole("guest", Role.GUEST)
+//        }
+//
+//        private fun useUserWithoutContainerAccess() {
+//            useUserWithRole("anonymous", null)
+//        }
 
         private fun useUserWithRole(userName: String, role: Role?) {
             every { containerUserDAO.getUserRole(containerName, userName) } returns role
