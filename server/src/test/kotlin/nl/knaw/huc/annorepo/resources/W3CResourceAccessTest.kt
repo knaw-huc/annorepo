@@ -27,7 +27,7 @@ import javax.ws.rs.core.SecurityContext
 import kotlin.test.assertNotNull
 
 @ExtendWith(MockKExtension::class)
-class W3CResourceTest2 {
+class W3CResourceAccessTest {
     @Nested
     inner class ContainerTest {
 
@@ -166,7 +166,7 @@ class W3CResourceTest2 {
         lateinit var containerUserDAO: ContainerUserDAO
 
         private lateinit var resource: W3CResource
-        private val log = LoggerFactory.getLogger(W3CResourceTest2::class.java)
+        private val log = LoggerFactory.getLogger(W3CResourceAccessTest::class.java)
 
         @BeforeAll
         @JvmStatic
@@ -196,22 +196,6 @@ class W3CResourceTest2 {
         private fun useRootUser() {
             every { securityContext.userPrincipal } returns RootUser()
         }
-
-//        private fun useAdminUser() {
-//            useUserWithRole("admin", Role.ADMIN)
-//        }
-//
-//        private fun useEditorUser() {
-//            useUserWithRole("editor", Role.EDITOR)
-//        }
-//
-//        private fun useGuestUser() {
-//            useUserWithRole("guest", Role.GUEST)
-//        }
-//
-//        private fun useUserWithoutContainerAccess() {
-//            useUserWithRole("anonymous", null)
-//        }
 
         private fun useUserWithRole(userName: String, role: Role?) {
             every { containerUserDAO.getUserRole(containerName, userName) } returns role
