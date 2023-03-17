@@ -1,6 +1,6 @@
 package nl.knaw.huc.annorepo.integration
 
-class MyBool(private val initialValue: Boolean) {
+class MyBool(initialValue: Boolean) {
     var value: Boolean = initialValue
 
     fun orWith(bool: Boolean) {
