@@ -29,7 +29,7 @@ class W3CResourceTest {
     private val client: MongoClient = mock {
         on { getDatabase(anyString()) }.doReturn(mdb)
     }
-    private val configuration: AnnoRepoConfiguration = mock() {
+    private val configuration: AnnoRepoConfiguration = mock {
         on { databaseName }.doReturn("annorepo")
     }
     private val containerAccessChecker: ContainerAccessChecker = mock()
