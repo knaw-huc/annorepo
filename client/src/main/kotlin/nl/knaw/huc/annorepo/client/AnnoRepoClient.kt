@@ -35,6 +35,7 @@ import nl.knaw.huc.annorepo.client.ARResult.CreateContainerResult
 import nl.knaw.huc.annorepo.client.ARResult.CreateSearchResult
 import nl.knaw.huc.annorepo.client.ARResult.DeleteAnnotationResult
 import nl.knaw.huc.annorepo.client.ARResult.DeleteContainerResult
+import nl.knaw.huc.annorepo.client.ARResult.DeleteContainerUserResult
 import nl.knaw.huc.annorepo.client.ARResult.DeleteIndexResult
 import nl.knaw.huc.annorepo.client.ARResult.DeleteUserResult
 import nl.knaw.huc.annorepo.client.ARResult.GetAboutResult
@@ -606,6 +607,12 @@ class AnnoRepoClient @JvmOverloads constructor(
         })
     )
 
+    /**
+     * Get container users
+     *
+     * @param containerName
+     * @return
+     */
     fun getContainerUsers(containerName: String): Either<RequestError, ContainerUsersResult> = doGet(
         request = webTarget.path(SERVICES).path(containerName).path(USERS).request(),
         responseHandlers = mapOf(Response.Status.OK to { response ->
@@ -619,6 +626,13 @@ class AnnoRepoClient @JvmOverloads constructor(
         })
     )
 
+    /**
+     * Add container users
+     *
+     * @param containerName
+     * @param containerUserEntries
+     * @return
+     */
     fun addContainerUsers(
         containerName: String,
         containerUserEntries: List<ContainerUserEntry>,
@@ -634,6 +648,28 @@ class AnnoRepoClient @JvmOverloads constructor(
                     ContainerUsersResult(
                         response = response,
                         containerUserEntries = containerUserEntryList
+                    )
+                )
+            })
+    )
+
+    /**
+     * Delete container user
+     *
+     * @param containerName
+     * @param userName
+     * @return
+     */
+    fun deleteContainerUser(
+        containerName: String,
+        userName: String,
+    ): Either<RequestError, DeleteContainerUserResult> = doDelete(
+        request = webTarget.path(SERVICES).path(containerName).path(USERS).path(userName).request(),
+        responseHandlers = mapOf(
+            Response.Status.OK to { response ->
+                Either.Right(
+                    DeleteContainerUserResult(
+                        response = response
                     )
                 )
             })
