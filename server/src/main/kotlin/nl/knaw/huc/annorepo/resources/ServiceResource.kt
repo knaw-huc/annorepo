@@ -38,9 +38,10 @@ import java.util.concurrent.TimeUnit
 import javax.annotation.security.PermitAll
 import javax.ws.rs.*
 import javax.ws.rs.core.*
+import javax.ws.rs.core.MediaType.APPLICATION_JSON
 
 @Path(SERVICES)
-@Produces(MediaType.APPLICATION_JSON)
+@Produces(APPLICATION_JSON)
 @PermitAll
 @SecurityRequirement(name = SECURITY_SCHEME_NAME)
 class ServiceResource(
@@ -75,6 +76,7 @@ class ServiceResource(
     @Timed
     @POST
     @Path("{containerName}/users")
+    @Consumes(APPLICATION_JSON)
     fun addContainerUsers(
         @PathParam("containerName") containerName: String,
         @Context context: SecurityContext,
@@ -109,6 +111,7 @@ class ServiceResource(
     @Timed
     @POST
     @Path("{containerName}/search")
+    @Consumes(APPLICATION_JSON)
     fun createSearch(
         @PathParam("containerName") containerName: String,
         queryJson: String,
