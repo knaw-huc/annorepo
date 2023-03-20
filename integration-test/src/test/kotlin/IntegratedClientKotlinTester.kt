@@ -7,6 +7,7 @@ import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.api.UserEntry
 import nl.knaw.huc.annorepo.api.WebAnnotation
+import nl.knaw.huc.annorepo.client.ARResult
 import nl.knaw.huc.annorepo.client.ARResult.AddIndexResult
 import nl.knaw.huc.annorepo.client.ARResult.AddUsersResult
 import nl.knaw.huc.annorepo.client.ARResult.AnnotationFieldInfoResult
@@ -415,6 +416,7 @@ class IntegratedClientKotlinTester {
         @Test
         fun testAddingContainerUsers() {
             val containerName = "republic-1728"
+            val newUserName = "user1"
             client.getContainerUsers(containerName).fold(
                 { error: RequestError ->
                     handleError(error)
@@ -422,10 +424,11 @@ class IntegratedClientKotlinTester {
                 },
                 { (_, containerUserEntries): ContainerUsersResult ->
                     doSomethingWith(containerUserEntries)
+                    assertThat(containerUserEntries).doesNotContain(ContainerUserEntry(newUserName, Role.GUEST))
                     true
                 }
             )
-            val containerUserEntries = listOf(ContainerUserEntry("user1", Role.GUEST))
+            val containerUserEntries = listOf(ContainerUserEntry(newUserName, Role.GUEST))
             client.addContainerUsers(containerName, containerUserEntries).fold(
                 { error: RequestError ->
                     handleError(error)
@@ -433,9 +436,70 @@ class IntegratedClientKotlinTester {
                 },
                 { (_, containerUserEntries): ContainerUsersResult ->
                     doSomethingWith(containerUserEntries)
+                    assertThat(containerUserEntries).contains(ContainerUserEntry(newUserName, Role.GUEST))
                     true
                 }
             )
+            client.getContainerUsers(containerName).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    false
+                },
+                { (_, containerUserEntries): ContainerUsersResult ->
+                    doSomethingWith(containerUserEntries)
+                    assertThat(containerUserEntries).contains(ContainerUserEntry(newUserName, Role.GUEST))
+                    true
+                }
+            )
+            client.deleteContainerUser(containerName, newUserName).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    false
+                },
+                { result: ARResult.DeleteContainerUserResult ->
+                    doSomethingWith(result.response.status)
+                    true
+                }
+            )
+            client.getContainerUsers(containerName).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    false
+                },
+                { (_, containerUserEntries): ContainerUsersResult ->
+                    doSomethingWith(containerUserEntries)
+                    assertThat(containerUserEntries).doesNotContain(ContainerUserEntry(newUserName, Role.GUEST))
+                    true
+                }
+            )
+        }
+
+        @Test
+        fun testAddContainerUsers() {
+            val containerName = "my-container"
+            val userName = "userName"
+            val containerUserEntries = listOf(ContainerUserEntry(userName, Role.EDITOR))
+            client.addContainerUsers(containerName, containerUserEntries).fold(
+                { error: RequestError -> handleError(error) },
+                { (_, newContainerUsersList): ContainerUsersResult -> doSomethingWith(newContainerUsersList) }
+            )
+        }
+
+        @Test
+        fun testGetContainerUsers() {
+            val containerName = "my-container"
+            client.getContainerUsers(containerName).fold(
+                { error: RequestError -> handleError(error) },
+                { (_, containerUserEntries): ContainerUsersResult -> doSomethingWith(containerUserEntries) }
+            )
+        }
+
+        @Test
+        fun testDeleteContainerUser() {
+            val containerName = "my-container"
+            val userName = "userName"
+            val deletionSuccess = client.deleteContainerUser(containerName, userName).isRight()
+            assertThat(deletionSuccess).isTrue
         }
     }
 

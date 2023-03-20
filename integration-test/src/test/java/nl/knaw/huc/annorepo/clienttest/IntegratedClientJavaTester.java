@@ -3,7 +3,17 @@ package nl.knaw.huc.annorepo.clienttest;
 import arrow.core.Either;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import nl.knaw.huc.annorepo.api.*;
+import nl.knaw.huc.annorepo.api.AboutInfo;
+import nl.knaw.huc.annorepo.api.AnnotationIdentifier;
+import nl.knaw.huc.annorepo.api.AnnotationPage;
+import nl.knaw.huc.annorepo.api.ContainerUserEntry;
+import nl.knaw.huc.annorepo.api.IndexConfig;
+import nl.knaw.huc.annorepo.api.IndexType;
+import nl.knaw.huc.annorepo.api.RejectedUserEntry;
+import nl.knaw.huc.annorepo.api.Role;
+import nl.knaw.huc.annorepo.api.SearchInfo;
+import nl.knaw.huc.annorepo.api.UserEntry;
+import nl.knaw.huc.annorepo.api.WebAnnotation;
 import nl.knaw.huc.annorepo.client.ARResult;
 import nl.knaw.huc.annorepo.client.ARResult.GetSearchResultPageResult;
 import nl.knaw.huc.annorepo.client.AnnoRepoClient;
@@ -497,6 +507,53 @@ public class IntegratedClientJavaTester {
             );
         }
 
+    }
+
+    @Nested
+    public class ContainerUsersTests {
+        @Test
+        public void testUserCreateAndDelete() {
+            String containerName = "my-container";
+            String userName = "userName";
+            List<ContainerUserEntry> containerUserEntries = List.of(new ContainerUserEntry(userName, Role.EDITOR));
+            Boolean success = client.addContainerUsers(containerName, containerUserEntries).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    (ARResult.ContainerUsersResult result) -> {
+                        List<ContainerUserEntry> newContainerUsersList = result.getContainerUserEntries();
+                        doSomethingWith(newContainerUsersList);
+                        return true;
+                    }
+            );
+            assertThat(success).isTrue();
+        }
+
+        @Test
+        public void testGetContainerUsers() {
+            String containerName = "my-container";
+            Boolean success = client.getContainerUsers(containerName).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    (ARResult.ContainerUsersResult result) -> {
+                        List<ContainerUserEntry> containerUserEntries = result.getContainerUserEntries();
+                        doSomethingWith(containerUserEntries);
+                        return true;
+                    }
+            );
+            assertThat(success).isTrue();
+        }
+
+        @Test
+        public void testDeleteContainerUser() {
+            String containerName = "my-container";
+            String userName = "userName";
+            boolean deletionSuccess = client.deleteContainerUser(containerName, userName).isRight();
+            assertThat(deletionSuccess).isTrue();
+        }
     }
 
     private static void handleError(RequestError error) {
