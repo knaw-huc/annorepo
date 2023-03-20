@@ -91,16 +91,16 @@ client.getAbout().fold(
 **Java**
 
 ```java
-Boolean success=client.getAbout().fold(
-        error->{
+Boolean success = client.getAbout().fold(
+    error -> {
         System.out.println(error.toString());
         return false;
-        },
-        result->{
+    },
+    result -> {
         System.out.println(result.toString());
         return true;
-        }
-        )
+    }
+)
 ```
 
 ## Get information about the server
@@ -139,11 +139,12 @@ val success = client.createContainer(preferredName, label).fold(
     { error: RequestError ->
         handleError(error)
         false
+    },
+    { (_, location, containerName, eTag): CreateContainerResult ->
+        doSomethingWith(containerName, location, eTag)
+        true
     }
-) { (_, location, containerName, eTag): CreateContainerResult ->
-    doSomethingWith(containerName, location, eTag)
-    true
-}
+)
 ```
 
 **Java**
