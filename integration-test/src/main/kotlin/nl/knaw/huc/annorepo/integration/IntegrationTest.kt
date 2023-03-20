@@ -2,13 +2,9 @@ package nl.knaw.huc.annorepo.integration
 
 import arrow.core.Either
 import arrow.core.getOrElse
-import arrow.core.getOrHandle
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.ObjectWriter
-import com.github.ajalt.mordant.rendering.TextColors.blue
-import com.github.ajalt.mordant.rendering.TextColors.green
-import com.github.ajalt.mordant.rendering.TextColors.red
-import com.github.ajalt.mordant.rendering.TextColors.yellow
+import com.github.ajalt.mordant.rendering.TextColors.*
 import com.github.ajalt.mordant.table.table
 import com.github.ajalt.mordant.terminal.Terminal
 import kotlinx.cli.ArgParser
@@ -42,7 +38,7 @@ class IntegrationTest {
         testResults["container field count"] = client.testContainerFieldCount(t)
         testResults["batch upload"] = client.testBatchUpload(t)
         testResults["admin endpoints"] = client.testAdminEndpoints(t)
-        testResults["this test should fail"] = client.testFailure(t)
+        testResults["this test should fail"] = testFailure(t)
 
         t.println("Results:")
         t.printTable(testResults)
@@ -74,7 +70,7 @@ class IntegrationTest {
             inTemporaryContainer(this, t) { }
         }
 
-    private fun AnnoRepoClient.testFailure(t: Terminal): Boolean =
+    private fun testFailure(t: Terminal): Boolean =
         runTest(t, "A failing test") {
             throw Exception("This exception was intentionally thrown.")
         }
@@ -159,7 +155,7 @@ class IntegrationTest {
                 t.printStep("using filterContainerAnnotations")
                 val query2 = mapOf("body.type" to "Page")
                 val filterContainerAnnotationsResult: FilterContainerAnnotationsResult? =
-                    this.filterContainerAnnotations(containerName, query2).orNull()
+                    this.filterContainerAnnotations(containerName, query2).getOrNull()
                 filterContainerAnnotationsResult?.let {
                     it.annotations.forEach { item ->
                         item.fold(
@@ -218,7 +214,7 @@ class IntegrationTest {
                     car.annotationName,
                     car.eTag,
                     newAnnotation
-                ).getOrHandle { er -> t.printJson(er); throw RuntimeException() }
+                ).getOrElse { er -> t.printJson(er); throw RuntimeException() }
 
                 val fc2 = getFieldInfo(containerName).getOrElse { throw Exception() }
                 t.printAssertion(
@@ -234,7 +230,7 @@ class IntegrationTest {
                 deleteAnnotation(containerName, uar.containerName, uar.eTag)
 
                 val fc3 =
-                    getFieldInfo(containerName).getOrHandle { er -> t.printJson(er); throw RuntimeException(er.message) }
+                    getFieldInfo(containerName).getOrElse { er -> t.printJson(er); throw RuntimeException(er.message) }
 
                 t.printAssertion("fieldCounts should be empty", fc3.fieldInfo.isEmpty())
             }
@@ -334,6 +330,7 @@ class IntegrationTest {
         } finally {
             t.printStep("Deleting container $containerName")
             val deleteResult = ac.deleteContainer(r.containerName, eTag = r.eTag)
+            assert(deleteResult.isRight())
         }
     }
 

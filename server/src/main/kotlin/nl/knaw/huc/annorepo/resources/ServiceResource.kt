@@ -13,22 +13,18 @@ import com.mongodb.client.model.IndexOptions
 import com.mongodb.client.model.Indexes
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
-import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
-import nl.knaw.huc.annorepo.api.ARConst
+import nl.knaw.huc.annorepo.api.*
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
-import nl.knaw.huc.annorepo.api.AnnotationPage
-import nl.knaw.huc.annorepo.api.ContainerMetadata
-import nl.knaw.huc.annorepo.api.IndexConfig
-import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
 import nl.knaw.huc.annorepo.api.ResourcePaths.SERVICES
-import nl.knaw.huc.annorepo.api.SearchInfo
+import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
 import nl.knaw.huc.annorepo.resources.tools.AnnotationList
+import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.QueryCacheItem
 import nl.knaw.huc.annorepo.service.UriFactory
 import org.bson.Document
@@ -40,31 +36,20 @@ import java.net.URI
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.annotation.security.PermitAll
-import javax.ws.rs.BadRequestException
-import javax.ws.rs.DELETE
-import javax.ws.rs.GET
-import javax.ws.rs.NotFoundException
-import javax.ws.rs.POST
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.Context
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.SecurityContext
-import javax.ws.rs.core.UriBuilder
+import javax.ws.rs.*
+import javax.ws.rs.core.*
+import javax.ws.rs.core.MediaType.APPLICATION_JSON
 
 @Path(SERVICES)
-@Produces(MediaType.APPLICATION_JSON)
+@Produces(APPLICATION_JSON)
 @PermitAll
 @SecurityRequirement(name = SECURITY_SCHEME_NAME)
 class ServiceResource(
-    private val configuration: AnnoRepoConfiguration, client: MongoClient,
-) {
+    private val configuration: AnnoRepoConfiguration,
+    client: MongoClient,
+    private val containerUserDAO: ContainerUserDAO,
+) : AbstractContainerResource(configuration, client, ContainerAccessChecker(containerUserDAO)) {
     private val uriFactory = UriFactory(configuration)
-    private val mdb = client.getDatabase(configuration.databaseName)
 
     private val paginationStage = limit(configuration.pageSize)
     private val aggregateStageGenerator = AggregateStageGenerator(configuration)
@@ -73,16 +58,67 @@ class ServiceResource(
         Caffeine.newBuilder().expireAfterAccess(1, TimeUnit.HOURS).maximumSize(1000).build()
     private val log = LoggerFactory.getLogger(javaClass)
 
+    @Operation(description = "Show the users with access to this container")
+    @Timed
+    @GET
+    @Path("{containerName}/users")
+    fun readContainerUsers(
+        @PathParam("containerName") containerName: String,
+        @Context context: SecurityContext,
+    ): Response {
+        checkUserHasAdminRightsInThisContainer(context, containerName)
+
+        val users = containerUserDAO.getUsersForContainer(containerName)
+        return Response.ok(users).build()
+    }
+
+    @Operation(description = "Add users with given role to this container")
+    @Timed
+    @POST
+    @Path("{containerName}/users")
+    @Consumes(APPLICATION_JSON)
+    fun addContainerUsers(
+        @PathParam("containerName") containerName: String,
+        @Context context: SecurityContext,
+        containerUsers: List<ContainerUserEntry>,
+    ): Response {
+        log.info("containerUsers={}", containerUsers)
+        checkUserHasAdminRightsInThisContainer(context, containerName)
+
+        for (user in containerUsers) {
+            containerUserDAO.removeContainerUser(containerName, user.userName)
+            containerUserDAO.addContainerUser(containerName, user.userName, user.role)
+        }
+        val users = containerUserDAO.getUsersForContainer(containerName)
+        return Response.ok(users).build()
+    }
+
+    @Operation(description = "Remove the user with the given userName from this container")
+    @Timed
+    @DELETE
+    @Path("{containerName}/users/{userName}")
+    fun deleteContainerUser(
+        @PathParam("containerName") containerName: String,
+        @PathParam("userName") userName: String,
+        @Context context: SecurityContext,
+    ): Response {
+        checkUserHasAdminRightsInThisContainer(context, containerName)
+        containerUserDAO.removeContainerUser(containerName, userName)
+        return Response.ok().build()
+    }
+
     @Operation(description = "Find annotations in the given container matching the given query")
     @Timed
     @POST
     @Path("{containerName}/search")
+    @Consumes(APPLICATION_JSON)
     fun createSearch(
         @PathParam("containerName") containerName: String,
         queryJson: String,
         @Context context: SecurityContext,
     ): Response {
-        checkContainerExists(containerName)
+        checkUserHasReadRightsInThisContainer(context, containerName)
+
         val queryMap = JSON.parse(queryJson)
         if (queryMap is HashMap<*, *>) {
             val aggregateStages =
@@ -109,7 +145,7 @@ class ServiceResource(
         @QueryParam("page") page: Int = 0,
         @Context context: SecurityContext,
     ): Response {
-        checkContainerExists(containerName)
+        checkUserHasReadRightsInThisContainer(context, containerName)
 
         val queryCacheItem = getQueryCacheItem(searchId)
         val aggregateStages = queryCacheItem.aggregateStages.toMutableList().apply {
@@ -135,7 +171,8 @@ class ServiceResource(
         @PathParam("searchId") searchId: String,
         @Context context: SecurityContext,
     ): Response {
-        checkContainerExists(containerName)
+        checkUserHasReadRightsInThisContainer(context, containerName)
+
         val queryCacheItem = getQueryCacheItem(searchId)
 //        val info = mapOf("query" to queryCacheItem.queryMap, "hits" to queryCacheItem.count)
         val query = queryCacheItem.queryMap as Map<String, Any>
@@ -152,8 +189,10 @@ class ServiceResource(
     @Path("{containerName}/$FIELDS")
     fun getAnnotationFieldsForContainer(
         @PathParam("containerName") containerName: String,
+        @Context context: SecurityContext,
     ): Response {
-        checkContainerExists(containerName)
+        checkUserHasReadRightsInThisContainer(context, containerName)
+
         val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(ARConst.CONTAINER_METADATA_COLLECTION)
         val containerMetadata: ContainerMetadata =
             containerMetadataCollection.findOne(eq(CONTAINER_NAME_FIELD, containerName))!!
@@ -166,8 +205,10 @@ class ServiceResource(
     @Path("{containerName}/metadata")
     fun getMetadataForContainer(
         @PathParam("containerName") containerName: String,
+        @Context context: SecurityContext,
     ): Response {
-        checkContainerExists(containerName)
+        checkUserHasReadRightsInThisContainer(context, containerName)
+
         val container = mdb.getCollection(containerName)
         val containerMetadataStore = mdb.getCollection<ContainerMetadata>(ARConst.CONTAINER_METADATA_COLLECTION)
         val meta = containerMetadataStore.findOne { eq(CONTAINER_NAME_FIELD, containerName) }!!
@@ -189,8 +230,10 @@ class ServiceResource(
     @Path("{containerName}/indexes")
     fun getContainerIndexes(
         @PathParam("containerName") containerName: String,
+        @Context context: SecurityContext,
     ): Response {
-        checkContainerExists(containerName)
+        checkUserHasReadRightsInThisContainer(context, containerName)
+
         val container = mdb.getCollection(containerName)
         val body = indexData(container, containerName)
         return Response.ok(body).build()
@@ -204,8 +247,10 @@ class ServiceResource(
         @PathParam("containerName") containerName: String,
         @PathParam("fieldName") fieldNameParam: String,
         @PathParam("indexType") indexTypeParam: String,
+        @Context context: SecurityContext,
     ): Response {
-        checkContainerExists(containerName)
+        checkUserHasAdminRightsInThisContainer(context, containerName)
+
         val container = mdb.getCollection(containerName)
 
         val fieldName = "$ANNOTATION_FIELD.${fieldNameParam}"
@@ -232,8 +277,10 @@ class ServiceResource(
         @PathParam("containerName") containerName: String,
         @PathParam("fieldName") fieldName: String,
         @PathParam("indexType") indexType: String,
+        @Context context: SecurityContext,
     ): Response {
-        checkContainerExists(containerName)
+        checkUserHasAdminRightsInThisContainer(context, containerName)
+
         val container = mdb.getCollection(containerName)
         val indexConfig =
             getIndexConfig(container, containerName, fieldName, indexType)
@@ -248,8 +295,10 @@ class ServiceResource(
         @PathParam("containerName") containerName: String,
         @PathParam("fieldName") fieldName: String,
         @PathParam("indexType") indexType: String,
+        @Context context: SecurityContext,
     ): Response {
-        checkContainerExists(containerName)
+        checkUserHasAdminRightsInThisContainer(context, containerName)
+
         val container = mdb.getCollection(containerName)
         val indexConfig =
             getIndexConfig(container, containerName, fieldName, indexType)
@@ -324,12 +373,6 @@ class ServiceResource(
             prev = if (prevPage != null) searchPageUri(searchUri, prevPage) else null,
             next = if (nextPage != null) searchPageUri(searchUri, nextPage) else null
         )
-    }
-
-    private fun checkContainerExists(containerName: String) {
-        if (!mdb.listCollectionNames().contains(containerName)) {
-            throw BadRequestException("Annotation Container '$containerName' not found")
-        }
     }
 
     private fun searchPageUri(searchUri: URI, page: Int) =

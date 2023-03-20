@@ -16,9 +16,8 @@ import org.litote.kmongo.findOne
 const val FIELD_API_KEY = "apiKey"
 const val FIELD_USER_NAME = "userName"
 
-
 class ARUserDAO(
-    private val configuration: AnnoRepoConfiguration, mongoClient: MongoClient
+    private val configuration: AnnoRepoConfiguration, mongoClient: MongoClient,
 ) : UserDAO {
 
     private val mdb = mongoClient.getDatabase(configuration.databaseName)
@@ -32,24 +31,19 @@ class ARUserDAO(
         }
     }
 
-    override fun userForApiKey(apiKey: String?): User? = when (apiKey) {
-        null -> {
-            null
-        }
-
-        configuration.rootApiKey -> {
-            RootUser()
-        }
-
-        else -> {
-            val doc = userCollection.find(Document(FIELD_API_KEY, apiKey)).first()
-            if (doc == null) {
-                null
-            } else {
-                BasicUser(doc.getString(FIELD_USER_NAME))
+    override fun userForApiKey(apiKey: String?): User? =
+        when (apiKey) {
+            null -> null
+            configuration.rootApiKey -> RootUser()
+            else -> {
+                val doc = userCollection.find(Document(FIELD_API_KEY, apiKey)).first()
+                if (doc == null) {
+                    null
+                } else {
+                    BasicUser(doc.getString(FIELD_USER_NAME))
+                }
             }
         }
-    }
 
     override fun addUserEntries(userEntries: List<UserEntry>): UserAddResults {
         val added = mutableListOf<String>()

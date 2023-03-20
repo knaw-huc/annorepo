@@ -4,6 +4,7 @@ import arrow.core.Either
 import nl.knaw.huc.annorepo.api.AboutInfo
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
 import nl.knaw.huc.annorepo.api.AnnotationPage
+import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.IndexConfig
 import nl.knaw.huc.annorepo.api.RejectedUserEntry
 import nl.knaw.huc.annorepo.api.SearchInfo
@@ -128,6 +129,14 @@ sealed class ARResult {
         override val response: Response,
     ) : ARResult()
 
+    data class ContainerUsersResult(
+        override val response: Response,
+        val containerUserEntries: List<ContainerUserEntry>,
+    ) : ARResult()
+
+    data class DeleteContainerUserResult(
+        override val response: Response,
+    ) : ARResult()
 }
 
 sealed class RequestError {
