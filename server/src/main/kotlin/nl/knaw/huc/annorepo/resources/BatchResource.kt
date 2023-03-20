@@ -14,6 +14,7 @@ import nl.knaw.huc.annorepo.api.AnnotationIdentifier
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.makeAnnotationETag
 import nl.knaw.huc.annorepo.service.JsonLdUtils
 import org.bson.Document
@@ -35,9 +36,10 @@ import javax.ws.rs.core.SecurityContext
 @PermitAll
 @SecurityRequirement(name = SECURITY_SCHEME_NAME)
 class BatchResource(
-    private val configuration: AnnoRepoConfiguration,
-    private val client: MongoClient,
-) {
+    configuration: AnnoRepoConfiguration,
+    client: MongoClient,
+    containerAccessChecker: ContainerAccessChecker,
+) : AbstractContainerResource(configuration, client, containerAccessChecker) {
 //    private val log = LoggerFactory.getLogger(javaClass)
 //    private val uriFactory = UriFactory(configuration)
 
@@ -48,10 +50,11 @@ class BatchResource(
     fun postAnnotationsBatch(
         @PathParam("containerName") containerName: String,
         annotations: List<HashMap<String, Any>>,
-        @Context context: SecurityContext
+        @Context context: SecurityContext,
     ): Response {
+        checkUserHasEditRightsInThisContainer(context, containerName)
+
         val annotationIdentifiers = mutableListOf<AnnotationIdentifier>()
-        val mdb = client.getDatabase(configuration.databaseName)
         val container = mdb.getCollection(containerName)
         for (i in 0..annotations.size) {
             val annotationName = UUID.randomUUID().toString()
@@ -79,7 +82,6 @@ class BatchResource(
     }
 
     private fun updateFieldCount(containerName: String, fieldsAdded: List<String>, fieldsDeleted: Set<String>) {
-        val mdb = client.getDatabase(configuration.databaseName)
         val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(ARConst.CONTAINER_METADATA_COLLECTION)
         val containerMetadata: ContainerMetadata =
             containerMetadataCollection.findOne(Filters.eq("name", containerName)) ?: return

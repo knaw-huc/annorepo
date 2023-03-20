@@ -14,7 +14,7 @@ Add the following to your `pom.xml`
 <dependency>
     <groupId>io.github.knaw-huc</groupId>
     <artifactId>annorepo-client</artifactId>
-    <version>0.3.8-SNAPSHOT</version>
+    <version>0.4.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -36,8 +36,8 @@ val client = AnnoRepoClient(
 
 ```java
 AnnoRepoClient1 client=new AnnoRepoClient(URI.create("http://localhost:8080"));
-AnnoRepoClient1 client2=new AnnoRepoClient(URI.create("http://localhost:8080",apiKey));
-AnnoRepoClient1 client3=new AnnoRepoClient(URI.create("http://localhost:8080",apiKey,userAgent));
+        AnnoRepoClient1 client2=new AnnoRepoClient(URI.create("http://localhost:8080",apiKey));
+        AnnoRepoClient1 client3=new AnnoRepoClient(URI.create("http://localhost:8080",apiKey,userAgent));
 ```
 
 The client will try to connect to the AnnoRepo server at the given URI, and throw a RuntimeException if this is not
@@ -93,15 +93,15 @@ client.getAbout().fold(
 
 ```java
 Boolean success=client.getAbout().fold(
-    error->{
+        error->{
         System.out.println(error.toString());
         return false;
-    },
-    result->{
+        },
+        result->{
         System.out.println(result.toString());
         return true;
-    }
-)
+        }
+        )
 ```
 
 ## Get information about the server
@@ -126,6 +126,10 @@ Parameters:
 
 - `preferredName`: optional String, indicating the preferred name for the container. May be overridden by the server.
 - `label`: optional String, a human-readable label for the container.
+
+If the annorepo instance has authorization enabled, the user creating a container will automatically get `Role.ADMIN`
+rights to that container.
+(see [Container User administration](#container-user-administration))
 
 **Kotlin:**
 
@@ -820,5 +824,108 @@ val deletionSucceeded = client.deleteUser(userName).isRight()
 **Java**
 
 ```java
-Boolean deletionSucceeded = client.deleteUser(userName).isRight();
+Boolean deletionSucceeded=client.deleteUser(userName).isRight();
+```
+
+## Container User administration
+
+These endpoints are only functional on annorepo servers that have authentication enabled.
+
+Only users with admin rights to the given container (and the root user) can use these endpoints.
+
+Users that have been previously added via the `.addUsers()` endpoint can be added to the given container, with one of
+these roles:
+
+- `Role.GUEST` -> user has read-only access to the container
+- `Role.EDITOR` -> user can read and write to the container, but cannot add or delete container users
+- `Role.ADMIN` -> user can read and write to the container, and add or delete users for this container
+
+### Adding container users
+
+**Kotlin:**
+
+```kotlin
+val containerName = "my-container"
+val containerUserEntries = listOf(
+    ContainerUserEntry("user1", Role.EDITOR),
+    ContainerUserEntry("user2", Role.GUEST),
+    ContainerUserEntry("admin2", Role.ADMIN),
+)
+client.addContainerUsers(containerName, containerUserEntries).fold(
+    { error: RequestError -> handleError(error) },
+    { (_, newContainerUsersList): ContainerUsersResult -> doSomethingWith(newContainerUsersList) }
+)
+```
+
+**Java**
+
+```java
+String containerName="my-container";
+        List<ContainerUserEntry> containerUserEntries=List.of(
+        new ContainerUserEntry("user1",Role.EDITOR),
+        new ContainerUserEntry("user2",Role.GUEST),
+        new ContainerUserEntry("admin2",Role.ADMIN)
+        );
+        Boolean success=client.addContainerUsers(containerName,containerUserEntries).fold(
+        (RequestError error)->{
+        handleError(error);
+        return false;
+        },
+        (ARResult.ContainerUsersResult result)->{
+        List<ContainerUserEntry> newContainerUsersList=result.getContainerUserEntries();
+        doSomethingWith(newContainerUsersList);
+        return true;
+        }
+        );
+        assertThat(success).isTrue();
+```
+
+### Reading the current list of container users
+
+**Kotlin:**
+
+```kotlin
+val containerName = "my-container"
+client.getContainerUsers(containerName).fold(
+    { error: RequestError -> handleError(error) },
+    { (_, containerUserEntries): ContainerUsersResult -> doSomethingWith(containerUserEntries) }
+)
+```
+
+**Java**
+
+```java
+String containerName="my-container";
+        Boolean success=client.getContainerUsers(containerName).fold(
+        (RequestError error)->{
+        handleError(error);
+        return false;
+        },
+        (ARResult.ContainerUsersResult result)->{
+        List<ContainerUserEntry> containerUserEntries=result.getContainerUserEntries();
+        doSomethingWith(containerUserEntries);
+        return true;
+        }
+        );
+        assertThat(success).isTrue();
+```
+
+### Deleting a container user
+
+**Kotlin:**
+
+```kotlin
+val containerName = "my-container"
+val userName = "userName"
+val deletionSuccess = client.deleteContainerUser(containerName, userName).isRight()
+assertThat(deletionSuccess).isTrue
+```
+
+**Java**
+
+```java
+String containerName="my-container";
+        String userName="userName";
+        boolean deletionSuccess=client.deleteContainerUser(containerName,userName).isRight();
+        assertThat(deletionSuccess).isTrue();
 ```

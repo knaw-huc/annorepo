@@ -8,6 +8,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
 import nl.knaw.huc.annorepo.api.AnnotationPage
+import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.IndexConfig
 import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.ResourcePaths.ABOUT
@@ -28,11 +29,13 @@ import nl.knaw.huc.annorepo.client.ARResult.AddIndexResult
 import nl.knaw.huc.annorepo.client.ARResult.AddUsersResult
 import nl.knaw.huc.annorepo.client.ARResult.AnnotationFieldInfoResult
 import nl.knaw.huc.annorepo.client.ARResult.BatchUploadResult
+import nl.knaw.huc.annorepo.client.ARResult.ContainerUsersResult
 import nl.knaw.huc.annorepo.client.ARResult.CreateAnnotationResult
 import nl.knaw.huc.annorepo.client.ARResult.CreateContainerResult
 import nl.knaw.huc.annorepo.client.ARResult.CreateSearchResult
 import nl.knaw.huc.annorepo.client.ARResult.DeleteAnnotationResult
 import nl.knaw.huc.annorepo.client.ARResult.DeleteContainerResult
+import nl.knaw.huc.annorepo.client.ARResult.DeleteContainerUserResult
 import nl.knaw.huc.annorepo.client.ARResult.DeleteIndexResult
 import nl.knaw.huc.annorepo.client.ARResult.DeleteUserResult
 import nl.knaw.huc.annorepo.client.ARResult.GetAboutResult
@@ -604,6 +607,74 @@ class AnnoRepoClient @JvmOverloads constructor(
         })
     )
 
+    /**
+     * Get container users
+     *
+     * @param containerName
+     * @return
+     */
+    fun getContainerUsers(containerName: String): Either<RequestError, ContainerUsersResult> = doGet(
+        request = webTarget.path(SERVICES).path(containerName).path(USERS).request(),
+        responseHandlers = mapOf(Response.Status.OK to { response ->
+            val json = response.readEntityAsJsonString()
+            val containerUserEntryList = oMapper.readValue(json, object : TypeReference<List<ContainerUserEntry>>() {})
+            Either.Right(
+                ContainerUsersResult(
+                    response = response, containerUserEntries = containerUserEntryList
+                )
+            )
+        })
+    )
+
+    /**
+     * Add container users
+     *
+     * @param containerName
+     * @param containerUserEntries
+     * @return
+     */
+    fun addContainerUsers(
+        containerName: String,
+        containerUserEntries: List<ContainerUserEntry>,
+    ): Either<RequestError, ContainerUsersResult> = doPost(
+        request = webTarget.path(SERVICES).path(containerName).path(USERS).request(),
+        entity = Entity.json(containerUserEntries),
+        responseHandlers = mapOf(
+            Response.Status.OK to { response ->
+                val json = response.readEntityAsJsonString()
+                val containerUserEntryList =
+                    oMapper.readValue(json, object : TypeReference<List<ContainerUserEntry>>() {})
+                Either.Right(
+                    ContainerUsersResult(
+                        response = response,
+                        containerUserEntries = containerUserEntryList
+                    )
+                )
+            })
+    )
+
+    /**
+     * Delete container user
+     *
+     * @param containerName
+     * @param userName
+     * @return
+     */
+    fun deleteContainerUser(
+        containerName: String,
+        userName: String,
+    ): Either<RequestError, DeleteContainerUserResult> = doDelete(
+        request = webTarget.path(SERVICES).path(containerName).path(USERS).path(userName).request(),
+        responseHandlers = mapOf(
+            Response.Status.OK to { response ->
+                Either.Right(
+                    DeleteContainerUserResult(
+                        response = response
+                    )
+                )
+            })
+    )
+
     // private functions
     private fun <T> doGet(
         request: Invocation.Builder, responseHandlers: ResponseHandlerMap<T>,
@@ -675,12 +746,13 @@ class AnnoRepoClient @JvmOverloads constructor(
 
     private fun Response.eTag(): String? = firstHeader("etag")
 
-    private fun <R> doRequest(requestHandler: () -> Either<RequestError, R>): Either<RequestError, R> = try {
-        requestHandler()
-    } catch (e: Exception) {
-        e.printStackTrace()
-        Either.Left(ConnectionError(e.message ?: e.javaClass.name))
-    }
+    private fun <R> doRequest(requestHandler: () -> Either<RequestError, R>): Either<RequestError, R> =
+        try {
+            requestHandler()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Either.Left(ConnectionError(e.message ?: e.javaClass.name))
+        }
 
     private fun Response.firstHeader(key: String): String? = if (headers.containsKey(key)) {
         val locations: MutableList<Any> = headers[key]!!
@@ -696,7 +768,8 @@ class AnnoRepoClient @JvmOverloads constructor(
         } else {
             "$userAgent ( using $libUA )"
         }
-        var builder = header("User-Agent", ua).header("Accept-Encoding", "gzip").header("Content-Encoding", "gzip")
+        var builder =
+            header("User-Agent", ua).header("Accept-Encoding", "gzip").header("Content-Encoding", "gzip")
 
         if (serverNeedsAuthentication != null && serverNeedsAuthentication!!) {
             builder = builder.header("Authorization", "Bearer $apiKey")
@@ -731,7 +804,8 @@ class AnnoRepoClient @JvmOverloads constructor(
         @JvmOverloads
         fun create(serverURI: URI, apiKey: String? = null, userAgent: String? = null): AnnoRepoClient? =
             try {
-                val annoRepoClient = AnnoRepoClient(serverURI = serverURI, apiKey = apiKey, userAgent = userAgent)
+                val annoRepoClient =
+                    AnnoRepoClient(serverURI = serverURI, apiKey = apiKey, userAgent = userAgent)
                 if (annoRepoClient.serverNeedsAuthentication!! && apiKey == null) {
                     log.warn(
                         "The server at $serverURI has authentication enabled," +

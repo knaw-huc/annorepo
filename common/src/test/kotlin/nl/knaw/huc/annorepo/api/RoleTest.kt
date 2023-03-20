@@ -1,4 +1,4 @@
-package nl.knaw.huc.annorepo.auth
+package nl.knaw.huc.annorepo.api
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -20,7 +20,7 @@ internal class RoleTest {
     }
 
     @Test
-    fun `there should be a user role`() {
-        assertThat(Role.USER.roleName).isEqualTo("user")
+    fun `there should be an editor role`() {
+        assertThat(Role.EDITOR.roleName).isEqualTo("editor")
     }
 }

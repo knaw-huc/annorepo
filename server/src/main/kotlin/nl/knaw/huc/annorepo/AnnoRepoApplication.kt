@@ -19,6 +19,7 @@ import nl.knaw.huc.annorepo.api.ARConst.APP_NAME
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.api.ARConst.EnvironmentVariable
 import nl.knaw.huc.annorepo.api.ContainerMetadata
+import nl.knaw.huc.annorepo.auth.ARContainerUserDAO
 import nl.knaw.huc.annorepo.auth.AROAuthAuthenticator
 import nl.knaw.huc.annorepo.auth.ARUserDAO
 import nl.knaw.huc.annorepo.auth.User
@@ -27,13 +28,8 @@ import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.filters.JSONPrettyPrintFilter
 import nl.knaw.huc.annorepo.health.MongoDbHealthCheck
 import nl.knaw.huc.annorepo.health.ServerHealthCheck
-import nl.knaw.huc.annorepo.resources.AboutResource
-import nl.knaw.huc.annorepo.resources.AdminResource
-import nl.knaw.huc.annorepo.resources.BatchResource
-import nl.knaw.huc.annorepo.resources.HomePageResource
-import nl.knaw.huc.annorepo.resources.ListResource
-import nl.knaw.huc.annorepo.resources.ServiceResource
-import nl.knaw.huc.annorepo.resources.W3CResource
+import nl.knaw.huc.annorepo.resources.*
+import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.service.LocalDateTimeSerializer
 import nl.knaw.huc.annorepo.tasks.RecalculateFieldCountTask
 import nl.knaw.huc.annorepo.tasks.UpdateTask
@@ -79,21 +75,24 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         log.info("connected!")
 
         val appVersion = javaClass.getPackage().implementationVersion
+        val userDAO = ARUserDAO(configuration, mongoClient)
+        val containerUserDAO = ARContainerUserDAO(configuration, mongoClient)
+        val containerAccessChecker = ContainerAccessChecker(containerUserDAO)
         environment.jersey().apply {
             register(AboutResource(configuration, name, appVersion))
             register(HomePageResource())
-            register(W3CResource(configuration, mongoClient))
-            register(ServiceResource(configuration, mongoClient))
-            register(BatchResource(configuration, mongoClient))
+            register(W3CResource(configuration, mongoClient, containerUserDAO))
+            register(ServiceResource(configuration, mongoClient, containerUserDAO))
+            register(BatchResource(configuration, mongoClient, containerAccessChecker))
             if (configuration.prettyPrint) {
                 register(JSONPrettyPrintFilter())
             }
             if (configuration.withAuthentication) {
-                register(AdminResource(ARUserDAO(configuration, mongoClient)))
+                register(AdminResource(userDAO))
                 register(
                     AuthDynamicFeature(
                         OAuthCredentialAuthFilter.Builder<User>()
-                            .setAuthenticator(AROAuthAuthenticator(ARUserDAO(configuration, mongoClient)))
+                            .setAuthenticator(AROAuthAuthenticator(userDAO))
                             .setPrefix("Bearer")
                             .buildAuthFilter()
                     )
