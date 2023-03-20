@@ -4,29 +4,33 @@
 
 - [General Notes](#general-notes)
 - [Annotation Containers](#annotation-containers):
-  - [Create](#creating-an-annotation-container-)
-  - [Read](#reading-an-annotation-container-)
-  - [Delete](#deleting-an-annotation-container-)
+  - [Create](#creating-an-annotation-container---)
+  - [Read](#reading-an-annotation-container---)
+  - [Delete](#deleting-an-annotation-container---)
 - [Annotations](#annotations):
-  - [Create](#adding-an-annotation-to-a-given-annotation-container-)
-  - [Read](#reading-an-annotation-)
-  - [Update](#updating-an-annotation-)
-  - [Delete](#deleting-an-annotation-)
-  - [Batch upload](#uploading-multiple-annotations-to-a-given-annotation-container---experimental)
+  - [Create](#adding-an-annotation-to-a-given-annotation-container---)
+  - [Read](#reading-an-annotation---)
+  - [Update](#updating-an-annotation---)
+  - [Delete](#deleting-an-annotation---)
+  - [Batch upload](#uploading-multiple-annotations-to-a-given-annotation-container----experimental)
 - [Querying](#querying):
-  - [Create a query](#create-a-query---experimental)
-  - [Get a query result page](#get-a-search-result-page---experimental)
+  - [Create a query](#create-a-query----experimental)
+  - [Get a query result page](#get-a-search-result-page----experimental)
 - [Indexes](#indexes)
-  - [Add an index](#add-index-)
-  - [Read an index](#read-index-)
-  - [List all indexes](#list-all-indexes-for-a-container-)
-  - [Delete an index](#delete-index-)
+  - [Add an index](#add-index---)
+  - [Read an index](#read-index---)
+  - [List all indexes](#list-all-indexes-for-a-container---)
+  - [Delete an index](#delete-index---)
 - [Admin](#admin):
-  - [Read users](#get-users-)
-  - [Add users](#add-users-)
-  - [Delete user](#delete-user-)
+  - [Read users](#get-users---)
+  - [Add users](#add-users---)
+  - [Delete user](#delete-user---)
+- [Container Users](#container-users):
+  - [Read container users](#get-container-users---)
+  - [Add container users](#add-container-users---)
+  - [Delete container user](#delete-container-user---)
 - [Miscellaneous](#miscellaneous):
-  - [Annotation Field Count](#get-annotation-field-count-)
+  - [Annotation Field Count](#get-annotation-field-count---)
 - [OpenAPI](#openapi)
 - [Server info](#server-info)
 
@@ -66,6 +70,10 @@ that in a way similar to that used by [elucidate](https://github.com/dlcs/elucid
 ## Annotation Containers
 
 ### Creating an annotation container (🔒)
+
+If the annorepo instance has authorization enabled, the user creating a container will automatically get `ADMIN`
+rights to that container.
+(see [Container Users](#container-users))
 
 #### Request
 
@@ -947,6 +955,104 @@ DELETE http://localhost:8080/admin/{userName} HTTP/1.1
 
 ```
 HTTP/1.1 204 No Content
+```
+
+---
+
+## Container Users
+
+These endpoints are only functional on annorepo servers that have authentication enabled.
+
+Only users with admin rights to the given container (and the root user) can use these endpoints.
+
+Users that have been previously added via the [add users endpoint](#add-users---) can be added to the given container,
+with one of
+these roles:
+
+- `GUEST` -> user has read-only access to the container
+- `EDITOR` -> user can read and write to the container, but cannot add or delete container users
+- `ADMIN` -> user can read and write to the container, and add or delete users for this container
+
+### Get Container users (🔒)
+
+#### Request
+
+```
+GET http://localhost:8080/services/{containerName}/users HTTP/1.1
+```
+
+#### Response
+
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+[
+    {
+        "userName": "user1",
+        "role": "ADMIN"
+    },
+    {
+        "userName": "user2",
+        "role": "GUEST"
+    }
+]
+```
+
+### Add Container users (🔒)
+
+#### Request
+
+```
+POST http://localhost:8080/services/{containerName}/users HTTP/1.1
+
+Content-Type: application/json
+
+[
+  { "userName": "username1", "role": "EDITOR" },
+  { "userName": "username2", "role": "ADMIN" }
+]
+```
+
+#### Response
+
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+[
+    {
+        "userName": "username1",
+        "role": "EDITOR"
+    },
+    {
+        "userName": "username2",
+        "role": "ADMIN"
+    },
+
+    {
+        "userName": "user1",
+        "role": "ADMIN"
+    },
+    {
+        "userName": "user2",
+        "role": "GUEST"
+    }
+]
+```
+
+### Delete Container user (🔒)
+
+#### Request
+
+```
+DELETE http://localhost:8080/services/{containerName}/users/{userName} HTTP/1.1
+```
+
+#### Response
+
+```
+HTTP/1.1 200 OK
 ```
 
 ---
