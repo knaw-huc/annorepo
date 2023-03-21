@@ -21,7 +21,9 @@ import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.makeAnnotationETag
 import nl.knaw.huc.annorepo.service.JsonLdUtils
 import nl.knaw.huc.annorepo.service.UriFactory
+import org.bson.BSONException
 import org.bson.Document
+import org.bson.json.JsonParseException
 import org.eclipse.jetty.util.ajax.JSON
 import org.litote.kmongo.*
 import org.slf4j.LoggerFactory
@@ -189,7 +191,6 @@ class W3CResource(
         annotationJson: String,
         @Context context: SecurityContext,
     ): Response {
-//        log.debug("annotation=\n$annotationJson")
         checkUserHasEditRightsInThisContainer(context, containerName)
 
         var name = slug ?: UUID.randomUUID().toString()
@@ -202,31 +203,43 @@ class W3CResource(
             )
             name = UUID.randomUUID().toString()
         }
-        val annotationDocument = Document.parse(annotationJson)
-        val fields = JsonLdUtils.extractFields(annotationJson)
-        updateFieldCount(containerName, fields, emptySet())
-        val doc = Document(ANNOTATION_NAME_FIELD, name)
-            .append(ANNOTATION_FIELD, annotationDocument)
-        val r = container.insertOne(doc).insertedId?.asObjectId()?.value
+        try {
+            val annotationDocument = Document.parse(annotationJson)
+            val fields = JsonLdUtils.extractFields(annotationJson)
+            updateFieldCount(containerName, fields, emptySet())
+            val doc = Document(ANNOTATION_NAME_FIELD, name)
+                .append(ANNOTATION_FIELD, annotationDocument)
+            val r = container.insertOne(doc).insertedId?.asObjectId()?.value
 
-        val annotationData = AnnotationData(
-            r!!.timestamp.toLong(),
-            name,
-            doc.getEmbedded(listOf(ANNOTATION_FIELD), Document::class.java).toJson(),
-            Date.from(Instant.now()),
-            Date.from(Instant.now())
-        )
-        val uri = uriFactory.annotationURL(containerName, name)
-        val eTag = makeAnnotationETag(containerName, name)
-        val entity = annotationData.contentWithAssignedId(containerName, name)
-        return Response.created(uri)
-            .header("Vary", "Accept")
-            .allow("POST", "PUT", "GET", "DELETE", "OPTIONS", "HEAD")
-            .link(RESOURCE_LINK, "type")
-            .link(ANNOTATION_LINK, "type")
-            .tag(eTag)
-            .entity(entity)
-            .build()
+            val annotationData = AnnotationData(
+                r!!.timestamp.toLong(),
+                name,
+                doc.getEmbedded(listOf(ANNOTATION_FIELD), Document::class.java).toJson(),
+                Date.from(Instant.now()),
+                Date.from(Instant.now())
+            )
+            val uri = uriFactory.annotationURL(containerName, name)
+            val eTag = makeAnnotationETag(containerName, name)
+            val entity = annotationData.contentWithAssignedId(containerName, name)
+            return Response.created(uri)
+                .header("Vary", "Accept")
+                .allow("POST", "PUT", "GET", "DELETE", "OPTIONS", "HEAD")
+                .link(RESOURCE_LINK, "type")
+                .link(ANNOTATION_LINK, "type")
+                .tag(eTag)
+                .entity(entity)
+                .build()
+        } catch (e: BSONException) {
+            throw BadRequestException(jsonParseExceptionMessage(annotationJson, e))
+        } catch (e: JsonParseException) {
+            throw BadRequestException(jsonParseExceptionMessage(annotationJson, e))
+        }
+    }
+
+    private fun jsonParseExceptionMessage(annotationJson: String, e: RuntimeException): String {
+        log.error("json parsing error for input:\n{}\n", annotationJson)
+        log.error("error:\n{}", e)
+        return "The given json does not parse: '$annotationJson'"
     }
 
     @Operation(description = "Get an Annotation")
