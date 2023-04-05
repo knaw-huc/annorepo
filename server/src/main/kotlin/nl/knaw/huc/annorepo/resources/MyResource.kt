@@ -1,12 +1,5 @@
 package nl.knaw.huc.annorepo.resources
 
-import com.codahale.metrics.annotation.Timed
-import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.security.SecurityRequirement
-import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
-import nl.knaw.huc.annorepo.api.ResourcePaths.MY
-import nl.knaw.huc.annorepo.auth.ContainerUserDAO
-import org.slf4j.LoggerFactory
 import javax.annotation.security.PermitAll
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -15,6 +8,13 @@ import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.SecurityContext
+import com.codahale.metrics.annotation.Timed
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import org.slf4j.LoggerFactory
+import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
+import nl.knaw.huc.annorepo.api.ResourcePaths.MY
+import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 
 @Path(MY)
 @Produces(MediaType.APPLICATION_JSON)

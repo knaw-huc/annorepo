@@ -1,10 +1,10 @@
 package nl.knaw.huc.annorepo.resources.tools
 
+import javax.ws.rs.BadRequestException
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Filters
-import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import org.bson.conversions.Bson
-import javax.ws.rs.BadRequestException
+import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 
 class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
 

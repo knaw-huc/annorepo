@@ -2,11 +2,11 @@
 
 package nl.knaw.huc.annorepo.service
 
+import java.io.StringReader
 import com.apicatalog.jsonld.JsonLd
 import com.apicatalog.jsonld.document.JsonDocument
 import com.apicatalog.jsonld.document.RdfDocument
 import org.bson.Document
-import java.io.StringReader
 
 object JsonLdUtils {
     data class JsonLdReport(val isValid: Boolean = false, val invalidFields: List<String> = emptyList())

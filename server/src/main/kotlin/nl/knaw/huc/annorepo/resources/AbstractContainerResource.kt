@@ -1,11 +1,11 @@
 package nl.knaw.huc.annorepo.resources
 
+import javax.ws.rs.NotFoundException
+import javax.ws.rs.core.SecurityContext
 import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoDatabase
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
-import javax.ws.rs.NotFoundException
-import javax.ws.rs.core.SecurityContext
 
 abstract class AbstractContainerResource(
     private val configuration: AnnoRepoConfiguration,

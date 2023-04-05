@@ -1,11 +1,23 @@
 package nl.knaw.huc.annorepo.client
 
+import java.net.URI
+import java.util.PropertyResourceBundle
+import javax.ws.rs.client.ClientBuilder
+import javax.ws.rs.client.Entity
+import javax.ws.rs.client.Invocation
+import javax.ws.rs.client.WebTarget
+import javax.ws.rs.core.Response
+import kotlin.streams.asStream
 import arrow.core.Either
 import arrow.core.flatMap
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import org.glassfish.jersey.client.filter.EncodingFilter
+import org.glassfish.jersey.message.GZipEncoder
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
 import nl.knaw.huc.annorepo.api.AnnotationPage
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
@@ -48,18 +60,6 @@ import nl.knaw.huc.annorepo.client.ARResult.GetSearchResultPageResult
 import nl.knaw.huc.annorepo.client.ARResult.ListIndexesResult
 import nl.knaw.huc.annorepo.client.ARResult.UsersResult
 import nl.knaw.huc.annorepo.client.RequestError.ConnectionError
-import org.glassfish.jersey.client.filter.EncodingFilter
-import org.glassfish.jersey.message.GZipEncoder
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import java.net.URI
-import java.util.*
-import javax.ws.rs.client.ClientBuilder
-import javax.ws.rs.client.Entity
-import javax.ws.rs.client.Invocation
-import javax.ws.rs.client.WebTarget
-import javax.ws.rs.core.Response
-import kotlin.streams.asStream
 
 private const val IF_MATCH = "if-match"
 

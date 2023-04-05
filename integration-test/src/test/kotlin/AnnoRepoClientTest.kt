@@ -1,7 +1,7 @@
-import nl.knaw.huc.annorepo.client.AnnoRepoClient
-import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Test
 import java.net.URI
+import org.junit.jupiter.api.Test
+import org.assertj.core.api.Assertions.assertThat
+import nl.knaw.huc.annorepo.client.AnnoRepoClient
 
 class AnnoRepoClientTest {
     @Test

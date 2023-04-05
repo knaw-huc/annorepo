@@ -1,15 +1,15 @@
 package nl.knaw.huc.annorepo.filters
 
-import com.fasterxml.jackson.core.JsonGenerator
-import com.fasterxml.jackson.databind.ObjectWriter
-import com.fasterxml.jackson.jaxrs.cfg.EndpointConfigBase
-import com.fasterxml.jackson.jaxrs.cfg.ObjectWriterInjector
-import com.fasterxml.jackson.jaxrs.cfg.ObjectWriterModifier
 import java.io.IOException
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.ContainerResponseContext
 import javax.ws.rs.container.ContainerResponseFilter
 import javax.ws.rs.core.MultivaluedMap
+import com.fasterxml.jackson.core.JsonGenerator
+import com.fasterxml.jackson.databind.ObjectWriter
+import com.fasterxml.jackson.jaxrs.cfg.EndpointConfigBase
+import com.fasterxml.jackson.jaxrs.cfg.ObjectWriterInjector
+import com.fasterxml.jackson.jaxrs.cfg.ObjectWriterModifier
 
 class JSONPrettyPrintFilter : ContainerResponseFilter {
     private class PrettyPrintWriter : ObjectWriterModifier() {

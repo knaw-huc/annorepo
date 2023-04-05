@@ -1,9 +1,9 @@
 package nl.knaw.huc.annorepo.service
 
-import nl.knaw.huc.annorepo.api.ResourcePaths
-import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import java.net.URI
 import javax.ws.rs.core.UriBuilder
+import nl.knaw.huc.annorepo.api.ResourcePaths
+import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 
 class UriFactory(private val configuration: AnnoRepoConfiguration) {
 

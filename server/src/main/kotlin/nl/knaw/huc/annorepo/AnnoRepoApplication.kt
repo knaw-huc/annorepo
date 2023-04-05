@@ -1,5 +1,8 @@
 package nl.knaw.huc.annorepo
 
+import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.util.concurrent.atomic.AtomicBoolean
 import com.codahale.metrics.health.HealthCheck
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
@@ -15,6 +18,10 @@ import io.dropwizard.configuration.SubstitutingSourceProvider
 import io.dropwizard.jdbi3.bundles.JdbiExceptionsBundle
 import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
+import org.apache.commons.lang3.StringUtils
+import org.litote.kmongo.KMongo
+import org.litote.kmongo.getCollection
+import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ARConst.APP_NAME
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.api.ARConst.EnvironmentVariable
@@ -33,13 +40,6 @@ import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.service.LocalDateTimeSerializer
 import nl.knaw.huc.annorepo.tasks.RecalculateFieldCountTask
 import nl.knaw.huc.annorepo.tasks.UpdateTask
-import org.apache.commons.lang3.StringUtils
-import org.litote.kmongo.KMongo
-import org.litote.kmongo.getCollection
-import org.slf4j.LoggerFactory
-import java.text.SimpleDateFormat
-import java.time.LocalDateTime
-import java.util.concurrent.atomic.AtomicBoolean
 
 class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
     private val log = LoggerFactory.getLogger(javaClass)

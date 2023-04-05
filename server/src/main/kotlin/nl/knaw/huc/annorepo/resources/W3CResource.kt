@@ -1,5 +1,14 @@
 package nl.knaw.huc.annorepo.resources
 
+import java.time.Instant
+import java.util.*
+import javax.annotation.security.PermitAll
+import javax.ws.rs.*
+import javax.ws.rs.core.*
+import javax.ws.rs.core.MediaType.APPLICATION_JSON
+import kotlin.collections.get
+import kotlin.collections.set
+import kotlin.math.abs
 import com.codahale.metrics.annotation.Timed
 import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Aggregates
@@ -8,6 +17,10 @@ import com.mongodb.client.model.Filters.eq
 import com.mongodb.client.model.ReplaceOptions
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import org.bson.Document
+import org.eclipse.jetty.util.ajax.JSON
+import org.litote.kmongo.*
+import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.*
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
@@ -21,29 +34,6 @@ import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.makeAnnotationETag
 import nl.knaw.huc.annorepo.service.JsonLdUtils
 import nl.knaw.huc.annorepo.service.UriFactory
-import org.bson.Document
-import org.eclipse.jetty.util.ajax.JSON
-import org.litote.kmongo.*
-import org.slf4j.LoggerFactory
-import java.time.Instant
-import java.util.*
-import javax.annotation.security.PermitAll
-import javax.ws.rs.*
-import javax.ws.rs.core.*
-import javax.ws.rs.core.MediaType.APPLICATION_JSON
-import kotlin.collections.HashMap
-import kotlin.collections.Map
-import kotlin.collections.MutableMap
-import kotlin.collections.Set
-import kotlin.collections.contains
-import kotlin.collections.emptySet
-import kotlin.collections.filter
-import kotlin.collections.get
-import kotlin.collections.listOf
-import kotlin.collections.set
-import kotlin.collections.toList
-import kotlin.collections.toMutableMap
-import kotlin.math.abs
 
 private const val ETAG_MISMATCH = "Etag does not match"
 private const val RESOURCE_LINK = "http://www.w3.org/ns/ldp#Resource"

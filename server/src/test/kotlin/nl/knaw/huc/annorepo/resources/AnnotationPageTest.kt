@@ -1,11 +1,11 @@
 package nl.knaw.huc.annorepo.resources
 
+import org.junit.jupiter.api.Test
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.AnnotationPage
-import org.junit.jupiter.api.Test
 
 internal class AnnotationPageTest {
     private val objectMapper = ObjectMapper().registerKotlinModule()
