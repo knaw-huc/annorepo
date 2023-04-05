@@ -1,7 +1,12 @@
+import java.net.URI
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import arrow.core.Either
 import arrow.core.Either.Right
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.assertj.core.api.Assertions.assertThat
+import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.Role
@@ -28,11 +33,6 @@ import nl.knaw.huc.annorepo.client.AnnoRepoClient.Companion.create
 import nl.knaw.huc.annorepo.client.FilterContainerAnnotationsResult
 import nl.knaw.huc.annorepo.client.RequestError
 import nl.knaw.huc.annorepo.client.untangled
-import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
-import org.slf4j.LoggerFactory
-import java.net.URI
 
 class IntegratedClientKotlinTester {
     //    Intentionally not named ClientTest, so mvn test will skip these integration tests

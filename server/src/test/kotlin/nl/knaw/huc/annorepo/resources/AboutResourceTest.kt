@@ -1,13 +1,13 @@
 package nl.knaw.huc.annorepo.resources
 
+import jakarta.ws.rs.core.MediaType.APPLICATION_JSON
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import com.jayway.jsonpath.JsonPath
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport
 import io.dropwizard.testing.junit5.ResourceExtension
-import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import javax.ws.rs.core.MediaType.APPLICATION_JSON
+import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 
 private const val APP_NAME = "annorepo"
 private const val VERSION = "0.1.0"

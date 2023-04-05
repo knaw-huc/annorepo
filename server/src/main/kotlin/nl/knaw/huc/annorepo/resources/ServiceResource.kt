@@ -1,5 +1,27 @@
 package nl.knaw.huc.annorepo.resources
 
+import java.io.StringReader
+import java.net.URI
+import java.util.*
+import java.util.concurrent.TimeUnit
+import jakarta.annotation.security.PermitAll
+import jakarta.json.Json
+import jakarta.ws.rs.BadRequestException
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.NotFoundException
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.Context
+import jakarta.ws.rs.core.MediaType.APPLICATION_JSON
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.SecurityContext
+import jakarta.ws.rs.core.UriBuilder
 import com.codahale.metrics.annotation.Timed
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
@@ -13,6 +35,10 @@ import com.mongodb.client.model.IndexOptions
 import com.mongodb.client.model.Indexes
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import org.bson.Document
+import org.litote.kmongo.findOne
+import org.litote.kmongo.getCollection
+import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.*
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
@@ -27,18 +53,6 @@ import nl.knaw.huc.annorepo.resources.tools.AnnotationList
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.QueryCacheItem
 import nl.knaw.huc.annorepo.service.UriFactory
-import org.bson.Document
-import org.eclipse.jetty.util.ajax.JSON
-import org.litote.kmongo.findOne
-import org.litote.kmongo.getCollection
-import org.slf4j.LoggerFactory
-import java.net.URI
-import java.util.*
-import java.util.concurrent.TimeUnit
-import javax.annotation.security.PermitAll
-import javax.ws.rs.*
-import javax.ws.rs.core.*
-import javax.ws.rs.core.MediaType.APPLICATION_JSON
 
 @Path(SERVICES)
 @Produces(APPLICATION_JSON)
@@ -119,7 +133,7 @@ class ServiceResource(
     ): Response {
         checkUserHasReadRightsInThisContainer(context, containerName)
 
-        val queryMap = JSON.parse(queryJson)
+        val queryMap = Json.createReader(StringReader(queryJson)).readObject().toMap()
         if (queryMap is HashMap<*, *>) {
             val aggregateStages =
                 queryMap.toMap().map { (k, v) -> aggregateStageGenerator.generateStage(k, v) }.toList()

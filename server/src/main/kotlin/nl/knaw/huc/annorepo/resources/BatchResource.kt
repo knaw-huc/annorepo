@@ -1,11 +1,24 @@
 package nl.knaw.huc.annorepo.resources
 
+import java.util.*
+import jakarta.annotation.security.PermitAll
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.core.Context
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.SecurityContext
 import com.codahale.metrics.annotation.Timed
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Filters
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import org.bson.Document
+import org.litote.kmongo.findOne
+import org.litote.kmongo.getCollection
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
@@ -17,19 +30,6 @@ import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.makeAnnotationETag
 import nl.knaw.huc.annorepo.service.JsonLdUtils
-import org.bson.Document
-import org.litote.kmongo.findOne
-import org.litote.kmongo.getCollection
-import java.util.*
-import javax.annotation.security.PermitAll
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.core.Context
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.SecurityContext
 
 @Path(ResourcePaths.BATCH)
 @Produces(MediaType.APPLICATION_JSON)

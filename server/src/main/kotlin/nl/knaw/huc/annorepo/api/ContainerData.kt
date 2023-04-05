@@ -1,7 +1,7 @@
 package nl.knaw.huc.annorepo.api
 
 import java.beans.ConstructorProperties
-import java.util.*
+import java.util.Date
 
 class ContainerData {
     var id: Long = 0

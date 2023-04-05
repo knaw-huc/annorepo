@@ -1,19 +1,23 @@
 package nl.knaw.huc.annorepo.resources
 
-import com.mongodb.client.*
-import nl.knaw.huc.annorepo.api.ContainerMetadata
-import nl.knaw.huc.annorepo.api.ContainerSpecs
-import nl.knaw.huc.annorepo.auth.ContainerUserDAO
-import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
-import org.assertj.core.api.Assertions.assertThat
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.SecurityContext
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import com.mongodb.client.MongoClient
+import com.mongodb.client.MongoCollection
+import com.mongodb.client.MongoCursor
+import com.mongodb.client.MongoDatabase
+import com.mongodb.client.MongoIterable
+import org.assertj.core.api.Assertions.assertThat
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.SecurityContext
+import nl.knaw.huc.annorepo.api.ContainerMetadata
+import nl.knaw.huc.annorepo.api.ContainerSpecs
+import nl.knaw.huc.annorepo.auth.ContainerUserDAO
+import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 
 class W3CResourceTest {
 

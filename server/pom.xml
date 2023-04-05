@@ -62,7 +62,7 @@
         </dependency>
 
         <dependency>
-            <groupId>in.vectorpro.dropwizard</groupId>
+            <groupId>com.smoketurner</groupId>
             <artifactId>dropwizard-swagger</artifactId>
             <version>${dropwizard-swagger.version}</version>
         </dependency>

@@ -1,8 +1,23 @@
 package nl.knaw.huc.annorepo.resources
 
+import jakarta.annotation.security.PermitAll
+import jakarta.validation.constraints.NotNull
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.NotAuthorizedException
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.core.Context
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.SecurityContext
 import com.codahale.metrics.annotation.Timed
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.RejectedUserEntry
 import nl.knaw.huc.annorepo.api.ResourcePaths.ADMIN
@@ -11,21 +26,6 @@ import nl.knaw.huc.annorepo.auth.FIELD_API_KEY
 import nl.knaw.huc.annorepo.auth.FIELD_USER_NAME
 import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.auth.UserDAO
-import org.slf4j.LoggerFactory
-import javax.annotation.security.PermitAll
-import javax.validation.constraints.NotNull
-import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
-import javax.ws.rs.GET
-import javax.ws.rs.NotAuthorizedException
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.core.Context
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.SecurityContext
 
 @Path(ADMIN)
 @Produces(MediaType.APPLICATION_JSON)

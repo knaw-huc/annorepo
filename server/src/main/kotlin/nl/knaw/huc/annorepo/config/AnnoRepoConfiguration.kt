@@ -1,12 +1,12 @@
 package nl.knaw.huc.annorepo.config
 
+import jakarta.validation.Valid
+import jakarta.validation.constraints.NotNull
 import com.fasterxml.jackson.annotation.JsonProperty
-import `in`.vectorpro.dropwizard.swagger.SwaggerBundleConfiguration
-import io.dropwizard.Configuration
+import io.dropwizard.core.Configuration
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.resources.AboutResource
-import javax.validation.Valid
-import javax.validation.constraints.NotNull
 
 open class AnnoRepoConfiguration : Configuration() {
 

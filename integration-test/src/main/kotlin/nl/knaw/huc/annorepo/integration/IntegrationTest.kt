@@ -1,5 +1,7 @@
 package nl.knaw.huc.annorepo.integration
 
+import java.net.URI
+import jakarta.ws.rs.core.EntityTag
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -16,8 +18,6 @@ import nl.knaw.huc.annorepo.client.ARResult
 import nl.knaw.huc.annorepo.client.AnnoRepoClient
 import nl.knaw.huc.annorepo.client.FilterContainerAnnotationsResult
 import nl.knaw.huc.annorepo.client.RequestError
-import java.net.URI
-import javax.ws.rs.core.EntityTag
 
 class IntegrationTest {
     private val jsonWriter: ObjectWriter = ObjectMapper().writerWithDefaultPrettyPrinter()
@@ -171,7 +171,7 @@ class IntegrationTest {
                     deleteAnnotation(
                         containerName = annotationData.containerName,
                         annotationName = annotationData.annotationName,
-                        eTag = EntityTag(annotationData.eTag, true).toString()
+                        eTag = EntityTag(annotationData.eTag, true).value
                     ).thenAssertResult(t) {
                         annotationsDeleted += 1
                         true

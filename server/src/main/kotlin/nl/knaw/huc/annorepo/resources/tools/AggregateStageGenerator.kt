@@ -1,10 +1,12 @@
 package nl.knaw.huc.annorepo.resources.tools
 
+import jakarta.json.JsonNumber
+import jakarta.json.JsonString
+import jakarta.ws.rs.BadRequestException
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Filters
-import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import org.bson.conversions.Bson
-import javax.ws.rs.BadRequestException
+import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 
 class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
 
@@ -112,26 +114,22 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
         if (!containsKey(key)) {
             throw BadRequestException("missing float parameter '$key'")
         }
-        val startValue = get(key)
-        val start: Float?
-        when (startValue) {
-            is Number -> start = startValue.toFloat()
-            else -> throw BadRequestException("parameter '$key' should be a float")
+        return when (val startValue = get(key)) {
+            is Number -> startValue.toFloat()
+            is JsonNumber -> startValue.numberValue().toFloat()
+            else -> throw BadRequestException("parameter '$key' should be a float, but is ${startValue?.javaClass}")
         }
-        return start
     }
 
     private fun Map<*, *>.stringValue(key: String): String {
         if (!containsKey(key)) {
             throw BadRequestException("missing string parameter '$key'")
         }
-        val sourceValue = get(key)
-        val source: String?
-        when (sourceValue) {
-            is String -> source = sourceValue
-            else -> throw BadRequestException("parameter '$key' should be a string")
+        return when (val sourceValue = get(key)) {
+            is String -> sourceValue
+            is JsonString -> sourceValue.string
+            else -> throw BadRequestException("parameter '$key' should be a string, but is ${sourceValue?.javaClass}")
         }
-        return source
     }
 
 }

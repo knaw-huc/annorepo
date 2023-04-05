@@ -20,9 +20,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.litote.kmongo.KMongo
 import org.mockito.Mockito.mock
-import javax.ws.rs.client.Entity.json
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.MediaType.APPLICATION_JSON
+import jakarta.ws.rs.client.Entity.json
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.MediaType.APPLICATION_JSON
 
 private const val BASE_URI = "https://annorepo.com"
 

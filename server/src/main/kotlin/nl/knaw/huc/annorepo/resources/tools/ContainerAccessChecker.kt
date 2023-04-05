@@ -1,10 +1,10 @@
 package nl.knaw.huc.annorepo.resources.tools
 
+import java.security.Principal
+import jakarta.ws.rs.NotAuthorizedException
 import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.auth.RootUser
-import java.security.Principal
-import javax.ws.rs.NotAuthorizedException
 
 class ContainerAccessChecker(private val containerUserDAO: ContainerUserDAO) {
     fun checkUserHasAdminRightsInThisContainer(userPrincipal: Principal?, containerName: String) {

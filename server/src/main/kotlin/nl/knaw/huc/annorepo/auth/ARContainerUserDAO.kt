@@ -2,12 +2,12 @@ package nl.knaw.huc.annorepo.auth
 
 import com.mongodb.client.MongoClient
 import com.mongodb.client.result.DeleteResult
+import org.bson.Document
+import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
-import org.bson.Document
-import org.slf4j.LoggerFactory
 
 const val FIELD_CONTAINER_NAME = "containerName"
 const val FIELD_ROLE = "role"
@@ -55,5 +55,6 @@ class ARContainerUserDAO(configuration: AnnoRepoConfiguration, mongoClient: Mong
             Document(FIELD_CONTAINER_NAME, containerName)
                 .append(FIELD_USER_NAME, userName)
         )
+        log.debug("{}", result)
     }
 }

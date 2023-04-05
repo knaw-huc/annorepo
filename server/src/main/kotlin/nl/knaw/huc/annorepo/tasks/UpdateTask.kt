@@ -1,10 +1,10 @@
 package nl.knaw.huc.annorepo.tasks
 
+import java.io.PrintWriter
 import com.codahale.metrics.annotation.Metered
 import com.mongodb.client.MongoClient
 import io.dropwizard.servlets.tasks.Task
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
-import java.io.PrintWriter
 
 class UpdateTask(
     val client: MongoClient,

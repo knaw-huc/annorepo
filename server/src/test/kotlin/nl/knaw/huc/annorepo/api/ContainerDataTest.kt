@@ -1,10 +1,10 @@
 package nl.knaw.huc.annorepo.api
 
-import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Test
-import org.slf4j.LoggerFactory
 import java.time.Instant
-import java.util.*
+import java.util.Date
+import org.junit.jupiter.api.Test
+import org.assertj.core.api.Assertions.assertThat
+import org.slf4j.LoggerFactory
 
 internal class ContainerDataTest {
     private val log = LoggerFactory.getLogger(javaClass)

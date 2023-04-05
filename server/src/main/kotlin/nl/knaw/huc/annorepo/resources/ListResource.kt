@@ -1,11 +1,23 @@
 package nl.knaw.huc.annorepo.resources
 
+import jakarta.annotation.security.PermitAll
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.Context
+import jakarta.ws.rs.core.SecurityContext
 import com.codahale.metrics.annotation.Timed
 import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Filters.exists
 import io.swagger.v3.oas.annotations.Hidden
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import org.bson.Document
+import org.litote.kmongo.aggregate
+import org.litote.kmongo.match
+import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
@@ -13,18 +25,6 @@ import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.service.UriFactory
-import org.bson.Document
-import org.litote.kmongo.aggregate
-import org.litote.kmongo.match
-import org.slf4j.LoggerFactory
-import javax.annotation.security.PermitAll
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.Context
-import javax.ws.rs.core.SecurityContext
 
 @Hidden
 @Path(ResourcePaths.LIST)

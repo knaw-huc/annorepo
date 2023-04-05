@@ -37,8 +37,8 @@
 
         <arrow-core.version>1.1.5</arrow-core.version>
         <dropwizard-swagger-ui.version>4.6.2</dropwizard-swagger-ui.version>
-        <dropwizard-swagger.version>2.0.28-1</dropwizard-swagger.version>
-        <dropwizard.version>2.1.5</dropwizard.version>
+        <dropwizard-swagger.version>2.1.4-1</dropwizard-swagger.version>
+        <dropwizard.version>4.0.0</dropwizard.version>
         <jackson-databind.version>2.13.4.1</jackson-databind.version>
         <jackson-module-kotlin.version>2.14.2</jackson-module-kotlin.version>
         <jackson-annotations.version>2.14.2</jackson-annotations.version>
