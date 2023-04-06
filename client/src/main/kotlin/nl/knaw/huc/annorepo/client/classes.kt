@@ -137,6 +137,11 @@ sealed class ARResult {
     data class DeleteContainerUserResult(
         override val response: Response,
     ) : ARResult()
+
+    data class MyContainersResult(
+        override val response: Response,
+        val containers: Map<String, List<String>>
+    ) : ARResult()
 }
 
 sealed class RequestError {
