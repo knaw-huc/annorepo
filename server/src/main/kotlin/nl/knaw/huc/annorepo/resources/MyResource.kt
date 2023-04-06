@@ -1,5 +1,6 @@
 package nl.knaw.huc.annorepo.resources
 
+import java.util.TreeMap
 import javax.annotation.security.PermitAll
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.ResourcePaths.MY
 import nl.knaw.huc.annorepo.auth.ContainerUserDAO
+import nl.knaw.huc.annorepo.auth.RootUser
 
 @Path(MY)
 @Produces(MediaType.APPLICATION_JSON)
@@ -29,12 +31,22 @@ class MyResource(
     @Timed
     @GET
     @Path("containers")
-    fun getAccessibleContainers(@Context context: SecurityContext): Response {
-        val accessibleContainers = AccessibleContainerList()
-        val userName = context.userPrincipal.name
-//        val userRoles = containerUserDAO.getUserRoles()
-        return Response.ok(accessibleContainers).build()
-    }
+    fun getAccessibleContainers(@Context context: SecurityContext): Response =
+        if (context.userPrincipal is RootUser) {
+            val allContainerNames = containerUserDAO.getAll().map { it.containerName }.toSortedSet()
+            val containerNames = mapOf("ROOT" to allContainerNames)
+            Response.ok(containerNames).build()
+        } else {
+            val userName = context.userPrincipal.name
+            val userRoles = containerUserDAO.getUserRoles(userName)
+            val containerUsersGroupedByRole = userRoles.groupBy { it.role }
+            val containerNamesGroupedByRole: TreeMap<String, List<String>> = TreeMap()
+            for (role in containerUsersGroupedByRole.keys.sorted()) {
+                val containerNames = containerUsersGroupedByRole[role]!!.map { it.containerName }
+                containerNamesGroupedByRole[role.name] = containerNames
+            }
+            Response.ok(containerNamesGroupedByRole).build()
+        }
 
 }
 

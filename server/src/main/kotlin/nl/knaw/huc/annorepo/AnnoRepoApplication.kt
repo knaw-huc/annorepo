@@ -89,6 +89,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             }
             if (configuration.withAuthentication) {
                 register(AdminResource(userDAO))
+                register(MyResource(containerUserDAO))
                 register(
                     AuthDynamicFeature(
                         OAuthCredentialAuthFilter.Builder<User>()
