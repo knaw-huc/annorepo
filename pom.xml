@@ -48,7 +48,7 @@
         <json.version>20220320</json.version>
         <kmongo.version>4.8.0</kmongo.version>
         <kotlinx-cli-jvm.version>0.3.5</kotlinx-cli-jvm.version>
-        <mongodb.version>4.9.0</mongodb.version>
+        <mongodb.version>4.8.0</mongodb.version>
         <mordant.version>2.0.0-beta11</mordant.version>
         <problem.version>0.27.1</problem.version>
         <slf4j.version>2.0.3</slf4j.version>

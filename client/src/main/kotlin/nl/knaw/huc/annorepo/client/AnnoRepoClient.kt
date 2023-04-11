@@ -30,6 +30,7 @@ import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
 import nl.knaw.huc.annorepo.api.ResourcePaths.INDEXES
 import nl.knaw.huc.annorepo.api.ResourcePaths.INFO
 import nl.knaw.huc.annorepo.api.ResourcePaths.METADATA
+import nl.knaw.huc.annorepo.api.ResourcePaths.MY
 import nl.knaw.huc.annorepo.api.ResourcePaths.SEARCH
 import nl.knaw.huc.annorepo.api.ResourcePaths.SERVICES
 import nl.knaw.huc.annorepo.api.ResourcePaths.USERS
@@ -58,6 +59,7 @@ import nl.knaw.huc.annorepo.client.ARResult.GetIndexResult
 import nl.knaw.huc.annorepo.client.ARResult.GetSearchInfoResult
 import nl.knaw.huc.annorepo.client.ARResult.GetSearchResultPageResult
 import nl.knaw.huc.annorepo.client.ARResult.ListIndexesResult
+import nl.knaw.huc.annorepo.client.ARResult.MyContainersResult
 import nl.knaw.huc.annorepo.client.ARResult.UsersResult
 import nl.knaw.huc.annorepo.client.RequestError.ConnectionError
 
@@ -670,6 +672,22 @@ class AnnoRepoClient @JvmOverloads constructor(
                 Either.Right(
                     DeleteContainerUserResult(
                         response = response
+                    )
+                )
+            })
+    )
+
+    fun getMyContainers(): Either<RequestError, MyContainersResult> = doGet(
+        request = webTarget.path(MY).path("containers").request(),
+        responseHandlers = mapOf(
+            Response.Status.OK to { response ->
+                val json = response.readEntityAsJsonString()
+                val accessibleContainers =
+                    oMapper.readValue(json, object : TypeReference<Map<String, List<String>>>() {})
+                Either.Right(
+                    MyContainersResult(
+                        response = response,
+                        containers = accessibleContainers
                     )
                 )
             })

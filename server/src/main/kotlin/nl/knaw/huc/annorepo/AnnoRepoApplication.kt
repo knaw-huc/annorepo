@@ -13,7 +13,6 @@ import io.dropwizard.auth.oauth.OAuthCredentialAuthFilter
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor
 import io.dropwizard.configuration.SubstitutingSourceProvider
 import io.dropwizard.core.Application
-import io.dropwizard.core.ConfiguredBundle
 import io.dropwizard.core.setup.Bootstrap
 import io.dropwizard.core.setup.Environment
 import io.dropwizard.jdbi3.bundles.JdbiExceptionsBundle
@@ -40,22 +39,24 @@ import nl.knaw.huc.annorepo.service.LocalDateTimeSerializer
 import nl.knaw.huc.annorepo.tasks.RecalculateFieldCountTask
 import nl.knaw.huc.annorepo.tasks.UpdateTask
 
-class AnnoRepoApplication : Application<AnnoRepoConfiguration>() {
+class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun getName(): String = APP_NAME
 
-    override fun initialize(bootstrap: Bootstrap<AnnoRepoConfiguration>) {
+    override fun initialize(bootstrap: Bootstrap<AnnoRepoConfiguration?>) {
         bootstrap.configurationSourceProvider = SubstitutingSourceProvider(
             bootstrap.configurationSourceProvider, EnvironmentVariableSubstitutor()
         )
-        bootstrap.addBundle(getSwaggerBundle())
+//        bootstrap.addBundle(getSwaggerBundle())
         bootstrap.addBundle(JdbiExceptionsBundle())
         bootstrap.addCommand(EnvCommand())
     }
 
-    private fun getSwaggerBundle(): ConfiguredBundle<AnnoRepoConfiguration> =
-        ConfiguredSwaggerBundle<AnnoRepoConfiguration>()
+//    private fun getSwaggerBundle() = object : SwaggerBundle<AnnoRepoConfiguration>() {
+//        override fun getSwaggerBundleConfiguration(configuration: AnnoRepoConfiguration): SwaggerBundleConfiguration =
+//            configuration.swaggerBundleConfiguration
+//    }
 
     override fun run(configuration: AnnoRepoConfiguration?, environment: Environment) {
         log.info(
@@ -86,6 +87,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration>() {
             }
             if (configuration.withAuthentication) {
                 register(AdminResource(userDAO))
+                register(MyResource(containerUserDAO))
                 register(
                     AuthDynamicFeature(
                         OAuthCredentialAuthFilter.Builder<User>()

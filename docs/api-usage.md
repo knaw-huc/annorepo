@@ -29,6 +29,7 @@
   - [Read container users](#get-container-users-)
   - [Add container users](#add-container-users-)
   - [Delete container user](#delete-container-user-)
+  - [Show containers for user](#show-containers-for-user-)
 - [Miscellaneous](#miscellaneous):
   - [Annotation Field Count](#get-annotation-field-count-)
 - [OpenAPI](#openapi)
@@ -1053,6 +1054,36 @@ DELETE http://localhost:8080/services/{containerName}/users/{userName} HTTP/1.1
 
 ```
 HTTP/1.1 200 OK
+```
+
+### Show containers for user (🔒)
+
+Calling this endpoint returns the containers that the authenticated user has access to, grouped by role.
+
+#### Request
+
+```
+GET http://localhost:8080/my/containers HTTP/1.1
+```
+
+#### Response
+
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+    "ADMIN": [
+        "my-container"
+    ],
+    "GUEST": [
+        "7696f94e-5809-45a2-b575-4872ce693bd2",
+        "b4421353-debb-4be7-8891-ccb510bbdff7",
+    ]
+    "EDITOR": [
+        "1ad90412-6247-47d4-b7bf-c9a4ec8bf8a4"
+    ]
+}
 ```
 
 ---

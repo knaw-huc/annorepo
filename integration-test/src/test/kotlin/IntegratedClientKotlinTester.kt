@@ -503,6 +503,17 @@ class IntegratedClientKotlinTester {
         }
     }
 
+    @Nested
+    inner class MyTests {
+        @Test
+        fun testMyContainers() {
+            client.getMyContainers().fold(
+                { error: RequestError -> handleError(error) },
+                { (_, containers): ARResult.MyContainersResult -> doSomethingWith(containers) }
+            )
+        }
+    }
+
     companion object {
         const val BASE_URL = "http://localhost:8080"
         val BASE_URI: URI = URI.create(BASE_URL)

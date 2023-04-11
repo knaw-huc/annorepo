@@ -613,7 +613,8 @@ val success = client.getIndex(containerName, fieldName, indexType).fold(
     { error: RequestError ->
         handleError(error)
         false
-    }, { (_, indexConfig): GetIndexResult ->
+    },
+    { (_, indexConfig): GetIndexResult ->
         doSomethingWith(indexConfig)
         true
     }
@@ -876,7 +877,6 @@ String containerName="my-container";
         return true;
         }
         );
-        assertThat(success).isTrue();
 ```
 
 ### Reading the current list of container users
@@ -906,7 +906,6 @@ String containerName="my-container";
         return true;
         }
         );
-        assertThat(success).isTrue();
 ```
 
 ### Deleting a container user
@@ -926,5 +925,31 @@ assertThat(deletionSuccess).isTrue
 String containerName="my-container";
         String userName="userName";
         boolean deletionSuccess=client.deleteContainerUser(containerName,userName).isRight();
-        assertThat(deletionSuccess).isTrue();
+```
+
+### Listing all containers accessible to the user
+
+**Kotlin:**
+
+```kotlin
+client.getMyContainers().fold(
+    { error: RequestError -> handleError(error) },
+    { (_, containers): ARResult.MyContainersResult -> doSomethingWith(containers) }
+)
+```
+
+**Java**
+
+```java
+Boolean success=client.getMyContainers().fold(
+        (RequestError error)->{
+        handleError(error);
+        return false;
+        },
+        (ARResult.MyContainersResult result)->{
+        Map<String, List<String>>containerMap=result.getContainers();
+        doSomethingWith(containerMap);
+        return true;
+        }
+        );
 ```
