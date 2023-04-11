@@ -556,6 +556,25 @@ public class IntegratedClientJavaTester {
         }
     }
 
+    @Nested
+    class MyTests {
+        @Test
+        void testGetMyContainers() {
+            Boolean success = client.getMyContainers().fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    (ARResult.MyContainersResult result) -> {
+                        Map<String, List<String>> containerMap = result.getContainers();
+                        doSomethingWith(containerMap);
+                        return true;
+                    }
+            );
+            assertThat(success).isTrue();
+        }
+    }
+
     private static void handleError(RequestError error) {
         System.out.println(error.getMessage());
     }

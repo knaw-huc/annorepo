@@ -613,7 +613,8 @@ val success = client.getIndex(containerName, fieldName, indexType).fold(
     { error: RequestError ->
         handleError(error)
         false
-    }, { (_, indexConfig): GetIndexResult ->
+    },
+    { (_, indexConfig): GetIndexResult ->
         doSomethingWith(indexConfig)
         true
     }
@@ -859,24 +860,23 @@ client.addContainerUsers(containerName, containerUserEntries).fold(
 **Java**
 
 ```java
-String containerName="my-container";
-        List<ContainerUserEntry> containerUserEntries=List.of(
-        new ContainerUserEntry("user1",Role.EDITOR),
-        new ContainerUserEntry("user2",Role.GUEST),
-        new ContainerUserEntry("admin2",Role.ADMIN)
-        );
-        Boolean success=client.addContainerUsers(containerName,containerUserEntries).fold(
-        (RequestError error)->{
+String containerName = "my-container";
+List<ContainerUserEntry> containerUserEntries = List.of(
+    new ContainerUserEntry("user1",Role.EDITOR),
+    new ContainerUserEntry("user2",Role.GUEST),
+    new ContainerUserEntry("admin2",Role.ADMIN)
+);
+Boolean success = client.addContainerUsers(containerName,containerUserEntries).fold(
+    (RequestError error) -> {
         handleError(error);
         return false;
-        },
-        (ARResult.ContainerUsersResult result)->{
-        List<ContainerUserEntry> newContainerUsersList=result.getContainerUserEntries();
+    },
+    (ARResult.ContainerUsersResult result) -> {
+        List<ContainerUserEntry> newContainerUsersList = result.getContainerUserEntries();
         doSomethingWith(newContainerUsersList);
         return true;
-        }
-        );
-        assertThat(success).isTrue();
+    }
+);
 ```
 
 ### Reading the current list of container users
@@ -906,7 +906,6 @@ String containerName="my-container";
         return true;
         }
         );
-        assertThat(success).isTrue();
 ```
 
 ### Deleting a container user
@@ -926,5 +925,31 @@ assertThat(deletionSuccess).isTrue
 String containerName="my-container";
         String userName="userName";
         boolean deletionSuccess=client.deleteContainerUser(containerName,userName).isRight();
-        assertThat(deletionSuccess).isTrue();
+```
+
+### Listing all containers accessible to the user
+
+**Kotlin:**
+
+```kotlin
+client.getMyContainers().fold(
+    { error: RequestError -> handleError(error) },
+    { (_, containers): ARResult.MyContainersResult -> doSomethingWith(containers) }
+)
+```
+
+**Java**
+
+```java
+Boolean success=client.getMyContainers().fold(
+        (RequestError error)->{
+        handleError(error);
+        return false;
+        },
+        (ARResult.MyContainersResult result)->{
+        Map<String, List<String>>containerMap=result.getContainers();
+        doSomethingWith(containerMap);
+        return true;
+        }
+        );
 ```

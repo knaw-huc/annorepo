@@ -15,6 +15,7 @@ class AnnoRepoConfigurationTest {
     fun `get base uri`() {
         val c = AnnoRepoConfiguration()
         log.info(c.externalBaseUrl)
+        assertThat(c).isNotNull
     }
 
     @Test
