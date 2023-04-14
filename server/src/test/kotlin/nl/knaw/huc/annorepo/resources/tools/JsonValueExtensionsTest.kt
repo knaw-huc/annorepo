@@ -33,12 +33,22 @@ class JsonValueExtensionsTest {
         val simpleValue = jsonValue.toSimpleValue()
         log.info("{}", simpleValue)
         assertThat(simpleValue is Map<*, *>).isTrue
+
         val map = simpleValue as Map<*, *>
         val arrayOfStrings = map["arrayOfStrings"]
         log.info("{}", arrayOfStrings)
-        assertThat(arrayOfStrings is Array<*> && arrayOfStrings.all { it is String }).isTrue
+        assertThat(arrayOfStrings.isStringArray()).isTrue
+
         val arrayOfInts = map["arrayOfInts"]
         log.info("{}", arrayOfInts)
-        assertThat(arrayOfInts is Array<*> && arrayOfInts.all { it is Number }).isTrue
+        assertThat(arrayOfInts.isNumberArray()).isTrue
     }
+
+    private fun Any?.isNumberArray() =
+        this is Array<*>
+                && all { it is Number }
+
+    private fun Any?.isStringArray() =
+        this is Array<*>
+                && all { it is String }
 }
