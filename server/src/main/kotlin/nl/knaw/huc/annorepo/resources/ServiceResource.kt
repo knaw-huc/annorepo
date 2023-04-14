@@ -6,6 +6,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import jakarta.annotation.security.PermitAll
 import jakarta.json.Json
+import jakarta.json.JsonValue
 import jakarta.ws.rs.BadRequestException
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
@@ -52,6 +53,7 @@ import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
 import nl.knaw.huc.annorepo.resources.tools.AnnotationList
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.QueryCacheItem
+import nl.knaw.huc.annorepo.resources.tools.toSimpleValue
 import nl.knaw.huc.annorepo.service.UriFactory
 
 @Path(SERVICES)
@@ -132,22 +134,37 @@ class ServiceResource(
         @Context context: SecurityContext,
     ): Response {
         checkUserHasReadRightsInThisContainer(context, containerName)
-
-        val queryMap = Json.createReader(StringReader(queryJson)).readObject().toMap()
-        if (queryMap is HashMap<*, *>) {
-            val aggregateStages =
-                queryMap.toMap().map { (k, v) -> aggregateStageGenerator.generateStage(k, v) }.toList()
+        try {
+            val queryMap: Map<String, Any?> = Json.createReader(StringReader(queryJson)).readObject().toMap().simplify()
+            val aggregateStages = queryMap
+                .map { (k, v) -> aggregateStageGenerator.generateStage(k, v!!) }
+                .toList()
             val container = mdb.getCollection(containerName)
             val count = container.aggregate(aggregateStages).count()
 
             val id = UUID.randomUUID().toString()
             queryCache.put(id, QueryCacheItem(queryMap, aggregateStages, count))
             val location = uriFactory.searchURL(containerName, id)
-            return Response.created(location).link(uriFactory.searchInfoURL(containerName, id), "info")
-                .entity(mapOf("hits" to count)).build()
+            return Response.created(location)
+                .link(uriFactory.searchInfoURL(containerName, id), "info")
+                .entity(mapOf("hits" to count))
+                .build()
+        } catch (e: RuntimeException) {
+            e.printStackTrace()
+            return Response.status(Response.Status.BAD_REQUEST).build()
         }
-        return Response.status(Response.Status.BAD_REQUEST).build()
     }
+
+    private fun Map<String, JsonValue>.simplify(): Map<String, Any?> {
+        val newMap = mutableMapOf<String, Any?>()
+        for (e in entries) {
+            val v = e.value
+            newMap[e.key] = v.toSimpleValue()
+        }
+        log.debug("newMap={}", newMap)
+        return newMap
+    }
+
 
     @Operation(description = "Get the given search result page")
     @Timed
@@ -169,7 +186,9 @@ class ServiceResource(
 //        log.debug("aggregateStages=\n  {}", Joiner.on("\n  ").join(aggregateStages))
 
         val annotations =
-            mdb.getCollection(containerName).aggregate(aggregateStages).map { a -> toAnnotationMap(a, containerName) }
+            mdb.getCollection(containerName)
+                .aggregate(aggregateStages)
+                .map { a -> toAnnotationMap(a, containerName) }
                 .toList()
         val annotationPage =
             buildAnnotationPage(uriFactory.searchURL(containerName, searchId), annotations, page, queryCacheItem.count)
@@ -401,4 +420,5 @@ class ServiceResource(
                 )
             }
 }
+
 

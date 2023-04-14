@@ -287,7 +287,6 @@ class IntegratedClientKotlinTester {
                 is Right -> println(e.value.size)
             }
         }
-
     }
 
     @Nested

@@ -6,9 +6,12 @@ import jakarta.ws.rs.BadRequestException
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Filters
 import org.bson.conversions.Bson
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 
 class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
+    val log: Logger = LoggerFactory.getLogger(this::class.java)
 
     fun generateStage(key: Any, value: Any): Bson =
         when (key) {
@@ -19,11 +22,13 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
                 if (key.startsWith(":")) {
                     throw BadRequestException("Unknown query function: '$key'")
                 } else {
+                    log.info("key={}, value={} ({})", key, value, value.javaClass)
                     fieldMatchStage(key, value)
                 }
             }
         }
 
+    @Suppress("UNCHECKED_CAST")
     private fun fieldMatchStage(key: String, value: Any): Bson =
         when (value) {
             is Map<*, *> -> specialFieldMatchStage(key, value as Map<String, Any>)
@@ -33,12 +38,15 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
     private fun specialFieldMatchStage(field: String, value: Map<String, Any>): Bson =
         Filters.and(value.map { (k, v) ->
             return when (k) {
-                IS_NOT_IN -> Aggregates.match(
-                    Filters.nin("$ANNOTATION_FIELD_PREFIX$field", (v as Array<Any>).toList())
-                )
+                IS_NOT_IN -> {
+                    log.info("v={} ({})", v, v.javaClass)
+                    Aggregates.match(
+                        Filters.nin("$ANNOTATION_FIELD_PREFIX$field", *(v as Array<*>))
+                    )
+                }
 
                 IS_IN -> Aggregates.match(
-                    Filters.`in`("$ANNOTATION_FIELD_PREFIX$field", (v as Array<Any>).toList())
+                    Filters.`in`("$ANNOTATION_FIELD_PREFIX$field", *(v as Array<*>))
                 )
 
                 IS_GREATER -> Aggregates.match(
