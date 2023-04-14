@@ -74,7 +74,7 @@ class W3CResource(
         @HeaderParam("slug") slug: String?,
         @Context context: SecurityContext,
     ): Response {
-        log.debug("$containerSpecs")
+        log.debug("{}", containerSpecs)
         var containerName = slug ?: UUID.randomUUID().toString()
         if (mdb.listCollectionNames().contains(containerName)) {
             log.debug("A container with the suggested name $containerName already exists, generating a new name.")
