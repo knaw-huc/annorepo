@@ -10,8 +10,6 @@ import nl.knaw.huc.annorepo.resources.AboutResource
 
 open class AnnoRepoConfiguration : Configuration() {
 
-//    private val log = LoggerFactory.getLogger(javaClass)
-
     @Valid
     @NotNull
     @JsonProperty
