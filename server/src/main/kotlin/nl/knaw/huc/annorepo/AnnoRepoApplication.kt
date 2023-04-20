@@ -82,7 +82,8 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             register(AboutResource(configuration, name, appVersion))
             register(HomePageResource())
             register(W3CResource(configuration, mongoClient, containerUserDAO))
-            register(ServiceResource(configuration, mongoClient, containerUserDAO))
+            register(ContainerServiceResource(configuration, mongoClient, containerUserDAO))
+            register(GlobalServiceResource(configuration, mongoClient, containerUserDAO))
             register(BatchResource(configuration, mongoClient, containerAccessChecker))
             if (configuration.prettyPrint) {
                 register(JSONPrettyPrintFilter())

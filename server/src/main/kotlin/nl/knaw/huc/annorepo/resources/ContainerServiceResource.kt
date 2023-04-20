@@ -44,7 +44,7 @@ import nl.knaw.huc.annorepo.service.UriFactory
 @Produces(APPLICATION_JSON)
 @PermitAll
 @SecurityRequirement(name = SECURITY_SCHEME_NAME)
-class ServiceResource(
+class ContainerServiceResource(
     private val configuration: AnnoRepoConfiguration,
     client: MongoClient,
     private val containerUserDAO: ContainerUserDAO,

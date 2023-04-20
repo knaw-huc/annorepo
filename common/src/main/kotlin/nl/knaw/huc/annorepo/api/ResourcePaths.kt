@@ -7,6 +7,7 @@ object ResourcePaths {
     const val BATCH = "batch"
     const val LIST = "_list"
     const val SERVICES = "services"
+    const val GLOBAL_SERVICES = "global"
     const val MY = "my"
     const val W3C = "w3c"
 

@@ -38,6 +38,21 @@ class UriFactory(private val configuration: AnnoRepoConfiguration) {
             .path("info")
             .build()
 
+    fun globalSearchURL(id: String): URI =
+        UriBuilder.fromUri(configuration.externalBaseUrl)
+            .path(ResourcePaths.GLOBAL_SERVICES)
+            .path(ResourcePaths.SEARCH)
+            .path(id)
+            .build()
+
+    fun globalSearchInfoURL(id: String): URI =
+        UriBuilder.fromUri(configuration.externalBaseUrl)
+            .path(ResourcePaths.SERVICES)
+            .path(ResourcePaths.SEARCH)
+            .path(id)
+            .path("info")
+            .build()
+
     fun indexURL(containerName: String, fieldName: String, type: String): URI =
         UriBuilder.fromUri(configuration.externalBaseUrl)
             .path(ResourcePaths.SERVICES)
