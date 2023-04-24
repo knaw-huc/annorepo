@@ -1,8 +1,10 @@
 package nl.knaw.huc.annorepo.resources.tools
 
+import java.util.Date
 import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoDatabase
 import org.bson.conversions.Bson
+import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.service.UriFactory
 
@@ -18,6 +20,7 @@ class SearchManager(
     )
 
     private val searchTaskIndex: MutableMap<String, SearchTask> = mutableMapOf()
+    private val log = LoggerFactory.getLogger(javaClass)
 
     fun startGlobalSearch(
         containerNames: List<String>,
@@ -38,6 +41,19 @@ class SearchManager(
     private fun startSearchTask(task: SearchTask): SearchTask {
         searchTaskIndex[task.id] = task
         Thread(task).start()
+        purgeExpiredTasks()
         return task
+    }
+
+    private fun purgeExpiredTasks() {
+        val expiredTaskIds = searchTaskIndex.entries
+            .asSequence()
+            .filter { it.value.status.state == SearchTask.State.DONE }
+            .filter { it.value.status.expirationTime()!!.before(Date()) }
+            .map { it.key }
+            .toList()
+        log.debug("expired tasks: {}", expiredTaskIds)
+        expiredTaskIds
+            .forEach { searchTaskIndex.remove(it) }
     }
 }

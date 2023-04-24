@@ -2,6 +2,7 @@ package nl.knaw.huc.annorepo.resources.tools
 
 import java.util.Date
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import org.joda.time.Instant
 import org.slf4j.LoggerFactory
@@ -14,6 +15,7 @@ abstract class SearchTask(queryMap: HashMap<*, *>) : Runnable {
             val query: HashMap<*, *>,
             val startedAt: Date,
             val finishedAt: Date?,
+            val expiresAt: Date?,
             val state: String,
             val containersSearched: Int,
             val totalContainersToSearch: Int,
@@ -21,7 +23,7 @@ abstract class SearchTask(queryMap: HashMap<*, *>) : Runnable {
             val processingTimeInMillis: Long
         )
 
-        var state = SearchTaskState.CREATED
+        var state = State.CREATED
         val annotations: MutableList<Map<String, Any>> = mutableListOf()
         var startTime: Instant = Instant.now()
         var endTime: Instant? = null
@@ -32,6 +34,7 @@ abstract class SearchTask(queryMap: HashMap<*, *>) : Runnable {
             query = queryMap,
             startedAt = startTime.toDate(),
             finishedAt = endTime?.toDate(),
+            expiresAt = expirationTime(),
             state = state.name,
             totalContainersToSearch = totalContainersToSearch,
             containersSearched = containersSearched.get(),
@@ -39,10 +42,13 @@ abstract class SearchTask(queryMap: HashMap<*, *>) : Runnable {
             processingTimeInMillis = (endTime?.millis ?: Instant.now().millis) - startTime.millis
         )
 
+        private val timeToLive = TimeUnit.MINUTES.toMillis(1)
+
+        fun expirationTime(): Date? = endTime?.withDurationAdded(timeToLive, 1)?.toDate()
     }
 
-    enum class SearchTaskState {
-        CREATED, STARTED, DONE
+    enum class State {
+        CREATED, RUNNING, DONE
     }
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -51,10 +57,10 @@ abstract class SearchTask(queryMap: HashMap<*, *>) : Runnable {
     val status = Status(queryMap)
 
     override fun run() {
-        status.state = SearchTaskState.STARTED
+        status.state = State.RUNNING
         status.startTime = Instant.now()
         runSearch(status)
-        status.state = SearchTaskState.DONE
+        status.state = State.DONE
         status.endTime = Instant.now()
         log.debug("query done")
     }

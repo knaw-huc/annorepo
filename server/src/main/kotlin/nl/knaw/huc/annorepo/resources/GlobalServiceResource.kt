@@ -83,7 +83,7 @@ class GlobalServiceResource(
     ): Response {
         val searchTaskStatus = searchManager.getSearchTask(searchId)?.status ?: throw NotFoundException()
         return when (searchTaskStatus.state) {
-            SearchTask.SearchTaskState.DONE -> {
+            SearchTask.State.DONE -> {
                 val total = searchTaskStatus.annotations.size
                 val selection = searchTaskStatus.annotations.subList(
                     page * configuration.pageSize,
