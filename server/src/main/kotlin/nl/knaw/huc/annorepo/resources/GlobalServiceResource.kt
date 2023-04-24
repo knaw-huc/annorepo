@@ -31,8 +31,9 @@ import nl.knaw.huc.annorepo.service.UriFactory
 @SecurityRequirement(name = SECURITY_SCHEME_NAME)
 class GlobalServiceResource(
     private val configuration: AnnoRepoConfiguration,
-    private val client: MongoClient,
+    client: MongoClient,
     private val containerUserDAO: ContainerUserDAO,
+    val searchManager: SearchManager
 ) : AbstractContainerResource(configuration, client, ContainerAccessChecker(containerUserDAO)) {
     private val uriFactory = UriFactory(configuration)
 
@@ -58,12 +59,10 @@ class GlobalServiceResource(
             queryMap.toMap().map { (k, v) -> aggregateStageGenerator.generateStage(k, v) }.toList()
         val containerNames = accessibleContainers(context.userPrincipal.name)
         val task: SearchTask =
-            SearchManager.startGlobalSearch(
+            searchManager.startGlobalSearch(
                 containerNames = containerNames,
                 queryMap = queryMap,
-                aggregateStages = aggregateStages,
-                configuration = configuration,
-                client = client
+                aggregateStages = aggregateStages
             )
         val id = task.id
         val location = uriFactory.globalSearchURL(id)
@@ -82,7 +81,7 @@ class GlobalServiceResource(
         @QueryParam("page") page: Int = 0,
         @Context context: SecurityContext,
     ): Response {
-        val searchTaskStatus = SearchManager.getSearchTask(searchId)?.status ?: throw NotFoundException()
+        val searchTaskStatus = searchManager.getSearchTask(searchId)?.status ?: throw NotFoundException()
         return when (searchTaskStatus.state) {
             SearchTask.SearchTaskState.DONE -> {
                 val total = searchTaskStatus.annotations.size
@@ -104,9 +103,6 @@ class GlobalServiceResource(
         }
     }
 
-    private fun accessibleContainers(name: String): List<String> =
-        containerUserDAO.getUserRoles(name).map { it.containerName }.toList()
-
     @Operation(description = "Get information about the given global search")
     @Timed
     @GET
@@ -115,9 +111,12 @@ class GlobalServiceResource(
         @PathParam("searchId") searchId: String,
         @Context context: SecurityContext,
     ): Response {
-        val searchTask = SearchManager.getSearchTask(searchId) ?: throw NotFoundException()
+        val searchTask = searchManager.getSearchTask(searchId) ?: throw NotFoundException()
         return Response.ok(searchTask.status.summary()).build()
     }
+
+    private fun accessibleContainers(name: String): List<String> =
+        containerUserDAO.getUserRoles(name).map { it.containerName }.toList()
 
     private fun buildAnnotationPage(
         searchUri: URI, annotations: AnnotationList, page: Int, total: Int,

@@ -1,28 +1,37 @@
 package nl.knaw.huc.annorepo.resources.tools
 
 import com.mongodb.client.MongoClient
+import com.mongodb.client.MongoDatabase
 import org.bson.conversions.Bson
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.service.UriFactory
 
-object SearchManager {
+class SearchManager(
+    configuration: AnnoRepoConfiguration,
+    client: MongoClient
+) {
+    data class Context(val uriFactory: UriFactory, val mdb: MongoDatabase)
+
+    val context = Context(
+        uriFactory = UriFactory(configuration),
+        mdb = client.getDatabase(configuration.databaseName)
+    )
 
     private val searchTaskIndex: MutableMap<String, SearchTask> = mutableMapOf()
-
-    fun startContainerSearch(
-        containerName: String,
-        queryMap: HashMap<*, *>,
-        aggregateStages: List<Bson>
-    ): SearchTask =
-        startSearchTask(ContainerSearchTask(containerName, queryMap, aggregateStages))
 
     fun startGlobalSearch(
         containerNames: List<String>,
         queryMap: HashMap<*, *>,
-        aggregateStages: List<Bson>,
-        configuration: AnnoRepoConfiguration,
-        client: MongoClient
+        aggregateStages: List<Bson>
     ): SearchTask =
-        startSearchTask(GlobalSearchTask(containerNames, queryMap, aggregateStages, configuration, client))
+        startSearchTask(
+            GlobalSearchTask(
+                containerNames = containerNames,
+                queryMap = queryMap,
+                aggregateStages = aggregateStages,
+                context = context
+            )
+        )
 
     fun getSearchTask(id: String): SearchTask? = searchTaskIndex[id]
 

@@ -37,6 +37,7 @@ import nl.knaw.huc.annorepo.health.MongoDbHealthCheck
 import nl.knaw.huc.annorepo.health.ServerHealthCheck
 import nl.knaw.huc.annorepo.resources.*
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
+import nl.knaw.huc.annorepo.resources.tools.SearchManager
 import nl.knaw.huc.annorepo.service.LocalDateTimeSerializer
 import nl.knaw.huc.annorepo.tasks.RecalculateFieldCountTask
 import nl.knaw.huc.annorepo.tasks.UpdateTask
@@ -78,12 +79,21 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         val userDAO = ARUserDAO(configuration, mongoClient)
         val containerUserDAO = ARContainerUserDAO(configuration, mongoClient)
         val containerAccessChecker = ContainerAccessChecker(containerUserDAO)
+        val searchManager = SearchManager(client = mongoClient, configuration = configuration)
+
         environment.jersey().apply {
             register(AboutResource(configuration, name, appVersion))
             register(HomePageResource())
             register(W3CResource(configuration, mongoClient, containerUserDAO))
             register(ContainerServiceResource(configuration, mongoClient, containerUserDAO))
-            register(GlobalServiceResource(configuration, mongoClient, containerUserDAO))
+            register(
+                GlobalServiceResource(
+                    configuration,
+                    mongoClient,
+                    containerUserDAO,
+                    searchManager
+                )
+            )
             register(BatchResource(configuration, mongoClient, containerAccessChecker))
             if (configuration.prettyPrint) {
                 register(JSONPrettyPrintFilter())
@@ -101,7 +111,6 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
                 )
             }
             register(ListResource(configuration, mongoClient))
-//            register(RuntimeExceptionMapper())
         }
         environment.healthChecks().apply {
             register("server", ServerHealthCheck())
