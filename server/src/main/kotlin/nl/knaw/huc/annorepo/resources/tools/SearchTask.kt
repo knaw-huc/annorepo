@@ -23,7 +23,7 @@ abstract class SearchTask(queryMap: HashMap<*, *>) : Runnable {
 
         var state = SearchTaskState.CREATED
         val annotations: MutableList<Map<String, Any>> = mutableListOf()
-        lateinit var startTime: Instant
+        var startTime: Instant = Instant.now()
         var endTime: Instant? = null
         var totalContainersToSearch: Int = 0
         val containersSearched: AtomicInteger = AtomicInteger(0)

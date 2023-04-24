@@ -87,7 +87,7 @@ class GlobalServiceResource(
                 val total = searchTaskStatus.annotations.size
                 val selection = searchTaskStatus.annotations.subList(
                     page * configuration.pageSize,
-                    min((page + 1 * configuration.pageSize), total)
+                    min((page + 1) * configuration.pageSize, total)
                 )
                 val annotationPage =
                     buildAnnotationPage(
