@@ -24,6 +24,7 @@ import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.service.UriFactory
 
 @ExtendWith(MockKExtension::class)
 class W3CResourceAccessTest {
@@ -188,7 +189,7 @@ class W3CResourceAccessTest {
             every { collectionNames.iterator() } returns mongoCursor
             every { mongoCursor.hasNext() } returns true
             every { mongoCursor.next() } returns containerName
-            resource = W3CResource(config, client, containerUserDAO)
+            resource = W3CResource(config, client, containerUserDAO, UriFactory(config))
         }
 
         private fun useRootUser() {

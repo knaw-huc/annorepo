@@ -6,8 +6,18 @@ import javax.annotation.security.PermitAll
 import javax.ws.rs.*
 import javax.ws.rs.core.*
 import javax.ws.rs.core.MediaType.APPLICATION_JSON
+import kotlin.collections.HashMap
+import kotlin.collections.Map
+import kotlin.collections.MutableMap
+import kotlin.collections.Set
+import kotlin.collections.contains
+import kotlin.collections.emptySet
+import kotlin.collections.filter
 import kotlin.collections.get
+import kotlin.collections.listOf
 import kotlin.collections.set
+import kotlin.collections.toList
+import kotlin.collections.toMutableMap
 import kotlin.math.abs
 import com.codahale.metrics.annotation.Timed
 import com.mongodb.client.MongoClient
@@ -47,10 +57,10 @@ class W3CResource(
     private val configuration: AnnoRepoConfiguration,
     client: MongoClient,
     private val containerUserDAO: ContainerUserDAO,
+    private val uriFactory: UriFactory,
 ) : AbstractContainerResource(configuration, client, ContainerAccessChecker(containerUserDAO)) {
 
     private val log = LoggerFactory.getLogger(javaClass)
-    private val uriFactory = UriFactory(configuration)
 
     @Operation(description = "Create an Annotation Container")
     @Timed
@@ -179,7 +189,6 @@ class W3CResource(
         annotationJson: String,
         @Context context: SecurityContext,
     ): Response {
-//        log.debug("annotation=\n$annotationJson")
         checkUserHasEditRightsInThisContainer(context, containerName)
 
         var name = slug ?: UUID.randomUUID().toString()

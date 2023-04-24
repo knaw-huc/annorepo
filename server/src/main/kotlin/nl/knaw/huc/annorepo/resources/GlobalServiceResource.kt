@@ -33,9 +33,9 @@ class GlobalServiceResource(
     private val configuration: AnnoRepoConfiguration,
     client: MongoClient,
     private val containerUserDAO: ContainerUserDAO,
-    val searchManager: SearchManager
+    private val searchManager: SearchManager,
+    private val uriFactory: UriFactory
 ) : AbstractContainerResource(configuration, client, ContainerAccessChecker(containerUserDAO)) {
-    private val uriFactory = UriFactory(configuration)
 
     private val aggregateStageGenerator = AggregateStageGenerator(configuration)
 
