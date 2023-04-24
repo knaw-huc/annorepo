@@ -28,9 +28,7 @@ class ContainerData {
         if (id != other.id) return false
         if (name != other.name) return false
         if (created != other.created) return false
-        if (modified != other.modified) return false
-
-        return true
+        return modified == other.modified
     }
 
     override fun hashCode(): Int {
