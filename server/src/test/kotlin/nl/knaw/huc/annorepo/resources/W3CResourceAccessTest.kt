@@ -125,7 +125,6 @@ class W3CResourceAccessTest {
         }
     }
 
-
     companion object {
         private const val containerName = "containername"
         private const val baseURL = "https://annorepo.net"

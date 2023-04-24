@@ -52,7 +52,7 @@ val serverVersion = client.serverVersion
 **Java**
 
 ```java
-String serverVersion = client.getServerVersion();
+String serverVersion=client.getServerVersion();
 ```
 
 as well as whether this server requires authentication:
@@ -114,7 +114,7 @@ val result = client.getAbout()
 **Java**
 
 ```java
-Either<RequestError, GetAboutResult> aboutResult = client.getAbout();
+Either<RequestError, GetAboutResult> aboutResult=client.getAbout();
 ```
 
 ## Annotation containers
@@ -149,21 +149,21 @@ val success = client.createContainer(preferredName, label).fold(
 **Java**
 
 ```java
-String preferredName = "my-container";
-String label = "A container for all my annotations";
-Boolean success = client.createContainer(preferredName, label).fold(
-        (RequestError error) -> {
-            handleError(error);
-            return false;
+String preferredName="my-container";
+        String label="A container for all my annotations";
+        Boolean success=client.createContainer(preferredName,label).fold(
+        (RequestError error)->{
+        handleError(error);
+        return false;
         },
-        (ARResult.CreateContainerResult result) -> {
-            String containerName = result.getContainerName();
-            URI location = result.getLocation();
-            String eTag = result.getETag();
-            doSomethingWith(containerName, location, eTag);
-            return true;
+        (ARResult.CreateContainerResult result)->{
+        String containerName=result.getContainerName();
+        URI location=result.getLocation();
+        String eTag=result.getETag();
+        doSomethingWith(containerName,location,eTag);
+        return true;
         }
-);
+        );
 ```
 
 On a succeeding call, the `CreateContainerResult` contains:
@@ -193,16 +193,16 @@ val either = client.createContainer()
 **Java**
 
 ```java
-String containerName = "my-container"
-client.getContainer(containerName).map(
-        (ARResult.GetContainerResult result) -> {
-            String eTag = result.getETag();
-            String entity = result.getEntity();
-            EntityTag entityTag = result.getResponse().getEntityTag();
-            doSomethingWith(eTag, entity, entityTag);
-            return true;
+String containerName="my-container"
+        client.getContainer(containerName).map(
+        (ARResult.GetContainerResult result)->{
+        String eTag=result.getETag();
+        String entity=result.getEntity();
+        EntityTag entityTag=result.getResponse().getEntityTag();
+        doSomethingWith(eTag,entity,entityTag);
+        return true;
         }
-);
+        );
 ```
 
 ### Deleting a container
@@ -217,9 +217,9 @@ client.deleteContainer(containerName, eTag)
 **Java**
 
 ```java
-client.deleteContainer(containerName, eTag).map(
-        (ARResult.DeleteContainerResult result) -> true
-);
+client.deleteContainer(containerName,eTag).map(
+        (ARResult.DeleteContainerResult result)->true
+        );
 ```
 
 ## Annotations
@@ -248,24 +248,24 @@ client.createAnnotation(containerName, annotation).fold(
 **Java**
 
 ```java
-String containerName = "my-container";
-WebAnnotation annotation = new WebAnnotation.Builder()
+String containerName="my-container";
+        WebAnnotation annotation=new WebAnnotation.Builder()
         .withBody("http://example.org/annotation1")
         .withTarget("http://example.org/target")
         .build();
-client.createAnnotation(containerName, annotation).fold(
-        (RequestError error) -> {
-            handleError(error);
-            return false;
+        client.createAnnotation(containerName,annotation).fold(
+        (RequestError error)->{
+        handleError(error);
+        return false;
         },
-        (ARResult.CreateAnnotationResult result) -> {
-            URI location = result.getLocation();
-            String eTag = result.getETag();
-            String annotationName = result.getAnnotationName();
-            doSomethingWith(annotationName, location, eTag);
-            return true;
+        (ARResult.CreateAnnotationResult result)->{
+        URI location=result.getLocation();
+        String eTag=result.getETag();
+        String annotationName=result.getAnnotationName();
+        doSomethingWith(annotationName,location,eTag);
+        return true;
         }
-);
+        );
 ```
 
 ### Retrieving an annotation
@@ -289,20 +289,20 @@ client.getAnnotation(containerName, annotationName).fold(
 **Java**
 
 ```java
-String containerName = "my-container";
-String annotationName = "my-annotation";
-client.getAnnotation(containerName, annotationName).fold(
-        (RequestError error) -> {
-            handleError(error);
-            return false;
+String containerName="my-container";
+        String annotationName="my-annotation";
+        client.getAnnotation(containerName,annotationName).fold(
+        (RequestError error)->{
+        handleError(error);
+        return false;
         },
-        (ARResult.GetAnnotationResult result) -> {
-            String eTag = result.getETag();
-            Map<String, Object> annotation = result.getAnnotation();
-            doSomethingWith(annotation, eTag);
-            return true;
+        (ARResult.GetAnnotationResult result)->{
+        String eTag=result.getETag();
+        Map<String, Object> annotation=result.getAnnotation();
+        doSomethingWith(annotation,eTag);
+        return true;
         }
-);
+        );
 ```
 
 ### Updating an annotation
@@ -332,25 +332,25 @@ client.updateAnnotation(containerName, annotationName, eTag, updatedAnnotation)
 **Java**
 
 ```java
-String containerName = "my-container";
-String annotationName = "my-annotation";
-String eTag = "abcdefg";
-WebAnnotation updatedAnnotation = new WebAnnotation.Builder()
+String containerName="my-container";
+        String annotationName="my-annotation";
+        String eTag="abcdefg";
+        WebAnnotation updatedAnnotation=new WebAnnotation.Builder()
         .withBody("http://example.org/annotation2")
         .withTarget("http://example.org/target")
         .build();
-client.updateAnnotation(containerName, annotationName, eTag, updatedAnnotation).fold(
-        (RequestError error) -> {
-            handleError(error);
-            return false;
+        client.updateAnnotation(containerName,annotationName,eTag,updatedAnnotation).fold(
+        (RequestError error)->{
+        handleError(error);
+        return false;
         },
-        (ARResult.CreateAnnotationResult result) -> {
-            URI location = result.getLocation();
-            String newETag = result.getETag();
-            doSomethingWith(annotationName, location, newETag);
-            return true;
+        (ARResult.CreateAnnotationResult result)->{
+        URI location=result.getLocation();
+        String newETag=result.getETag();
+        doSomethingWith(annotationName,location,newETag);
+        return true;
         }
-);
+        );
 ```
 
 ### Deleting an annotation
@@ -372,16 +372,16 @@ val success = client.deleteAnnotation(containerName, annotationName, eTag).fold(
 **Java**
 
 ```java
-String containerName = "my-container";
-String annotationName = "my-annotation";
-String eTag = "abcdefg";
-Boolean success = client.deleteAnnotation(containerName, annotationName, eTag).fold(
-        (RequestError error) -> {
-            handleError(error);
-            return false;
+String containerName="my-container";
+        String annotationName="my-annotation";
+        String eTag="abcdefg";
+        Boolean success=client.deleteAnnotation(containerName,annotationName,eTag).fold(
+        (RequestError error)->{
+        handleError(error);
+        return false;
         },
-        (ARResult.DeleteAnnotationResult result) -> true
-);
+        (ARResult.DeleteAnnotationResult result)->true
+        );
 ```
 
 ### Batch uploading of annotations
@@ -413,28 +413,28 @@ val success = client.batchUpload(containerName, annotations).fold(
 **Java**
 
 ```java
-String containerName = "my-container";
-WebAnnotation annotation1 = new WebAnnotation.Builder()
+String containerName="my-container";
+        WebAnnotation annotation1=new WebAnnotation.Builder()
         .withBody("http://example.org/annotation1")
         .withTarget("http://example.org/target1")
         .build();
-WebAnnotation annotation2 = new WebAnnotation.Builder()
+        WebAnnotation annotation2=new WebAnnotation.Builder()
         .withBody("http://example.org/annotation2")
         .withTarget("http://example.org/target2")
         .build();
 
-List<WebAnnotation> annotations = List.of(annotation1, annotation2);
-Boolean success = client.batchUpload(containerName, annotations).fold(
-        (RequestError error) -> {
-            handleError(error);
-            return false;
+        List<WebAnnotation> annotations=List.of(annotation1,annotation2);
+        Boolean success=client.batchUpload(containerName,annotations).fold(
+        (RequestError error)->{
+        handleError(error);
+        return false;
         },
-        (ARResult.BatchUploadResult result) -> {
-            List<AnnotationIdentifier> annotationIdentifiers = result.getAnnotationData();
-            doSomethingWith(annotationIdentifiers);
-            return true;
+        (ARResult.BatchUploadResult result)->{
+        List<AnnotationIdentifier> annotationIdentifiers=result.getAnnotationData();
+        doSomethingWith(annotationIdentifiers);
+        return true;
         }
-);
+        );
 ```
 
 ## Querying a container
@@ -444,7 +444,8 @@ Boolean success = client.batchUpload(containerName, annotations).fold(
 **Kotlin:**
 
 Construct the query as a (nested) map.
-When successful, the call returns a createSearchResult, which contains the queryId to be used in getting the result pages.
+When successful, the call returns a createSearchResult, which contains the queryId to be used in getting the result
+pages.
 
 ```kotlin
 val query = mapOf("body" to "urn:example:body42")
@@ -485,24 +486,25 @@ val resultPageResult = this.getSearchResultPage(
 **Java**
 
 ```java
-client.getSearchResultPage(containerName, queryId, 0).fold(
-        (RequestError error) -> {
-            handleError(error);
-            return false;
+client.getSearchResultPage(containerName,queryId,0).fold(
+        (RequestError error)->{
+        handleError(error);
+        return false;
         },
-        result -> {
-            AnnotationPage annotationPage = result.getAnnotationPage();
-            doSomethingWith(annotationPage);
-            return true;
+        result->{
+        AnnotationPage annotationPage=result.getAnnotationPage();
+        doSomethingWith(annotationPage);
+        return true;
         }
-);
+        );
 ```
 
 ### Filtering Container Annotations
 
-This function combines creating the search and iterating over the search result pages and extracting the annotations from those pages into a stream.
-Since there could be unexpected response from the server, the stream returned is one of `Either<RequestError, FilterContainerAnnotationsResult>`
-
+This function combines creating the search and iterating over the search result pages and extracting the annotations
+from those pages into a stream.
+Since there could be unexpected response from the server, the stream returned is one
+of `Either<RequestError, FilterContainerAnnotationsResult>`
 
 **Kotlin:**
 
@@ -523,20 +525,20 @@ filterContainerAnnotationsResult?.let {
 **Java**
 
 ```java
-Map<String, ?> query = Map.of("body.type", "Resolution");
-client.filterContainerAnnotations("my-container", query).fold(
-        error -> {
-            System.out.println(error.toString());
-            return false;
+Map<String, ?> query=Map.of("body.type","Resolution");
+        client.filterContainerAnnotations("my-container",query).fold(
+        error->{
+        System.out.println(error.toString());
+        return false;
         },
-        result -> {
-            result.getAnnotations().limit(5).forEach(item -> {
-                System.out.println(item.orNull());
-                System.out.println();
-            });
-            return true;
+        result->{
+        result.getAnnotations().limit(5).forEach(item->{
+        System.out.println(item.orNull());
+        System.out.println();
+        });
+        return true;
         }
-)
+        )
 ```
 
 ### Retrieving search information
@@ -553,17 +555,17 @@ val getSearchInfoResult = this.getSearchInfo(
 **Java**
 
 ```java
-Boolean success = client.getSearchInfo(containerName, queryId).fold(
-        (RequestError error) -> {
-            handleError(error);
-            return false;
+Boolean success=client.getSearchInfo(containerName,queryId).fold(
+        (RequestError error)->{
+        handleError(error);
+        return false;
         },
-        result -> {
-            SearchInfo searchInfo = result.getSearchInfo();
-            doSomethingWith(searchInfo);
-            return true;
+        result->{
+        SearchInfo searchInfo=result.getSearchInfo();
+        doSomethingWith(searchInfo);
+        return true;
         }
-);
+        );
 
 ```
 
@@ -589,16 +591,16 @@ val success = client.addIndex(containerName, fieldName, indexType).fold(
 **Java**
 
 ```java
-String containerName = "volume-1728";
-String fieldName = "body.type";
-IndexType indexType = IndexType.HASHED;
-Boolean success = client.addIndex(containerName, fieldName, indexType).fold(
-        (RequestError error) -> {
-            handleError(error);
-            return false;
+String containerName="volume-1728";
+        String fieldName="body.type";
+        IndexType indexType=IndexType.HASHED;
+        Boolean success=client.addIndex(containerName,fieldName,indexType).fold(
+        (RequestError error)->{
+        handleError(error);
+        return false;
         },
-        result -> true
-);
+        result->true
+        );
 ```
 
 ### Retrieving index information
@@ -624,20 +626,20 @@ val success = client.getIndex(containerName, fieldName, indexType).fold(
 **Java**
 
 ```java
-String containerName = "volume-1728"; 
-String fieldName = "body.type";
-IndexType indexType = IndexType.HASHED;
-Boolean success = client.getIndex(containerName, fieldName, indexType).fold(
-        (RequestError error) -> {
-            handleError(error);
-            return false;
+String containerName="volume-1728";
+        String fieldName="body.type";
+        IndexType indexType=IndexType.HASHED;
+        Boolean success=client.getIndex(containerName,fieldName,indexType).fold(
+        (RequestError error)->{
+        handleError(error);
+        return false;
         },
-        (ARResult.GetIndexResult result) -> {
-            IndexConfig indexConfig = result.getIndexConfig();
-            doSomethingWith(indexConfig);
-            return true;
+        (ARResult.GetIndexResult result)->{
+        IndexConfig indexConfig=result.getIndexConfig();
+        doSomethingWith(indexConfig);
+        return true;
         }
-);
+        );
 ```
 
 ### Listing all indexes for a container
@@ -660,18 +662,18 @@ val success = client.listIndexes(containerName).fold(
 **Java**
 
 ```java
-String containerName = "volume-1728";
-Boolean success = client.listIndexes(containerName).fold(
-        (RequestError error) -> {
-            handleError(error);
-            return false;
+String containerName="volume-1728";
+        Boolean success=client.listIndexes(containerName).fold(
+        (RequestError error)->{
+        handleError(error);
+        return false;
         },
-        (ARResult.ListIndexesResult result) -> {
-            List<IndexConfig> indexes = result.getIndexes();
-            doSomethingWith(indexes);
-            return true;
+        (ARResult.ListIndexesResult result)->{
+        List<IndexConfig> indexes=result.getIndexes();
+        doSomethingWith(indexes);
+        return true;
         }
-);
+        );
 ```
 
 ### Deleting an index
@@ -694,16 +696,16 @@ val success = client.deleteIndex(containerName, fieldName, indexType).fold(
 **Java**
 
 ```java
-String containerName = "volume-1728";
-String fieldName = "body.type";
-IndexType indexType = IndexType.HASHED;
-Boolean success = client.deleteIndex(containerName, fieldName, indexType).fold(
-        (RequestError error) -> {
-            handleError(error);
-            return false;
+String containerName="volume-1728";
+        String fieldName="body.type";
+        IndexType indexType=IndexType.HASHED;
+        Boolean success=client.deleteIndex(containerName,fieldName,indexType).fold(
+        (RequestError error)->{
+        handleError(error);
+        return false;
         },
-        (ARResult.DeleteIndexResult result) -> true
-);
+        (ARResult.DeleteIndexResult result)->true
+        );
 
 ```
 
@@ -722,18 +724,18 @@ client.getFieldInfo(containerName).fold(
 **Java**
 
 ```java
-String containerName = "volume-1728";
-client.getFieldInfo(containerName).fold(
-        (RequestError error) -> {
-            handleError(error);
-            return false;
+String containerName="volume-1728";
+        client.getFieldInfo(containerName).fold(
+        (RequestError error)->{
+        handleError(error);
+        return false;
         },
-        result -> {
-            Map<String, Integer> fieldInfo = result.getFieldInfo();
-            doSomethingWith(fieldInfo);
-            return true;
+        result->{
+        Map<String, Integer> fieldInfo=result.getFieldInfo();
+        doSomethingWith(fieldInfo);
+        return true;
         }
-);
+        );
 ```
 
 ## User administration
@@ -749,7 +751,7 @@ The root api-key is required for these calls.
 val userEntries = listOf(UserEntry(userName, apiKey))
 client.addUsers(userEntries).fold(
     { error -> println(error.message) },
-    { result -> 
+    { result ->
         val accepted = result.accepted
         val rejected = result.rejected
         doSomething(accepted, rejected)
@@ -760,19 +762,19 @@ client.addUsers(userEntries).fold(
 **Java**
 
 ```java
-List<UserEntry> userEntries = List.of(new UserEntry("userName", "apiKey"));
-client.addUsers(userEntrirs).fold(
-        error -> 
-            System.out.println(error.getMessage());
-            return false;
+List<UserEntry> userEntries=List.of(new UserEntry("userName","apiKey"));
+        client.addUsers(userEntrirs).fold(
+        error->
+        System.out.println(error.getMessage());
+        return false;
         },
-        result -> {
-            List<String> accepted = result.getAccepted();
-            List<RejectedUserEntry> rejected = result.getRejected();
-            doSomething(accepted,rejected);
-            return true;
+        result->{
+        List<String> accepted=result.getAccepted();
+        List<RejectedUserEntry> rejected=result.getRejected();
+        doSomething(accepted,rejected);
+        return true;
         }
-);
+        );
 ```
 
 ### Retrieving users
@@ -796,20 +798,20 @@ client.getUsers().fold(
 
 ```java
 client.getUsers().fold(
-        error -> {
-            System.out.println(error.getMessage());
-            return false;
+        error->{
+        System.out.println(error.getMessage());
+        return false;
         },
-        result -> {
-            List<UserEntry> userEntries = result.getUserEntries();
-            for (UserEntry ue : userEntries) {
-                String userName = ue.getUserName();
-                String apiKey = ue.getApiKey();
-                doSomething(userName, apiKey);
-            }
-            return true;
+        result->{
+        List<UserEntry> userEntries=result.getUserEntries();
+        for(UserEntry ue:userEntries){
+        String userName=ue.getUserName();
+        String apiKey=ue.getApiKey();
+        doSomething(userName,apiKey);
         }
-);
+        return true;
+        }
+        );
 
 ```
 
@@ -860,23 +862,23 @@ client.addContainerUsers(containerName, containerUserEntries).fold(
 **Java**
 
 ```java
-String containerName = "my-container";
-List<ContainerUserEntry> containerUserEntries = List.of(
-    new ContainerUserEntry("user1",Role.EDITOR),
-    new ContainerUserEntry("user2",Role.GUEST),
-    new ContainerUserEntry("admin2",Role.ADMIN)
-);
-Boolean success = client.addContainerUsers(containerName,containerUserEntries).fold(
-    (RequestError error) -> {
+String containerName="my-container";
+        List<ContainerUserEntry> containerUserEntries=List.of(
+        new ContainerUserEntry("user1",Role.EDITOR),
+        new ContainerUserEntry("user2",Role.GUEST),
+        new ContainerUserEntry("admin2",Role.ADMIN)
+        );
+        Boolean success=client.addContainerUsers(containerName,containerUserEntries).fold(
+        (RequestError error)->{
         handleError(error);
         return false;
-    },
-    (ARResult.ContainerUsersResult result) -> {
-        List<ContainerUserEntry> newContainerUsersList = result.getContainerUserEntries();
+        },
+        (ARResult.ContainerUsersResult result)->{
+        List<ContainerUserEntry> newContainerUsersList=result.getContainerUserEntries();
         doSomethingWith(newContainerUsersList);
         return true;
-    }
-);
+        }
+        );
 ```
 
 ### Reading the current list of container users

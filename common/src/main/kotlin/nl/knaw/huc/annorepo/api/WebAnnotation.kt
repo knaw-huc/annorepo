@@ -23,7 +23,9 @@ class WebAnnotation private constructor(
         fun withTarget(target: Any) = apply { this.target = target }
 
         fun build(): WebAnnotation {
-            if (target == null) { throw MissingTargetException() }
+            if (target == null) {
+                throw MissingTargetException()
+            }
             return WebAnnotation(body, target)
         }
     }

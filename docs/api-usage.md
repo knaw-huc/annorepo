@@ -63,7 +63,8 @@ that in a way similar to that used by [elucidate](https://github.com/dlcs/elucid
 
 - Gzip compression is enabled by default:
   - Add the header `Content-Encoding: gzip` when sending gzip-compressed data.
-  - Add the header `Accept-Encoding: gzip` to receive the data gzip-compressed. (Data smaller than 256 bytes will not be
+  - Add the header `Accept-Encoding: gzip` to receive the data gzip-compressed. (Data smaller than 256 bytes will not
+    be
     compressed)
 
 ---
