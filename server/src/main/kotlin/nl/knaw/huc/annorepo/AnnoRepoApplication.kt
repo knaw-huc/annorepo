@@ -11,11 +11,13 @@ import com.mongodb.client.model.Indexes
 import `in`.vectorpro.dropwizard.swagger.SwaggerBundle
 import `in`.vectorpro.dropwizard.swagger.SwaggerBundleConfiguration
 import io.dropwizard.Application
+import io.dropwizard.ConfiguredBundle
 import io.dropwizard.auth.AuthDynamicFeature
 import io.dropwizard.auth.oauth.OAuthCredentialAuthFilter
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor
 import io.dropwizard.configuration.SubstitutingSourceProvider
 import io.dropwizard.jdbi3.bundles.JdbiExceptionsBundle
+import io.dropwizard.jobs.JobsBundle
 import io.dropwizard.setup.Bootstrap
 import io.dropwizard.setup.Environment
 import org.apache.commons.lang3.StringUtils
@@ -35,6 +37,7 @@ import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.filters.JSONPrettyPrintFilter
 import nl.knaw.huc.annorepo.health.MongoDbHealthCheck
 import nl.knaw.huc.annorepo.health.ServerHealthCheck
+import nl.knaw.huc.annorepo.jobs.ExpiredTasksCleanerJob
 import nl.knaw.huc.annorepo.resources.*
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.SearchManager
@@ -52,14 +55,23 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         bootstrap.configurationSourceProvider = SubstitutingSourceProvider(
             bootstrap.configurationSourceProvider, EnvironmentVariableSubstitutor()
         )
+
         bootstrap.addBundle(getSwaggerBundle())
         bootstrap.addBundle(JdbiExceptionsBundle())
+        bootstrap.addBundle(getJobsBundle())
+
         bootstrap.addCommand(EnvCommand())
     }
 
-    private fun getSwaggerBundle() = object : SwaggerBundle<AnnoRepoConfiguration>() {
-        override fun getSwaggerBundleConfiguration(configuration: AnnoRepoConfiguration): SwaggerBundleConfiguration =
-            configuration.swaggerBundleConfiguration
+    private fun getSwaggerBundle(): SwaggerBundle<AnnoRepoConfiguration> =
+        object : SwaggerBundle<AnnoRepoConfiguration>() {
+            override fun getSwaggerBundleConfiguration(configuration: AnnoRepoConfiguration): SwaggerBundleConfiguration =
+                configuration.swaggerBundleConfiguration
+        }
+
+    private fun getJobsBundle(): ConfiguredBundle<in AnnoRepoConfiguration?> {
+        val expiredTasksCleanerJob = ExpiredTasksCleanerJob()
+        return JobsBundle(expiredTasksCleanerJob)
     }
 
     override fun run(configuration: AnnoRepoConfiguration?, environment: Environment) {

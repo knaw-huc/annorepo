@@ -49,6 +49,17 @@
             <artifactId>dropwizard-jdbi3</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.github.dropwizard-jobs</groupId>
+            <artifactId>dropwizard-jobs</artifactId>
+            <version>${dropwizard-jobs.version}</version>
+            <type>pom</type>
+        </dependency>
+        <dependency>
+            <groupId>io.github.dropwizard-jobs</groupId>
+            <artifactId>dropwizard-jobs-core</artifactId>
+            <version>${dropwizard-jobs.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
         </dependency>

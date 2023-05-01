@@ -5,10 +5,11 @@ import javax.validation.constraints.NotNull
 import com.fasterxml.jackson.annotation.JsonProperty
 import `in`.vectorpro.dropwizard.swagger.SwaggerBundleConfiguration
 import io.dropwizard.Configuration
+import io.dropwizard.jobs.JobConfiguration
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.resources.AboutResource
 
-open class AnnoRepoConfiguration : Configuration() {
+open class AnnoRepoConfiguration : Configuration(), JobConfiguration {
 
 //    private val log = LoggerFactory.getLogger(javaClass)
 
