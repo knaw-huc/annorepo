@@ -12,6 +12,7 @@ import nl.knaw.huc.annorepo.api.IndexType;
 import nl.knaw.huc.annorepo.api.RejectedUserEntry;
 import nl.knaw.huc.annorepo.api.Role;
 import nl.knaw.huc.annorepo.api.SearchInfo;
+import nl.knaw.huc.annorepo.api.SearchStatusSummary;
 import nl.knaw.huc.annorepo.api.UserEntry;
 import nl.knaw.huc.annorepo.api.WebAnnotation;
 import nl.knaw.huc.annorepo.client.ARResult;
@@ -290,7 +291,7 @@ public class IntegratedClientJavaTester {
     }
 
     @Nested
-    class SearchTests {
+    class ContainerSearchTests {
 
         @Test
         void testCreateSearch() {
@@ -391,6 +392,105 @@ public class IntegratedClientJavaTester {
             assertThat(success).isTrue();
 
         }
+    }
+
+    @Nested
+    class GlobalSearchTests {
+
+        @Test
+        void testCreateGlobalSearch() {
+            Map<String, Object> query = Map.of("body.type", "Page");
+            Boolean success = client.createGlobalSearch(query).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    (ARResult.CreateSearchResult result) -> {
+                        URI location = result.getLocation();
+                        String queryId = result.getQueryId();
+                        doSomethingWith(location, queryId);
+                        return true;
+                    }
+            );
+            assertThat(success).isTrue();
+        }
+
+        @Test
+        void testGetGlobalSearchResultPage() {
+            Map<String, Object> query = Map.of("type", "Annotation");
+            Optional<String> optionalQueryId = client.createGlobalSearch(query).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return Optional.empty();
+                    },
+                    (ARResult.CreateSearchResult result) -> Optional.of(result.getQueryId())
+            );
+            assertThat(optionalQueryId).isPresent();
+            optionalQueryId.ifPresent(queryId -> client.getGlobalSearchResultPage(queryId, 0, true).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    (GetSearchResultPageResult result) -> {
+                        AnnotationPage annotationPage = result.getAnnotationPage();
+                        doSomethingWith(annotationPage);
+                        return true;
+                    }
+            ));
+        }
+
+        @Test
+        void testGetGlobalSearchStatus() {
+            Map<String, Object> query = Map.of("body.type", "Page");
+            Optional<String> optionalQueryId = client.createGlobalSearch(query).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return Optional.empty();
+                    },
+                    (ARResult.CreateSearchResult result) -> Optional.of(result.getQueryId())
+            );
+            optionalQueryId.ifPresent(queryId -> {
+                Boolean success = client.getGlobalSearchStatus(queryId).fold(
+                        (RequestError error) -> {
+                            handleError(error);
+                            return false;
+                        },
+                        result -> {
+                            SearchStatusSummary searchStatus = result.getSearchStatus();
+                            doSomethingWith(searchStatus);
+                            return true;
+                        }
+                );
+                assertThat(success).isTrue();
+            });
+        }
+
+//        @Test
+//        void testFilterAnnotations() {
+//            Map<String, Object> query = Map.of("body.type", "Page");
+//            Boolean success = client.filterAnnotations(query).fold(
+//                    (RequestError error) -> {
+//                        handleError(error);
+//                        return false;
+//                    },
+//                    result -> {
+//                        Stream<Either<RequestError, String>> annotations = result.getAnnotations();
+//                        annotations.forEach((a) -> a.fold(
+//                                e -> {
+//                                    System.out.println(e);
+//                                    return false;
+//                                },
+//                                r -> {
+//                                    System.out.println(r);
+//                                    return true;
+//                                }
+//                        ));
+//                        return true;
+//                    }
+//
+//            );
+//            assertThat(success).isTrue();
+//        }
     }
 
     @Nested

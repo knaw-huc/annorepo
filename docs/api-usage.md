@@ -13,9 +13,13 @@
   - [Update](#updating-an-annotation-)
   - [Delete](#deleting-an-annotation-)
   - [Batch upload](#uploading-multiple-annotations-to-a-given-annotation-container---experimental)
-- [Querying](#querying):
+- [Querying a container](#querying):
   - [Create a query](#create-a-query---experimental)
-  - [Get a query result page](#get-a-search-result-page---experimental)
+  - [Get a search result page](#get-a-search-result-page---experimental)
+- [Querying (globally)](#querying-globally):
+  - [Create a global query](#create-a-global-query---experimental)
+  - [Get the search status](#get-the-search-status---experimental)
+  - [Get a global search result page](#get-a-global-search-result-page---experimental)
 - [Indexes](#indexes)
   - [Add an index](#add-index-)
   - [Read an index](#read-index-)
@@ -608,7 +612,7 @@ Content-Length: 23
 
 ---
 
-## Querying
+## Querying a container
 
 ### Create a query  (🔒) `(experimental)`
 
@@ -784,6 +788,65 @@ Vary: Accept-Encoding
 ```
 
 The Location header contains the link to the first search result page.
+
+---
+
+## Querying globally
+
+To query all the containers the user has read-access to, use the `/global/search` endpoint in a similar way as querying
+a specific container.
+
+### Create a global query  (🔒) `(experimental)`
+
+#### Request
+
+```
+POST http://localhost:8080/global/search HTTP/1.1
+
+{
+  "purpose": "identifying"
+}
+```
+
+#### Response
+
+```
+HTTP/1.1 201 Created
+Location: http://localhost:8080/global/search/73f62348-7dcc-4d13-9748-fcb8f5a8a367
+Link: <http://localhost:8080/global/search/73f62348-7dcc-4d13-9748-fcb8f5a8a367/status>; rel="status"
+Content-Type: application/json
+
+{
+  "query" : {
+    "purpose": "identifying"
+  },
+  "startedAt" : "2023-05-02T12:49:32",
+  "finishedAt" : null,
+  "expiresAt" : null,
+  "state" : "RUNNING",
+  "containersSearched" : 0,
+  "totalContainersToSearch" : 11,
+  "hitsFoundSoFar" : 0,
+  "processingTimeInMillis" : 2
+}
+```
+
+Creating the global query returns its location in the `Location` header.
+The body returned is a representation of the status of the search, with the fields:
+
+- `query`: the query used
+- `startedAt`: the time the search was started
+- `finishedAt`: the time the search was finished, or null if the search hasn't finished yet.
+- `expiresAt`: the time at which the search results will not be available anymore, or null if the search hasn't finished
+  yet.
+- `state`: the state of the search; this can be:
+  - `CREATED`: the search was created, but not started yet
+  - `RUNNING`: the search is applying the query to all relevant containers
+  - `DONE`: the search is finished
+- `containersSearched`: the number of containers that have been searched so far.
+- `totalContainersToSearch`: the number of containers to search in total.
+- `hitsFoundSoFar`: the number of annotations found so far.
+- `processingTimeInMillis`: The number of milliseconds that the search has run.
 
 ---
 
@@ -1121,7 +1184,7 @@ Vary: Accept-Encoding
 }
 ```
 
-This response means that, for example, there are 15 annotations in `my-container` with a `target` field, and only 1 with
+This response, for example, indicates there are 15 annotations in `my-container` with a `target` field, and only 1 with
 a `body.id` field.
 
 ---

@@ -1,6 +1,7 @@
 package nl.knaw.huc.annorepo.api
 
 import java.net.URI
+import java.util.Date
 
 data class RejectedUserEntry(
     val userEntry: Map<String, String>,
@@ -55,3 +56,14 @@ data class ContainerUserEntry(
 )
 
 class MissingTargetException : Exception("WebAnnotation must have 1 or more targets")
+data class SearchStatusSummary(
+    val query: HashMap<*, *>,
+    val startedAt: Date,
+    val finishedAt: Date?,
+    val expiresAt: Date?,
+    val state: String,
+    val containersSearched: Int,
+    val totalContainersToSearch: Int,
+    val hitsFoundSoFar: Int,
+    val processingTimeInMillis: Long
+)

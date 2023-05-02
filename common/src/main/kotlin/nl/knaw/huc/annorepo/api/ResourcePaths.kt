@@ -18,5 +18,6 @@ object ResourcePaths {
     const val ANNOTATIONS = "annotations"
     const val INDEXES = "indexes"
     const val SEARCH = "search"
+    const val STATUS = "status"
     const val METADATA = "metadata"
 }

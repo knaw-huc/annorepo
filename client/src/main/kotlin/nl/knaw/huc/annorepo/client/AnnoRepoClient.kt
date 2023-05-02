@@ -28,14 +28,17 @@ import nl.knaw.huc.annorepo.api.ResourcePaths.ADMIN
 import nl.knaw.huc.annorepo.api.ResourcePaths.BATCH
 import nl.knaw.huc.annorepo.api.ResourcePaths.CONTAINER_SERVICES
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
+import nl.knaw.huc.annorepo.api.ResourcePaths.GLOBAL_SERVICES
 import nl.knaw.huc.annorepo.api.ResourcePaths.INDEXES
 import nl.knaw.huc.annorepo.api.ResourcePaths.INFO
 import nl.knaw.huc.annorepo.api.ResourcePaths.METADATA
 import nl.knaw.huc.annorepo.api.ResourcePaths.MY
 import nl.knaw.huc.annorepo.api.ResourcePaths.SEARCH
+import nl.knaw.huc.annorepo.api.ResourcePaths.STATUS
 import nl.knaw.huc.annorepo.api.ResourcePaths.USERS
 import nl.knaw.huc.annorepo.api.ResourcePaths.W3C
 import nl.knaw.huc.annorepo.api.SearchInfo
+import nl.knaw.huc.annorepo.api.SearchStatusSummary
 import nl.knaw.huc.annorepo.api.UserAddResults
 import nl.knaw.huc.annorepo.api.UserEntry
 import nl.knaw.huc.annorepo.client.ARResult.AddIndexResult
@@ -383,7 +386,8 @@ class AnnoRepoClient @JvmOverloads constructor(
         doGet(
             request = webTarget.path(CONTAINER_SERVICES).path(containerName).path(SEARCH).path(queryId)
                 .queryParam("page", page)
-                .request(), responseHandlers = mapOf(
+                .request(),
+            responseHandlers = mapOf(
                 Response.Status.OK to { response ->
                     val json = response.readEntityAsJsonString()
                     val annotationPage: AnnotationPage = oMapper.readValue(json)
@@ -455,31 +459,88 @@ class AnnoRepoClient @JvmOverloads constructor(
             }
         )
 
-    private fun annotationSequence(
-        containerName: String,
+    /**
+     * Create global search
+     *
+     * @param query
+     * @return
+     */
+    fun createGlobalSearch(query: Map<String, Any>): Either<RequestError, CreateSearchResult> = doPost(
+        request = webTarget.path(GLOBAL_SERVICES).path(SEARCH).request(),
+        entity = Entity.json(query),
+        responseHandlers = mapOf(Response.Status.CREATED to { response ->
+            val location = response.location
+            val queryId = location.rawPath.split("/").last()
+            Either.Right(
+                CreateSearchResult(response = response, location = location, queryId = queryId)
+            )
+        })
+    )
+
+    /**
+     * Get global search result page
+     *
+     * @param queryId
+     * @param page
+     * @return
+     */
+    fun getGlobalSearchResultPage(
         queryId: String,
-    ): Sequence<Either<RequestError, String>> =
-        sequence {
-            var page = 0
-            var goOn = true
-            while (goOn) {
-                goOn = getSearchResultPage(containerName, queryId, page)
-                    .fold(
-                        { error ->
-                            yield(Either.Left(error))
-                            false
-                        },
-                        { result ->
-                            yieldAll(result.annotationPage.items.map {
-                                val jsonString = oMapper.writeValueAsString(it)
-                                Either.Right(jsonString)
-                            })
-                            result.annotationPage.next != null
-                        }
-                    )
-                page += 1
+        page: Int,
+        retryUntilDone: Boolean = true
+    ): Either<RequestError, GetSearchResultPageResult> {
+        var result = tryGetGlobalSearchResultPage(queryId, page)
+        return if (retryUntilDone) {
+            while (result.isLeft()) {
+                Thread.sleep(1000)
+                result = tryGetGlobalSearchResultPage(queryId, page)
             }
+            result
+        } else {
+            result
         }
+    }
+
+    private fun tryGetGlobalSearchResultPage(
+        queryId: String,
+        page: Int
+    ): Either<RequestError, GetSearchResultPageResult> {
+        val result = doGet(
+            request = webTarget.path(GLOBAL_SERVICES).path(SEARCH).path(queryId)
+                .queryParam("page", page)
+                .request(),
+            responseHandlers = mapOf(
+                Response.Status.OK to { response ->
+                    val json = response.readEntityAsJsonString()
+                    val annotationPage: AnnotationPage = oMapper.readValue(json)
+                    Either.Right(
+                        GetSearchResultPageResult(
+                            response = response, annotationPage = annotationPage
+                        )
+                    )
+                })
+        )
+        return result
+    }
+
+    /**
+     * Get search status
+     *
+     * @param queryId
+     * @return
+     */
+    fun getGlobalSearchStatus(queryId: String): Either<RequestError, ARResult.GetGlobalSearchStatusResult> =
+        doGet(
+            request = webTarget.path(GLOBAL_SERVICES).path(SEARCH).path(queryId).path(STATUS)
+                .request(),
+            responseHandlers = mapOf(Response.Status.OK to { response ->
+                val json = response.readEntityAsJsonString()
+                val searchStatus: SearchStatusSummary = oMapper.readValue(json)
+                Either.Right(
+                    ARResult.GetGlobalSearchStatusResult(response, searchStatus)
+                )
+            })
+        )
 
     /**
      * Add index
@@ -751,6 +812,32 @@ class AnnoRepoClient @JvmOverloads constructor(
     )
 
     private fun Response.readEntityAsJsonString(): String = readEntity(String::class.java) ?: ""
+
+    private fun annotationSequence(
+        containerName: String,
+        queryId: String,
+    ): Sequence<Either<RequestError, String>> =
+        sequence {
+            var page = 0
+            var goOn = true
+            while (goOn) {
+                goOn = getSearchResultPage(containerName, queryId, page)
+                    .fold(
+                        { error ->
+                            yield(Either.Left(error))
+                            false
+                        },
+                        { result ->
+                            yieldAll(result.annotationPage.items.map {
+                                val jsonString = oMapper.writeValueAsString(it)
+                                Either.Right(jsonString)
+                            })
+                            result.annotationPage.next != null
+                        }
+                    )
+                page += 1
+            }
+        }
 
     private fun extractContainerName(location: String): String {
         val parts = location.split("/")

@@ -67,7 +67,7 @@ class GlobalServiceResource(
         val id = task.id
         val location = uriFactory.globalSearchURL(id)
         return Response.created(location)
-            .link(uriFactory.globalSearchInfoURL(id), "info")
+            .link(uriFactory.globalSearchStatusURL(id), "status")
             .entity(task.status.summary())
             .build()
     }
@@ -107,7 +107,7 @@ class GlobalServiceResource(
     @Timed
     @GET
     @Path("search/{searchId}/status")
-    fun getSearchInfo(
+    fun getSearchStatus(
         @PathParam("searchId") searchId: String,
         @Context context: SecurityContext,
     ): Response {

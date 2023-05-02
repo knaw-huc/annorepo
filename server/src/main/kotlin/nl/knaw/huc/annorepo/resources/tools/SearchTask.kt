@@ -6,22 +6,11 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import org.joda.time.Instant
 import org.slf4j.LoggerFactory
+import nl.knaw.huc.annorepo.api.SearchStatusSummary
 
 abstract class SearchTask(queryMap: HashMap<*, *>) : Runnable {
 
     class Status(private val queryMap: HashMap<*, *>) {
-
-        data class Summary(
-            val query: HashMap<*, *>,
-            val startedAt: Date,
-            val finishedAt: Date?,
-            val expiresAt: Date?,
-            val state: String,
-            val containersSearched: Int,
-            val totalContainersToSearch: Int,
-            val hitsFoundSoFar: Int,
-            val processingTimeInMillis: Long
-        )
 
         var state = State.CREATED
         val annotations: MutableList<Map<String, Any>> = mutableListOf()
@@ -30,7 +19,7 @@ abstract class SearchTask(queryMap: HashMap<*, *>) : Runnable {
         var totalContainersToSearch: Int = 0
         val containersSearched: AtomicInteger = AtomicInteger(0)
 
-        fun summary(): Summary = Summary(
+        fun summary(): SearchStatusSummary = SearchStatusSummary(
             query = queryMap,
             startedAt = startTime.toDate(),
             finishedAt = endTime?.toDate(),

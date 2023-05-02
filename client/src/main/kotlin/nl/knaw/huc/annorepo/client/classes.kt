@@ -11,6 +11,7 @@ import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.IndexConfig
 import nl.knaw.huc.annorepo.api.RejectedUserEntry
 import nl.knaw.huc.annorepo.api.SearchInfo
+import nl.knaw.huc.annorepo.api.SearchStatusSummary
 import nl.knaw.huc.annorepo.api.UserEntry
 
 sealed class ARResult {
@@ -94,6 +95,11 @@ sealed class ARResult {
     data class GetSearchResultPageResult(
         override val response: Response,
         val annotationPage: AnnotationPage,
+    ) : ARResult()
+
+    data class GetGlobalSearchStatusResult(
+        override val response: Response,
+        val searchStatus: SearchStatusSummary,
     ) : ARResult()
 
     data class AddIndexResult(
