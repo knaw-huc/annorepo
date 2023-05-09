@@ -12,14 +12,14 @@
   - [Read](#reading-an-annotation-)
   - [Update](#updating-an-annotation-)
   - [Delete](#deleting-an-annotation-)
-  - [Batch upload](#uploading-multiple-annotations-to-a-given-annotation-container---experimental)
-- [Querying a container](#querying):
-  - [Create a query](#create-a-query---experimental)
-  - [Get a search result page](#get-a-search-result-page---experimental)
+  - [Batch upload](#uploading-multiple-annotations-to-a-given-annotation-container--experimental)
+- [Querying a container](#querying-a-container):
+  - [Create a query](#create-a-query--experimental)
+  - [Get a search result page](#get-a-search-result-page--experimental)
 - [Querying (globally)](#querying-globally):
-  - [Create a global query](#create-a-global-query---experimental)
-  - [Get the search status](#get-the-search-status---experimental)
-  - [Get a global search result page](#get-a-global-search-result-page---experimental)
+  - [Create a global query](#create-a-global-query--experimental)
+  - [Get the search status](#get-a-global-search-status--experimental)
+  - [Get a global search result page](#get-a-global-search-result-page--experimental)
 - [Indexes](#indexes)
   - [Add an index](#add-index-)
   - [Read an index](#read-index-)
@@ -850,6 +850,37 @@ The body returned is a representation of the status of the search, with the fiel
 
 ---
 
+### Get a global search status (🔒) `(experimental)`
+
+#### Request
+
+```
+GET http://localhost:8080/global/search/{searchId}/status HTTP/1.1
+```
+
+#### Response
+
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+    "query": {
+        "type": "Annotation"
+    },
+    "startedAt": "2023-05-09T11:00:20",
+    "finishedAt": null,
+    "expiresAt": null,
+    "state": "RUNNING",
+    "containersSearched": 3,
+    "totalContainersToSearch": 11,
+    "hitsFoundSoFar": 1114,
+    "processingTimeInMillis": 41
+}
+```
+
+---
+
 ### Get a global search result page (🔒) `(experimental)`
 
 #### Request
@@ -891,36 +922,6 @@ The Location header contains the link to the first search result page.
 
 ---
 
-### Get a global search status (🔒) `(experimental)`
-
-#### Request
-
-```
-GET http://localhost:8080/global/search/{searchId}/status HTTP/1.1
-```
-
-#### Response
-
-```
-HTTP/1.1 200 OK
-Content-Type: application/json
-
-{
-    "query": {
-        "type": "Annotation"
-    },
-    "startedAt": "2023-05-09T11:00:20",
-    "finishedAt": null,
-    "expiresAt": null,
-    "state": "RUNNING",
-    "containersSearched": 3,
-    "totalContainersToSearch": 11,
-    "hitsFoundSoFar": 1114,
-    "processingTimeInMillis": 41
-}
-```
-
----
 
 ## Indexes
 
