@@ -479,7 +479,7 @@ If-Match: "{etag}"
 HTTP/1.1 204 No Content
 ```
 
-### Uploading multiple annotations to a given annotation container  (🔒) `(experimental)`
+### Uploading multiple annotations to a given annotation container (🔒) `(experimental)`
 
 #### Request
 
@@ -614,7 +614,7 @@ Content-Length: 23
 
 ## Querying a container
 
-### Create a query  (🔒) `(experimental)`
+### Create a query (🔒) `(experimental)`
 
 #### Request
 
@@ -760,7 +760,7 @@ The Location header contains the link to the first search result page.
 
 ---
 
-### Get a search result page  (🔒) `(experimental)`
+### Get a search result page (🔒) `(experimental)`
 
 #### Request
 
@@ -796,7 +796,7 @@ The Location header contains the link to the first search result page.
 To query all the containers the user has read-access to, use the `/global/search` endpoint in a similar way as querying
 a specific container.
 
-### Create a global query  (🔒) `(experimental)`
+### Create a global query (🔒) `(experimental)`
 
 #### Request
 
@@ -847,6 +847,78 @@ The body returned is a representation of the status of the search, with the fiel
 - `totalContainersToSearch`: the number of containers to search in total.
 - `hitsFoundSoFar`: the number of annotations found so far.
 - `processingTimeInMillis`: The number of milliseconds that the search has run.
+
+---
+
+### Get a global search result page (🔒) `(experimental)`
+
+#### Request
+
+```
+GET http://localhost:8080/global/search/{searchId} HTTP/1.1
+```
+
+#### Response
+
+If the search is still ongoing,
+
+```
+HTTP/1.1 202 Accepted
+```
+
+is returned, with the search status in the body.
+
+If the search has finished:
+
+```
+HTTP/1.1 200 OK
+
+Content-Type: application/json
+Vary: Accept-Encoding
+
+{
+  "id": "http://localhost:8080/global/search/73f62348-7dcc-4d13-9748-fcb8f5a8a367?page=0",
+  "type": "AnnotationPage",
+  "partOf": "http://localhost:8080/global/search/73f62348-7dcc-4d13-9748-fcb8f5a8a367",
+  "startIndex": 0,
+  "items": [
+    ....
+  ]
+}
+```
+
+The Location header contains the link to the first search result page.
+
+---
+
+### Get a global search status (🔒) `(experimental)`
+
+#### Request
+
+```
+GET http://localhost:8080/global/search/{searchId}/status HTTP/1.1
+```
+
+#### Response
+
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+    "query": {
+        "type": "Annotation"
+    },
+    "startedAt": "2023-05-09T11:00:20",
+    "finishedAt": null,
+    "expiresAt": null,
+    "state": "RUNNING",
+    "containersSearched": 3,
+    "totalContainersToSearch": 11,
+    "hitsFoundSoFar": 1114,
+    "processingTimeInMillis": 41
+}
+```
 
 ---
 
