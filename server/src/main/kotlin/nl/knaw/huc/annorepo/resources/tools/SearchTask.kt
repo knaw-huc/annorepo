@@ -31,7 +31,7 @@ abstract class SearchTask(queryMap: HashMap<*, *>) : Runnable {
             processingTimeInMillis = (endTime?.millis ?: Instant.now().millis) - startTime.millis
         )
 
-        private val timeToLive = TimeUnit.MINUTES.toMillis(1)
+        private val timeToLive = TimeUnit.HOURS.toMillis(1)
 
         fun expirationTime(): Date? = endTime?.withDurationAdded(timeToLive, 1)?.toDate()
     }
