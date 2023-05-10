@@ -55,7 +55,7 @@
         <slf4j.version>2.0.3</slf4j.version>
         <log4j.version>1.2.17</log4j.version>
         <swagger-annotations.version>1.6.6</swagger-annotations.version>
-        <titanium-json-ld.version>1.3.1</titanium-json-ld.version>
+        <titanium-json-ld.version>1.3.2</titanium-json-ld.version>
 
         <!-- test dependencies -->
         <assertj-core.version>3.24.2</assertj-core.version>
