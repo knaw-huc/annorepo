@@ -416,30 +416,6 @@ public class IntegratedClientJavaTester {
         }
 
         @Test
-        void testGetGlobalSearchResultPage() {
-            Map<String, Object> query = Map.of("type", "Annotation");
-            Optional<String> optionalQueryId = client.createGlobalSearch(query).fold(
-                    (RequestError error) -> {
-                        handleError(error);
-                        return Optional.empty();
-                    },
-                    (ARResult.CreateSearchResult result) -> Optional.of(result.getQueryId())
-            );
-            assertThat(optionalQueryId).isPresent();
-            optionalQueryId.ifPresent(queryId -> client.getGlobalSearchResultPage(queryId, 0, true).fold(
-                    (RequestError error) -> {
-                        handleError(error);
-                        return false;
-                    },
-                    (GetSearchResultPageResult result) -> {
-                        AnnotationPage annotationPage = result.getAnnotationPage();
-                        doSomethingWith(annotationPage);
-                        return true;
-                    }
-            ));
-        }
-
-        @Test
         void testGetGlobalSearchStatus() {
             Map<String, Object> query = Map.of("body.type", "Page");
             Optional<String> optionalQueryId = client.createGlobalSearch(query).fold(
@@ -465,32 +441,30 @@ public class IntegratedClientJavaTester {
             });
         }
 
-//        @Test
-//        void testFilterAnnotations() {
-//            Map<String, Object> query = Map.of("body.type", "Page");
-//            Boolean success = client.filterAnnotations(query).fold(
-//                    (RequestError error) -> {
-//                        handleError(error);
-//                        return false;
-//                    },
-//                    result -> {
-//                        Stream<Either<RequestError, String>> annotations = result.getAnnotations();
-//                        annotations.forEach((a) -> a.fold(
-//                                e -> {
-//                                    System.out.println(e);
-//                                    return false;
-//                                },
-//                                r -> {
-//                                    System.out.println(r);
-//                                    return true;
-//                                }
-//                        ));
-//                        return true;
-//                    }
-//
-//            );
-//            assertThat(success).isTrue();
-//        }
+        @Test
+        void testGetGlobalSearchResultPage() {
+            Map<String, Object> query = Map.of("type", "Annotation");
+            Optional<String> optionalQueryId = client.createGlobalSearch(query).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return Optional.empty();
+                    },
+                    (ARResult.CreateSearchResult result) -> Optional.of(result.getQueryId())
+            );
+            assertThat(optionalQueryId).isPresent();
+            optionalQueryId.ifPresent(queryId -> client.getGlobalSearchResultPage(queryId, 0, true).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    (GetSearchResultPageResult result) -> {
+                        AnnotationPage annotationPage = result.getAnnotationPage();
+                        doSomethingWith(annotationPage);
+                        return true;
+                    }
+            ));
+        }
+
     }
 
     @Nested

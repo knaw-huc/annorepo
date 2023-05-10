@@ -574,6 +574,148 @@ Boolean success = client.getSearchInfo(containerName, queryId).fold(
 );
 ```
 
+## Querying all accessible containers
+
+### Creating the global search
+
+**Kotlin:**
+
+```kotlin
+val query = mapOf("body.type" to "Page")
+val success = client.createGlobalSearch(query).fold(
+    { error: RequestError ->
+        handleError(error)
+        false
+    },
+    { (_, location, queryId): CreateSearchResult ->
+        doSomethingWith(location, queryId)
+        true
+    }
+)
+```
+
+**Java**
+
+```java
+Map<String, Object> query = Map.of("body.type", "Page");
+Boolean success = client.createGlobalSearch(query).fold(
+        (RequestError error) -> {
+            handleError(error);
+            return false;
+        },
+        (ARResult.CreateSearchResult result) -> {
+            URI location = result.getLocation();
+            String queryId = result.getQueryId();
+            doSomethingWith(location, queryId);
+            return true;
+        }
+);
+```
+
+### Get the global search status
+
+**Kotlin:**
+
+```kotlin
+val query = mapOf("body.type" to "Page")
+val optionalQueryId = client.createGlobalSearch(query = query).fold(
+    { error: RequestError ->
+        handleError(error)
+        null
+    },
+    { (_, _, queryId): CreateSearchResult -> queryId }
+)
+optionalQueryId?.apply {
+    val success = client.getGlobalSearchStatus(queryId = this).fold(
+        { error: RequestError ->
+            handleError(error)
+            false
+        },
+        { (_, searchStatus): GetGlobalSearchStatusResult ->
+            doSomethingWith(searchStatus)
+            true
+        }
+    )
+}
+```
+
+**Java**
+
+```java
+Map<String, Object> query = Map.of("body.type", "Page");
+Optional<String> optionalQueryId = client.createGlobalSearch(query).fold(
+        (RequestError error) -> {
+            handleError(error);
+            return Optional.empty();
+        },
+        (ARResult.CreateSearchResult result) -> Optional.of(result.getQueryId())
+);
+optionalQueryId.ifPresent(queryId -> {
+    Boolean success = client.getGlobalSearchStatus(queryId).fold(
+            (RequestError error) -> {
+                handleError(error);
+                return false;
+            },
+            result -> {
+                SearchStatusSummary searchStatus = result.getSearchStatus();
+                doSomethingWith(searchStatus);
+                return true;
+            }
+    );
+    assertThat(success).isTrue();
+});
+```
+
+### Get the global search results
+
+**Kotlin:**
+
+```kotlin
+val query = mapOf("type" to "Annotation")
+val optionalQueryId = client.createGlobalSearch(query = query).fold(
+    { error: RequestError ->
+        handleError(error)
+        null
+    },
+    { (_, _, queryId): CreateSearchResult -> queryId }
+)
+optionalQueryId?.apply {
+    client.getGlobalSearchResultPage(queryId = this, page = 0, retryUntilDone = true).fold(
+        { error: RequestError ->
+            handleError(error)
+        },
+        { (_, annotationPage): GetSearchResultPageResult ->
+            doSomethingWith(annotationPage)
+        }
+    )
+}
+```
+
+**Java**
+
+```java
+Map<String, Object> query = Map.of("type", "Annotation");
+Optional<String> optionalQueryId = client.createGlobalSearch(query).fold(
+        (RequestError error) -> {
+            handleError(error);
+            return Optional.empty();
+        },
+        (ARResult.CreateSearchResult result) -> Optional.of(result.getQueryId())
+);
+assertThat(optionalQueryId).isPresent();
+optionalQueryId.ifPresent(queryId -> client.getGlobalSearchResultPage(queryId, 0, true).fold(
+        (RequestError error) -> {
+            handleError(error);
+            return false;
+        },
+        (GetSearchResultPageResult result) -> {
+            AnnotationPage annotationPage = result.getAnnotationPage();
+            doSomethingWith(annotationPage);
+            return true;
+        }
+));
+```
+
 ## Indexes
 
 ### Adding an index to a container

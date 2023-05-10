@@ -20,12 +20,15 @@ import nl.knaw.huc.annorepo.client.ARResult.BatchUploadResult
 import nl.knaw.huc.annorepo.client.ARResult.ContainerUsersResult
 import nl.knaw.huc.annorepo.client.ARResult.CreateAnnotationResult
 import nl.knaw.huc.annorepo.client.ARResult.CreateContainerResult
+import nl.knaw.huc.annorepo.client.ARResult.CreateSearchResult
 import nl.knaw.huc.annorepo.client.ARResult.DeleteAnnotationResult
 import nl.knaw.huc.annorepo.client.ARResult.DeleteContainerResult
 import nl.knaw.huc.annorepo.client.ARResult.DeleteIndexResult
 import nl.knaw.huc.annorepo.client.ARResult.GetAnnotationResult
 import nl.knaw.huc.annorepo.client.ARResult.GetContainerResult
+import nl.knaw.huc.annorepo.client.ARResult.GetGlobalSearchStatusResult
 import nl.knaw.huc.annorepo.client.ARResult.GetIndexResult
+import nl.knaw.huc.annorepo.client.ARResult.GetSearchResultPageResult
 import nl.knaw.huc.annorepo.client.ARResult.ListIndexesResult
 import nl.knaw.huc.annorepo.client.ARResult.UsersResult
 import nl.knaw.huc.annorepo.client.AnnoRepoClient
@@ -285,6 +288,74 @@ class IntegratedClientKotlinTester {
             when (e) {
                 is Either.Left -> println(e.value)
                 is Right -> println(e.value.size)
+            }
+        }
+
+    }
+
+    @Nested
+    inner class GlobalSearchTests {
+        @Test
+        fun testCreateGlobalSearch() {
+            val query = mapOf("body.type" to "Page")
+            val success = client.createGlobalSearch(query = query).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    false
+                },
+                { (_, location, queryId): CreateSearchResult ->
+                    doSomethingWith(location, queryId)
+                    true
+                }
+            )
+            assertThat(success).isTrue()
+        }
+
+        @Test
+        fun testGetGlobalSearchStatus() {
+            val query = mapOf("body.type" to "Page")
+            val optionalQueryId = client.createGlobalSearch(query = query).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    null
+                },
+                { (_, _, queryId): CreateSearchResult -> queryId }
+            )
+            optionalQueryId?.apply {
+                val success = client.getGlobalSearchStatus(queryId = this).fold(
+                    { error: RequestError ->
+                        handleError(error)
+                        false
+                    },
+                    { (_, searchStatus): GetGlobalSearchStatusResult ->
+                        doSomethingWith(searchStatus)
+                        true
+                    }
+                )
+                assertThat(success).isTrue()
+            }
+        }
+
+        @Test
+        fun testGetGlobalSearchResultPage() {
+            val query = mapOf("type" to "Annotation")
+            val optionalQueryId = client.createGlobalSearch(query = query).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    null
+                },
+                { (_, _, queryId): CreateSearchResult -> queryId }
+            )
+            assertThat(optionalQueryId).isNotNull()
+            optionalQueryId?.apply {
+                client.getGlobalSearchResultPage(queryId = this, page = 0, retryUntilDone = true).fold(
+                    { error: RequestError ->
+                        handleError(error)
+                    },
+                    { (_, annotationPage): GetSearchResultPageResult ->
+                        doSomethingWith(annotationPage)
+                    }
+                )
             }
         }
 
