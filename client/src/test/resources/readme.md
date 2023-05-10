@@ -139,11 +139,12 @@ val success = client.createContainer(preferredName, label).fold(
     { error: RequestError ->
         handleError(error)
         false
+    },
+    { (_, location, containerName, eTag): CreateContainerResult ->
+        doSomethingWith(containerName, location, eTag)
+        true
     }
-) { (_, location, containerName, eTag): CreateContainerResult ->
-    doSomethingWith(containerName, location, eTag)
-    true
-}
+)
 ```
 
 **Java**
@@ -193,7 +194,7 @@ val either = client.createContainer()
 **Java**
 
 ```java
-String containerName="my-container"
+String containerName="my-container";
         client.getContainer(containerName).map(
         (ARResult.GetContainerResult result)->{
         String eTag=result.getETag();
@@ -238,11 +239,12 @@ client.createAnnotation(containerName, annotation).fold(
     { error: RequestError ->
         handleError(error)
         false
+    },
+    { (_, location, _, annotationName, eTag): CreateAnnotationResult ->
+        doSomethingWith(annotationName, location, eTag)
+        true
     }
-) { (_, location, _, annotationName, eTag): CreateAnnotationResult ->
-    doSomethingWith(annotationName, location, eTag)
-    true
-}
+)
 ```
 
 **Java**
@@ -279,11 +281,12 @@ client.getAnnotation(containerName, annotationName).fold(
     { error: RequestError ->
         handleError(error)
         false
+    },
+    { (_, eTag, annotation): GetAnnotationResult ->
+        doSomethingWith(annotation, eTag)
+        true
     }
-) { (_, eTag, annotation): GetAnnotationResult ->
-    doSomethingWith(annotation, eTag)
-    true
-}
+)
 ```
 
 **Java**
@@ -322,11 +325,12 @@ client.updateAnnotation(containerName, annotationName, eTag, updatedAnnotation)
         { error: RequestError ->
             handleError(error)
             false
+        },
+        { (_, location, _, _, newETag): CreateAnnotationResult ->
+            doSomethingWith(annotationName, location, newETag)
+            true
         }
-    ) { (_, location, _, _, newETag): CreateAnnotationResult ->
-        doSomethingWith(annotationName, location, newETag)
-        true
-    }
+    )
 ```
 
 **Java**
@@ -365,8 +369,9 @@ val success = client.deleteAnnotation(containerName, annotationName, eTag).fold(
     { error: RequestError ->
         handleError(error)
         false
-    }
-) { _: DeleteAnnotationResult -> true }
+    },
+    { _: DeleteAnnotationResult -> true }
+)
 ```
 
 **Java**
@@ -403,11 +408,12 @@ val success = client.batchUpload(containerName, annotations).fold(
     { error: RequestError ->
         handleError(error)
         false
+    },
+    { (_, annotationIdentifiers): BatchUploadResult ->
+        doSomethingWith(annotationIdentifiers)
+        true
     }
-) { (_, annotationIdentifiers): BatchUploadResult ->
-    doSomethingWith(annotationIdentifiers)
-    true
-}
+)
 ```
 
 **Java**
@@ -538,7 +544,7 @@ Map<String, ?> query=Map.of("body.type","Resolution");
         });
         return true;
         }
-        )
+        );
 ```
 
 ### Retrieving search information
@@ -566,7 +572,6 @@ Boolean success=client.getSearchInfo(containerName,queryId).fold(
         return true;
         }
         );
-
 ```
 
 ## Indexes
@@ -706,7 +711,6 @@ String containerName="volume-1728";
         },
         (ARResult.DeleteIndexResult result)->true
         );
-
 ```
 
 ## Retrieving information about the fields used in container annotations
@@ -763,8 +767,8 @@ client.addUsers(userEntries).fold(
 
 ```java
 List<UserEntry> userEntries=List.of(new UserEntry("userName","apiKey"));
-        client.addUsers(userEntrirs).fold(
-        error->
+        client.addUsers(userEntries).fold(
+        error->{
         System.out.println(error.getMessage());
         return false;
         },
@@ -812,7 +816,6 @@ client.getUsers().fold(
         return true;
         }
         );
-
 ```
 
 ### Deleting a user
