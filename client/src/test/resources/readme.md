@@ -34,9 +34,9 @@ val client = AnnoRepoClient(
 **Java**
 
 ```java
-AnnoRepoClient1 client=new AnnoRepoClient(URI.create("http://localhost:8080"));
-AnnoRepoClient1 client2=new AnnoRepoClient(URI.create("http://localhost:8080",apiKey));
-AnnoRepoClient1 client3=new AnnoRepoClient(URI.create("http://localhost:8080",apiKey,userAgent));
+AnnoRepoClient1 client = new AnnoRepoClient(URI.create("http://localhost:8080"));
+AnnoRepoClient1 client2 = new AnnoRepoClient(URI.create("http://localhost:8080", apiKey));
+AnnoRepoClient1 client3 = new AnnoRepoClient(URI.create("http://localhost:8080", apiKey, userAgent));
 ```
 
 The client will try to connect to the AnnoRepo server at the given URI, and throw a RuntimeException if this is not
@@ -52,7 +52,7 @@ val serverVersion = client.serverVersion
 **Java**
 
 ```java
-String serverVersion=client.getServerVersion();
+String serverVersion = client.getServerVersion();
 ```
 
 as well as whether this server requires authentication:
