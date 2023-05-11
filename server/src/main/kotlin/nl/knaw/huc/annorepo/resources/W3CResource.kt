@@ -1,32 +1,5 @@
 package nl.knaw.huc.annorepo.resources
 
-import com.codahale.metrics.annotation.Timed
-import com.mongodb.client.MongoClient
-import com.mongodb.client.model.Aggregates
-import com.mongodb.client.model.Filters
-import com.mongodb.client.model.Filters.eq
-import com.mongodb.client.model.ReplaceOptions
-import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.security.SecurityRequirement
-import nl.knaw.huc.annorepo.api.*
-import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
-import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
-import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
-import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
-import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_NAME_FIELD
-import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
-import nl.knaw.huc.annorepo.auth.ContainerUserDAO
-import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
-import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
-import nl.knaw.huc.annorepo.resources.tools.makeAnnotationETag
-import nl.knaw.huc.annorepo.service.JsonLdUtils
-import nl.knaw.huc.annorepo.service.UriFactory
-import org.bson.BSONException
-import org.bson.Document
-import org.bson.json.JsonParseException
-import org.eclipse.jetty.util.ajax.JSON
-import org.litote.kmongo.*
-import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.*
 import javax.annotation.security.PermitAll
@@ -46,6 +19,33 @@ import kotlin.collections.set
 import kotlin.collections.toList
 import kotlin.collections.toMutableMap
 import kotlin.math.abs
+import com.codahale.metrics.annotation.Timed
+import com.mongodb.client.MongoClient
+import com.mongodb.client.model.Aggregates
+import com.mongodb.client.model.Filters
+import com.mongodb.client.model.Filters.eq
+import com.mongodb.client.model.ReplaceOptions
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import org.bson.BSONException
+import org.bson.Document
+import org.bson.json.JsonParseException
+import org.eclipse.jetty.util.ajax.JSON
+import org.litote.kmongo.*
+import org.slf4j.LoggerFactory
+import nl.knaw.huc.annorepo.api.*
+import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
+import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
+import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
+import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
+import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_NAME_FIELD
+import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
+import nl.knaw.huc.annorepo.auth.ContainerUserDAO
+import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
+import nl.knaw.huc.annorepo.resources.tools.makeAnnotationETag
+import nl.knaw.huc.annorepo.service.JsonLdUtils
+import nl.knaw.huc.annorepo.service.UriFactory
 
 private const val ETAG_MISMATCH = "Etag does not match"
 private const val RESOURCE_LINK = "http://www.w3.org/ns/ldp#Resource"
@@ -59,10 +59,10 @@ class W3CResource(
     private val configuration: AnnoRepoConfiguration,
     client: MongoClient,
     private val containerUserDAO: ContainerUserDAO,
+    private val uriFactory: UriFactory,
 ) : AbstractContainerResource(configuration, client, ContainerAccessChecker(containerUserDAO)) {
 
     private val log = LoggerFactory.getLogger(javaClass)
-    private val uriFactory = UriFactory(configuration)
 
     @Operation(description = "Create an Annotation Container")
     @Timed
@@ -73,7 +73,7 @@ class W3CResource(
         @HeaderParam("slug") slug: String?,
         @Context context: SecurityContext,
     ): Response {
-        log.debug("$containerSpecs")
+        log.debug("{}", containerSpecs)
         var containerName = slug ?: UUID.randomUUID().toString()
         if (mdb.listCollectionNames().contains(containerName)) {
             log.debug("A container with the suggested name $containerName already exists, generating a new name.")

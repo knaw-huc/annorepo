@@ -1,7 +1,12 @@
+import java.net.URI
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import arrow.core.Either
 import arrow.core.Either.Right
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.assertj.core.api.Assertions.assertThat
+import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.Role
@@ -15,12 +20,15 @@ import nl.knaw.huc.annorepo.client.ARResult.BatchUploadResult
 import nl.knaw.huc.annorepo.client.ARResult.ContainerUsersResult
 import nl.knaw.huc.annorepo.client.ARResult.CreateAnnotationResult
 import nl.knaw.huc.annorepo.client.ARResult.CreateContainerResult
+import nl.knaw.huc.annorepo.client.ARResult.CreateSearchResult
 import nl.knaw.huc.annorepo.client.ARResult.DeleteAnnotationResult
 import nl.knaw.huc.annorepo.client.ARResult.DeleteContainerResult
 import nl.knaw.huc.annorepo.client.ARResult.DeleteIndexResult
 import nl.knaw.huc.annorepo.client.ARResult.GetAnnotationResult
 import nl.knaw.huc.annorepo.client.ARResult.GetContainerResult
+import nl.knaw.huc.annorepo.client.ARResult.GetGlobalSearchStatusResult
 import nl.knaw.huc.annorepo.client.ARResult.GetIndexResult
+import nl.knaw.huc.annorepo.client.ARResult.GetSearchResultPageResult
 import nl.knaw.huc.annorepo.client.ARResult.ListIndexesResult
 import nl.knaw.huc.annorepo.client.ARResult.UsersResult
 import nl.knaw.huc.annorepo.client.AnnoRepoClient
@@ -28,11 +36,6 @@ import nl.knaw.huc.annorepo.client.AnnoRepoClient.Companion.create
 import nl.knaw.huc.annorepo.client.FilterContainerAnnotationsResult
 import nl.knaw.huc.annorepo.client.RequestError
 import nl.knaw.huc.annorepo.client.untangled
-import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
-import org.slf4j.LoggerFactory
-import java.net.URI
 
 class IntegratedClientKotlinTester {
     //    Intentionally not named ClientTest, so mvn test will skip these integration tests
@@ -291,6 +294,74 @@ class IntegratedClientKotlinTester {
     }
 
     @Nested
+    inner class GlobalSearchTests {
+        @Test
+        fun testCreateGlobalSearch() {
+            val query = mapOf("body.type" to "Page")
+            val success = client.createGlobalSearch(query = query).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    false
+                },
+                { (_, location, queryId): CreateSearchResult ->
+                    doSomethingWith(location, queryId)
+                    true
+                }
+            )
+            assertThat(success).isTrue()
+        }
+
+        @Test
+        fun testGetGlobalSearchStatus() {
+            val query = mapOf("body.type" to "Page")
+            val optionalQueryId = client.createGlobalSearch(query = query).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    null
+                },
+                { (_, _, queryId): CreateSearchResult -> queryId }
+            )
+            optionalQueryId?.apply {
+                val success = client.getGlobalSearchStatus(queryId = this).fold(
+                    { error: RequestError ->
+                        handleError(error)
+                        false
+                    },
+                    { (_, searchStatus): GetGlobalSearchStatusResult ->
+                        doSomethingWith(searchStatus)
+                        true
+                    }
+                )
+                assertThat(success).isTrue()
+            }
+        }
+
+        @Test
+        fun testGetGlobalSearchResultPage() {
+            val query = mapOf("type" to "Annotation")
+            val optionalQueryId = client.createGlobalSearch(query = query).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    null
+                },
+                { (_, _, queryId): CreateSearchResult -> queryId }
+            )
+            assertThat(optionalQueryId).isNotNull()
+            optionalQueryId?.apply {
+                client.getGlobalSearchResultPage(queryId = this, page = 0, retryUntilDone = true).fold(
+                    { error: RequestError ->
+                        handleError(error)
+                    },
+                    { (_, annotationPage): GetSearchResultPageResult ->
+                        doSomethingWith(annotationPage)
+                    }
+                )
+            }
+        }
+
+    }
+
+    @Nested
     inner class IndexTests {
         @Test
         fun testIndexCreation() {
@@ -500,6 +571,17 @@ class IntegratedClientKotlinTester {
             val userName = "userName"
             val deletionSuccess = client.deleteContainerUser(containerName, userName).isRight()
             assertThat(deletionSuccess).isTrue
+        }
+    }
+
+    @Nested
+    inner class MyTests {
+        @Test
+        fun testMyContainers() {
+            client.getMyContainers().fold(
+                { error: RequestError -> handleError(error) },
+                { (_, containers): ARResult.MyContainersResult -> doSomethingWith(containers) }
+            )
         }
     }
 

@@ -1,9 +1,9 @@
 package nl.knaw.huc.annorepo.service
 
-import nl.knaw.huc.annorepo.api.ResourcePaths
-import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import java.net.URI
 import javax.ws.rs.core.UriBuilder
+import nl.knaw.huc.annorepo.api.ResourcePaths
+import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 
 class UriFactory(private val configuration: AnnoRepoConfiguration) {
 
@@ -23,7 +23,7 @@ class UriFactory(private val configuration: AnnoRepoConfiguration) {
 
     fun searchURL(containerName: String, id: String): URI =
         UriBuilder.fromUri(configuration.externalBaseUrl)
-            .path(ResourcePaths.SERVICES)
+            .path(ResourcePaths.CONTAINER_SERVICES)
             .path(containerName)
             .path(ResourcePaths.SEARCH)
             .path(id)
@@ -31,16 +31,31 @@ class UriFactory(private val configuration: AnnoRepoConfiguration) {
 
     fun searchInfoURL(containerName: String, id: String): URI =
         UriBuilder.fromUri(configuration.externalBaseUrl)
-            .path(ResourcePaths.SERVICES)
+            .path(ResourcePaths.CONTAINER_SERVICES)
             .path(containerName)
             .path(ResourcePaths.SEARCH)
             .path(id)
             .path("info")
             .build()
 
+    fun globalSearchURL(id: String): URI =
+        UriBuilder.fromUri(configuration.externalBaseUrl)
+            .path(ResourcePaths.GLOBAL_SERVICES)
+            .path(ResourcePaths.SEARCH)
+            .path(id)
+            .build()
+
+    fun globalSearchStatusURL(id: String): URI =
+        UriBuilder.fromUri(configuration.externalBaseUrl)
+            .path(ResourcePaths.GLOBAL_SERVICES)
+            .path(ResourcePaths.SEARCH)
+            .path(id)
+            .path(ResourcePaths.STATUS)
+            .build()
+
     fun indexURL(containerName: String, fieldName: String, type: String): URI =
         UriBuilder.fromUri(configuration.externalBaseUrl)
-            .path(ResourcePaths.SERVICES)
+            .path(ResourcePaths.CONTAINER_SERVICES)
             .path(containerName)
             .path(ResourcePaths.INDEXES)
             .path(fieldName)

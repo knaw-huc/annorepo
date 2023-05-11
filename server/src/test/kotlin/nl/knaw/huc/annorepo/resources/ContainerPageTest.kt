@@ -1,11 +1,11 @@
 package nl.knaw.huc.annorepo.resources
 
+import org.junit.jupiter.api.Test
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
-import nl.knaw.huc.annorepo.api.ContainerPage
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Test
+import nl.knaw.huc.annorepo.api.ContainerPage
 
 internal class ContainerPageTest {
 

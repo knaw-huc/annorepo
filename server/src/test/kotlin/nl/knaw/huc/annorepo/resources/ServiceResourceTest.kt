@@ -1,29 +1,30 @@
 package nl.knaw.huc.annorepo.resources
 
+import java.net.URI
+import java.security.Principal
+import javax.ws.rs.NotAuthorizedException
+import javax.ws.rs.core.SecurityContext
+import kotlin.test.assertNotNull
+import org.junit.jupiter.api.Assertions.fail
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import com.mongodb.client.*
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.junit5.MockKExtension
+import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
+import org.bson.Document
+import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
-import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
-import org.bson.Document
-import org.junit.jupiter.api.Assertions.fail
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import org.slf4j.LoggerFactory
-import java.net.URI
-import java.security.Principal
-import javax.ws.rs.NotAuthorizedException
-import javax.ws.rs.core.SecurityContext
-import kotlin.test.assertNotNull
+import nl.knaw.huc.annorepo.service.UriFactory
 
 @ExtendWith(MockKExtension::class)
 class ServiceResourceTest {
@@ -271,7 +272,7 @@ class ServiceResourceTest {
         @RelaxedMockK
         lateinit var containerUserDAO: ContainerUserDAO
 
-        private lateinit var resource: ServiceResource
+        private lateinit var resource: ContainerServiceResource
         private val log = LoggerFactory.getLogger(ServiceResourceTest::class.java)
 
         @BeforeAll
@@ -289,7 +290,7 @@ class ServiceResourceTest {
             every { collectionNames.iterator() } returns mongoCursor
             every { mongoCursor.hasNext() } returns true
             every { mongoCursor.next() } returns containerName
-            resource = ServiceResource(config, client, containerUserDAO)
+            resource = ContainerServiceResource(config, client, containerUserDAO, UriFactory(config))
         }
 
         private fun useRootUser() {

@@ -1,7 +1,7 @@
 package nl.knaw.huc.annorepo.service
 
-import nl.knaw.huc.annorepo.service.JsonLdUtils.checkFieldContext
-import nl.knaw.huc.annorepo.service.JsonLdUtils.extractFields
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 import org.apache.jena.query.DatasetFactory
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.riot.JsonLDWriteContext
@@ -12,8 +12,8 @@ import org.apache.jena.riot.RDFWriter
 import org.apache.jena.riot.system.ErrorHandler
 import org.apache.jena.sparql.core.DatasetGraph
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.Test
+import nl.knaw.huc.annorepo.service.JsonLdUtils.checkFieldContext
+import nl.knaw.huc.annorepo.service.JsonLdUtils.extractFields
 
 class JsonLdUtilsTest {
 

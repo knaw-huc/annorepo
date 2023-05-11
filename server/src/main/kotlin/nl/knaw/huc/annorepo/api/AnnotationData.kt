@@ -1,7 +1,7 @@
 package nl.knaw.huc.annorepo.api
 
 import java.beans.ConstructorProperties
-import java.util.*
+import java.util.Date
 
 class AnnotationData {
     var id: Long = 0
@@ -31,9 +31,7 @@ class AnnotationData {
         if (name != other.name) return false
         if (content != other.content) return false
         if (created != other.created) return false
-        if (modified != other.modified) return false
-
-        return true
+        return modified == other.modified
     }
 
     override fun hashCode(): Int {

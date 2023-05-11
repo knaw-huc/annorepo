@@ -1,29 +1,30 @@
 package nl.knaw.huc.annorepo.resources
 
+import java.security.Principal
+import javax.ws.rs.NotAuthorizedException
+import javax.ws.rs.core.Request
+import javax.ws.rs.core.SecurityContext
+import kotlin.test.assertNotNull
+import org.junit.jupiter.api.Assertions.fail
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import com.mongodb.client.*
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.junit5.MockKExtension
+import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
+import org.bson.Document
+import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
-import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
-import org.bson.Document
-import org.junit.jupiter.api.Assertions.fail
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import org.slf4j.LoggerFactory
-import java.security.Principal
-import javax.ws.rs.NotAuthorizedException
-import javax.ws.rs.core.Request
-import javax.ws.rs.core.SecurityContext
-import kotlin.test.assertNotNull
+import nl.knaw.huc.annorepo.service.UriFactory
 
 @ExtendWith(MockKExtension::class)
 class W3CResourceAccessTest {
@@ -125,7 +126,6 @@ class W3CResourceAccessTest {
         }
     }
 
-
     companion object {
         private const val containerName = "containername"
         private const val baseURL = "https://annorepo.net"
@@ -189,7 +189,7 @@ class W3CResourceAccessTest {
             every { collectionNames.iterator() } returns mongoCursor
             every { mongoCursor.hasNext() } returns true
             every { mongoCursor.next() } returns containerName
-            resource = W3CResource(config, client, containerUserDAO)
+            resource = W3CResource(config, client, containerUserDAO, UriFactory(config))
         }
 
         private fun useRootUser() {

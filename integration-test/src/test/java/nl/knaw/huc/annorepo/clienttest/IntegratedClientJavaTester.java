@@ -12,6 +12,7 @@ import nl.knaw.huc.annorepo.api.IndexType;
 import nl.knaw.huc.annorepo.api.RejectedUserEntry;
 import nl.knaw.huc.annorepo.api.Role;
 import nl.knaw.huc.annorepo.api.SearchInfo;
+import nl.knaw.huc.annorepo.api.SearchStatusSummary;
 import nl.knaw.huc.annorepo.api.UserEntry;
 import nl.knaw.huc.annorepo.api.WebAnnotation;
 import nl.knaw.huc.annorepo.client.ARResult;
@@ -50,55 +51,55 @@ public class IntegratedClientJavaTester {
     @Nested
     class ConstructorTests {
         @Test
-        public void testClientConstructor1() {
+        void testClientConstructor1() {
             AnnoRepoClient client = new AnnoRepoClient(BASE_URI);
             assertThat(client.getServerVersion()).isNotBlank();
         }
 
         @Test
-        public void testClientConstructor2() {
+        void testClientConstructor2() {
             AnnoRepoClient client = new AnnoRepoClient(BASE_URI, apiKey);
             assertThat(client.getServerVersion()).isNotBlank();
         }
 
         @Test
-        public void testClientConstructor3() {
+        void testClientConstructor3() {
             AnnoRepoClient client = new AnnoRepoClient(BASE_URI, apiKey, "custom-user-agent");
             assertThat(client.getServerVersion()).isNotBlank();
         }
 
         @Test
-        public void testCreate1() {
+        void testCreate1() {
             AnnoRepoClient client = AnnoRepoClient.create(BASE_URI);
             assertClient(client);
         }
 
         @Test
-        public void testCreate1a() {
+        void testCreate1a() {
             AnnoRepoClient client = AnnoRepoClient.create(BASE_URL);
             assertClient(client);
         }
 
         @Test
-        public void testCreate2() {
+        void testCreate2() {
             AnnoRepoClient client = AnnoRepoClient.create(BASE_URI, "root");
             assertClient(client);
         }
 
         @Test
-        public void testCreate2a() {
+        void testCreate2a() {
             AnnoRepoClient client = AnnoRepoClient.create(BASE_URL, "root");
             assertClient(client);
         }
 
         @Test
-        public void testCreate3() {
+        void testCreate3() {
             AnnoRepoClient client = AnnoRepoClient.create(BASE_URI, "root", "custom-user-agent");
             assertClient(client);
         }
 
         @Test
-        public void testCreate3a() {
+        void testCreate3a() {
             AnnoRepoClient client = AnnoRepoClient.create(BASE_URL, "root", "custom-user-agent");
             assertClient(client);
         }
@@ -109,16 +110,16 @@ public class IntegratedClientJavaTester {
         }
 
         @Test
-        public void testFailingCreate() {
+        void testFailingCreate() {
             AnnoRepoClient client = AnnoRepoClient.create(URI.create("http://nothingtoseehere"));
             assertThat(client).isNull();
         }
     }
 
     @Nested
-    public class ContainerTests {
+    class ContainerTests {
         @Test
-        public void testCreateContainer() {
+        void testCreateContainer() {
             String preferredName = "my-container";
             String label = "A container for all my annotations";
             Boolean success = client.createContainer(preferredName, label).fold(
@@ -138,7 +139,7 @@ public class IntegratedClientJavaTester {
         }
 
         @Test
-        public void testGetContainer() {
+        void testGetContainer() {
             Either<RequestError, Boolean> either = client.createContainer()
                     .map(
                             (ARResult.CreateContainerResult result) -> {
@@ -159,7 +160,7 @@ public class IntegratedClientJavaTester {
         }
 
         @Test
-        public void testDeleteContainer() {
+        void testDeleteContainer() {
             Either<RequestError, Boolean> either = client.createContainer()
                     .map(
                             (ARResult.CreateContainerResult result) -> {
@@ -176,15 +177,15 @@ public class IntegratedClientJavaTester {
     }
 
     @Nested
-    public class AnnotationTests {
+    class AnnotationTests {
         @Test
-        public void testCreateAnnotation() {
+        void testCreateAnnotation() {
             String containerName = "my-container";
             WebAnnotation annotation = new WebAnnotation.Builder()
                     .withBody("http://example.org/annotation1")
                     .withTarget("http://example.org/target")
                     .build();
-            client.createAnnotation(containerName, annotation).fold(
+            Boolean success = client.createAnnotation(containerName, annotation).fold(
                     (RequestError error) -> {
                         handleError(error);
                         return false;
@@ -197,13 +198,14 @@ public class IntegratedClientJavaTester {
                         return true;
                     }
             );
+            assertThat(success).isTrue();
         }
 
         @Test
-        public void testReadAnnotation() {
+        void testReadAnnotation() {
             String containerName = "my-container";
             String annotationName = "my-annotation";
-            client.getAnnotation(containerName, annotationName).fold(
+            Boolean success = client.getAnnotation(containerName, annotationName).fold(
                     (RequestError error) -> {
                         handleError(error);
                         return false;
@@ -215,10 +217,11 @@ public class IntegratedClientJavaTester {
                         return true;
                     }
             );
+            assertThat(success).isTrue();
         }
 
         @Test
-        public void testUpdateAnnotation() {
+        void testUpdateAnnotation() {
             String containerName = "my-container";
             String annotationName = "my-annotation";
             String eTag = "abcde";
@@ -226,7 +229,7 @@ public class IntegratedClientJavaTester {
                     .withBody("http://example.org/annotation2")
                     .withTarget("http://example.org/target")
                     .build();
-            client.updateAnnotation(containerName, annotationName, eTag, updatedAnnotation).fold(
+            Boolean success = client.updateAnnotation(containerName, annotationName, eTag, updatedAnnotation).fold(
                     (RequestError error) -> {
                         handleError(error);
                         return false;
@@ -238,10 +241,12 @@ public class IntegratedClientJavaTester {
                         return true;
                     }
             );
+            assertThat(success).isTrue();
+
         }
 
         @Test
-        public void testDeleteAnnotation() {
+        void testDeleteAnnotation() {
             String containerName = "my-container";
             String annotationName = "my-annotation";
             String eTag = "abcdefg";
@@ -252,10 +257,12 @@ public class IntegratedClientJavaTester {
                     },
                     (ARResult.DeleteAnnotationResult result) -> true
             );
+            assertThat(success).isTrue();
+
         }
 
         @Test
-        public void testBatchUpload() {
+        void testBatchUpload() {
             String containerName = "my-container";
             WebAnnotation annotation1 = new WebAnnotation.Builder()
                     .withBody("http://example.org/annotation1")
@@ -278,14 +285,16 @@ public class IntegratedClientJavaTester {
                         return true;
                     }
             );
+            assertThat(success).isTrue();
+
         }
     }
 
     @Nested
-    public class SearchTests {
+    class ContainerSearchTests {
 
         @Test
-        public void testCreateSearch() {
+        void testCreateSearch() {
             String containerName = "volume-1728";
             Map<String, Object> query = Map.of("body.type", "Page");
             Boolean success = client.createSearch(containerName, query).fold(
@@ -304,7 +313,7 @@ public class IntegratedClientJavaTester {
         }
 
         @Test
-        public void testGetSearchResultPage() {
+        void testGetSearchResultPage() {
             String containerName = "volume-1728";
             Map<String, Object> query = Map.of("body.type", "Page");
             Optional<String> optionalQueryId = client.createSearch(containerName, query).fold(
@@ -314,6 +323,7 @@ public class IntegratedClientJavaTester {
                     },
                     (ARResult.CreateSearchResult result) -> Optional.of(result.getQueryId())
             );
+            assertThat(optionalQueryId).isPresent();
             optionalQueryId.ifPresent(queryId -> client.getSearchResultPage(containerName, queryId, 0).fold(
                     (RequestError error) -> {
                         handleError(error);
@@ -328,7 +338,7 @@ public class IntegratedClientJavaTester {
         }
 
         @Test
-        public void testGetSearchInfo() {
+        void testGetSearchInfo() {
             String containerName = "volume-1728";
             Map<String, Object> query = Map.of("body.type", "Page");
             Optional<String> optionalQueryId = client.createSearch(containerName, query).fold(
@@ -355,10 +365,10 @@ public class IntegratedClientJavaTester {
         }
 
         @Test
-        public void testFilterContainerAnnotations() {
+        void testFilterContainerAnnotations() {
             String containerName = "volume-1728";
             Map<String, Object> query = Map.of("body.type", "Page");
-            client.filterContainerAnnotations(containerName, query).fold(
+            Boolean success = client.filterContainerAnnotations(containerName, query).fold(
                     (RequestError error) -> {
                         handleError(error);
                         return false;
@@ -379,13 +389,88 @@ public class IntegratedClientJavaTester {
                     }
 
             );
+            assertThat(success).isTrue();
+
         }
     }
 
     @Nested
-    public class IndexTests {
+    class GlobalSearchTests {
+
         @Test
-        public void testIndexCreation() {
+        void testCreateGlobalSearch() {
+            Map<String, Object> query = Map.of("body.type", "Page");
+            Boolean success = client.createGlobalSearch(query).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    (ARResult.CreateSearchResult result) -> {
+                        URI location = result.getLocation();
+                        String queryId = result.getQueryId();
+                        doSomethingWith(location, queryId);
+                        return true;
+                    }
+            );
+            assertThat(success).isTrue();
+        }
+
+        @Test
+        void testGetGlobalSearchStatus() {
+            Map<String, Object> query = Map.of("body.type", "Page");
+            Optional<String> optionalQueryId = client.createGlobalSearch(query).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return Optional.empty();
+                    },
+                    (ARResult.CreateSearchResult result) -> Optional.of(result.getQueryId())
+            );
+            optionalQueryId.ifPresent(queryId -> {
+                Boolean success = client.getGlobalSearchStatus(queryId).fold(
+                        (RequestError error) -> {
+                            handleError(error);
+                            return false;
+                        },
+                        result -> {
+                            SearchStatusSummary searchStatus = result.getSearchStatus();
+                            doSomethingWith(searchStatus);
+                            return true;
+                        }
+                );
+                assertThat(success).isTrue();
+            });
+        }
+
+        @Test
+        void testGetGlobalSearchResultPage() {
+            Map<String, Object> query = Map.of("type", "Annotation");
+            Optional<String> optionalQueryId = client.createGlobalSearch(query).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return Optional.empty();
+                    },
+                    (ARResult.CreateSearchResult result) -> Optional.of(result.getQueryId())
+            );
+            assertThat(optionalQueryId).isPresent();
+            optionalQueryId.ifPresent(queryId -> client.getGlobalSearchResultPage(queryId, 0, true).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    (GetSearchResultPageResult result) -> {
+                        AnnotationPage annotationPage = result.getAnnotationPage();
+                        doSomethingWith(annotationPage);
+                        return true;
+                    }
+            ));
+        }
+
+    }
+
+    @Nested
+    class IndexTests {
+        @Test
+        void testIndexCreation() {
             String containerName = "volume-1728";
             String fieldName = "body.type";
             IndexType indexType = IndexType.HASHED;
@@ -400,7 +485,7 @@ public class IntegratedClientJavaTester {
         }
 
         @Test
-        public void testGetIndex() {
+        void testGetIndex() {
             String containerName = "volume-1728";
             String fieldName = "body.type";
             IndexType indexType = IndexType.HASHED;
@@ -419,7 +504,7 @@ public class IntegratedClientJavaTester {
         }
 
         @Test
-        public void testListIndexes() {
+        void testListIndexes() {
             String containerName = "volume-1728";
             Boolean success = client.listIndexes(containerName).fold(
                     (RequestError error) -> {
@@ -436,7 +521,7 @@ public class IntegratedClientJavaTester {
         }
 
         @Test
-        public void testDeleteIndex() {
+        void testDeleteIndex() {
             String containerName = "volume-1728";
             String fieldName = "body.type";
             IndexType indexType = IndexType.HASHED;
@@ -452,11 +537,11 @@ public class IntegratedClientJavaTester {
     }
 
     @Nested
-    public class FieldInfoTests {
+    class FieldInfoTests {
         @Test
-        public void testFieldInfo() {
+        void testFieldInfo() {
             String containerName = "volume-1728";
-            client.getFieldInfo(containerName).fold(
+            Boolean success = client.getFieldInfo(containerName).fold(
                     (RequestError error) -> {
                         handleError(error);
                         return false;
@@ -467,13 +552,14 @@ public class IntegratedClientJavaTester {
                         return true;
                     }
             );
+            assertThat(success).isTrue();
         }
     }
 
     @Nested
-    public class AdminTests {
+    class AdminTests {
         @Test
-        public void testUserCreateAndDelete() {
+        void testUserCreateAndDelete() {
             String userName = "userName";
             List<UserEntry> userEntries = List.of(new UserEntry(userName, "apiKey"));
             client.addUsers(userEntries).fold(
@@ -493,8 +579,8 @@ public class IntegratedClientJavaTester {
         }
 
         @Test
-        public void testGetUsers() {
-            client.getUsers().fold(
+        void testGetUsers() {
+            Boolean success = client.getUsers().fold(
                     (RequestError error) -> {
                         handleError(error);
                         return false;
@@ -505,14 +591,15 @@ public class IntegratedClientJavaTester {
                         return true;
                     }
             );
+            assertThat(success).isTrue();
         }
 
     }
 
     @Nested
-    public class ContainerUsersTests {
+    class ContainerUsersTests {
         @Test
-        public void testUserCreateAndDelete() {
+        void testUserCreateAndDelete() {
             String containerName = "my-container";
             String userName = "userName";
             List<ContainerUserEntry> containerUserEntries = List.of(new ContainerUserEntry(userName, Role.EDITOR));
@@ -531,7 +618,7 @@ public class IntegratedClientJavaTester {
         }
 
         @Test
-        public void testGetContainerUsers() {
+        void testGetContainerUsers() {
             String containerName = "my-container";
             Boolean success = client.getContainerUsers(containerName).fold(
                     (RequestError error) -> {
@@ -548,11 +635,30 @@ public class IntegratedClientJavaTester {
         }
 
         @Test
-        public void testDeleteContainerUser() {
+        void testDeleteContainerUser() {
             String containerName = "my-container";
             String userName = "userName";
             boolean deletionSuccess = client.deleteContainerUser(containerName, userName).isRight();
             assertThat(deletionSuccess).isTrue();
+        }
+    }
+
+    @Nested
+    class MyTests {
+        @Test
+        void testGetMyContainers() {
+            Boolean success = client.getMyContainers().fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    (ARResult.MyContainersResult result) -> {
+                        Map<String, List<String>> containerMap = result.getContainers();
+                        doSomethingWith(containerMap);
+                        return true;
+                    }
+            );
+            assertThat(success).isTrue();
         }
     }
 
@@ -571,8 +677,9 @@ public class IntegratedClientJavaTester {
     }
 
     @Test
-    public void testAbout() {
+    void testAbout() {
         var getAboutResult = client.getAbout().getOrNull();
+        assertThat(getAboutResult).isNotNull();
         AboutInfo aboutInfo = getAboutResult.getAboutInfo();
         doSomethingWith(aboutInfo);
         assertThat(aboutInfo).isNotNull();

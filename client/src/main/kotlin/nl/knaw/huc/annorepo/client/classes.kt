@@ -1,5 +1,8 @@
 package nl.knaw.huc.annorepo.client
 
+import java.net.URI
+import java.util.stream.Stream
+import javax.ws.rs.core.Response
 import arrow.core.Either
 import nl.knaw.huc.annorepo.api.AboutInfo
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
@@ -8,10 +11,8 @@ import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.IndexConfig
 import nl.knaw.huc.annorepo.api.RejectedUserEntry
 import nl.knaw.huc.annorepo.api.SearchInfo
+import nl.knaw.huc.annorepo.api.SearchStatusSummary
 import nl.knaw.huc.annorepo.api.UserEntry
-import java.net.URI
-import java.util.stream.Stream
-import javax.ws.rs.core.Response
 
 sealed class ARResult {
     abstract val response: Response
@@ -96,6 +97,11 @@ sealed class ARResult {
         val annotationPage: AnnotationPage,
     ) : ARResult()
 
+    data class GetGlobalSearchStatusResult(
+        override val response: Response,
+        val searchStatus: SearchStatusSummary,
+    ) : ARResult()
+
     data class AddIndexResult(
         override val response: Response,
     ) : ARResult()
@@ -136,6 +142,11 @@ sealed class ARResult {
 
     data class DeleteContainerUserResult(
         override val response: Response,
+    ) : ARResult()
+
+    data class MyContainersResult(
+        override val response: Response,
+        val containers: Map<String, List<String>>
     ) : ARResult()
 }
 

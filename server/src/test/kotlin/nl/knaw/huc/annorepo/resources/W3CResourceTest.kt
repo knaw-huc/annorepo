@@ -1,19 +1,24 @@
 package nl.knaw.huc.annorepo.resources
 
-import com.mongodb.client.*
-import nl.knaw.huc.annorepo.api.ContainerMetadata
-import nl.knaw.huc.annorepo.api.ContainerSpecs
-import nl.knaw.huc.annorepo.auth.ContainerUserDAO
-import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
-import org.assertj.core.api.Assertions.assertThat
+import javax.ws.rs.core.Response
+import javax.ws.rs.core.SecurityContext
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import com.mongodb.client.MongoClient
+import com.mongodb.client.MongoCollection
+import com.mongodb.client.MongoCursor
+import com.mongodb.client.MongoDatabase
+import com.mongodb.client.MongoIterable
+import org.assertj.core.api.Assertions.assertThat
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.SecurityContext
+import nl.knaw.huc.annorepo.api.ContainerMetadata
+import nl.knaw.huc.annorepo.api.ContainerSpecs
+import nl.knaw.huc.annorepo.auth.ContainerUserDAO
+import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.service.UriFactory
 
 class W3CResourceTest {
 
@@ -43,9 +48,10 @@ class W3CResourceTest {
         println(client.getDatabase(configuration.databaseName))
         val r =
             W3CResource(
-                client = client,
                 configuration = configuration,
-                containerUserDAO = containerUserDAO
+                client = client,
+                containerUserDAO = containerUserDAO,
+                uriFactory = UriFactory(configuration)
             )
         val response = r.createContainer(
             containerSpecs = ContainerSpecs(

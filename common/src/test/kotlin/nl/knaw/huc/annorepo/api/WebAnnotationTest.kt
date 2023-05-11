@@ -1,10 +1,10 @@
 package nl.knaw.huc.annorepo.api
 
+import org.junit.jupiter.api.Test
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.ObjectWriter
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Fail.fail
-import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 
 internal class WebAnnotationTest {

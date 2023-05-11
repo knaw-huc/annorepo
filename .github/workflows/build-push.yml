@@ -3,10 +3,10 @@ name: build-image
 on:
   push:
     tags:
-    - '*'
-    - '**'
+      - '*'
+      - '**'
   release:
-    types: [published]
+    types: [ published ]
   workflow_dispatch:
 
 env:
@@ -56,7 +56,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY_FQDN }}/${{ env.UPDATER_IMAGE_NAME }}
 
-      - name: Build and push Docker image (updater) 
+      - name: Build and push Docker image (updater)
         uses: docker/build-push-action@v3.2.0
         with:
           file: ${{ env.UPDATER_IMAGE_FILE }}

@@ -60,7 +60,7 @@ docker-image: .make/.docker
 	@touch $@
 
 .PHONY: push
-push:   .make/.push-server .make/.push-updater
+push:   clean build-server .make/.push-server .make/.push-updater
 
 .PHONY: clean
 clean:
@@ -101,11 +101,16 @@ client/readme.md: client/src/test/resources/readme.md client/pom.xml
 #release:
 #	mvn nexus-staging:release
 
+.PHONY: tests
+tests:
+	mvn test
+
 .PHONY: help
 help:
 	@echo "make-tools for $(TAG)"
 	@echo
 	@echo "Please use \`make <target>', where <target> is one of:"
+	@echo "  tests           to test the project"
 	@echo "  build           to test and build the project"
 	@echo "  build-server    to test and build just the server"
 	@echo "  build-client    to test and build just the client"

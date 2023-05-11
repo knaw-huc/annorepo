@@ -1,5 +1,12 @@
 package nl.knaw.huc.annorepo.resources
 
+import java.net.URI
+import java.util.*
+import java.util.concurrent.TimeUnit
+import javax.annotation.security.PermitAll
+import javax.ws.rs.*
+import javax.ws.rs.core.*
+import javax.ws.rs.core.MediaType.APPLICATION_JSON
 import com.codahale.metrics.annotation.Timed
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
@@ -13,13 +20,18 @@ import com.mongodb.client.model.IndexOptions
 import com.mongodb.client.model.Indexes
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import org.bson.Document
+import org.eclipse.jetty.util.ajax.JSON
+import org.litote.kmongo.findOne
+import org.litote.kmongo.getCollection
+import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.*
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
+import nl.knaw.huc.annorepo.api.ResourcePaths.CONTAINER_SERVICES
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
-import nl.knaw.huc.annorepo.api.ResourcePaths.SERVICES
 import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
@@ -27,29 +39,17 @@ import nl.knaw.huc.annorepo.resources.tools.AnnotationList
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.QueryCacheItem
 import nl.knaw.huc.annorepo.service.UriFactory
-import org.bson.Document
-import org.eclipse.jetty.util.ajax.JSON
-import org.litote.kmongo.findOne
-import org.litote.kmongo.getCollection
-import org.slf4j.LoggerFactory
-import java.net.URI
-import java.util.*
-import java.util.concurrent.TimeUnit
-import javax.annotation.security.PermitAll
-import javax.ws.rs.*
-import javax.ws.rs.core.*
-import javax.ws.rs.core.MediaType.APPLICATION_JSON
 
-@Path(SERVICES)
+@Path(CONTAINER_SERVICES)
 @Produces(APPLICATION_JSON)
 @PermitAll
 @SecurityRequirement(name = SECURITY_SCHEME_NAME)
-class ServiceResource(
+class ContainerServiceResource(
     private val configuration: AnnoRepoConfiguration,
     client: MongoClient,
     private val containerUserDAO: ContainerUserDAO,
+    private val uriFactory: UriFactory,
 ) : AbstractContainerResource(configuration, client, ContainerAccessChecker(containerUserDAO)) {
-    private val uriFactory = UriFactory(configuration)
 
     private val paginationStage = limit(configuration.pageSize)
     private val aggregateStageGenerator = AggregateStageGenerator(configuration)

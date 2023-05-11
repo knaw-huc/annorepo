@@ -1,13 +1,13 @@
 package nl.knaw.huc.annorepo.auth
 
 import com.mongodb.client.MongoClient
-import com.mongodb.client.result.DeleteResult
+import org.bson.Document
+import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.Role
+import nl.knaw.huc.annorepo.api.UserAccessEntry
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
-import org.bson.Document
-import org.slf4j.LoggerFactory
 
 const val FIELD_CONTAINER_NAME = "containerName"
 const val FIELD_ROLE = "role"
@@ -27,10 +27,8 @@ class ARContainerUserDAO(configuration: AnnoRepoConfiguration, mongoClient: Mong
 
     override fun getUserRole(containerName: String, userName: String): Role? {
         val doc = containerUserCollection.find(
-            Document(FIELD_CONTAINER_NAME, containerName).append(
-                FIELD_USER_NAME,
-                userName
-            )
+            Document(FIELD_CONTAINER_NAME, containerName)
+                .append(FIELD_USER_NAME, userName)
         ).first()
         return if (doc == null) {
             null
@@ -42,18 +40,36 @@ class ARContainerUserDAO(configuration: AnnoRepoConfiguration, mongoClient: Mong
     override fun getUsersForContainer(containerName: String): List<ContainerUserEntry> =
         containerUserCollection
             .find(Document(FIELD_CONTAINER_NAME, containerName))
-            .map { d ->
-                ContainerUserEntry(
-                    userName = d.getString(FIELD_USER_NAME),
-                    role = Role.valueOf(d.getString(FIELD_ROLE))
-                )
-            }
+            .map(::toContainerUserEntry)
             .toList()
 
+    private fun toContainerUserEntry(d: Document) = ContainerUserEntry(
+        userName = d.getString(FIELD_USER_NAME),
+        role = Role.valueOf(d.getString(FIELD_ROLE))
+    )
+
     override fun removeContainerUser(containerName: String, userName: String) {
-        val result: DeleteResult = containerUserCollection.deleteMany(
+        containerUserCollection.deleteMany(
             Document(FIELD_CONTAINER_NAME, containerName)
                 .append(FIELD_USER_NAME, userName)
         )
     }
+
+    override fun getUserRoles(userName: String): List<UserAccessEntry> =
+        containerUserCollection
+            .find(Document(FIELD_USER_NAME, userName))
+            .map(::toUserAccessEntry)
+            .toList()
+
+    override fun getAll(): List<UserAccessEntry> =
+        containerUserCollection
+            .find()
+            .map(::toUserAccessEntry)
+            .toList()
+
+    private fun toUserAccessEntry(d: Document) = UserAccessEntry(
+        containerName = d.getString(FIELD_CONTAINER_NAME),
+        userName = d.getString(FIELD_USER_NAME),
+        role = Role.valueOf(d.getString(FIELD_ROLE))
+    )
 }

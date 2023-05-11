@@ -1,7 +1,7 @@
 package nl.knaw.huc.annorepo.api
 
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.assertj.core.api.Assertions.assertThat
 
 internal class RoleTest {
     @Test
