@@ -18,6 +18,7 @@ abstract class SearchTask(queryMap: HashMap<*, *>) : Runnable {
         var endTime: Instant? = null
         var totalContainersToSearch: Int = 0
         val containersSearched: AtomicInteger = AtomicInteger(0)
+        val errors: MutableList<String> = mutableListOf()
 
         fun summary(): SearchStatusSummary = SearchStatusSummary(
             query = queryMap,
@@ -28,6 +29,7 @@ abstract class SearchTask(queryMap: HashMap<*, *>) : Runnable {
             totalContainersToSearch = totalContainersToSearch,
             containersSearched = containersSearched.get(),
             hitsFoundSoFar = annotations.size,
+            errors = errors,
             processingTimeInMillis = (endTime?.millis ?: Instant.now().millis) - startTime.millis
         )
 
@@ -37,7 +39,7 @@ abstract class SearchTask(queryMap: HashMap<*, *>) : Runnable {
     }
 
     enum class State {
-        CREATED, RUNNING, DONE
+        CREATED, RUNNING, DONE, FAILED
     }
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -48,8 +50,14 @@ abstract class SearchTask(queryMap: HashMap<*, *>) : Runnable {
     override fun run() {
         status.state = State.RUNNING
         status.startTime = Instant.now()
-        runSearch(status)
-        status.state = State.DONE
+        try {
+            runSearch(status)
+            status.state = State.DONE
+        } catch (t: Throwable) {
+            t.printStackTrace()
+            status.state = State.FAILED
+            status.errors += "${t.javaClass}: ${t.message ?: ""}"
+        }
         status.endTime = Instant.now()
         log.debug("query done")
     }

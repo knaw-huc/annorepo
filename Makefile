@@ -60,7 +60,7 @@ docker-image: .make/.docker
 	@touch $@
 
 .PHONY: push
-push:   .make/.push-server .make/.push-updater
+push:   clean build-server .make/.push-server .make/.push-updater
 
 .PHONY: clean
 clean:

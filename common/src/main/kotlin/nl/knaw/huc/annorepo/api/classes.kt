@@ -65,5 +65,6 @@ data class SearchStatusSummary(
     val containersSearched: Int,
     val totalContainersToSearch: Int,
     val hitsFoundSoFar: Int,
+    val errors: List<String>,
     val processingTimeInMillis: Long
 )

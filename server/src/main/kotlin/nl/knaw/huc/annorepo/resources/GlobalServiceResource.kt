@@ -83,24 +83,36 @@ class GlobalServiceResource(
     ): Response {
         val searchTaskStatus = searchManager.getSearchTask(searchId)?.status ?: throw NotFoundException()
         return when (searchTaskStatus.state) {
-            SearchTask.State.DONE -> {
-                val total = searchTaskStatus.annotations.size
-                val selection = searchTaskStatus.annotations.subList(
-                    page * configuration.pageSize,
-                    min((page + 1) * configuration.pageSize, total)
-                )
-                val annotationPage =
-                    buildAnnotationPage(
-                        searchUri = uriFactory.globalSearchURL(searchId),
-                        annotations = selection,
-                        page = page,
-                        total = total
-                    )
-                Response.ok(annotationPage).build()
-            }
-
-            else -> Response.accepted().entity(searchTaskStatus.summary()).build()
+            SearchTask.State.DONE -> annotationPageResponse(searchTaskStatus, page, searchId)
+            SearchTask.State.FAILED -> serverErrorResponse(searchTaskStatus)
+            else -> acceptedResponse(searchTaskStatus)
         }
+    }
+
+    private fun acceptedResponse(searchTaskStatus: SearchTask.Status): Response =
+        Response.accepted().entity(searchTaskStatus.summary()).build()
+
+    private fun serverErrorResponse(searchTaskStatus: SearchTask.Status): Response =
+        Response.serverError().entity(searchTaskStatus.summary()).build()
+
+    private fun annotationPageResponse(
+        searchTaskStatus: SearchTask.Status,
+        page: Int,
+        searchId: String
+    ): Response {
+        val total = searchTaskStatus.annotations.size
+        val selection = searchTaskStatus.annotations.subList(
+            page * configuration.pageSize,
+            min((page + 1) * configuration.pageSize, total)
+        )
+        val annotationPage =
+            buildAnnotationPage(
+                searchUri = uriFactory.globalSearchURL(searchId),
+                annotations = selection,
+                page = page,
+                total = total
+            )
+        return Response.ok(annotationPage).build()
     }
 
     @Operation(description = "Get information about the given global search")
