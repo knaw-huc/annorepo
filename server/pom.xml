@@ -139,7 +139,7 @@
         <dependency>
             <groupId>org.litote.kmongo</groupId>
             <artifactId>kmongo-native</artifactId>
-            <version>${kmongo.version}</version>
+            <version>${mongodb.version}</version>
         </dependency>
 
         <!-- test dependencies -->
