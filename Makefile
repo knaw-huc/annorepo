@@ -103,7 +103,7 @@ client/readme.md: client/src/test/resources/readme.md client/pom.xml
 
 .PHONY: tests
 tests:
-	mvn test
+	mvn test -Dmaven.plugin.validation=VERBOSE
 
 .PHONY: help
 help:
