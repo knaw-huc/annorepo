@@ -6,18 +6,8 @@ import javax.annotation.security.PermitAll
 import javax.ws.rs.*
 import javax.ws.rs.core.*
 import javax.ws.rs.core.MediaType.APPLICATION_JSON
-import kotlin.collections.HashMap
-import kotlin.collections.Map
-import kotlin.collections.MutableMap
-import kotlin.collections.Set
-import kotlin.collections.contains
-import kotlin.collections.emptySet
-import kotlin.collections.filter
 import kotlin.collections.get
-import kotlin.collections.listOf
 import kotlin.collections.set
-import kotlin.collections.toList
-import kotlin.collections.toMutableMap
 import kotlin.math.abs
 import com.codahale.metrics.annotation.Timed
 import com.mongodb.client.MongoClient
@@ -27,7 +17,9 @@ import com.mongodb.client.model.Filters.eq
 import com.mongodb.client.model.ReplaceOptions
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import org.bson.BSONException
 import org.bson.Document
+import org.bson.json.JsonParseException
 import org.eclipse.jetty.util.ajax.JSON
 import org.litote.kmongo.*
 import org.slf4j.LoggerFactory
@@ -201,31 +193,43 @@ class W3CResource(
             )
             name = UUID.randomUUID().toString()
         }
-        val annotationDocument = Document.parse(annotationJson)
-        val fields = JsonLdUtils.extractFields(annotationJson)
-        updateFieldCount(containerName, fields, emptySet())
-        val doc = Document(ANNOTATION_NAME_FIELD, name)
-            .append(ANNOTATION_FIELD, annotationDocument)
-        val r = container.insertOne(doc).insertedId?.asObjectId()?.value
+        try {
+            val annotationDocument = Document.parse(annotationJson)
+            val fields = JsonLdUtils.extractFields(annotationJson)
+            updateFieldCount(containerName, fields, emptySet())
+            val doc = Document(ANNOTATION_NAME_FIELD, name)
+                .append(ANNOTATION_FIELD, annotationDocument)
+            val r = container.insertOne(doc).insertedId?.asObjectId()?.value
 
-        val annotationData = AnnotationData(
-            r!!.timestamp.toLong(),
-            name,
-            doc.getEmbedded(listOf(ANNOTATION_FIELD), Document::class.java).toJson(),
-            Date.from(Instant.now()),
-            Date.from(Instant.now())
-        )
-        val uri = uriFactory.annotationURL(containerName, name)
-        val eTag = makeAnnotationETag(containerName, name)
-        val entity = annotationData.contentWithAssignedId(containerName, name)
-        return Response.created(uri)
-            .header("Vary", "Accept")
-            .allow("POST", "PUT", "GET", "DELETE", "OPTIONS", "HEAD")
-            .link(RESOURCE_LINK, "type")
-            .link(ANNOTATION_LINK, "type")
-            .tag(eTag)
-            .entity(entity)
-            .build()
+            val annotationData = AnnotationData(
+                r!!.timestamp.toLong(),
+                name,
+                doc.getEmbedded(listOf(ANNOTATION_FIELD), Document::class.java).toJson(),
+                Date.from(Instant.now()),
+                Date.from(Instant.now())
+            )
+            val uri = uriFactory.annotationURL(containerName, name)
+            val eTag = makeAnnotationETag(containerName, name)
+            val entity = annotationData.contentWithAssignedId(containerName, name)
+            return Response.created(uri)
+                .header("Vary", "Accept")
+                .allow("POST", "PUT", "GET", "DELETE", "OPTIONS", "HEAD")
+                .link(RESOURCE_LINK, "type")
+                .link(ANNOTATION_LINK, "type")
+                .tag(eTag)
+                .entity(entity)
+                .build()
+        } catch (e: BSONException) {
+            throw BadRequestException(jsonParseExceptionMessage(annotationJson, e))
+        } catch (e: JsonParseException) {
+            throw BadRequestException(jsonParseExceptionMessage(annotationJson, e))
+        }
+    }
+
+    private fun jsonParseExceptionMessage(annotationJson: String, e: RuntimeException): String {
+        log.error("json parsing error for input:\n{}\n", annotationJson)
+        log.error("error:\n{}", e)
+        return "The given json does not parse: '$annotationJson'"
     }
 
     @Operation(description = "Get an Annotation")

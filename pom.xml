@@ -8,7 +8,7 @@
 
     <groupId>io.github.knaw-huc</groupId>
     <artifactId>annorepo</artifactId>
-    <version>0.4.1</version>
+    <version>0.4.1-beta</version>
     <packaging>pom</packaging>
 
     <name>AnnoRepo</name>
@@ -26,7 +26,7 @@
         <!-- Timestamp settings for use in properties file -->
         <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ss'Z'</maven.build.timestamp.format>
 
-        <kotlin.version>1.8.20</kotlin.version>
+        <kotlin.version>1.8.21</kotlin.version>
         <java.version>17</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
@@ -36,7 +36,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <arrow-core.version>1.1.5</arrow-core.version>
-        <dropwizard.version>2.1.5</dropwizard.version>
+        <dropwizard.version>2.1.6</dropwizard.version>
         <dropwizard-jobs.version>4.0.0-RELEASE</dropwizard-jobs.version>
         <dropwizard-swagger-ui.version>4.6.2</dropwizard-swagger-ui.version>
         <dropwizard-swagger.version>2.0.28-1</dropwizard-swagger.version>
@@ -45,11 +45,10 @@
         <jackson-annotations.version>2.14.2</jackson-annotations.version>
         <jakarta.json.version>2.0.1</jakarta.json.version>
         <jakarta.ws.rs-api.version>3.1.0</jakarta.ws.rs-api.version>
-        <jena.version>4.7.0</jena.version>
-        <json.version>20220320</json.version>
-        <kmongo.version>4.8.0</kmongo.version>
+        <jena.version>4.8.0</jena.version>
+        <json.version>20230227</json.version>
         <kotlinx-cli-jvm.version>0.3.5</kotlinx-cli-jvm.version>
-        <mongodb.version>4.8.0</mongodb.version>
+        <mongodb.version>4.9.0</mongodb.version>
         <mordant.version>2.0.0-beta11</mordant.version>
         <problem.version>0.27.1</problem.version>
         <slf4j.version>2.0.3</slf4j.version>
@@ -69,14 +68,14 @@
 
         <!-- maven plugin dependencies -->
         <dokka.version>1.7.20</dokka.version>
-        <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
+        <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
         <maven-gpg-plugin.version>3.0.1</maven-gpg-plugin.version>
         <maven-jar-plugin.version>3.2.2</maven-jar-plugin.version>
         <maven-javadoc-plugin.version>3.3.1</maven-javadoc-plugin.version>
-        <maven-project-info-reports-plugin.version>3.3.0</maven-project-info-reports-plugin.version>
-        <maven-shade-plugin.version>3.4.0</maven-shade-plugin.version>
+        <maven-project-info-reports-plugin.version>3.4.3</maven-project-info-reports-plugin.version>
+        <maven-shade-plugin.version>3.4.1</maven-shade-plugin.version>
         <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
-        <maven-surefire-plugin.version>3.0.0-M7</maven-surefire-plugin.version>
+        <maven-surefire-plugin.version>3.1.0</maven-surefire-plugin.version>
         <nexus-staging-maven-plugin.version>1.6.13</nexus-staging-maven-plugin.version>
         <wagon-ssh.version>3.4.3</wagon-ssh.version>
     </properties>
