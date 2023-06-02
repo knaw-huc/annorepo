@@ -11,11 +11,12 @@ class JVMInfoTask(
 
     @Metered
     override fun execute(parameters: MutableMap<String, MutableList<String>>, output: PrintWriter) {
-        output.println("Available processors (cores): " + Runtime.getRuntime().availableProcessors())
+        val runtime = Runtime.getRuntime()
+        output.println("Available processors (cores): " + runtime.availableProcessors())
 
-        val heapSpace = Runtime.getRuntime().totalMemory().formatAsSize
-        val freeMemory = Runtime.getRuntime().freeMemory().formatAsSize
-        val maxMemory = Runtime.getRuntime().maxMemory()
+        val heapSpace = runtime.totalMemory().formatAsSize
+        val freeMemory = runtime.freeMemory().formatAsSize
+        val maxMemory = runtime.maxMemory()
 
         val maximum = if (maxMemory == Long.MAX_VALUE) "no limit" else maxMemory.formatAsSize
         output.println("Heap space:     $heapSpace")
