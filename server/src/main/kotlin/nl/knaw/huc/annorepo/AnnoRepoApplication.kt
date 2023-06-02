@@ -41,8 +41,10 @@ import nl.knaw.huc.annorepo.jobs.ExpiredTasksCleanerJob
 import nl.knaw.huc.annorepo.resources.*
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.SearchManager
+import nl.knaw.huc.annorepo.resources.tools.formatAsSize
 import nl.knaw.huc.annorepo.service.LocalDateTimeSerializer
 import nl.knaw.huc.annorepo.service.UriFactory
+import nl.knaw.huc.annorepo.tasks.JVMInfoTask
 import nl.knaw.huc.annorepo.tasks.RecalculateFieldCountTask
 import nl.knaw.huc.annorepo.tasks.UpdateTask
 
@@ -134,6 +136,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         environment.admin().apply {
             addTask(RecalculateFieldCountTask(mongoClient, configuration))
             addTask(UpdateTask(mongoClient, configuration))
+            addTask(JVMInfoTask())
         }
 
         customizeObjectMapper(environment)
@@ -146,6 +149,8 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
                     "http://localhost:${System.getenv(EnvironmentVariable.AR_SERVER_PORT.name) ?: 8080}\n" +
                     "    externally accessible at ${configuration.externalBaseUrl}\n"
         )
+        val heapSpace = Runtime.getRuntime().totalMemory().formatAsSize
+        log.info("Heap space = $heapSpace")
     }
 
     private fun createMongoClient(configuration: AnnoRepoConfiguration): MongoClient {
