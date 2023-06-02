@@ -25,7 +25,6 @@ class JVMInfoTask(
 
         output.println()
 
-        /* For each filesystem root, print some info */
         for (root in File.listRoots()) {
             output.println("File system root: ${root.absolutePath}")
             output.println("Total space:  ${root.totalSpace.formatAsSize}")
