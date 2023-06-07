@@ -42,7 +42,7 @@
         <dropwizard-swagger.version>2.0.28-1</dropwizard-swagger.version>
         <jackson-databind.version>2.13.4.1</jackson-databind.version>
         <jackson-module-kotlin.version>2.15.0</jackson-module-kotlin.version>
-        <jackson-annotations.version>2.14.2</jackson-annotations.version>
+        <jackson-annotations.version>2.15.0</jackson-annotations.version>
         <jakarta.json.version>2.0.1</jakarta.json.version>
         <jakarta.ws.rs-api.version>3.1.0</jakarta.ws.rs-api.version>
         <jena.version>4.8.0</jena.version>
