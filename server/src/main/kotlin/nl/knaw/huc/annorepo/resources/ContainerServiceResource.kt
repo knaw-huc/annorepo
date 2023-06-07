@@ -122,7 +122,9 @@ class ContainerServiceResource(
         val queryMap = JSON.parse(queryJson)
         if (queryMap is HashMap<*, *>) {
             val aggregateStages =
-                queryMap.toMap().map { (k, v) -> aggregateStageGenerator.generateStage(k, v) }.toList()
+                queryMap.toMap()
+                    .map { (k, v) -> aggregateStageGenerator.generateStage(k, v) }
+                    .toList()
             val container = mdb.getCollection(containerName)
             val count = container.aggregate(aggregateStages).count()
 
