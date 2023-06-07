@@ -1,9 +1,9 @@
 package nl.knaw.huc.annorepo.resources.tools
 
 import javax.ws.rs.BadRequestException
+import kotlin.test.fail
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.junit.jupiter.api.fail
 import io.mockk.every
 import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.junit5.MockKExtension
@@ -137,6 +137,20 @@ class AggregateStageGeneratorTest {
     }
 
     @Test
+    fun `special field matching - isNotIn with value other than list`() {
+        val asg = AggregateStageGenerator(config)
+        val key = "year"
+        val value = mapOf(IS_NOT_IN to 1999)
+        try {
+            val stage = asg.generateStage(key, value)
+            log.info("{}", stage)
+            fail("expected call to fail")
+        } catch (e: BadRequestException) {
+            assertThat(e.message).isEqualTo(":isNotIn parameter must be a list")
+        }
+    }
+
+    @Test
     fun `special field matching - isIn`() {
         val asg = AggregateStageGenerator(config)
         val key = "year"
@@ -149,6 +163,20 @@ class AggregateStageGeneratorTest {
             """.trimIndent()
             .replace('@', '$')
         assertThatJson(stage.json).isEqualTo(expected)
+    }
+
+    @Test
+    fun `special field matching - isIn with value other than list`() {
+        val asg = AggregateStageGenerator(config)
+        val key = "year"
+        val value = mapOf(IS_IN to 2000)
+        try {
+            val stage = asg.generateStage(key, value)
+            log.info("{}", stage)
+            fail("expected call to fail")
+        } catch (e: BadRequestException) {
+            assertThat(e.message).isEqualTo(":isIn parameter must be a list")
+        }
     }
 
     @Test

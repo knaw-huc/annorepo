@@ -31,13 +31,26 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
     private fun specialFieldMatchStage(field: String, value: Map<String, Any>): Bson =
         Filters.and(value.map { (k, v) ->
             return when (k) {
-                IS_NOT_IN -> Aggregates.match(
-                    Filters.nin("$ANNOTATION_FIELD_PREFIX$field", (v as Array<Any>).toList())
-                )
+                IS_NOT_IN ->
+                    try {
+                        val valueAsList = (v as Array<Any>).toList()
+                        Aggregates.match(
+                            Filters.nin("$ANNOTATION_FIELD_PREFIX$field", valueAsList)
+                        )
+                    } catch (e: ClassCastException) {
+                        throw BadRequestException("$IS_NOT_IN parameter must be a list")
+                    }
 
-                IS_IN -> Aggregates.match(
-                    Filters.`in`("$ANNOTATION_FIELD_PREFIX$field", (v as Array<Any>).toList())
-                )
+                IS_IN -> {
+                    try {
+                        val valueAsList = (v as Array<Any>).toList()
+                        Aggregates.match(
+                            Filters.`in`("$ANNOTATION_FIELD_PREFIX$field", valueAsList)
+                        )
+                    } catch (e: ClassCastException) {
+                        throw BadRequestException("$IS_IN parameter must be a list")
+                    }
+                }
 
                 IS_GREATER -> Aggregates.match(
                     Filters.gt("$ANNOTATION_FIELD_PREFIX$field", v)
