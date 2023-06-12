@@ -7,7 +7,7 @@ services:
       - VIRTUAL_HOST=annorepo.tt.di.huc.knaw.nl
       - VIRTUAL_PORT=8080
       - AR_EXTERNAL_BASE_URL=https://annorepo.tt.di.huc.knaw.nl
-#      - AR_MONGODB_URL=mongodb://admin:ItsVeryVerySecret@annorepo_mongodb/
+      #      - AR_MONGODB_URL=mongodb://admin:ItsVeryVerySecret@annorepo_mongodb/
       - AR_MONGODB_URL=mongodb://annorepo_mongodb/
       - AR_DB_NAME=annorepo
       - AR_PAGE_SIZE=100
@@ -27,9 +27,9 @@ services:
 
   annorepo_mongodb:
     container_name: annorepo_mongodb
-#    environment:
-#      - MONGO_INITDB_ROOT_USERNAME=admin
-#      - MONGO_INITDB_ROOT_PASSWORD=ItsVeryVerySecret
+    #    environment:
+    #      - MONGO_INITDB_ROOT_USERNAME=admin
+    #      - MONGO_INITDB_ROOT_PASSWORD=ItsVeryVerySecret
     expose:
       - 27017
     image: mongo:5.0.9

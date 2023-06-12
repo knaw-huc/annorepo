@@ -4,38 +4,38 @@
 
 - [General Notes](#general-notes)
 - [Annotation Containers](#annotation-containers):
-  - [Create](#creating-an-annotation-container-)
-  - [Read](#reading-an-annotation-container-)
-  - [Delete](#deleting-an-annotation-container-)
+    - [Create](#creating-an-annotation-container-)
+    - [Read](#reading-an-annotation-container-)
+    - [Delete](#deleting-an-annotation-container-)
 - [Annotations](#annotations):
-  - [Create](#adding-an-annotation-to-a-given-annotation-container-)
-  - [Read](#reading-an-annotation-)
-  - [Update](#updating-an-annotation-)
-  - [Delete](#deleting-an-annotation-)
-  - [Batch upload](#uploading-multiple-annotations-to-a-given-annotation-container--experimental)
+    - [Create](#adding-an-annotation-to-a-given-annotation-container-)
+    - [Read](#reading-an-annotation-)
+    - [Update](#updating-an-annotation-)
+    - [Delete](#deleting-an-annotation-)
+    - [Batch upload](#uploading-multiple-annotations-to-a-given-annotation-container--experimental)
 - [Querying a container](#querying-a-container):
-  - [Create a query](#create-a-query--experimental)
-  - [Get a search result page](#get-a-search-result-page--experimental)
+    - [Create a query](#create-a-query--experimental)
+    - [Get a search result page](#get-a-search-result-page--experimental)
 - [Querying (globally)](#querying-globally):
-  - [Create a global query](#create-a-global-query--experimental)
-  - [Get the search status](#get-a-global-search-status--experimental)
-  - [Get a global search result page](#get-a-global-search-result-page--experimental)
+    - [Create a global query](#create-a-global-query--experimental)
+    - [Get the search status](#get-a-global-search-status--experimental)
+    - [Get a global search result page](#get-a-global-search-result-page--experimental)
 - [Indexes](#indexes)
-  - [Add an index](#add-index-)
-  - [Read an index](#read-index-)
-  - [List all indexes](#list-all-indexes-for-a-container-)
-  - [Delete an index](#delete-index-)
+    - [Add an index](#add-index-)
+    - [Read an index](#read-index-)
+    - [List all indexes](#list-all-indexes-for-a-container-)
+    - [Delete an index](#delete-index-)
 - [Admin](#admin):
-  - [Read users](#get-users-)
-  - [Add users](#add-users-)
-  - [Delete user](#delete-user-)
+    - [Read users](#get-users-)
+    - [Add users](#add-users-)
+    - [Delete user](#delete-user-)
 - [Container Users](#container-users):
-  - [Read container users](#get-container-users-)
-  - [Add container users](#add-container-users-)
-  - [Delete container user](#delete-container-user-)
-  - [Show containers for user](#show-containers-for-user-)
+    - [Read container users](#get-container-users-)
+    - [Add container users](#add-container-users-)
+    - [Delete container user](#delete-container-user-)
+    - [Show containers for user](#show-containers-for-user-)
 - [Miscellaneous](#miscellaneous):
-  - [Annotation Field Count](#get-annotation-field-count-)
+    - [Annotation Field Count](#get-annotation-field-count-)
 - [OpenAPI](#openapi)
 - [Server info](#server-info)
 
@@ -66,10 +66,10 @@ that in a way similar to that used by [elucidate](https://github.com/dlcs/elucid
 - `{variable}`s in the Request parts need to be substituted with the appropriate value.
 
 - Gzip compression is enabled by default:
-  - Add the header `Content-Encoding: gzip` when sending gzip-compressed data.
-  - Add the header `Accept-Encoding: gzip` to receive the data gzip-compressed. (Data smaller than 256 bytes will not
-    be
-    compressed)
+    - Add the header `Content-Encoding: gzip` when sending gzip-compressed data.
+    - Add the header `Accept-Encoding: gzip` to receive the data gzip-compressed. (Data smaller than 256 bytes will not
+      be
+      compressed)
 
 ---
 
@@ -840,9 +840,9 @@ The body returned is a representation of the status of the search, with the fiel
 - `expiresAt`: the time at which the search results will not be available anymore, or null if the search hasn't finished
   yet.
 - `state`: the state of the search; this can be:
-  - `CREATED`: the search was created, but not started yet
-  - `RUNNING`: the search is applying the query to all relevant containers
-  - `DONE`: the search is finished
+    - `CREATED`: the search was created, but not started yet
+    - `RUNNING`: the search is applying the query to all relevant containers
+    - `DONE`: the search is finished
 - `containersSearched`: the number of containers that have been searched so far.
 - `totalContainersToSearch`: the number of containers to search in total.
 - `hitsFoundSoFar`: the number of annotations found so far.
@@ -921,7 +921,6 @@ Vary: Accept-Encoding
 The Location header contains the link to the first search result page.
 
 ---
-
 
 ## Indexes
 
