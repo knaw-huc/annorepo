@@ -885,6 +885,37 @@ client.getFieldInfo(containerName).fold(
 );
 ```
 
+## Retrieving the distinct field values used in container annotations
+
+**Kotlin:**
+
+```kotlin
+val containerName = "volume-1728"
+client.getDistinctFieldValues(containerName, "body.type").fold(
+        { error: RequestError -> handleError(error) },
+        { (_, distinctValues): ARResult.DistinctAnnotationFieldValuesResult ->
+            doSomethingWith(distinctValues)
+        })
+```
+
+**Java**
+
+```java
+String containerName = "volume-1728";
+String fieldName = "body.type";
+Boolean success = client.getDistinctFieldValues(containerName, fieldName).fold(
+        (RequestError error) -> {
+            handleError(error);
+            return false;
+        },
+        result -> {
+            List<Object> distinctValues = result.getDistinctValues();
+            doSomethingWith(distinctValues);
+            return true;
+        }
+);
+```
+
 ## User administration
 
 These admin functionalities are only available on annorepo servers that have authentication enabled.
