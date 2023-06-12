@@ -1,8 +1,8 @@
 package nl.knaw.huc.annorepo.resources.tools
 
-import javax.ws.rs.BadRequestException
 import jakarta.json.JsonNumber
 import jakarta.json.JsonString
+import jakarta.ws.rs.BadRequestException
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Filters
 import org.bson.conversions.Bson

@@ -2,16 +2,16 @@ package nl.knaw.huc.annorepo.resources
 
 import java.net.URI
 import java.util.*
-import javax.annotation.security.PermitAll
-import javax.ws.rs.*
-import javax.ws.rs.core.*
-import javax.ws.rs.core.MediaType.APPLICATION_JSON
+import jakarta.annotation.security.PermitAll
+import jakarta.ws.rs.*
+import jakarta.ws.rs.core.*
+import jakarta.ws.rs.core.MediaType.APPLICATION_JSON
 import kotlin.math.min
 import com.codahale.metrics.annotation.Timed
 import com.mongodb.client.MongoClient
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
-import org.eclipse.jetty.util.ajax.JSON
+import org.apache.jena.atlas.json.JSON
 import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.*
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME

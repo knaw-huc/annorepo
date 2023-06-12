@@ -142,6 +142,11 @@
             <artifactId>kmongo-native</artifactId>
             <version>${mongodb.version}</version>
         </dependency>
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+            <version>${joda-time.version}</version>
+        </dependency>
 
         <!-- test dependencies -->
         <dependency>
