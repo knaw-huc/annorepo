@@ -168,6 +168,20 @@ class ServiceResourceTest {
         }
 
         @Nested
+        inner class GetDistinctAnnotationFieldValuesForContainerTest {
+            @Test
+            fun `getDistinctAnnotationFieldsValuesForContainer endpoint can be used by root, admin, editor and guest, but not by others`() {
+                assertRoleAuthorizationForBlock(
+                    authorizedRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR, Role.GUEST)
+                ) {
+                    val response =
+                        resource.getDistinctAnnotationFieldsValuesForContainer(containerName, "type", securityContext)
+                    assertNotNull(response)
+                }
+            }
+        }
+
+        @Nested
         inner class GetMetadataForContainerTest {
             @Test
             fun `getMetadataForContainer endpoint can be used by root, admin, editor and guest, but not by others`() {
