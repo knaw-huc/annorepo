@@ -32,10 +32,13 @@ import nl.knaw.huc.annorepo.service.UriFactory
 @PermitAll
 @SecurityRequirement(name = SECURITY_SCHEME_NAME)
 class ListResource(
-    private val configuration: AnnoRepoConfiguration, client: MongoClient,
+    private val configuration: AnnoRepoConfiguration,
+    client: MongoClient,
+    private val uriFactory: UriFactory
 ) {
+
     private val log = LoggerFactory.getLogger(javaClass)
-    private val uriFactory = UriFactory(configuration)
+
     private val mdb = client.getDatabase(configuration.databaseName)
 
     @Operation(description = "Get a list of all the container URLs")

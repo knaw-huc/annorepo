@@ -1,8 +1,8 @@
 package nl.knaw.huc.annorepo.resources.tools
 
+import javax.ws.rs.BadRequestException
 import jakarta.json.JsonNumber
 import jakarta.json.JsonString
-import jakarta.ws.rs.BadRequestException
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Filters
 import org.bson.conversions.Bson
@@ -38,16 +38,26 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
     private fun specialFieldMatchStage(field: String, value: Map<String, Any>): Bson =
         Filters.and(value.map { (k, v) ->
             return when (k) {
-                IS_NOT_IN -> {
-                    log.info("v={} ({})", v, v.javaClass)
-                    Aggregates.match(
-                        Filters.nin("$ANNOTATION_FIELD_PREFIX$field", *(v as Array<*>))
-                    )
-                }
+                IS_NOT_IN ->
+                    try {
+                        val valueAsList = (v as Array<Any>).toList()
+                        Aggregates.match(
+                            Filters.nin("$ANNOTATION_FIELD_PREFIX$field", valueAsList)
+                        )
+                    } catch (e: ClassCastException) {
+                        throw BadRequestException("$IS_NOT_IN parameter must be a list")
+                    }
 
-                IS_IN -> Aggregates.match(
-                    Filters.`in`("$ANNOTATION_FIELD_PREFIX$field", *(v as Array<*>))
-                )
+                IS_IN -> {
+                    try {
+                        val valueAsList = (v as Array<Any>).toList()
+                        Aggregates.match(
+                            Filters.`in`("$ANNOTATION_FIELD_PREFIX$field", valueAsList)
+                        )
+                    } catch (e: ClassCastException) {
+                        throw BadRequestException("$IS_IN parameter must be a list")
+                    }
+                }
 
                 IS_GREATER -> Aggregates.match(
                     Filters.gt("$ANNOTATION_FIELD_PREFIX$field", v)

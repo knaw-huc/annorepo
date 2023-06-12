@@ -12,10 +12,14 @@
   - [Read](#reading-an-annotation-)
   - [Update](#updating-an-annotation-)
   - [Delete](#deleting-an-annotation-)
-  - [Batch upload](#uploading-multiple-annotations-to-a-given-annotation-container---experimental)
-- [Querying](#querying):
-  - [Create a query](#create-a-query---experimental)
-  - [Get a query result page](#get-a-search-result-page---experimental)
+  - [Batch upload](#uploading-multiple-annotations-to-a-given-annotation-container--experimental)
+- [Querying a container](#querying-a-container):
+  - [Create a query](#create-a-query--experimental)
+  - [Get a search result page](#get-a-search-result-page--experimental)
+- [Querying (globally)](#querying-globally):
+  - [Create a global query](#create-a-global-query--experimental)
+  - [Get the search status](#get-a-global-search-status--experimental)
+  - [Get a global search result page](#get-a-global-search-result-page--experimental)
 - [Indexes](#indexes)
   - [Add an index](#add-index-)
   - [Read an index](#read-index-)
@@ -63,7 +67,8 @@ that in a way similar to that used by [elucidate](https://github.com/dlcs/elucid
 
 - Gzip compression is enabled by default:
   - Add the header `Content-Encoding: gzip` when sending gzip-compressed data.
-  - Add the header `Accept-Encoding: gzip` to receive the data gzip-compressed. (Data smaller than 256 bytes will not be
+  - Add the header `Accept-Encoding: gzip` to receive the data gzip-compressed. (Data smaller than 256 bytes will not
+    be
     compressed)
 
 ---
@@ -474,7 +479,7 @@ If-Match: "{etag}"
 HTTP/1.1 204 No Content
 ```
 
-### Uploading multiple annotations to a given annotation container  (🔒) `(experimental)`
+### Uploading multiple annotations to a given annotation container (🔒) `(experimental)`
 
 #### Request
 
@@ -607,9 +612,9 @@ Content-Length: 23
 
 ---
 
-## Querying
+## Querying a container
 
-### Create a query  (🔒) `(experimental)`
+### Create a query (🔒) `(experimental)`
 
 #### Request
 
@@ -755,7 +760,7 @@ The Location header contains the link to the first search result page.
 
 ---
 
-### Get a search result page  (🔒) `(experimental)`
+### Get a search result page (🔒) `(experimental)`
 
 #### Request
 
@@ -785,6 +790,138 @@ Vary: Accept-Encoding
 The Location header contains the link to the first search result page.
 
 ---
+
+## Querying globally
+
+To query all the containers the user has read-access to, use the `/global/search` endpoint in a similar way as querying
+a specific container.
+
+### Create a global query (🔒) `(experimental)`
+
+#### Request
+
+```
+POST http://localhost:8080/global/search HTTP/1.1
+
+{
+  "purpose": "identifying"
+}
+```
+
+#### Response
+
+```
+HTTP/1.1 201 Created
+Location: http://localhost:8080/global/search/73f62348-7dcc-4d13-9748-fcb8f5a8a367
+Link: <http://localhost:8080/global/search/73f62348-7dcc-4d13-9748-fcb8f5a8a367/status>; rel="status"
+Content-Type: application/json
+
+{
+  "query" : {
+    "purpose": "identifying"
+  },
+  "startedAt" : "2023-05-02T12:49:32",
+  "finishedAt" : null,
+  "expiresAt" : null,
+  "state" : "RUNNING",
+  "containersSearched" : 0,
+  "totalContainersToSearch" : 11,
+  "hitsFoundSoFar" : 0,
+  "processingTimeInMillis" : 2
+}
+```
+
+Creating the global query returns its location in the `Location` header.
+The body returned is a representation of the status of the search, with the fields:
+
+- `query`: the query used
+- `startedAt`: the time the search was started
+- `finishedAt`: the time the search was finished, or null if the search hasn't finished yet.
+- `expiresAt`: the time at which the search results will not be available anymore, or null if the search hasn't finished
+  yet.
+- `state`: the state of the search; this can be:
+  - `CREATED`: the search was created, but not started yet
+  - `RUNNING`: the search is applying the query to all relevant containers
+  - `DONE`: the search is finished
+- `containersSearched`: the number of containers that have been searched so far.
+- `totalContainersToSearch`: the number of containers to search in total.
+- `hitsFoundSoFar`: the number of annotations found so far.
+- `processingTimeInMillis`: The number of milliseconds that the search has run.
+
+---
+
+### Get a global search status (🔒) `(experimental)`
+
+#### Request
+
+```
+GET http://localhost:8080/global/search/{searchId}/status HTTP/1.1
+```
+
+#### Response
+
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+    "query": {
+        "type": "Annotation"
+    },
+    "startedAt": "2023-05-09T11:00:20",
+    "finishedAt": null,
+    "expiresAt": null,
+    "state": "RUNNING",
+    "containersSearched": 3,
+    "totalContainersToSearch": 11,
+    "hitsFoundSoFar": 1114,
+    "processingTimeInMillis": 41
+}
+```
+
+---
+
+### Get a global search result page (🔒) `(experimental)`
+
+#### Request
+
+```
+GET http://localhost:8080/global/search/{searchId} HTTP/1.1
+```
+
+#### Response
+
+If the search is still ongoing,
+
+```
+HTTP/1.1 202 Accepted
+```
+
+is returned, with the search status in the body.
+
+If the search has finished:
+
+```
+HTTP/1.1 200 OK
+
+Content-Type: application/json
+Vary: Accept-Encoding
+
+{
+  "id": "http://localhost:8080/global/search/73f62348-7dcc-4d13-9748-fcb8f5a8a367?page=0",
+  "type": "AnnotationPage",
+  "partOf": "http://localhost:8080/global/search/73f62348-7dcc-4d13-9748-fcb8f5a8a367",
+  "startIndex": 0,
+  "items": [
+    ....
+  ]
+}
+```
+
+The Location header contains the link to the first search result page.
+
+---
+
 
 ## Indexes
 
@@ -1120,7 +1257,7 @@ Vary: Accept-Encoding
 }
 ```
 
-This response means that, for example, there are 15 annotations in `my-container` with a `target` field, and only 1 with
+This response, for example, indicates there are 15 annotations in `my-container` with a `target` field, and only 1 with
 a `body.id` field.
 
 ---

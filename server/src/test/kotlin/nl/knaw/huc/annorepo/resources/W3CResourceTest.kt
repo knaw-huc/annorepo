@@ -18,6 +18,7 @@ import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.ContainerSpecs
 import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.service.UriFactory
 
 class W3CResourceTest {
 
@@ -47,9 +48,10 @@ class W3CResourceTest {
         println(client.getDatabase(configuration.databaseName))
         val r =
             W3CResource(
-                client = client,
                 configuration = configuration,
-                containerUserDAO = containerUserDAO
+                client = client,
+                containerUserDAO = containerUserDAO,
+                uriFactory = UriFactory(configuration)
             )
         val response = r.createContainer(
             containerSpecs = ContainerSpecs(

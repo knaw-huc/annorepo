@@ -60,7 +60,7 @@ docker-image: .make/.docker
 	@touch $@
 
 .PHONY: push
-push:   .make/.push-server .make/.push-updater
+push:   clean build-server .make/.push-server .make/.push-updater
 
 .PHONY: clean
 clean:
@@ -103,7 +103,7 @@ client/readme.md: client/src/test/resources/readme.md client/pom.xml
 
 .PHONY: tests
 tests:
-	mvn test
+	mvn test -Dmaven.plugin.validation=VERBOSE
 
 .PHONY: help
 help:

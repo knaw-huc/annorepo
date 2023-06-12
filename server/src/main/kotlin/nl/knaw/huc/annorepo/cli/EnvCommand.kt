@@ -1,7 +1,7 @@
 package nl.knaw.huc.annorepo.cli
 
-import io.dropwizard.core.cli.Command
-import io.dropwizard.core.setup.Bootstrap
+import io.dropwizard.cli.Command
+import io.dropwizard.setup.Bootstrap
 import net.sourceforge.argparse4j.inf.Namespace
 import net.sourceforge.argparse4j.inf.Subparser
 import nl.knaw.huc.annorepo.api.ARConst

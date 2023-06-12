@@ -45,8 +45,8 @@ import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
+import nl.knaw.huc.annorepo.api.ResourcePaths.CONTAINER_SERVICES
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
-import nl.knaw.huc.annorepo.api.ResourcePaths.SERVICES
 import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
@@ -56,16 +56,16 @@ import nl.knaw.huc.annorepo.resources.tools.QueryCacheItem
 import nl.knaw.huc.annorepo.resources.tools.toSimpleValue
 import nl.knaw.huc.annorepo.service.UriFactory
 
-@Path(SERVICES)
+@Path(CONTAINER_SERVICES)
 @Produces(APPLICATION_JSON)
 @PermitAll
 @SecurityRequirement(name = SECURITY_SCHEME_NAME)
-class ServiceResource(
+class ContainerServiceResource(
     private val configuration: AnnoRepoConfiguration,
     client: MongoClient,
     private val containerUserDAO: ContainerUserDAO,
+    private val uriFactory: UriFactory,
 ) : AbstractContainerResource(configuration, client, ContainerAccessChecker(containerUserDAO)) {
-    private val uriFactory = UriFactory(configuration)
 
     private val paginationStage = limit(configuration.pageSize)
     private val aggregateStageGenerator = AggregateStageGenerator(configuration)

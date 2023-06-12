@@ -24,6 +24,7 @@ import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.service.UriFactory
 
 @ExtendWith(MockKExtension::class)
 class ServiceResourceTest {
@@ -271,7 +272,7 @@ class ServiceResourceTest {
         @RelaxedMockK
         lateinit var containerUserDAO: ContainerUserDAO
 
-        private lateinit var resource: ServiceResource
+        private lateinit var resource: ContainerServiceResource
         private val log = LoggerFactory.getLogger(ServiceResourceTest::class.java)
 
         @BeforeAll
@@ -289,7 +290,7 @@ class ServiceResourceTest {
             every { collectionNames.iterator() } returns mongoCursor
             every { mongoCursor.hasNext() } returns true
             every { mongoCursor.next() } returns containerName
-            resource = ServiceResource(config, client, containerUserDAO)
+            resource = ContainerServiceResource(config, client, containerUserDAO, UriFactory(config))
         }
 
         private fun useRootUser() {

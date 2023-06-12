@@ -6,6 +6,7 @@ COPY ./client /build/client
 COPY ./common /build/common
 COPY ./integration-test /build/integration-test
 COPY ./pom.xml /build/
+COPY ./config.yml config.yml
 RUN mvn --projects server --no-transfer-progress --batch-mode --update-snapshots --also-make package
 
 FROM openjdk:20-rc-jdk-slim

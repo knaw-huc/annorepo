@@ -6,7 +6,8 @@ object ResourcePaths {
     const val ADMIN = "admin"
     const val BATCH = "batch"
     const val LIST = "_list"
-    const val SERVICES = "services"
+    const val CONTAINER_SERVICES = "services"
+    const val GLOBAL_SERVICES = "global"
     const val MY = "my"
     const val W3C = "w3c"
 
@@ -17,5 +18,6 @@ object ResourcePaths {
     const val ANNOTATIONS = "annotations"
     const val INDEXES = "indexes"
     const val SEARCH = "search"
+    const val STATUS = "status"
     const val METADATA = "metadata"
 }

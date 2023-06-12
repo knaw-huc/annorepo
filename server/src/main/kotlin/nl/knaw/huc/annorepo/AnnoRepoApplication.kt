@@ -8,14 +8,18 @@ import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Indexes
+import `in`.vectorpro.dropwizard.swagger.SwaggerBundle
+import `in`.vectorpro.dropwizard.swagger.SwaggerBundleConfiguration
+import io.dropwizard.Application
+import io.dropwizard.ConfiguredBundle
 import io.dropwizard.auth.AuthDynamicFeature
 import io.dropwizard.auth.oauth.OAuthCredentialAuthFilter
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor
 import io.dropwizard.configuration.SubstitutingSourceProvider
-import io.dropwizard.core.Application
-import io.dropwizard.core.setup.Bootstrap
-import io.dropwizard.core.setup.Environment
 import io.dropwizard.jdbi3.bundles.JdbiExceptionsBundle
+import io.dropwizard.jobs.JobsBundle
+import io.dropwizard.setup.Bootstrap
+import io.dropwizard.setup.Environment
 import org.apache.commons.lang3.StringUtils
 import org.litote.kmongo.KMongo
 import org.litote.kmongo.getCollection
@@ -33,9 +37,12 @@ import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.filters.JSONPrettyPrintFilter
 import nl.knaw.huc.annorepo.health.MongoDbHealthCheck
 import nl.knaw.huc.annorepo.health.ServerHealthCheck
+import nl.knaw.huc.annorepo.jobs.ExpiredTasksCleanerJob
 import nl.knaw.huc.annorepo.resources.*
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
+import nl.knaw.huc.annorepo.resources.tools.SearchManager
 import nl.knaw.huc.annorepo.service.LocalDateTimeSerializer
+import nl.knaw.huc.annorepo.service.UriFactory
 import nl.knaw.huc.annorepo.tasks.RecalculateFieldCountTask
 import nl.knaw.huc.annorepo.tasks.UpdateTask
 
@@ -48,15 +55,22 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         bootstrap.configurationSourceProvider = SubstitutingSourceProvider(
             bootstrap.configurationSourceProvider, EnvironmentVariableSubstitutor()
         )
-//        bootstrap.addBundle(getSwaggerBundle())
+        bootstrap.addBundle(getSwaggerBundle())
         bootstrap.addBundle(JdbiExceptionsBundle())
+        bootstrap.addBundle(getJobsBundle())
         bootstrap.addCommand(EnvCommand())
     }
 
-//    private fun getSwaggerBundle() = object : SwaggerBundle<AnnoRepoConfiguration>() {
-//        override fun getSwaggerBundleConfiguration(configuration: AnnoRepoConfiguration): SwaggerBundleConfiguration =
-//            configuration.swaggerBundleConfiguration
-//    }
+    private fun getSwaggerBundle(): SwaggerBundle<AnnoRepoConfiguration> =
+        object : SwaggerBundle<AnnoRepoConfiguration>() {
+            override fun getSwaggerBundleConfiguration(configuration: AnnoRepoConfiguration): SwaggerBundleConfiguration =
+                configuration.swaggerBundleConfiguration
+        }
+
+    private fun getJobsBundle(): ConfiguredBundle<in AnnoRepoConfiguration?> {
+        val expiredTasksCleanerJob = ExpiredTasksCleanerJob()
+        return JobsBundle(expiredTasksCleanerJob)
+    }
 
     override fun run(configuration: AnnoRepoConfiguration?, environment: Environment) {
         log.info(
@@ -76,11 +90,22 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         val userDAO = ARUserDAO(configuration, mongoClient)
         val containerUserDAO = ARContainerUserDAO(configuration, mongoClient)
         val containerAccessChecker = ContainerAccessChecker(containerUserDAO)
+        val searchManager = SearchManager(client = mongoClient, configuration = configuration)
+        val uriFactory = UriFactory(configuration)
         environment.jersey().apply {
             register(AboutResource(configuration, name, appVersion))
             register(HomePageResource())
-            register(W3CResource(configuration, mongoClient, containerUserDAO))
-            register(ServiceResource(configuration, mongoClient, containerUserDAO))
+            register(W3CResource(configuration, mongoClient, containerUserDAO, uriFactory))
+            register(ContainerServiceResource(configuration, mongoClient, containerUserDAO, uriFactory))
+            register(
+                GlobalServiceResource(
+                    configuration,
+                    mongoClient,
+                    containerUserDAO,
+                    searchManager,
+                    uriFactory
+                )
+            )
             register(BatchResource(configuration, mongoClient, containerAccessChecker))
             if (configuration.prettyPrint) {
                 register(JSONPrettyPrintFilter())
@@ -97,8 +122,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
                     )
                 )
             }
-            register(ListResource(configuration, mongoClient))
-//            register(RuntimeExceptionMapper())
+//            register(ListResource(configuration, mongoClient, uriFactory))
         }
         environment.healthChecks().apply {
             register("server", ServerHealthCheck())

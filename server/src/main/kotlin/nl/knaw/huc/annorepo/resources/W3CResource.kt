@@ -3,24 +3,25 @@ package nl.knaw.huc.annorepo.resources
 import java.io.StringReader
 import java.time.Instant
 import java.util.*
-import jakarta.annotation.security.PermitAll
+import javax.annotation.security.PermitAll
+import javax.ws.rs.BadRequestException
+import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.Context
+import javax.ws.rs.core.EntityTag
+import javax.ws.rs.core.MediaType.APPLICATION_JSON
+import javax.ws.rs.core.Request
+import javax.ws.rs.core.Response
+import javax.ws.rs.core.SecurityContext
 import jakarta.json.Json
-import jakarta.ws.rs.Consumes
-import jakarta.ws.rs.DELETE
-import jakarta.ws.rs.GET
-import jakarta.ws.rs.HeaderParam
-import jakarta.ws.rs.POST
-import jakarta.ws.rs.PUT
-import jakarta.ws.rs.Path
-import jakarta.ws.rs.PathParam
-import jakarta.ws.rs.Produces
-import jakarta.ws.rs.QueryParam
-import jakarta.ws.rs.core.Context
-import jakarta.ws.rs.core.EntityTag
-import jakarta.ws.rs.core.MediaType.APPLICATION_JSON
-import jakarta.ws.rs.core.Request
-import jakarta.ws.rs.core.Response
-import jakarta.ws.rs.core.SecurityContext
 import kotlin.collections.set
 import kotlin.math.abs
 import com.codahale.metrics.annotation.Timed
@@ -31,7 +32,9 @@ import com.mongodb.client.model.Filters.eq
 import com.mongodb.client.model.ReplaceOptions
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import org.bson.BSONException
 import org.bson.Document
+import org.bson.json.JsonParseException
 import org.litote.kmongo.*
 import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.*
@@ -60,10 +63,10 @@ class W3CResource(
     private val configuration: AnnoRepoConfiguration,
     client: MongoClient,
     private val containerUserDAO: ContainerUserDAO,
+    private val uriFactory: UriFactory,
 ) : AbstractContainerResource(configuration, client, ContainerAccessChecker(containerUserDAO)) {
 
     private val log = LoggerFactory.getLogger(javaClass)
-    private val uriFactory = UriFactory(configuration)
 
     @Operation(description = "Create an Annotation Container")
     @Timed
@@ -192,7 +195,6 @@ class W3CResource(
         annotationJson: String,
         @Context context: SecurityContext,
     ): Response {
-//        log.debug("annotation=\n$annotationJson")
         checkUserHasEditRightsInThisContainer(context, containerName)
 
         var name = slug ?: UUID.randomUUID().toString()
@@ -205,31 +207,43 @@ class W3CResource(
             )
             name = UUID.randomUUID().toString()
         }
-        val annotationDocument = Document.parse(annotationJson)
-        val fields = JsonLdUtils.extractFields(annotationJson)
-        updateFieldCount(containerName, fields, emptySet())
-        val doc = Document(ANNOTATION_NAME_FIELD, name)
-            .append(ANNOTATION_FIELD, annotationDocument)
-        val r = container.insertOne(doc).insertedId?.asObjectId()?.value
+        try {
+            val annotationDocument = Document.parse(annotationJson)
+            val fields = JsonLdUtils.extractFields(annotationJson)
+            updateFieldCount(containerName, fields, emptySet())
+            val doc = Document(ANNOTATION_NAME_FIELD, name)
+                .append(ANNOTATION_FIELD, annotationDocument)
+            val r = container.insertOne(doc).insertedId?.asObjectId()?.value
 
-        val annotationData = AnnotationData(
-            r!!.timestamp.toLong(),
-            name,
-            doc.getEmbedded(listOf(ANNOTATION_FIELD), Document::class.java).toJson(),
-            Date.from(Instant.now()),
-            Date.from(Instant.now())
-        )
-        val uri = uriFactory.annotationURL(containerName, name)
-        val eTag = makeAnnotationETag(containerName, name)
-        val entity = annotationData.contentWithAssignedId(containerName, name)
-        return Response.created(uri)
-            .header("Vary", "Accept")
-            .allow("POST", "PUT", "GET", "DELETE", "OPTIONS", "HEAD")
-            .link(RESOURCE_LINK, "type")
-            .link(ANNOTATION_LINK, "type")
-            .tag(eTag)
-            .entity(entity)
-            .build()
+            val annotationData = AnnotationData(
+                r!!.timestamp.toLong(),
+                name,
+                doc.getEmbedded(listOf(ANNOTATION_FIELD), Document::class.java).toJson(),
+                Date.from(Instant.now()),
+                Date.from(Instant.now())
+            )
+            val uri = uriFactory.annotationURL(containerName, name)
+            val eTag = makeAnnotationETag(containerName, name)
+            val entity = annotationData.contentWithAssignedId(containerName, name)
+            return Response.created(uri)
+                .header("Vary", "Accept")
+                .allow("POST", "PUT", "GET", "DELETE", "OPTIONS", "HEAD")
+                .link(RESOURCE_LINK, "type")
+                .link(ANNOTATION_LINK, "type")
+                .tag(eTag)
+                .entity(entity)
+                .build()
+        } catch (e: BSONException) {
+            throw BadRequestException(jsonParseExceptionMessage(annotationJson, e))
+        } catch (e: JsonParseException) {
+            throw BadRequestException(jsonParseExceptionMessage(annotationJson, e))
+        }
+    }
+
+    private fun jsonParseExceptionMessage(annotationJson: String, e: RuntimeException): String {
+        log.error("json parsing error for input:\n{}\n", annotationJson)
+        log.error("error:\n{}", e)
+        return "The given json does not parse: '$annotationJson'"
     }
 
     @Operation(description = "Get an Annotation")
