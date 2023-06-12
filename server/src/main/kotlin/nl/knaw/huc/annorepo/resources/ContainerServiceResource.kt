@@ -36,6 +36,8 @@ import com.mongodb.client.model.IndexOptions
 import com.mongodb.client.model.Indexes
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import org.bson.BsonType
+import org.bson.BsonValue
 import org.bson.Document
 import org.litote.kmongo.findOne
 import org.litote.kmongo.getCollection
@@ -46,6 +48,7 @@ import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.ResourcePaths.CONTAINER_SERVICES
+import nl.knaw.huc.annorepo.api.ResourcePaths.DISTINCT_FIELD_VALUES
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
 import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
@@ -231,6 +234,23 @@ class ContainerServiceResource(
         return Response.ok(containerMetadata.fieldCounts.toSortedMap()).build()
     }
 
+    @Operation(description = "Get a list of the fields used in the annotations in a container")
+    @Timed
+    @GET
+    @Path("{containerName}/$DISTINCT_FIELD_VALUES/{field}")
+    fun getDistinctAnnotationFieldsValuesForContainer(
+        @PathParam("containerName") containerName: String,
+        @PathParam("field") field: String,
+        @Context context: SecurityContext,
+    ): Response {
+        checkUserHasReadRightsInThisContainer(context, containerName)
+        val distinctValues =
+            mdb.getCollection(containerName).distinct("$ANNOTATION_FIELD.$field", BsonValue::class.java)
+                .map { it.toPrimitive() }
+                .toList()
+        return Response.ok(distinctValues).build()
+    }
+
     @Operation(description = "Get some container metadata")
     @Timed
     @GET
@@ -410,14 +430,28 @@ class ContainerServiceResource(
     private fun searchPageUri(searchUri: URI, page: Int) =
         UriBuilder.fromUri(searchUri).queryParam("page", page).build().toString()
 
-    private fun toAnnotationMap(a: Document, containerName: String): Map<String, Any> =
-        a.get(ANNOTATION_FIELD, Document::class.java)
+    private fun toAnnotationMap(document: Document, containerName: String): Map<String, Any> =
+        document[ANNOTATION_FIELD, Document::class.java]
             .toMutableMap()
             .apply<MutableMap<String, Any>> {
                 put(
-                    "id", uriFactory.annotationURL(containerName, a.getString(ANNOTATION_NAME_FIELD))
+                    "id", uriFactory.annotationURL(containerName, document.getString(ANNOTATION_NAME_FIELD))
                 )
             }
+}
+
+private fun BsonValue.toPrimitive(): Any? {
+    return when (this.bsonType) {
+        BsonType.BOOLEAN -> this.asBoolean().value
+        BsonType.DATE_TIME -> this.asDateTime().value
+        BsonType.DECIMAL128 -> this.asDecimal128().value
+        BsonType.DOUBLE -> this.asDouble().value
+        BsonType.INT32 -> this.asInt32().value
+        BsonType.INT64 -> this.asInt64().value
+        BsonType.STRING -> this.asString().value
+        BsonType.TIMESTAMP -> this.asTimestamp().value
+        else -> this
+    }
 }
 
 

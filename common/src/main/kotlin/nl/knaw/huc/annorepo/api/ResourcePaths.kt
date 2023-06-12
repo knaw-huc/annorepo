@@ -20,4 +20,5 @@ object ResourcePaths {
     const val SEARCH = "search"
     const val STATUS = "status"
     const val METADATA = "metadata"
+    const val DISTINCT_FIELD_VALUES = "distinct-values"
 }
