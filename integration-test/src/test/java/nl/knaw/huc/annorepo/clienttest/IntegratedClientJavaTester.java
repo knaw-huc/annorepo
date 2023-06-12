@@ -537,7 +537,7 @@ public class IntegratedClientJavaTester {
     }
 
     @Nested
-    class FieldInfoTests {
+    class FieldTests {
         @Test
         void testFieldInfo() {
             String containerName = "volume-1728";
@@ -549,6 +549,24 @@ public class IntegratedClientJavaTester {
                     result -> {
                         Map<String, Integer> fieldInfo = result.getFieldInfo();
                         doSomethingWith(fieldInfo);
+                        return true;
+                    }
+            );
+            assertThat(success).isTrue();
+        }
+
+        @Test
+        void testDistinctFieldValues() {
+            String containerName = "volume-1728";
+            String fieldName = "body.type";
+            Boolean success = client.getDistinctFieldValues(containerName, fieldName).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    result -> {
+                        List<Object> distinctValues = result.getDistinctValues();
+                        doSomethingWith(distinctValues);
                         return true;
                     }
             );

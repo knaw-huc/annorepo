@@ -1261,6 +1261,33 @@ a `body.id` field.
 
 ---
 
+### Get Distinct Annotation Field Values (🔒)
+
+This endpoint will list the distinct values for the given annotation field in the given container.
+
+#### Request
+
+```
+GET http://localhost:8080/services/{containerName}/distinct-values/{fieldName} HTTP/1.1
+```
+
+#### Response
+
+```
+HTTP/1.1 200 OK
+
+Content-Type: application/json
+Vary: Accept-Encoding
+
+[
+  value1,
+  value2
+]
+
+```
+
+---
+
 ## OpenAPI
 
 AnnoRepo provides an [openapi](https://www.openapis.org/) API definition via [swagger](https://swagger.io/)
