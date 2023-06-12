@@ -27,6 +27,7 @@ import nl.knaw.huc.annorepo.api.ResourcePaths.ABOUT
 import nl.knaw.huc.annorepo.api.ResourcePaths.ADMIN
 import nl.knaw.huc.annorepo.api.ResourcePaths.BATCH
 import nl.knaw.huc.annorepo.api.ResourcePaths.CONTAINER_SERVICES
+import nl.knaw.huc.annorepo.api.ResourcePaths.DISTINCT_FIELD_VALUES
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
 import nl.knaw.huc.annorepo.api.ResourcePaths.GLOBAL_SERVICES
 import nl.knaw.huc.annorepo.api.ResourcePaths.INDEXES
@@ -54,6 +55,7 @@ import nl.knaw.huc.annorepo.client.ARResult.DeleteContainerResult
 import nl.knaw.huc.annorepo.client.ARResult.DeleteContainerUserResult
 import nl.knaw.huc.annorepo.client.ARResult.DeleteIndexResult
 import nl.knaw.huc.annorepo.client.ARResult.DeleteUserResult
+import nl.knaw.huc.annorepo.client.ARResult.DistinctAnnotationFieldValuesResult
 import nl.knaw.huc.annorepo.client.ARResult.GetAboutResult
 import nl.knaw.huc.annorepo.client.ARResult.GetAnnotationResult
 import nl.knaw.huc.annorepo.client.ARResult.GetContainerMetadataResult
@@ -327,6 +329,29 @@ class AnnoRepoClient @JvmOverloads constructor(
             Either.Right(
                 AnnotationFieldInfoResult(
                     response = response, fieldInfo = oMapper.readValue(json)
+                )
+            )
+        })
+    )
+
+    /**
+     * Get distinct field values
+     *
+     * @param containerName
+     * @param fieldName
+     * @return
+     */
+    fun getDistinctFieldValues(
+        containerName: String,
+        fieldName: String
+    ): Either<RequestError, DistinctAnnotationFieldValuesResult> = doGet(
+        request = webTarget.path(CONTAINER_SERVICES).path(containerName).path(DISTINCT_FIELD_VALUES).path(fieldName)
+            .request(),
+        responseHandlers = mapOf(Response.Status.OK to { response ->
+            val json = response.readEntityAsJsonString()
+            Either.Right(
+                DistinctAnnotationFieldValuesResult(
+                    response = response, distinctValues = oMapper.readValue(json)
                 )
             )
         })

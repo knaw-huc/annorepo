@@ -76,6 +76,11 @@ sealed class ARResult {
         val fieldInfo: Map<String, Int>,
     ) : ARResult()
 
+    data class DistinctAnnotationFieldValuesResult(
+        override val response: Response,
+        val distinctValues: List<Any?>,
+    ) : ARResult()
+
     data class BatchUploadResult(
         override val response: Response,
         val annotationData: List<AnnotationIdentifier>,
