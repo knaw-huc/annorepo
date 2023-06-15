@@ -131,61 +131,85 @@ class IntegratedClientKotlinTester {
     @Nested
     inner class AnnotationTests {
         @Test
-        fun testCreateAnnotation() {
+        fun testAnnotationCRUD() {
             val containerName = "my-container"
             val annotation = WebAnnotation.Builder().withBody("http://example.org/annotation1")
                 .withTarget("http://example.org/target").build()
-            client.createAnnotation(containerName, annotation).fold({ error: RequestError ->
-                handleError(error)
-                false
-            }) { (_, location, _, annotationName, eTag): CreateAnnotationResult ->
-                doSomethingWith(annotationName, location, eTag)
-                true
-            }
+
+            // Create
+            client.createAnnotation(containerName, annotation).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    false
+                },
+                { (_, location, _, annotationName, eTag): CreateAnnotationResult ->
+                    continueWithRead(annotationName, location, eTag, containerName)
+                    true
+                })
         }
 
-        @Test
-        fun testReadAnnotation() {
-            val containerName = "my-container"
-            val annotationName = "my-annotation"
-            client.getAnnotation(containerName, annotationName).fold({ error: RequestError ->
-                handleError(error)
-                false
-            }) { (_, eTag, annotation): GetAnnotationResult ->
-                doSomethingWith(annotation, eTag)
-                true
-            }
+        private fun continueWithRead(
+            annotationName: String,
+            location: URI,
+            eTag: String,
+            containerName: String
+        ) {
+            doSomethingWith(annotationName, location, eTag)
+
+            // Read
+            client.getAnnotation(containerName, annotationName).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    false
+                },
+                { (_, eTag, annotation): GetAnnotationResult ->
+                    continueWithUpdate(annotation, eTag, containerName, annotationName)
+                })
         }
 
-        @Test
-        fun testUpdateAnnotation() {
-            val containerName = "my-container"
-            val annotationName = "my-annotation"
-            val eTag = "abcde"
+        private fun continueWithUpdate(
+            annotation: Map<String, Any>,
+            eTag: String,
+            containerName: String,
+            annotationName: String
+        ): Boolean {
+            doSomethingWith(annotation, eTag)
+
+            // Update
             val updatedAnnotation = WebAnnotation.Builder().withBody("http://example.org/annotation2")
                 .withTarget("http://example.org/target").build()
             client.updateAnnotation(containerName, annotationName, eTag, updatedAnnotation)
-                .fold({ error: RequestError ->
-                    handleError(error)
-                    false
-                }) { (_, location, _, _, newETag): CreateAnnotationResult ->
-                    doSomethingWith(annotationName, location, newETag)
-                    true
-                }
+                .fold(
+                    { error: RequestError ->
+                        handleError(error)
+                        false
+                    },
+                    { (_, location, _, _, newETag): CreateAnnotationResult ->
+                        continueWithDelete(annotationName, location, newETag, containerName, eTag)
+                    })
+            return true
         }
 
-        @Test
-        fun testDeleteAnnotation() {
-            val containerName = "my-container"
-            val annotationName = "my-annotation"
-            val eTag = "abcdefg"
-            val success = client.deleteAnnotation(containerName, annotationName, eTag).fold({ error: RequestError ->
-                handleError(error)
-                false
-            }, { _: DeleteAnnotationResult -> true })
+        private fun continueWithDelete(
+            annotationName: String,
+            location: URI,
+            newETag: String,
+            containerName: String,
+            eTag: String
+        ): Boolean {
+            doSomethingWith(annotationName, location, newETag)
+            // Delete
+            val success = client.deleteAnnotation(containerName, annotationName, eTag)
+                .fold(
+                    { error: RequestError ->
+                        handleError(error)
+                        false
+                    },
+                    { _: DeleteAnnotationResult -> true })
             assertThat(success).isTrue
-
+            return true
         }
+
 
         @Test
         fun testBatchUpload() {
@@ -210,7 +234,7 @@ class IntegratedClientKotlinTester {
     inner class SearchTests {
         @Test
         fun testFilterContainerAnnotations() {
-            val containerName = "volume-1728"
+            val containerName = "republic"
             val query = mapOf("body.type" to "Page")
             client.filterContainerAnnotations(containerName, query).fold({ error: RequestError -> handleError(error) },
                 { (searchId, annotations): FilterContainerAnnotationsResult ->
@@ -223,7 +247,7 @@ class IntegratedClientKotlinTester {
 
         @Test
         fun testFilterContainerAnnotations2() {
-            val containerName = "volume-1728"
+            val containerName = "republic"
             val query = mapOf("body.type" to "Page")
 
             val e: Either<RequestError, List<String>> =
@@ -240,31 +264,37 @@ class IntegratedClientKotlinTester {
         @Test
         fun testCreateGlobalSearch() {
             val query = mapOf("body.type" to "Page")
-            val success = client.createGlobalSearch(query = query).fold({ error: RequestError ->
-                handleError(error)
-                false
-            }, { (_, location, queryId): CreateSearchResult ->
-                doSomethingWith(location, queryId)
-                true
-            })
+            val success = client.createGlobalSearch(query = query).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    false
+                },
+                { (_, location, queryId): CreateSearchResult ->
+                    doSomethingWith(location, queryId)
+                    true
+                })
             assertThat(success).isTrue()
         }
 
         @Test
         fun testGetGlobalSearchStatus() {
             val query = mapOf("body.type" to "Page")
-            val optionalQueryId = client.createGlobalSearch(query = query).fold({ error: RequestError ->
-                handleError(error)
-                null
-            }, { (_, _, queryId): CreateSearchResult -> queryId })
-            optionalQueryId?.apply {
-                val success = client.getGlobalSearchStatus(queryId = this).fold({ error: RequestError ->
+            val optionalQueryId = client.createGlobalSearch(query = query).fold(
+                { error: RequestError ->
                     handleError(error)
-                    false
-                }, { (_, searchStatus): GetGlobalSearchStatusResult ->
-                    doSomethingWith(searchStatus)
-                    true
-                })
+                    null
+                },
+                { (_, _, queryId): CreateSearchResult -> queryId })
+            optionalQueryId?.apply {
+                val success = client.getGlobalSearchStatus(queryId = this).fold(
+                    { error: RequestError ->
+                        handleError(error)
+                        false
+                    },
+                    { (_, searchStatus): GetGlobalSearchStatusResult ->
+                        doSomethingWith(searchStatus)
+                        true
+                    })
                 assertThat(success).isTrue()
             }
         }
@@ -292,35 +322,40 @@ class IntegratedClientKotlinTester {
     @Nested
     inner class IndexTests {
         @Test
-        fun testIndexCreation() {
-            val containerName = "volume-1728"
+        fun testIndexCRUD() {
+            val containerName = "republic"
             val fieldName = "body.type"
             val indexType = IndexType.HASHED
-            val success = client.addIndex(containerName, fieldName, indexType).fold({ error: RequestError ->
+
+            // create
+            val create_success = client.addIndex(containerName, fieldName, indexType).fold({ error: RequestError ->
                 handleError(error)
                 false
             }, { _: AddIndexResult -> true })
-            assertThat(success).isTrue
-        }
+            assertThat(create_success).isTrue
 
-        @Test
-        fun testGetIndex() {
-            val containerName = "volume-1728"
-            val fieldName = "body.type"
-            val indexType = IndexType.HASHED
-            val success = client.getIndex(containerName, fieldName, indexType).fold({ error: RequestError ->
+            // read
+            val read_success = client.getIndex(containerName, fieldName, indexType).fold({ error: RequestError ->
                 handleError(error)
                 false
             }, { (_, indexConfig): GetIndexResult ->
                 doSomethingWith(indexConfig)
                 true
             })
-            assertThat(success).isTrue
+            assertThat(read_success).isTrue
+
+            // delete
+            val delete_success = client.deleteIndex(containerName, fieldName, indexType).fold({ error: RequestError ->
+                handleError(error)
+                false
+            }, { _: DeleteIndexResult -> true })
+            assertThat(delete_success).isTrue
         }
+
 
         @Test
         fun testListIndexes() {
-            val containerName = "volume-1728"
+            val containerName = "republic"
             val success = client.listIndexes(containerName).fold({ error: RequestError ->
                 handleError(error)
                 false
@@ -331,17 +366,6 @@ class IntegratedClientKotlinTester {
             assertThat(success).isTrue
         }
 
-        @Test
-        fun testDeleteIndex() {
-            val containerName = "volume-1728"
-            val fieldName = "body.type"
-            val indexType = IndexType.HASHED
-            val success = client.deleteIndex(containerName, fieldName, indexType).fold({ error: RequestError ->
-                handleError(error)
-                false
-            }, { _: DeleteIndexResult -> true })
-            assertThat(success).isTrue
-        }
     }
 
     @Nested

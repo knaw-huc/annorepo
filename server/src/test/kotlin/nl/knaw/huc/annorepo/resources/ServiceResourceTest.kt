@@ -1,30 +1,30 @@
 package nl.knaw.huc.annorepo.resources
 
-import java.net.URI
-import java.security.Principal
-import jakarta.ws.rs.NotAuthorizedException
-import jakarta.ws.rs.core.SecurityContext
-import kotlin.test.assertNotNull
-import org.junit.jupiter.api.Assertions.fail
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import com.mongodb.client.*
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.junit5.MockKExtension
-import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
-import org.bson.Document
-import org.slf4j.LoggerFactory
+import jakarta.ws.rs.NotAuthorizedException
+import jakarta.ws.rs.core.SecurityContext
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.service.UriFactory
+import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
+import org.bson.Document
+import org.junit.jupiter.api.Assertions.fail
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
+import org.slf4j.LoggerFactory
+import java.net.URI
+import java.security.Principal
+import kotlin.test.assertNotNull
 
 @ExtendWith(MockKExtension::class)
 class ServiceResourceTest {
@@ -368,6 +368,5 @@ class ServiceResourceTest {
                 }
             }
         }
-
     }
 }

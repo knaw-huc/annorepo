@@ -1,29 +1,25 @@
 package nl.knaw.huc.annorepo.resources
 
-import java.net.URI
-import java.util.*
+import com.codahale.metrics.annotation.Timed
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.mongodb.client.MongoClient
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import jakarta.annotation.security.PermitAll
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.*
 import jakarta.ws.rs.core.MediaType.APPLICATION_JSON
-import kotlin.math.min
-import com.codahale.metrics.annotation.Timed
-import com.mongodb.client.MongoClient
-import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.security.SecurityRequirement
-import org.apache.jena.atlas.json.JSON
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.*
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.ResourcePaths.GLOBAL_SERVICES
 import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
-import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
-import nl.knaw.huc.annorepo.resources.tools.AnnotationList
-import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
-import nl.knaw.huc.annorepo.resources.tools.SearchManager
-import nl.knaw.huc.annorepo.resources.tools.SearchTask
+import nl.knaw.huc.annorepo.resources.tools.*
 import nl.knaw.huc.annorepo.service.UriFactory
+import org.slf4j.LoggerFactory
+import java.net.URI
+import java.util.*
+import kotlin.math.min
 
 @Path(GLOBAL_SERVICES)
 @Produces(APPLICATION_JSON)
@@ -50,26 +46,27 @@ class GlobalServiceResource(
         queryJson: String,
         @Context context: SecurityContext,
     ): Response {
-        val queryMap = JSON.parse(queryJson)
-        if (queryMap !is HashMap<*, *>) {
-            throw BadRequestException()
-        }
+        try {
+            val queryMap = ObjectMapper().readValue(queryJson, HashMap::class.java)
 
-        val aggregateStages =
-            queryMap.toMap().map { (k, v) -> aggregateStageGenerator.generateStage(k, v) }.toList()
-        val containerNames = accessibleContainers(context.userPrincipal.name)
-        val task: SearchTask =
-            searchManager.startGlobalSearch(
-                containerNames = containerNames,
-                queryMap = queryMap,
-                aggregateStages = aggregateStages
-            )
-        val id = task.id
-        val location = uriFactory.globalSearchURL(id)
-        return Response.created(location)
-            .link(uriFactory.globalSearchStatusURL(id), "status")
-            .entity(task.status.summary())
-            .build()
+            val aggregateStages =
+                queryMap.toMap().map { (k, v) -> aggregateStageGenerator.generateStage(k, v) }.toList()
+            val containerNames = accessibleContainers(context.userPrincipal.name)
+            val task: SearchTask =
+                searchManager.startGlobalSearch(
+                    containerNames = containerNames,
+                    queryMap = queryMap,
+                    aggregateStages = aggregateStages
+                )
+            val id = task.id
+            val location = uriFactory.globalSearchURL(id)
+            return Response.created(location)
+                .link(uriFactory.globalSearchStatusURL(id), "status")
+                .entity(task.status.summary())
+                .build()
+        } catch (e: Exception) {
+            throw BadRequestException(e.message)
+        }
     }
 
     @Operation(description = "Get the given global search result page")
