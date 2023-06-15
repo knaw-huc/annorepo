@@ -1,41 +1,16 @@
-import java.net.URI
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
 import arrow.core.Either
 import arrow.core.Either.Right
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.assertj.core.api.Assertions.assertThat
-import org.slf4j.LoggerFactory
-import nl.knaw.huc.annorepo.api.ContainerUserEntry
-import nl.knaw.huc.annorepo.api.IndexType
-import nl.knaw.huc.annorepo.api.Role
-import nl.knaw.huc.annorepo.api.UserEntry
-import nl.knaw.huc.annorepo.api.WebAnnotation
-import nl.knaw.huc.annorepo.client.ARResult
-import nl.knaw.huc.annorepo.client.ARResult.AddIndexResult
-import nl.knaw.huc.annorepo.client.ARResult.AddUsersResult
-import nl.knaw.huc.annorepo.client.ARResult.AnnotationFieldInfoResult
-import nl.knaw.huc.annorepo.client.ARResult.BatchUploadResult
-import nl.knaw.huc.annorepo.client.ARResult.ContainerUsersResult
-import nl.knaw.huc.annorepo.client.ARResult.CreateAnnotationResult
-import nl.knaw.huc.annorepo.client.ARResult.CreateContainerResult
-import nl.knaw.huc.annorepo.client.ARResult.CreateSearchResult
-import nl.knaw.huc.annorepo.client.ARResult.DeleteAnnotationResult
-import nl.knaw.huc.annorepo.client.ARResult.DeleteContainerResult
-import nl.knaw.huc.annorepo.client.ARResult.DeleteIndexResult
-import nl.knaw.huc.annorepo.client.ARResult.GetAnnotationResult
-import nl.knaw.huc.annorepo.client.ARResult.GetContainerResult
-import nl.knaw.huc.annorepo.client.ARResult.GetGlobalSearchStatusResult
-import nl.knaw.huc.annorepo.client.ARResult.GetIndexResult
-import nl.knaw.huc.annorepo.client.ARResult.GetSearchResultPageResult
-import nl.knaw.huc.annorepo.client.ARResult.ListIndexesResult
-import nl.knaw.huc.annorepo.client.ARResult.UsersResult
-import nl.knaw.huc.annorepo.client.AnnoRepoClient
+import nl.knaw.huc.annorepo.api.*
+import nl.knaw.huc.annorepo.client.*
+import nl.knaw.huc.annorepo.client.ARResult.*
 import nl.knaw.huc.annorepo.client.AnnoRepoClient.Companion.create
-import nl.knaw.huc.annorepo.client.FilterContainerAnnotationsResult
-import nl.knaw.huc.annorepo.client.RequestError
-import nl.knaw.huc.annorepo.client.untangled
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import org.slf4j.LoggerFactory
+import java.net.URI
 
 class IntegratedClientKotlinTester {
     //    Intentionally not named ClientTest, so mvn test will skip these integration tests
@@ -432,7 +407,7 @@ class IntegratedClientKotlinTester {
     inner class ContainerUsersTests {
         @Test
         fun testAddingContainerUsers() {
-            val containerName = "republic-1728"
+            val containerName = "republic"
             val newUserName = "user1"
             client.getContainerUsers(containerName).fold({ error: RequestError ->
                 handleError(error)
@@ -512,14 +487,14 @@ class IntegratedClientKotlinTester {
     }
 
     companion object {
-        const val BASE_URL = "http://localhost:9000"
+        const val BASE_URL = "http://localhost:2023"
         val BASE_URI: URI = URI.create(BASE_URL)
         private const val apiKey = "root"
         val client = AnnoRepoClient(BASE_URI, apiKey, "integrated-client-tester")
         private val log = LoggerFactory.getLogger(IntegratedClientKotlinTester::class.java)
 
         private fun handleError(error: RequestError) {
-//            println(error.message)
+            println(error)
             throw RuntimeException(error.message)
         }
 

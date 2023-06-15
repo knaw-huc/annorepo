@@ -1,7 +1,7 @@
 package nl.knaw.huc.annorepo.api
 
 import java.net.URI
-import java.util.Date
+import java.util.*
 
 data class RejectedUserEntry(
     val userEntry: Map<String, String>,
@@ -25,7 +25,7 @@ data class AboutInfo(
 data class AnnotationIdentifier(
     val annotationName: String,
     val containerName: String,
-    val eTag: String,
+    val etag: String, // don't change this to eTag!
 )
 
 data class IndexConfig(
