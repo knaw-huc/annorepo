@@ -2,7 +2,7 @@ package nl.knaw.huc.annorepo.client
 
 import java.net.URI
 import java.util.stream.Stream
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import arrow.core.Either
 import nl.knaw.huc.annorepo.api.AboutInfo
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
@@ -74,6 +74,11 @@ sealed class ARResult {
     data class AnnotationFieldInfoResult(
         override val response: Response,
         val fieldInfo: Map<String, Int>,
+    ) : ARResult()
+
+    data class DistinctAnnotationFieldValuesResult(
+        override val response: Response,
+        val distinctValues: List<Any?>,
     ) : ARResult()
 
     data class BatchUploadResult(

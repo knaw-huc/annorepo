@@ -1,12 +1,27 @@
 package nl.knaw.huc.annorepo.resources
 
+import java.io.StringReader
 import java.time.Instant
 import java.util.*
-import javax.annotation.security.PermitAll
-import javax.ws.rs.*
-import javax.ws.rs.core.*
-import javax.ws.rs.core.MediaType.APPLICATION_JSON
-import kotlin.collections.get
+import jakarta.annotation.security.PermitAll
+import jakarta.json.Json
+import jakarta.ws.rs.BadRequestException
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.Context
+import jakarta.ws.rs.core.EntityTag
+import jakarta.ws.rs.core.MediaType.APPLICATION_JSON
+import jakarta.ws.rs.core.Request
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.SecurityContext
 import kotlin.collections.set
 import kotlin.math.abs
 import com.codahale.metrics.annotation.Timed
@@ -20,7 +35,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.bson.BSONException
 import org.bson.Document
 import org.bson.json.JsonParseException
-import org.eclipse.jetty.util.ajax.JSON
 import org.litote.kmongo.*
 import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.*
@@ -363,16 +377,13 @@ class W3CResource(
 
     private fun AnnotationData.contentWithAssignedId(
         containerName: String, annotationName: String,
-    ): Any? {
-        val assignedId = uriFactory.annotationURL(containerName, annotationName)
-        var jo = JSON.parse(content)
-        if (jo is HashMap<*, *>) {
-            jo = jo.toMutableMap()
-            val originalId = jo["id"]
-            jo["id"] = assignedId
-            if (originalId != null && originalId != assignedId) {
-                jo["via"] = originalId
-            }
+    ): Any {
+        val assignedId = uriFactory.annotationURL(containerName, annotationName).toString()
+        val jo = Json.createReader(StringReader(content!!)).readObject().toMutableMap()
+        val originalId = jo["id"]?.toString()
+        jo["id"] = Json.createValue(assignedId)
+        if (originalId != null && originalId != assignedId) {
+            jo["via"] = Json.createValue(originalId)
         }
         return jo
     }

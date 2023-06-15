@@ -1,7 +1,7 @@
 package nl.knaw.huc.annorepo.resources
 
-import javax.ws.rs.NotFoundException
-import javax.ws.rs.core.SecurityContext
+import jakarta.ws.rs.NotFoundException
+import jakarta.ws.rs.core.SecurityContext
 import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoDatabase
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration

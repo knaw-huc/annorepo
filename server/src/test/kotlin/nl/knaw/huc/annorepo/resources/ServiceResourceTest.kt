@@ -2,8 +2,8 @@ package nl.knaw.huc.annorepo.resources
 
 import java.net.URI
 import java.security.Principal
-import javax.ws.rs.NotAuthorizedException
-import javax.ws.rs.core.SecurityContext
+import jakarta.ws.rs.NotAuthorizedException
+import jakarta.ws.rs.core.SecurityContext
 import kotlin.test.assertNotNull
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.BeforeAll
@@ -162,6 +162,20 @@ class ServiceResourceTest {
                     authorizedRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR, Role.GUEST)
                 ) {
                     val response = resource.getAnnotationFieldsForContainer(containerName, securityContext)
+                    assertNotNull(response)
+                }
+            }
+        }
+
+        @Nested
+        inner class GetDistinctAnnotationFieldValuesForContainerTest {
+            @Test
+            fun `getDistinctAnnotationFieldsValuesForContainer endpoint can be used by root, admin, editor and guest, but not by others`() {
+                assertRoleAuthorizationForBlock(
+                    authorizedRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR, Role.GUEST)
+                ) {
+                    val response =
+                        resource.getDistinctAnnotationFieldsValuesForContainer(containerName, "type", securityContext)
                     assertNotNull(response)
                 }
             }
@@ -354,6 +368,5 @@ class ServiceResourceTest {
                 }
             }
         }
-
     }
 }

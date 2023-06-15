@@ -14,7 +14,7 @@ Add the following to your `pom.xml`
 <dependency>
     <groupId>io.github.knaw-huc</groupId>
     <artifactId>annorepo-client</artifactId>
-    <version>0.4.1-beta</version>
+    <version>0.5.0-beta</version>
 </dependency>
 ```
 
@@ -880,6 +880,37 @@ client.getFieldInfo(containerName).fold(
         result -> {
             Map<String, Integer> fieldInfo = result.getFieldInfo();
             doSomethingWith(fieldInfo);
+            return true;
+        }
+);
+```
+
+## Retrieving the distinct field values used in container annotations
+
+**Kotlin:**
+
+```kotlin
+val containerName = "volume-1728"
+client.getDistinctFieldValues(containerName, "body.type").fold(
+        { error: RequestError -> handleError(error) },
+        { (_, distinctValues): ARResult.DistinctAnnotationFieldValuesResult ->
+            doSomethingWith(distinctValues)
+        })
+```
+
+**Java**
+
+```java
+String containerName = "volume-1728";
+String fieldName = "body.type";
+Boolean success = client.getDistinctFieldValues(containerName, fieldName).fold(
+        (RequestError error) -> {
+            handleError(error);
+            return false;
+        },
+        result -> {
+            List<Object> distinctValues = result.getDistinctValues();
+            doSomethingWith(distinctValues);
             return true;
         }
 );

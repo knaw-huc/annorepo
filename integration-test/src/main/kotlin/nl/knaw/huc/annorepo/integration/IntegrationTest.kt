@@ -1,7 +1,10 @@
 package nl.knaw.huc.annorepo.integration
 
 import java.net.URI
-import javax.ws.rs.core.EntityTag
+import jakarta.ws.rs.core.EntityTag
+import kotlinx.cli.ArgParser
+import kotlinx.cli.ArgType
+import kotlinx.cli.required
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -9,9 +12,6 @@ import com.fasterxml.jackson.databind.ObjectWriter
 import com.github.ajalt.mordant.rendering.TextColors.*
 import com.github.ajalt.mordant.table.table
 import com.github.ajalt.mordant.terminal.Terminal
-import kotlinx.cli.ArgParser
-import kotlinx.cli.ArgType
-import kotlinx.cli.required
 import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.UserEntry
 import nl.knaw.huc.annorepo.client.ARResult
@@ -171,7 +171,7 @@ class IntegrationTest {
                     deleteAnnotation(
                         containerName = annotationData.containerName,
                         annotationName = annotationData.annotationName,
-                        eTag = EntityTag(annotationData.eTag, true).toString()
+                        eTag = EntityTag(annotationData.etag, true).value
                     ).thenAssertResult(t) {
                         annotationsDeleted += 1
                         true

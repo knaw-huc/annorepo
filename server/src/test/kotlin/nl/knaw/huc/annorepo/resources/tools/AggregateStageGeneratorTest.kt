@@ -1,6 +1,6 @@
 package nl.knaw.huc.annorepo.resources.tools
 
-import javax.ws.rs.BadRequestException
+import jakarta.ws.rs.BadRequestException
 import kotlin.test.fail
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith

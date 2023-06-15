@@ -1,7 +1,7 @@
 package nl.knaw.huc.annorepo.service
 
 import java.net.URI
-import javax.ws.rs.core.UriBuilder
+import jakarta.ws.rs.core.UriBuilder
 import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 

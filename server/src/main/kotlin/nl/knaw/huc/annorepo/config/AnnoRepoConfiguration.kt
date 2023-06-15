@@ -1,17 +1,14 @@
 package nl.knaw.huc.annorepo.config
 
-import javax.validation.Valid
-import javax.validation.constraints.NotNull
+import jakarta.validation.Valid
 import com.fasterxml.jackson.annotation.JsonProperty
-import `in`.vectorpro.dropwizard.swagger.SwaggerBundleConfiguration
-import io.dropwizard.Configuration
 import io.dropwizard.jobs.JobConfiguration
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
+import org.jetbrains.annotations.NotNull
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.resources.AboutResource
 
-open class AnnoRepoConfiguration : Configuration(), JobConfiguration {
-
-//    private val log = LoggerFactory.getLogger(javaClass)
+open class AnnoRepoConfiguration : JobConfiguration() {
 
     @Valid
     @NotNull

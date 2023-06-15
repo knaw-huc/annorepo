@@ -8,7 +8,7 @@
 
     <groupId>io.github.knaw-huc</groupId>
     <artifactId>annorepo</artifactId>
-    <version>0.4.1-beta</version>
+    <version>0.5.0-beta</version>
     <packaging>pom</packaging>
 
     <name>AnnoRepo</name>
@@ -36,17 +36,19 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <arrow-core.version>1.1.5</arrow-core.version>
-        <dropwizard.version>2.1.6</dropwizard.version>
-        <dropwizard-jobs.version>4.0.0-RELEASE</dropwizard-jobs.version>
         <dropwizard-swagger-ui.version>4.6.2</dropwizard-swagger-ui.version>
-        <dropwizard-swagger.version>2.0.28-1</dropwizard-swagger.version>
+        <dropwizard-swagger.version>4.0.0-1</dropwizard-swagger.version>
+        <dropwizard.version>4.0.0</dropwizard.version>
+        <dropwizard-jobs.version>5.1.0</dropwizard-jobs.version>
         <jackson-databind.version>2.13.4.1</jackson-databind.version>
         <jackson-module-kotlin.version>2.15.1</jackson-module-kotlin.version>
         <jackson-annotations.version>2.15.1</jackson-annotations.version>
         <jakarta.json.version>2.0.1</jakarta.json.version>
         <jakarta.ws.rs-api.version>3.1.0</jakarta.ws.rs-api.version>
+        <jaxb-api.version>2.3.1</jaxb-api.version>
         <jena.version>4.8.0</jena.version>
         <json.version>20230227</json.version>
+        <kmongo.version>4.8.0</kmongo.version>
         <kotlinx-cli-jvm.version>0.3.5</kotlinx-cli-jvm.version>
         <mongodb.version>4.9.0</mongodb.version>
         <mordant.version>2.0.0-beta11</mordant.version>
@@ -60,7 +62,7 @@
         <assertj-core.version>3.24.2</assertj-core.version>
         <h2.version>2.1.214</h2.version>
         <json-path.version>2.7.0</json-path.version>
-        <json-unit-assertj.version>2.36.1</json-unit-assertj.version>
+        <json-unit-assertj.version>2.37.0</json-unit-assertj.version>
         <junit-jupiter.version>5.9.2</junit-jupiter.version>
         <mockito-kotlin.version>4.1.0</mockito-kotlin.version>
         <mockito.version>5.1.1</mockito.version>
@@ -78,6 +80,7 @@
         <maven-surefire-plugin.version>3.1.0</maven-surefire-plugin.version>
         <nexus-staging-maven-plugin.version>1.6.13</nexus-staging-maven-plugin.version>
         <wagon-ssh.version>3.4.3</wagon-ssh.version>
+        <joda-time.version>2.12.5</joda-time.version>
     </properties>
 
     <dependencies>
