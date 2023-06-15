@@ -1,7 +1,7 @@
 package nl.knaw.huc.annorepo.api
 
 import java.net.URI
-import java.util.*
+import java.util.Date
 
 data class RejectedUserEntry(
     val userEntry: Map<String, String>,

@@ -1,14 +1,18 @@
 package nl.knaw.huc.annorepo.resources
 
+import java.net.URI
+import java.util.*
+import jakarta.annotation.security.PermitAll
+import jakarta.ws.rs.*
+import jakarta.ws.rs.core.*
+import jakarta.ws.rs.core.MediaType.APPLICATION_JSON
+import kotlin.math.min
 import com.codahale.metrics.annotation.Timed
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.mongodb.client.MongoClient
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
-import jakarta.annotation.security.PermitAll
-import jakarta.ws.rs.*
-import jakarta.ws.rs.core.*
-import jakarta.ws.rs.core.MediaType.APPLICATION_JSON
+import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.*
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.ResourcePaths.GLOBAL_SERVICES
@@ -16,10 +20,6 @@ import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.resources.tools.*
 import nl.knaw.huc.annorepo.service.UriFactory
-import org.slf4j.LoggerFactory
-import java.net.URI
-import java.util.*
-import kotlin.math.min
 
 @Path(GLOBAL_SERVICES)
 @Produces(APPLICATION_JSON)

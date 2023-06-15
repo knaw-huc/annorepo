@@ -62,7 +62,7 @@ class BatchResource(
                 AnnotationIdentifier(
                     containerName = containerName,
                     annotationName = annotationName,
-                    eTag = makeAnnotationETag(containerName, annotationName).value
+                    etag = makeAnnotationETag(containerName, annotationName).value
                 )
             )
         }

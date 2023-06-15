@@ -1,5 +1,10 @@
 package nl.knaw.huc.annorepo.integration
 
+import java.net.URI
+import jakarta.ws.rs.core.EntityTag
+import kotlinx.cli.ArgParser
+import kotlinx.cli.ArgType
+import kotlinx.cli.required
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -7,17 +12,12 @@ import com.fasterxml.jackson.databind.ObjectWriter
 import com.github.ajalt.mordant.rendering.TextColors.*
 import com.github.ajalt.mordant.table.table
 import com.github.ajalt.mordant.terminal.Terminal
-import jakarta.ws.rs.core.EntityTag
-import kotlinx.cli.ArgParser
-import kotlinx.cli.ArgType
-import kotlinx.cli.required
 import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.UserEntry
 import nl.knaw.huc.annorepo.client.ARResult
 import nl.knaw.huc.annorepo.client.AnnoRepoClient
 import nl.knaw.huc.annorepo.client.FilterContainerAnnotationsResult
 import nl.knaw.huc.annorepo.client.RequestError
-import java.net.URI
 
 class IntegrationTest {
     private val jsonWriter: ObjectWriter = ObjectMapper().writerWithDefaultPrettyPrinter()
