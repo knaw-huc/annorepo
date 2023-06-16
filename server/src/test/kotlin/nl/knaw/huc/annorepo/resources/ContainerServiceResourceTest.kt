@@ -27,7 +27,7 @@ import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.service.UriFactory
 
 @ExtendWith(MockKExtension::class)
-class ServiceResourceTest {
+class ContainerServiceResourceTest {
     @Nested
     inner class ContainerUserTest {
         @Nested
@@ -287,7 +287,7 @@ class ServiceResourceTest {
         lateinit var containerUserDAO: ContainerUserDAO
 
         private lateinit var resource: ContainerServiceResource
-        private val log = LoggerFactory.getLogger(ServiceResourceTest::class.java)
+        private val log = LoggerFactory.getLogger(ContainerServiceResourceTest::class.java)
 
         @BeforeAll
         @JvmStatic

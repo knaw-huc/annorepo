@@ -1,12 +1,13 @@
 package nl.knaw.huc.annorepo.resources.tools
 
 import jakarta.json.JsonNumber
+import jakarta.json.JsonString
 import jakarta.json.JsonValue
 
 fun JsonValue.toSimpleValue(): Any? {
     return when (valueType) {
         JsonValue.ValueType.NUMBER -> toSimpleNumber()
-        JsonValue.ValueType.STRING -> toString()
+        JsonValue.ValueType.STRING -> toSimpleString()
         JsonValue.ValueType.TRUE -> true
         JsonValue.ValueType.FALSE -> false
         JsonValue.ValueType.NULL -> null
@@ -35,4 +36,9 @@ fun JsonValue.toSimpleNumber(): Number {
     } else {
         jsonNumber.doubleValue()
     }
+}
+
+fun JsonValue.toSimpleString(): String {
+    val jsonString = this as JsonString
+    return jsonString.string
 }
