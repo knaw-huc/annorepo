@@ -1,7 +1,7 @@
 package nl.knaw.huc.annorepo.cli
 
 import org.junit.jupiter.api.Test
-import io.dropwizard.setup.Bootstrap
+import io.dropwizard.core.setup.Bootstrap
 import net.sourceforge.argparse4j.inf.Namespace
 import org.mockito.Mockito.mock
 

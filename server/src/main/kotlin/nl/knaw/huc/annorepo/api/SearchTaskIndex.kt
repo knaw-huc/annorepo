@@ -1,11 +1,9 @@
 package nl.knaw.huc.annorepo.api
 
 import java.util.Date
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.resources.tools.SearchTask
 
 object SearchTaskIndex {
-    private val log = LoggerFactory.getLogger(javaClass)
 
     private val index: MutableMap<String, SearchTask> = mutableMapOf()
 
@@ -21,8 +19,6 @@ object SearchTaskIndex {
             .filter { it.value.status.expirationTime()!!.before(Date()) }
             .map { it.key }
             .toList()
-        log.debug("{} / {} tasks are expired:", expiredTaskIds.size, index.size)
-        log.debug("removing expired tasks: {}", expiredTaskIds)
         expiredTaskIds
             .forEach { index.remove(it) }
     }

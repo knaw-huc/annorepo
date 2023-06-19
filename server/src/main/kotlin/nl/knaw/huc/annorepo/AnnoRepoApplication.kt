@@ -8,18 +8,18 @@ import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Indexes
-import `in`.vectorpro.dropwizard.swagger.SwaggerBundle
-import `in`.vectorpro.dropwizard.swagger.SwaggerBundleConfiguration
-import io.dropwizard.Application
-import io.dropwizard.ConfiguredBundle
 import io.dropwizard.auth.AuthDynamicFeature
 import io.dropwizard.auth.oauth.OAuthCredentialAuthFilter
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor
 import io.dropwizard.configuration.SubstitutingSourceProvider
+import io.dropwizard.core.Application
+import io.dropwizard.core.ConfiguredBundle
+import io.dropwizard.core.setup.Bootstrap
+import io.dropwizard.core.setup.Environment
 import io.dropwizard.jdbi3.bundles.JdbiExceptionsBundle
 import io.dropwizard.jobs.JobsBundle
-import io.dropwizard.setup.Bootstrap
-import io.dropwizard.setup.Environment
+import io.federecio.dropwizard.swagger.SwaggerBundle
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
 import org.apache.commons.lang3.StringUtils
 import org.litote.kmongo.KMongo
 import org.litote.kmongo.getCollection
@@ -57,11 +57,9 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         bootstrap.configurationSourceProvider = SubstitutingSourceProvider(
             bootstrap.configurationSourceProvider, EnvironmentVariableSubstitutor()
         )
-
         bootstrap.addBundle(getSwaggerBundle())
         bootstrap.addBundle(JdbiExceptionsBundle())
         bootstrap.addBundle(getJobsBundle())
-
         bootstrap.addCommand(EnvCommand())
     }
 

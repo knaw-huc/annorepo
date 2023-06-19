@@ -2,8 +2,8 @@ package nl.knaw.huc.annorepo.resources
 
 import java.net.URI
 import java.security.Principal
-import javax.ws.rs.NotAuthorizedException
-import javax.ws.rs.core.SecurityContext
+import jakarta.ws.rs.NotAuthorizedException
+import jakarta.ws.rs.core.SecurityContext
 import kotlin.test.assertNotNull
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.BeforeAll
@@ -27,7 +27,7 @@ import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.service.UriFactory
 
 @ExtendWith(MockKExtension::class)
-class ServiceResourceTest {
+class ContainerServiceResourceTest {
     @Nested
     inner class ContainerUserTest {
         @Nested
@@ -168,6 +168,20 @@ class ServiceResourceTest {
         }
 
         @Nested
+        inner class GetDistinctAnnotationFieldValuesForContainerTest {
+            @Test
+            fun `getDistinctAnnotationFieldsValuesForContainer endpoint can be used by root, admin, editor and guest, but not by others`() {
+                assertRoleAuthorizationForBlock(
+                    authorizedRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR, Role.GUEST)
+                ) {
+                    val response =
+                        resource.getDistinctAnnotationFieldsValuesForContainer(containerName, "type", securityContext)
+                    assertNotNull(response)
+                }
+            }
+        }
+
+        @Nested
         inner class GetMetadataForContainerTest {
             @Test
             fun `getMetadataForContainer endpoint can be used by root, admin, editor and guest, but not by others`() {
@@ -273,7 +287,7 @@ class ServiceResourceTest {
         lateinit var containerUserDAO: ContainerUserDAO
 
         private lateinit var resource: ContainerServiceResource
-        private val log = LoggerFactory.getLogger(ServiceResourceTest::class.java)
+        private val log = LoggerFactory.getLogger(ContainerServiceResourceTest::class.java)
 
         @BeforeAll
         @JvmStatic
@@ -354,6 +368,5 @@ class ServiceResourceTest {
                 }
             }
         }
-
     }
 }

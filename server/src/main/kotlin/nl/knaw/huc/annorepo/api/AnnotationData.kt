@@ -10,8 +10,6 @@ class AnnotationData {
     var created: Date? = null
     var modified: Date? = null
 
-    constructor() : super()
-
     @ConstructorProperties("id", "name")
     constructor(id: Long, name: String, content: String, created: Date, modified: Date) {
         this.id = id

@@ -1,7 +1,7 @@
 package nl.knaw.huc.annorepo.resources
 
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.SecurityContext
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.SecurityContext
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import com.mongodb.client.MongoClient

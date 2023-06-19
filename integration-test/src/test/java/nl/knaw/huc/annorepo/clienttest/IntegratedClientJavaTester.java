@@ -3,18 +3,8 @@ package nl.knaw.huc.annorepo.clienttest;
 import arrow.core.Either;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import nl.knaw.huc.annorepo.api.AboutInfo;
-import nl.knaw.huc.annorepo.api.AnnotationIdentifier;
-import nl.knaw.huc.annorepo.api.AnnotationPage;
-import nl.knaw.huc.annorepo.api.ContainerUserEntry;
-import nl.knaw.huc.annorepo.api.IndexConfig;
-import nl.knaw.huc.annorepo.api.IndexType;
-import nl.knaw.huc.annorepo.api.RejectedUserEntry;
-import nl.knaw.huc.annorepo.api.Role;
-import nl.knaw.huc.annorepo.api.SearchInfo;
-import nl.knaw.huc.annorepo.api.SearchStatusSummary;
-import nl.knaw.huc.annorepo.api.UserEntry;
-import nl.knaw.huc.annorepo.api.WebAnnotation;
+import jakarta.ws.rs.core.EntityTag;
+import nl.knaw.huc.annorepo.api.*;
 import nl.knaw.huc.annorepo.client.ARResult;
 import nl.knaw.huc.annorepo.client.ARResult.GetSearchResultPageResult;
 import nl.knaw.huc.annorepo.client.AnnoRepoClient;
@@ -25,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.core.EntityTag;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
@@ -537,7 +526,7 @@ public class IntegratedClientJavaTester {
     }
 
     @Nested
-    class FieldInfoTests {
+    class FieldTests {
         @Test
         void testFieldInfo() {
             String containerName = "volume-1728";
@@ -549,6 +538,24 @@ public class IntegratedClientJavaTester {
                     result -> {
                         Map<String, Integer> fieldInfo = result.getFieldInfo();
                         doSomethingWith(fieldInfo);
+                        return true;
+                    }
+            );
+            assertThat(success).isTrue();
+        }
+
+        @Test
+        void testDistinctFieldValues() {
+            String containerName = "volume-1728";
+            String fieldName = "body.type";
+            Boolean success = client.getDistinctFieldValues(containerName, fieldName).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    result -> {
+                        List<Object> distinctValues = result.getDistinctValues();
+                        doSomethingWith(distinctValues);
                         return true;
                     }
             );

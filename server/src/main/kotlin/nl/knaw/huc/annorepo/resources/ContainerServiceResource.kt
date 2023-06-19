@@ -1,12 +1,28 @@
 package nl.knaw.huc.annorepo.resources
 
+import java.io.StringReader
 import java.net.URI
 import java.util.*
 import java.util.concurrent.TimeUnit
-import javax.annotation.security.PermitAll
-import javax.ws.rs.*
-import javax.ws.rs.core.*
-import javax.ws.rs.core.MediaType.APPLICATION_JSON
+import jakarta.annotation.security.PermitAll
+import jakarta.json.Json
+import jakarta.json.JsonValue
+import jakarta.ws.rs.BadRequestException
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.NotFoundException
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.Context
+import jakarta.ws.rs.core.MediaType.APPLICATION_JSON
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.SecurityContext
+import jakarta.ws.rs.core.UriBuilder
 import com.codahale.metrics.annotation.Timed
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
@@ -20,8 +36,9 @@ import com.mongodb.client.model.IndexOptions
 import com.mongodb.client.model.Indexes
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import org.bson.BsonType
+import org.bson.BsonValue
 import org.bson.Document
-import org.eclipse.jetty.util.ajax.JSON
 import org.litote.kmongo.findOne
 import org.litote.kmongo.getCollection
 import org.slf4j.LoggerFactory
@@ -31,6 +48,7 @@ import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.ResourcePaths.CONTAINER_SERVICES
+import nl.knaw.huc.annorepo.api.ResourcePaths.DISTINCT_FIELD_VALUES
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
 import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
@@ -38,6 +56,7 @@ import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
 import nl.knaw.huc.annorepo.resources.tools.AnnotationList
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.QueryCacheItem
+import nl.knaw.huc.annorepo.resources.tools.toSimpleValue
 import nl.knaw.huc.annorepo.service.UriFactory
 
 @Path(CONTAINER_SERVICES)
@@ -118,23 +137,35 @@ class ContainerServiceResource(
         @Context context: SecurityContext,
     ): Response {
         checkUserHasReadRightsInThisContainer(context, containerName)
-
-        val queryMap = JSON.parse(queryJson)
-        if (queryMap is HashMap<*, *>) {
-            val aggregateStages =
-                queryMap.toMap()
-                    .map { (k, v) -> aggregateStageGenerator.generateStage(k, v) }
-                    .toList()
+        try {
+            val queryMap: Map<String, Any?> = Json.createReader(StringReader(queryJson)).readObject().toMap().simplify()
+            val aggregateStages = queryMap
+                .map { (k, v) -> aggregateStageGenerator.generateStage(k, v!!) }
+                .toList()
             val container = mdb.getCollection(containerName)
             val count = container.aggregate(aggregateStages).count()
 
             val id = UUID.randomUUID().toString()
             queryCache.put(id, QueryCacheItem(queryMap, aggregateStages, count))
             val location = uriFactory.searchURL(containerName, id)
-            return Response.created(location).link(uriFactory.searchInfoURL(containerName, id), "info")
-                .entity(mapOf("hits" to count)).build()
+            return Response.created(location)
+                .link(uriFactory.searchInfoURL(containerName, id), "info")
+                .entity(mapOf("hits" to count))
+                .build()
+        } catch (e: RuntimeException) {
+            e.printStackTrace()
+            return Response.status(Response.Status.BAD_REQUEST).build()
         }
-        return Response.status(Response.Status.BAD_REQUEST).build()
+    }
+
+    private fun Map<String, JsonValue>.simplify(): Map<String, Any?> {
+        val newMap = mutableMapOf<String, Any?>()
+        for (e in entries) {
+            val v = e.value
+            newMap[e.key] = v.toSimpleValue()
+        }
+        log.debug("newMap={}", newMap)
+        return newMap
     }
 
     @Operation(description = "Get the given search result page")
@@ -157,7 +188,9 @@ class ContainerServiceResource(
 //        log.debug("aggregateStages=\n  {}", Joiner.on("\n  ").join(aggregateStages))
 
         val annotations =
-            mdb.getCollection(containerName).aggregate(aggregateStages).map { a -> toAnnotationMap(a, containerName) }
+            mdb.getCollection(containerName)
+                .aggregate(aggregateStages)
+                .map { a -> toAnnotationMap(a, containerName) }
                 .toList()
         val annotationPage =
             buildAnnotationPage(uriFactory.searchURL(containerName, searchId), annotations, page, queryCacheItem.count)
@@ -199,6 +232,23 @@ class ContainerServiceResource(
         val containerMetadata: ContainerMetadata =
             containerMetadataCollection.findOne(eq(CONTAINER_NAME_FIELD, containerName))!!
         return Response.ok(containerMetadata.fieldCounts.toSortedMap()).build()
+    }
+
+    @Operation(description = "Get a list of the fields used in the annotations in a container")
+    @Timed
+    @GET
+    @Path("{containerName}/$DISTINCT_FIELD_VALUES/{field}")
+    fun getDistinctAnnotationFieldsValuesForContainer(
+        @PathParam("containerName") containerName: String,
+        @PathParam("field") field: String,
+        @Context context: SecurityContext,
+    ): Response {
+        checkUserHasReadRightsInThisContainer(context, containerName)
+        val distinctValues =
+            mdb.getCollection(containerName).distinct("$ANNOTATION_FIELD.$field", BsonValue::class.java)
+                .map { it.toPrimitive() }
+                .toList()
+        return Response.ok(distinctValues).build()
     }
 
     @Operation(description = "Get some container metadata")
@@ -380,13 +430,28 @@ class ContainerServiceResource(
     private fun searchPageUri(searchUri: URI, page: Int) =
         UriBuilder.fromUri(searchUri).queryParam("page", page).build().toString()
 
-    private fun toAnnotationMap(a: Document, containerName: String): Map<String, Any> =
-        a.get(ANNOTATION_FIELD, Document::class.java)
+    private fun toAnnotationMap(document: Document, containerName: String): Map<String, Any> =
+        document[ANNOTATION_FIELD, Document::class.java]
             .toMutableMap()
             .apply<MutableMap<String, Any>> {
                 put(
-                    "id", uriFactory.annotationURL(containerName, a.getString(ANNOTATION_NAME_FIELD))
+                    "id", uriFactory.annotationURL(containerName, document.getString(ANNOTATION_NAME_FIELD))
                 )
             }
 }
+
+private fun BsonValue.toPrimitive(): Any? {
+    return when (this.bsonType) {
+        BsonType.BOOLEAN -> this.asBoolean().value
+        BsonType.DATE_TIME -> this.asDateTime().value
+        BsonType.DECIMAL128 -> this.asDecimal128().value
+        BsonType.DOUBLE -> this.asDouble().value
+        BsonType.INT32 -> this.asInt32().value
+        BsonType.INT64 -> this.asInt64().value
+        BsonType.STRING -> this.asString().value
+        BsonType.TIMESTAMP -> this.asTimestamp().value
+        else -> this
+    }
+}
+
 

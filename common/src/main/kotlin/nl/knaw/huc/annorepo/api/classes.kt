@@ -25,7 +25,7 @@ data class AboutInfo(
 data class AnnotationIdentifier(
     val annotationName: String,
     val containerName: String,
-    val eTag: String,
+    val etag: String, // don't change this to eTag!
 )
 
 data class IndexConfig(

@@ -1,7 +1,7 @@
 package nl.knaw.huc.annorepo.tasks
 
 import java.io.PrintWriter
-import javax.ws.rs.BadRequestException
+import jakarta.ws.rs.BadRequestException
 import com.codahale.metrics.annotation.Metered
 import com.google.common.collect.SortedMultiset
 import com.google.common.collect.TreeMultiset

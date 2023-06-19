@@ -1,9 +1,9 @@
 package nl.knaw.huc.annorepo.resources
 
 import java.security.Principal
-import javax.ws.rs.NotAuthorizedException
-import javax.ws.rs.core.Request
-import javax.ws.rs.core.SecurityContext
+import jakarta.ws.rs.NotAuthorizedException
+import jakarta.ws.rs.core.Request
+import jakarta.ws.rs.core.SecurityContext
 import kotlin.test.assertNotNull
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.BeforeAll

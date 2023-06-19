@@ -1,7 +1,7 @@
 package nl.knaw.huc.annorepo.resources.tools
 
 import java.security.Principal
-import javax.ws.rs.NotAuthorizedException
+import jakarta.ws.rs.NotAuthorizedException
 import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.auth.RootUser

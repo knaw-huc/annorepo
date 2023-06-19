@@ -1,6 +1,6 @@
 package nl.knaw.huc.annorepo.resources
 
-import javax.ws.rs.core.MediaType.APPLICATION_JSON
+import jakarta.ws.rs.core.MediaType.APPLICATION_JSON
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import com.jayway.jsonpath.JsonPath
