@@ -101,7 +101,7 @@ class ContainerServiceResource(
         @Context context: SecurityContext,
         containerUsers: List<ContainerUserEntry>,
     ): Response {
-        log.info("containerUsers={}", containerUsers)
+//        log.info("containerUsers={}", containerUsers)
         checkUserHasAdminRightsInThisContainer(context, containerName)
 
         for (user in containerUsers) {

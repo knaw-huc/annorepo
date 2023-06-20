@@ -43,6 +43,7 @@ import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.SearchManager
 import nl.knaw.huc.annorepo.resources.tools.formatAsSize
 import nl.knaw.huc.annorepo.service.LocalDateTimeSerializer
+import nl.knaw.huc.annorepo.service.MongoDbUpdater
 import nl.knaw.huc.annorepo.service.UriFactory
 import nl.knaw.huc.annorepo.tasks.JVMInfoTask
 import nl.knaw.huc.annorepo.tasks.RecalculateFieldCountTask
@@ -141,6 +142,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
 
         doHealthChecks(environment)
 
+
         log.info(
             "\n\n  Starting $name (v$appVersion)\n" +
                     "    locally accessible at    " +
@@ -149,6 +151,13 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         )
         val heapSpace = Runtime.getRuntime().totalMemory().formatAsSize
         log.info("Heap space = $heapSpace")
+
+        MongoDbUpdater(
+            configuration = configuration,
+            client = mongoClient,
+            userDAO = userDAO,
+            containerUserDAO = containerUserDAO
+        ).run()
     }
 
     private fun createMongoClient(configuration: AnnoRepoConfiguration): MongoClient {
