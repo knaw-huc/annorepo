@@ -19,7 +19,8 @@ class MongoDbUpdater(
 
     fun run() {
         val allContainerUsers = containerUserDAO.getAll()
-        if (allContainerUsers.isEmpty()) {
+        if (allContainerUsers.isEmpty()) { // < v0.5.0
+            log.info("No container users found, adding all users to all containers as admin")
             val allContainers = mdb.listCollectionNames()
                 .filter { it != ARConst.CONTAINER_METADATA_COLLECTION }
                 .sorted()

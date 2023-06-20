@@ -142,7 +142,6 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
 
         doHealthChecks(environment)
 
-
         log.info(
             "\n\n  Starting $name (v$appVersion)\n" +
                     "    locally accessible at    " +
