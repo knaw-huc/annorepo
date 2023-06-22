@@ -17,3 +17,4 @@ val Long.formatAsSize: String
         val prefix = arrayOf("", "K", "M", "G", "T", "P", "E", "Z", "Y")
         String.format("%.${precision}f ${prefix[it]}B", toDouble() / 2.0.pow(it * 10.0))
     }
+

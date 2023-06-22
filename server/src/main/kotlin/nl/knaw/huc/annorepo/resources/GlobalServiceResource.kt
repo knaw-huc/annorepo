@@ -50,7 +50,9 @@ class GlobalServiceResource(
             val queryMap = ObjectMapper().readValue(queryJson, HashMap::class.java)
 
             val aggregateStages =
-                queryMap.toMap().map { (k, v) -> aggregateStageGenerator.generateStage(k, v) }.toList()
+                queryMap.toMap()
+                    .map { (k, v) -> aggregateStageGenerator.generateStage(k, v) }
+                    .toList()
             val containerNames = accessibleContainers(context.userPrincipal.name)
             val task: SearchTask =
                 searchManager.startGlobalSearch(
@@ -75,8 +77,7 @@ class GlobalServiceResource(
     @Path("search/{searchId}")
     fun getSearchResultPage(
         @PathParam("searchId") searchId: String,
-        @QueryParam("page") page: Int = 0,
-        @Context context: SecurityContext,
+        @QueryParam("page") page: Int = 0
     ): Response {
         val searchTaskStatus = searchManager.getSearchTask(searchId)?.status ?: throw NotFoundException()
         return when (searchTaskStatus.state) {

@@ -6,7 +6,6 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import jakarta.annotation.security.PermitAll
 import jakarta.json.Json
-import jakarta.json.JsonValue
 import jakarta.ws.rs.BadRequestException
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
@@ -56,7 +55,7 @@ import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
 import nl.knaw.huc.annorepo.resources.tools.AnnotationList
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.QueryCacheItem
-import nl.knaw.huc.annorepo.resources.tools.toSimpleValue
+import nl.knaw.huc.annorepo.resources.tools.simplify
 import nl.knaw.huc.annorepo.service.UriFactory
 
 @Path(CONTAINER_SERVICES)
@@ -156,16 +155,6 @@ class ContainerServiceResource(
             e.printStackTrace()
             return Response.status(Response.Status.BAD_REQUEST).build()
         }
-    }
-
-    private fun Map<String, JsonValue>.simplify(): Map<String, Any?> {
-        val newMap = mutableMapOf<String, Any?>()
-        for (e in entries) {
-            val v = e.value
-            newMap[e.key] = v.toSimpleValue()
-        }
-        log.debug("newMap={}", newMap)
-        return newMap
     }
 
     @Operation(description = "Get the given search result page")

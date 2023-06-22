@@ -48,6 +48,7 @@ import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.makeAnnotationETag
+import nl.knaw.huc.annorepo.resources.tools.simplify
 import nl.knaw.huc.annorepo.service.JsonLdUtils
 import nl.knaw.huc.annorepo.service.UriFactory
 
@@ -377,15 +378,20 @@ class W3CResource(
 
     private fun AnnotationData.contentWithAssignedId(
         containerName: String, annotationName: String,
-    ): Any {
+    ): Map<String, Any?> {
         val assignedId = uriFactory.annotationURL(containerName, annotationName).toString()
-        val jo = Json.createReader(StringReader(content!!)).readObject().toMutableMap()
-        val originalId = jo["id"]?.toString()
-        jo["id"] = Json.createValue(assignedId)
+        val jo: MutableMap<String, Any?> =
+            Json.createReader(StringReader(content!!))
+                .readObject()
+                .toMap()
+                .simplify()
+                .toMutableMap()
+        val originalId = jo["id"]
+        jo["id"] = assignedId
         if (originalId != null && originalId != assignedId) {
-            jo["via"] = Json.createValue(originalId)
+            jo["via"] = originalId
         }
-        return jo
+        return jo.toMap()
     }
 
     private val paginationStage = Aggregates.limit(configuration.pageSize)
