@@ -24,9 +24,13 @@ build-server: .make/.version server/target/annorepo-server-$(call version_fn).ja
 .PHONY: build-client
 build-client: .make/.version client/target/annorepo-client-$(call version_fn).jar client/readme.md
 
-.PHONY: run-server
-run-server: build-server
-	java -jar server/target/annorepo-server-$(call version_fn).jar server config.yml
+.PHONY: run-server-with-auth
+run-server-with-auth: build-server
+	AR_WITH_AUTHENTICATION=true AR_ROOT_API_KEY=root java -jar server/target/annorepo-server-$(call version_fn).jar server config.yml
+
+.PHONY: run-server-without-auth
+run-server-without-auth: build-server
+	AR_WITH_AUTHENTICATION=false java -jar server/target/annorepo-server-$(call version_fn).jar server config.yml
 
 .PHONY: run-env
 run-env: build-server
@@ -110,19 +114,20 @@ help:
 	@echo "make-tools for $(TAG)"
 	@echo
 	@echo "Please use \`make <target>', where <target> is one of:"
-	@echo "  tests           to test the project"
-	@echo "  build           to test and build the project"
-	@echo "  build-server    to test and build just the server"
-	@echo "  build-client    to test and build just the client"
-	@echo "  run-server      to start the server app"
-	@echo "  docker-run      to start the server app in docker"
-	@echo "  docker-stop     to stop the server app in docker"
-	@echo "  run-env         to run the annorepo env command"
-	@echo "  docker-image    to build the docker image of the app"
-	@echo "  push            to push the linux/amd64 docker image to registry.diginfra.net"
-	@echo "  clean           to remove generated files"
-	@echo "  version-update  to update the project version"
-	@echo "  deploy          to deploy annorepo-client and annorepo-common"
-	@#echo "  release         to release the annorepo-client and annorepo-common jars"
-	@echo "  dokka           to generate dokka html"
+	@echo "  tests                     to test the project"
+	@echo "  build                     to test and build the project"
+	@echo "  build-server              to test and build just the server"
+	@echo "  build-client              to test and build just the client"
+	@echo "  run-server-with-auth      to start the server app with authorization on"
+	@echo "  run-server-without-auth   to start the server app with authorization off"
+	@echo "  docker-run                to start the server app in docker"
+	@echo "  docker-stop               to stop the server app in docker"
+	@echo "  run-env                   to run the annorepo env command"
+	@echo "  docker-image              to build the docker image of the app"
+	@echo "  push                      to push the linux/amd64 docker image to registry.diginfra.net"
+	@echo "  clean                     to remove generated files"
+	@echo "  version-update            to update the project version"
+	@echo "  deploy                    to deploy annorepo-client and annorepo-common"
+	@#echo "  release                   to release the annorepo-client and annorepo-common jars"
+	@echo "  dokka                     to generate dokka html"
 	@echo
