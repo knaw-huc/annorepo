@@ -56,7 +56,7 @@ class BatchResource(
 
         val annotationIdentifiers = mutableListOf<AnnotationIdentifier>()
         val container = mdb.getCollection(containerName)
-        for (i in 0..annotations.size) {
+        for (i in annotations.indices) {
             val annotationName = UUID.randomUUID().toString()
             annotationIdentifiers.add(
                 AnnotationIdentifier(
