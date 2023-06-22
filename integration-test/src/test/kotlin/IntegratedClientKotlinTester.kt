@@ -235,7 +235,6 @@ class IntegratedClientKotlinTester {
             return true
         }
 
-
         @Test
         fun testBatchUpload() {
             val containerName = "my-container"
@@ -376,7 +375,6 @@ class IntegratedClientKotlinTester {
             }, { _: DeleteIndexResult -> true })
             assertThat(delete_success).isTrue
         }
-
 
         @Test
         fun testListIndexes() {

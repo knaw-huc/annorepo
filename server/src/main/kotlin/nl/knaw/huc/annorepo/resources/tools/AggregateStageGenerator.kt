@@ -58,7 +58,6 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
                         throw BadRequestException("$IS_IN parameter must be a list")
                     }
 
-
                 IS_GREATER -> Aggregates.match(
                     Filters.gt("$ANNOTATION_FIELD_PREFIX$field", v)
                 )
