@@ -87,6 +87,18 @@ class GlobalServiceResource(
         }
     }
 
+    @Operation(description = "Get information about the given global search")
+    @Timed
+    @GET
+    @Path("search/{searchId}/status")
+    fun getSearchStatus(
+        @PathParam("searchId") searchId: String,
+        @Context context: SecurityContext,
+    ): Response {
+        val searchTask = searchManager.getSearchTask(searchId) ?: throw NotFoundException()
+        return Response.ok(searchTask.status.summary()).build()
+    }
+
     private fun acceptedResponse(searchTaskStatus: SearchTask.Status): Response =
         Response.accepted().entity(searchTaskStatus.summary()).build()
 
@@ -111,18 +123,6 @@ class GlobalServiceResource(
                 total = total
             )
         return Response.ok(annotationPage).build()
-    }
-
-    @Operation(description = "Get information about the given global search")
-    @Timed
-    @GET
-    @Path("search/{searchId}/status")
-    fun getSearchStatus(
-        @PathParam("searchId") searchId: String,
-        @Context context: SecurityContext,
-    ): Response {
-        val searchTask = searchManager.getSearchTask(searchId) ?: throw NotFoundException()
-        return Response.ok(searchTask.status.summary()).build()
     }
 
     private fun accessibleContainers(name: String): List<String> =
