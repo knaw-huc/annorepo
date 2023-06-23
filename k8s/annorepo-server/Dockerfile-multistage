@@ -1,8 +1,5 @@
 FROM maven:3.8.5 as builder
 
-RUN groupadd -r annorepo && \
-    useradd --no-log-init -r -g annorepo annorepo
-USER annorepo
 WORKDIR /build/
 COPY ./server /build/server
 COPY ./client /build/client
@@ -14,9 +11,6 @@ RUN mvn --projects server --no-transfer-progress --batch-mode --update-snapshots
 
 FROM openjdk:20-rc-jdk-slim
 
-RUN groupadd -r annorepo && \
-    useradd --no-log-init -r -g annorepo annorepo
-USER annorepo
 WORKDIR /apps/annorepo
 COPY --from=builder /build/server/target/annorepo-server-*.jar /apps/annorepo/annorepo-server.jar
 COPY ./k8s/annorepo-server/entrypoint.sh entrypoint.sh
