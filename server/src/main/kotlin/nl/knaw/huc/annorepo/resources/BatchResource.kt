@@ -47,6 +47,7 @@ class BatchResource(
     @Timed
     @POST
     @Path("{containerName}/annotations")
+    @Deprecated("use postAnnotationsBatch in ContainerServiceResource")
     fun postAnnotationsBatch(
         @PathParam("containerName") containerName: String,
         annotations: List<HashMap<String, Any>>,
