@@ -13,7 +13,7 @@ abstract class SearchTask(queryMap: HashMap<*, *>) : Runnable {
     class Status(private val queryMap: HashMap<*, *>) {
 
         var state = State.CREATED
-        val annotations: MutableList<Map<String, Any>> = mutableListOf()
+        val annotationIds: MutableList<MongoDocumentId> = mutableListOf()
         var startTime: Instant = Instant.now()
         var endTime: Instant? = null
         var totalContainersToSearch: Int = 0
@@ -28,7 +28,7 @@ abstract class SearchTask(queryMap: HashMap<*, *>) : Runnable {
             state = state.name,
             totalContainersToSearch = totalContainersToSearch,
             containersSearched = containersSearched.get(),
-            hitsFoundSoFar = annotations.size,
+            hitsFoundSoFar = annotationIds.size,
             errors = errors,
             processingTimeInMillis = (endTime?.millis ?: Instant.now().millis) - startTime.millis
         )
@@ -64,3 +64,4 @@ abstract class SearchTask(queryMap: HashMap<*, *>) : Runnable {
 
     abstract fun runSearch(status: Status)
 }
+

@@ -10,8 +10,11 @@ import kotlin.math.min
 import com.codahale.metrics.annotation.Timed
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.mongodb.client.MongoClient
+import com.mongodb.client.model.Filters.`in`
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import org.bson.Document
+import org.bson.types.ObjectId
 import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.*
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
@@ -110,11 +113,20 @@ class GlobalServiceResource(
         page: Int,
         searchId: String
     ): Response {
-        val total = searchTaskStatus.annotations.size
-        val selection = searchTaskStatus.annotations.subList(
+        val total = searchTaskStatus.annotationIds.size
+        val annotationIdSelection = searchTaskStatus.annotationIds.subList(
             page * configuration.pageSize,
             min((page + 1) * configuration.pageSize, total)
         )
+        val selection: MutableList<Map<String, Any>> = mutableListOf()
+        val grouped = annotationIdSelection.groupBy { it.collectionName }
+        for (collectionName in grouped.keys) {
+            val objectIds: List<ObjectId> = grouped[collectionName]?.map { it.objectId } ?: listOf()
+            mdb.getCollection(collectionName)
+                .find(`in`("_id", objectIds))
+                .map { toAnnotationMap(it, collectionName) }
+                .forEach(selection::add)
+        }
         val annotationPage =
             buildAnnotationPage(
                 searchUri = uriFactory.globalSearchURL(searchId),
@@ -124,6 +136,15 @@ class GlobalServiceResource(
             )
         return Response.ok(annotationPage).build()
     }
+
+    private fun toAnnotationMap(a: Document, containerName: String): Map<String, Any> =
+        a.get(ARConst.ANNOTATION_FIELD, Document::class.java)
+            .toMutableMap()
+            .apply<MutableMap<String, Any>> {
+                put(
+                    "id", uriFactory.annotationURL(containerName, a.getString(ARConst.ANNOTATION_NAME_FIELD))
+                )
+            }
 
     private fun accessibleContainers(name: String): List<String> =
         containerUserDAO.getUserRoles(name).map { it.containerName }.toList()
