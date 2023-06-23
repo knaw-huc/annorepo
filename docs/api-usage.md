@@ -822,7 +822,7 @@ Content-Type: application/json
   },
   "startedAt" : "2023-05-02T12:49:32",
   "finishedAt" : null,
-  "expiresAt" : null,
+  "expiresAfter" : null,
   "state" : "RUNNING",
   "containersSearched" : 0,
   "totalContainersToSearch" : 11,
@@ -837,7 +837,7 @@ The body returned is a representation of the status of the search, with the fiel
 - `query`: the query used
 - `startedAt`: the time the search was started
 - `finishedAt`: the time the search was finished, or null if the search hasn't finished yet.
-- `expiresAt`: the time at which the search results will not be available anymore, or null if the search hasn't finished
+- `expiresAfter`: the time after which the search results may not be available anymore, or null if the search hasn't finished
   yet.
 - `state`: the state of the search; this can be:
     - `CREATED`: the search was created, but not started yet
@@ -870,7 +870,7 @@ Content-Type: application/json
     },
     "startedAt": "2023-05-09T11:00:20",
     "finishedAt": null,
-    "expiresAt": null,
+    "expiresAfter": null,
     "state": "RUNNING",
     "containersSearched": 3,
     "totalContainersToSearch": 11,

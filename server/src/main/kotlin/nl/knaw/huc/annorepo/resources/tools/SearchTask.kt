@@ -24,7 +24,7 @@ abstract class SearchTask(queryMap: HashMap<*, *>) : Runnable {
             query = queryMap,
             startedAt = startTime.toDate(),
             finishedAt = endTime?.toDate(),
-            expiresAt = expirationTime(),
+            expiresAfter = expirationTime(),
             state = state.name,
             totalContainersToSearch = totalContainersToSearch,
             containersSearched = containersSearched.get(),
