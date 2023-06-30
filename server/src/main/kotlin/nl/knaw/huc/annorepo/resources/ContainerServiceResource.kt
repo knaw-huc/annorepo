@@ -299,7 +299,13 @@ class ContainerServiceResource(
 
         val fieldName = "$ANNOTATION_FIELD.${fieldNameParam}"
         val indexType =
-            IndexType.fromString(indexTypeParam) ?: throw BadRequestException("Unknown indexType $indexTypeParam")
+            IndexType.fromString(indexTypeParam) ?: throw BadRequestException(
+                "Unknown indexType $indexTypeParam; expected indexTypes: ${
+                    IndexType.values()
+                        .map { it.name.lowercase() }
+                        .joinToString(", ")
+                }"
+            )
         val index = when (indexType) {
             IndexType.HASHED -> Indexes.hashed(fieldName)
             IndexType.ASCENDING -> Indexes.ascending(fieldName)
