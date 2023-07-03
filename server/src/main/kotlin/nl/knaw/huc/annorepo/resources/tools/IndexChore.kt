@@ -1,7 +1,6 @@
 package nl.knaw.huc.annorepo.resources.tools
 
 import java.util.Date
-import java.util.UUID
 import java.util.concurrent.TimeUnit
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.Filters
@@ -13,6 +12,7 @@ import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ChoreStatusSummary
 
 class IndexChore(
+    val id: String,
     private val container: MongoCollection<Document>,
     private val fieldName: String,
     private val index: Bson
@@ -45,7 +45,6 @@ class IndexChore(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    val id: String = UUID.randomUUID().toString()
     val status = Status()
 
     override fun run() {
@@ -53,7 +52,8 @@ class IndexChore(
         status.startTime = Instant.now()
         try {
             val partialFilter = Filters.exists(fieldName)
-            container.createIndex(index, IndexOptions().partialFilterExpression(partialFilter))
+            val createIndex = container.createIndex(index, IndexOptions().partialFilterExpression(partialFilter))
+            log.info("created index: $createIndex")
             status.state = State.DONE
         } catch (t: Throwable) {
             t.printStackTrace()

@@ -57,17 +57,17 @@ class GlobalServiceResource(
                     .map { (k, v) -> aggregateStageGenerator.generateStage(k, v) }
                     .toList()
             val containerNames = accessibleContainers(context.userPrincipal.name)
-            val task: SearchChore =
+            val chore: SearchChore =
                 searchManager.startGlobalSearch(
                     containerNames = containerNames,
                     queryMap = queryMap,
                     aggregateStages = aggregateStages
                 )
-            val id = task.id
+            val id = chore.id
             val location = uriFactory.globalSearchURL(id)
             return Response.created(location)
                 .link(uriFactory.globalSearchStatusURL(id), "status")
-                .entity(task.status.summary())
+                .entity(chore.status.summary())
                 .build()
         } catch (e: Exception) {
             throw BadRequestException(e.message)

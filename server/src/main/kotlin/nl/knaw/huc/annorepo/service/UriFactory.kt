@@ -62,4 +62,14 @@ class UriFactory(private val configuration: AnnoRepoConfiguration) {
             .path(type.lowercase())
             .build()
 
+    fun indexStatusURL(containerName: String, fieldName: String, type: String): URI =
+        UriBuilder.fromUri(configuration.externalBaseUrl)
+            .path(ResourcePaths.CONTAINER_SERVICES)
+            .path(containerName)
+            .path(ResourcePaths.INDEXES)
+            .path(fieldName)
+            .path(type.lowercase())
+            .path(ResourcePaths.STATUS)
+            .build()
+
 }

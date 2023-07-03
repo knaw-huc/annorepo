@@ -32,7 +32,6 @@ import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Aggregates.limit
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Filters.eq
-import com.mongodb.client.model.Indexes
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.bson.BsonType
@@ -296,9 +295,6 @@ class ContainerServiceResource(
     ): Response {
         checkUserHasAdminRightsInThisContainer(context, containerName)
 
-        val container = mdb.getCollection(containerName)
-
-        val fieldName = "$ANNOTATION_FIELD.${fieldNameParam}"
         val indexType =
             IndexType.fromString(indexTypeParam) ?: throw BadRequestException(
                 "Unknown indexType $indexTypeParam; expected indexTypes: ${
@@ -307,16 +303,14 @@ class ContainerServiceResource(
                         .joinToString(", ")
                 }"
             )
-        val index = when (indexType) {
-            IndexType.HASHED -> Indexes.hashed(fieldName)
-            IndexType.ASCENDING -> Indexes.ascending(fieldName)
-            IndexType.DESCENDING -> Indexes.descending(fieldName)
-            IndexType.TEXT -> Indexes.text(fieldName)
-            else -> throw RuntimeException("Cannot make an index with type $indexType")
-        }
-        indexManager.startIndexCreation(container, fieldName, index)
+        val indexChore =
+            indexManager.startIndexCreation(containerName, fieldNameParam, indexTypeParam, indexType)
+        indexManager.getIndexChore(containerName, fieldNameParam, indexTypeParam)
         val location = uriFactory.indexURL(containerName, fieldNameParam, indexTypeParam)
-        return Response.created(location).build()
+        return Response.created(location)
+            .link(uriFactory.indexStatusURL(containerName, fieldNameParam, indexTypeParam), "status")
+            .entity(indexChore.status.summary())
+            .build()
     }
 
     @Operation(description = "Get an index definition")
@@ -335,6 +329,22 @@ class ContainerServiceResource(
         val indexConfig =
             getIndexConfig(container, containerName, fieldName, indexType)
         return Response.ok(indexConfig).build()
+    }
+
+    @Operation(description = "Get an index status")
+    @Timed
+    @GET
+    @Path("{containerName}/indexes/{fieldName}/{indexType}/status")
+    fun getContainerIndexStatus(
+        @PathParam("containerName") containerName: String,
+        @PathParam("fieldName") fieldName: String,
+        @PathParam("indexType") indexType: String,
+        @Context context: SecurityContext,
+    ): Response {
+        checkUserHasAdminRightsInThisContainer(context, containerName)
+
+        val indexChore = indexManager.getIndexChore(containerName, fieldName, indexType) ?: throw NotFoundException()
+        return Response.ok(indexChore.status.summary()).build()
     }
 
     @Operation(description = "Delete a container index")

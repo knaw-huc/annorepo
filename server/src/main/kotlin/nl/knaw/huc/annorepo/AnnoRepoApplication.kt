@@ -95,7 +95,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         val containerUserDAO = ARContainerUserDAO(configuration, mongoClient)
         val containerAccessChecker = ContainerAccessChecker(containerUserDAO)
         val searchManager = SearchManager(client = mongoClient, configuration = configuration)
-        val indexManager = IndexManager()
+        val indexManager = IndexManager(mongoClient.getDatabase(configuration.databaseName))
         val uriFactory = UriFactory(configuration)
         environment.jersey().apply {
             register(AboutResource(configuration, name, appVersion))
