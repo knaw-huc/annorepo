@@ -40,6 +40,7 @@ import nl.knaw.huc.annorepo.health.ServerHealthCheck
 import nl.knaw.huc.annorepo.jobs.ExpiredTasksCleanerJob
 import nl.knaw.huc.annorepo.resources.*
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
+import nl.knaw.huc.annorepo.resources.tools.IndexManager
 import nl.knaw.huc.annorepo.resources.tools.SearchManager
 import nl.knaw.huc.annorepo.resources.tools.formatAsSize
 import nl.knaw.huc.annorepo.service.LocalDateTimeSerializer
@@ -94,12 +95,13 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         val containerUserDAO = ARContainerUserDAO(configuration, mongoClient)
         val containerAccessChecker = ContainerAccessChecker(containerUserDAO)
         val searchManager = SearchManager(client = mongoClient, configuration = configuration)
+        val indexManager = IndexManager(client = mongoClient, configuration = configuration)
         val uriFactory = UriFactory(configuration)
         environment.jersey().apply {
             register(AboutResource(configuration, name, appVersion))
             register(HomePageResource())
             register(W3CResource(configuration, mongoClient, containerUserDAO, uriFactory))
-            register(ContainerServiceResource(configuration, mongoClient, containerUserDAO, uriFactory))
+            register(ContainerServiceResource(configuration, mongoClient, containerUserDAO, uriFactory, indexManager))
             register(
                 GlobalServiceResource(
                     configuration,

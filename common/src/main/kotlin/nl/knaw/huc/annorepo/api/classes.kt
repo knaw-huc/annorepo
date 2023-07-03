@@ -68,3 +68,12 @@ data class SearchStatusSummary(
     val errors: List<String>,
     val processingTimeInMillis: Long
 )
+
+data class TaskSummary(
+    val startedAt: Date,
+    val finishedAt: Date?,
+    val expiresAfter: Date?,
+    val state: String,
+    val errors: List<String>,
+    val processingTimeInMillis: Long
+)

@@ -32,7 +32,6 @@ import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Aggregates.limit
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Filters.eq
-import com.mongodb.client.model.IndexOptions
 import com.mongodb.client.model.Indexes
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
@@ -55,6 +54,7 @@ import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
 import nl.knaw.huc.annorepo.resources.tools.AnnotationList
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
+import nl.knaw.huc.annorepo.resources.tools.IndexManager
 import nl.knaw.huc.annorepo.resources.tools.QueryCacheItem
 import nl.knaw.huc.annorepo.resources.tools.makeAnnotationETag
 import nl.knaw.huc.annorepo.resources.tools.simplify
@@ -70,6 +70,7 @@ class ContainerServiceResource(
     client: MongoClient,
     private val containerUserDAO: ContainerUserDAO,
     private val uriFactory: UriFactory,
+    private val indexManager: IndexManager
 ) : AbstractContainerResource(configuration, client, ContainerAccessChecker(containerUserDAO)) {
 
     private val paginationStage = limit(configuration.pageSize)
@@ -313,8 +314,7 @@ class ContainerServiceResource(
             IndexType.TEXT -> Indexes.text(fieldName)
             else -> throw RuntimeException("Cannot make an index with type $indexType")
         }
-        val partialFilter = Filters.exists(fieldName)
-        container.createIndex(index, IndexOptions().partialFilterExpression(partialFilter))
+        indexManager.startIndexCreation(container, fieldName, index)
         val location = uriFactory.indexURL(containerName, fieldNameParam, indexTypeParam)
         return Response.created(location).build()
     }

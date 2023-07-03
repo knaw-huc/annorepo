@@ -24,6 +24,7 @@ import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.resources.tools.IndexManager
 import nl.knaw.huc.annorepo.service.UriFactory
 
 @ExtendWith(MockKExtension::class)
@@ -263,6 +264,9 @@ class ContainerServiceResourceTest {
         lateinit var config: AnnoRepoConfiguration
 
         @MockK
+        lateinit var indexManager: IndexManager
+
+        @MockK
         lateinit var securityContext: SecurityContext
 
         @MockK
@@ -304,7 +308,7 @@ class ContainerServiceResourceTest {
             every { collectionNames.iterator() } returns mongoCursor
             every { mongoCursor.hasNext() } returns true
             every { mongoCursor.next() } returns containerName
-            resource = ContainerServiceResource(config, client, containerUserDAO, UriFactory(config))
+            resource = ContainerServiceResource(config, client, containerUserDAO, UriFactory(config), indexManager)
         }
 
         private fun useRootUser() {
