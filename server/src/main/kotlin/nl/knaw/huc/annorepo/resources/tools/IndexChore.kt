@@ -3,32 +3,33 @@ package nl.knaw.huc.annorepo.resources.tools
 import java.util.Date
 import java.util.UUID
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
+import com.mongodb.client.MongoCollection
+import com.mongodb.client.model.Filters
+import com.mongodb.client.model.IndexOptions
+import org.bson.Document
+import org.bson.conversions.Bson
 import org.joda.time.Instant
 import org.slf4j.LoggerFactory
-import nl.knaw.huc.annorepo.api.SearchStatusSummary
+import nl.knaw.huc.annorepo.api.ChoreStatusSummary
 
-abstract class SearchTask(queryMap: HashMap<*, *>) : Runnable {
+class IndexChore(
+    private val container: MongoCollection<Document>,
+    private val fieldName: String,
+    private val index: Bson
+) :
+    Runnable {
 
-    class Status(private val queryMap: HashMap<*, *>) {
-
+    class Status() {
         var state = State.CREATED
-        val annotationIds: MutableList<MongoDocumentId> = mutableListOf()
         var startTime: Instant = Instant.now()
         var endTime: Instant? = null
-        var totalContainersToSearch: Int = 0
-        val containersSearched: AtomicInteger = AtomicInteger(0)
         val errors: MutableList<String> = mutableListOf()
 
-        fun summary(): SearchStatusSummary = SearchStatusSummary(
-            query = queryMap,
+        fun summary(): ChoreStatusSummary = ChoreStatusSummary(
             startedAt = startTime.toDate(),
             finishedAt = endTime?.toDate(),
             expiresAfter = expirationTime(),
             state = state.name,
-            totalContainersToSearch = totalContainersToSearch,
-            containersSearched = containersSearched.get(),
-            hitsFoundSoFar = annotationIds.size,
             errors = errors,
             processingTimeInMillis = (endTime?.millis ?: Instant.now().millis) - startTime.millis
         )
@@ -45,13 +46,14 @@ abstract class SearchTask(queryMap: HashMap<*, *>) : Runnable {
     private val log = LoggerFactory.getLogger(javaClass)
 
     val id: String = UUID.randomUUID().toString()
-    val status = Status(queryMap)
+    val status = Status()
 
     override fun run() {
         status.state = State.RUNNING
         status.startTime = Instant.now()
         try {
-            runSearch(status)
+            val partialFilter = Filters.exists(fieldName)
+            container.createIndex(index, IndexOptions().partialFilterExpression(partialFilter))
             status.state = State.DONE
         } catch (t: Throwable) {
             t.printStackTrace()
@@ -62,6 +64,5 @@ abstract class SearchTask(queryMap: HashMap<*, *>) : Runnable {
         log.debug("query done")
     }
 
-    abstract fun runSearch(status: Status)
 }
 

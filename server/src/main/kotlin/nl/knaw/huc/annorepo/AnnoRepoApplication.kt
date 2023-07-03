@@ -37,7 +37,7 @@ import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.filters.JSONPrettyPrintFilter
 import nl.knaw.huc.annorepo.health.MongoDbHealthCheck
 import nl.knaw.huc.annorepo.health.ServerHealthCheck
-import nl.knaw.huc.annorepo.jobs.ExpiredTasksCleanerJob
+import nl.knaw.huc.annorepo.jobs.ExpiredChoresCleanerJob
 import nl.knaw.huc.annorepo.resources.*
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.IndexManager
@@ -72,8 +72,8 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         }
 
     private fun getJobsBundle(): ConfiguredBundle<in AnnoRepoConfiguration?> {
-        val expiredTasksCleanerJob = ExpiredTasksCleanerJob()
-        return JobsBundle(expiredTasksCleanerJob)
+        val expiredChoresCleanerJob = ExpiredChoresCleanerJob()
+        return JobsBundle(expiredChoresCleanerJob)
     }
 
     override fun run(configuration: AnnoRepoConfiguration?, environment: Environment) {

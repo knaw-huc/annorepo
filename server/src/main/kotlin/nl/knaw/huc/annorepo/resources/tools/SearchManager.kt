@@ -4,7 +4,7 @@ import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoDatabase
 import org.bson.conversions.Bson
 import org.slf4j.LoggerFactory
-import nl.knaw.huc.annorepo.api.SearchTaskIndex
+import nl.knaw.huc.annorepo.api.SearchChoreIndex
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.service.UriFactory
 
@@ -25,9 +25,9 @@ class SearchManager(
         containerNames: List<String>,
         queryMap: HashMap<*, *>,
         aggregateStages: List<Bson>
-    ): SearchTask =
-        startSearchTask(
-            GlobalSearchTask(
+    ): SearchChore =
+        startSearchChore(
+            GlobalSearchChore(
                 containerNames = containerNames,
                 queryMap = queryMap,
                 aggregateStages = aggregateStages,
@@ -35,12 +35,12 @@ class SearchManager(
             )
         )
 
-    fun getSearchTask(id: String): SearchTask? = SearchTaskIndex[id]
+    fun getSearchChore(id: String): SearchChore? = SearchChoreIndex[id]
 
-    private fun startSearchTask(task: SearchTask): SearchTask {
-        SearchTaskIndex[task.id] = task
-        Thread(task).start()
-        return task
+    private fun startSearchChore(chore: SearchChore): SearchChore {
+        SearchChoreIndex[chore.id] = chore
+        Thread(chore).start()
+        return chore
     }
 
 }

@@ -6,7 +6,7 @@ import com.mongodb.client.MongoDatabase
 import org.bson.Document
 import org.bson.conversions.Bson
 import org.slf4j.LoggerFactory
-import nl.knaw.huc.annorepo.api.IndexTaskIndex
+import nl.knaw.huc.annorepo.api.IndexChoreIndex
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.service.UriFactory
 
@@ -27,21 +27,21 @@ class IndexManager(
         container: MongoCollection<Document>,
         fieldName: String,
         index: Bson
-    ): IndexTask =
-        startIndexTask(
-            IndexTask(
+    ): IndexChore =
+        startIndexChore(
+            IndexChore(
                 container = container,
                 fieldName = fieldName,
                 index = index
             )
         )
 
-    fun getIndexTask(id: String): IndexTask? = IndexTaskIndex[id]
+    fun getIndexChore(id: String): IndexChore? = IndexChoreIndex[id]
 
-    private fun startIndexTask(task: IndexTask): IndexTask {
-        IndexTaskIndex[task.id] = task
-        Thread(task).start()
-        return task
+    private fun startIndexChore(chore: IndexChore): IndexChore {
+        IndexChoreIndex[chore.id] = chore
+        Thread(chore).start()
+        return chore
     }
 
 }

@@ -69,7 +69,7 @@ data class SearchStatusSummary(
     val processingTimeInMillis: Long
 )
 
-data class TaskSummary(
+data class ChoreStatusSummary(
     val startedAt: Date,
     val finishedAt: Date?,
     val expiresAfter: Date?,
