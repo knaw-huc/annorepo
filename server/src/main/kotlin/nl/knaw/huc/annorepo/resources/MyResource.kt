@@ -42,8 +42,8 @@ class MyResource(
             val containerUsersGroupedByRole = userRoles.groupBy { it.role }
             val containerNamesGroupedByRole: TreeMap<String, List<String>> = TreeMap()
             for (role in containerUsersGroupedByRole.keys.sorted()) {
-                val containerNames = containerUsersGroupedByRole[role]!!.map { it.containerName }
-                containerNamesGroupedByRole[role.name] = containerNames
+                val containerNames = containerUsersGroupedByRole[role]?.map { it.containerName }
+                containerNamesGroupedByRole[role.name] = containerNames!!
             }
             Response.ok(containerNamesGroupedByRole).build()
         }
