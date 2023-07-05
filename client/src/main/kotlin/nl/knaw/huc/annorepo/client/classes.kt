@@ -7,6 +7,7 @@ import arrow.core.Either
 import nl.knaw.huc.annorepo.api.AboutInfo
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
 import nl.knaw.huc.annorepo.api.AnnotationPage
+import nl.knaw.huc.annorepo.api.ChoreStatusSummary
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.IndexConfig
 import nl.knaw.huc.annorepo.api.RejectedUserEntry
@@ -109,11 +110,17 @@ sealed class ARResult {
 
     data class AddIndexResult(
         override val response: Response,
+        val status: ChoreStatusSummary,
     ) : ARResult()
 
     data class GetIndexResult(
         override val response: Response,
         val indexConfig: IndexConfig,
+    ) : ARResult()
+
+    data class GetIndexCreationStatusResult(
+        override val response: Response,
+        val status: ChoreStatusSummary,
     ) : ARResult()
 
     data class ListIndexesResult(

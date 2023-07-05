@@ -27,6 +27,7 @@ import nl.knaw.huc.annorepo.client.ARResult.DeleteIndexResult
 import nl.knaw.huc.annorepo.client.ARResult.GetAnnotationResult
 import nl.knaw.huc.annorepo.client.ARResult.GetContainerResult
 import nl.knaw.huc.annorepo.client.ARResult.GetGlobalSearchStatusResult
+import nl.knaw.huc.annorepo.client.ARResult.GetIndexCreationStatusResult
 import nl.knaw.huc.annorepo.client.ARResult.GetIndexResult
 import nl.knaw.huc.annorepo.client.ARResult.GetSearchResultPageResult
 import nl.knaw.huc.annorepo.client.ARResult.ListIndexesResult
@@ -352,27 +353,53 @@ class IntegratedClientKotlinTester {
             val indexType = IndexType.HASHED
 
             // create
-            val create_success = client.addIndex(containerName, fieldName, indexType).fold({ error: RequestError ->
-                handleError(error)
-                false
-            }, { _: AddIndexResult -> true })
+            val create_success = client.addIndex(containerName, fieldName, indexType).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    false
+                },
+                { (_, statusSummary): AddIndexResult ->
+                    doSomethingWith(statusSummary)
+                    true
+                }
+            )
             assertThat(create_success).isTrue
 
+            // read status
+            val read_status_success =
+                client.getIndexCreationStatus(containerName, fieldName, indexType).fold(
+                    { error: RequestError ->
+                        handleError(error)
+                        false
+                    },
+                    { (_, statusSummary): GetIndexCreationStatusResult ->
+                        doSomethingWith(statusSummary)
+                        true
+                    }
+                )
+            assertThat(read_status_success).isTrue
+
             // read
-            val read_success = client.getIndex(containerName, fieldName, indexType).fold({ error: RequestError ->
-                handleError(error)
-                false
-            }, { (_, indexConfig): GetIndexResult ->
-                doSomethingWith(indexConfig)
-                true
-            })
+            val read_success = client.getIndex(containerName, fieldName, indexType).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    false
+                },
+                { (_, indexConfig): GetIndexResult ->
+                    doSomethingWith(indexConfig)
+                    true
+                }
+            )
             assertThat(read_success).isTrue
 
             // delete
-            val delete_success = client.deleteIndex(containerName, fieldName, indexType).fold({ error: RequestError ->
-                handleError(error)
-                false
-            }, { _: DeleteIndexResult -> true })
+            val delete_success = client.deleteIndex(containerName, fieldName, indexType).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    false
+                },
+                { _: DeleteIndexResult -> true }
+            )
             assertThat(delete_success).isTrue
         }
 
