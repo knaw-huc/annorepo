@@ -3,9 +3,11 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import arrow.core.Either
 import arrow.core.Either.Right
+import arrow.core.flatMap
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.fail
 import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.IndexType
@@ -31,6 +33,7 @@ import nl.knaw.huc.annorepo.client.ARResult.GetIndexCreationStatusResult
 import nl.knaw.huc.annorepo.client.ARResult.GetIndexResult
 import nl.knaw.huc.annorepo.client.ARResult.GetSearchResultPageResult
 import nl.knaw.huc.annorepo.client.ARResult.ListIndexesResult
+import nl.knaw.huc.annorepo.client.ARResult.MyContainersResult
 import nl.knaw.huc.annorepo.client.ARResult.UsersResult
 import nl.knaw.huc.annorepo.client.AnnoRepoClient
 import nl.knaw.huc.annorepo.client.AnnoRepoClient.Companion.create
@@ -556,7 +559,40 @@ class IntegratedClientKotlinTester {
         @Test
         fun testMyContainers() {
             client.getMyContainers().fold({ error: RequestError -> handleError(error) },
-                { (_, containers): ARResult.MyContainersResult -> doSomethingWith(containers) })
+                { (_, containers): MyContainersResult -> doSomethingWith(containers) })
+        }
+    }
+
+    @Nested
+    inner class Tests {
+        @Test
+        fun `after deleting a container, it shouldn't show up in my-containers anymore`() {
+            client.createContainer("test-container")
+                .map { result ->
+                    val containerName = result.containerName
+                    val eTag = result.eTag
+                    Pair(containerName, eTag)
+                }
+                .flatMap { pair ->
+                    val containerName = pair.first
+                    client.getMyContainers()
+                        .map { assertThat(it.containers["ROOT"]).contains(containerName) }
+                        .map { pair }
+                }
+                .flatMap { pair ->
+                    val containerName = pair.first
+                    val eTag = pair.second
+                    client.deleteContainer(containerName, eTag)
+                        .map { containerName }
+                }
+                .flatMap { containerName ->
+                    client.getMyContainers()
+                        .map { assertThat(it.containers["ROOT"]).doesNotContain(containerName) }
+                }
+                .fold(
+                    { failure -> fail(failure.message) },
+                    {}
+                )
         }
     }
 
