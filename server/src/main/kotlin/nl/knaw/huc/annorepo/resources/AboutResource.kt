@@ -13,7 +13,7 @@ import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 
 @Path(ResourcePaths.ABOUT)
 @Produces(MediaType.APPLICATION_JSON)
-class AboutResource(configuration: AnnoRepoConfiguration, appName: String, version: String) {
+class AboutResource(configuration: AnnoRepoConfiguration, appName: String, version: String, mongoVersion: String) {
 
 //    private val log = LoggerFactory.getLogger(javaClass)
 
@@ -22,7 +22,8 @@ class AboutResource(configuration: AnnoRepoConfiguration, appName: String, versi
         version = version,
         startedAt = Instant.now().toString(),
         baseURI = configuration.externalBaseUrl,
-        withAuthentication = configuration.withAuthentication
+        withAuthentication = configuration.withAuthentication,
+        mongoVersion = mongoVersion
     )
 
     @Operation(description = "Get some info about the server")

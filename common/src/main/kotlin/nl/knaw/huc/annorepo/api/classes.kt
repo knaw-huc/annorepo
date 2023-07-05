@@ -20,6 +20,7 @@ data class AboutInfo(
     val baseURI: String,
     val withAuthentication: Boolean,
     val sourceCode: String = "https://github.com/knaw-huc/annorepo",
+    val mongoVersion: String,
 )
 
 data class AnnotationIdentifier(

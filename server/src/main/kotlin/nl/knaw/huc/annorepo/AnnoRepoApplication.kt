@@ -21,6 +21,7 @@ import io.dropwizard.jobs.JobsBundle
 import io.federecio.dropwizard.swagger.SwaggerBundle
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
 import org.apache.commons.lang3.StringUtils
+import org.bson.Document
 import org.litote.kmongo.KMongo
 import org.litote.kmongo.getCollection
 import org.slf4j.LoggerFactory
@@ -97,8 +98,9 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         val searchManager = SearchManager(client = mongoClient, configuration = configuration)
         val indexManager = IndexManager(mongoClient.getDatabase(configuration.databaseName))
         val uriFactory = UriFactory(configuration)
+        val mongoVersion = getMongoVersion(mongoClient)
         environment.jersey().apply {
-            register(AboutResource(configuration, name, appVersion))
+            register(AboutResource(configuration, name, appVersion, mongoVersion))
             register(HomePageResource())
             register(W3CResource(configuration, mongoClient, containerUserDAO, uriFactory))
             register(ContainerServiceResource(configuration, mongoClient, containerUserDAO, uriFactory, indexManager))
@@ -160,6 +162,12 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             containerUserDAO = containerUserDAO
         ).run()
     }
+
+    private fun getMongoVersion(mongoClient: MongoClient): String =
+        mongoClient
+            .getDatabase("admin")
+            .runCommand(Document("buildInfo", 1))
+            .getString("version")
 
     private fun createMongoClient(configuration: AnnoRepoConfiguration): MongoClient {
         val mongoClient = KMongo.createClient(configuration.mongodbURL)
