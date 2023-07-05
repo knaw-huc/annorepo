@@ -2,6 +2,7 @@ package nl.knaw.huc.annorepo
 
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
+import java.util.Collections.max
 import java.util.concurrent.atomic.AtomicBoolean
 import com.codahale.metrics.health.HealthCheck
 import com.fasterxml.jackson.databind.module.SimpleModule
@@ -78,11 +79,12 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
     }
 
     override fun run(configuration: AnnoRepoConfiguration?, environment: Environment) {
+        val maxEnvVarLen = max(EnvironmentVariable.values().map { it.name.length })
         log.info(
             "AR_ environment variables:\n\n" +
                     EnvironmentVariable.values()
                         .joinToString("\n") { e ->
-                            "  ${e.name}:\t${System.getenv(e.name) ?: "(not set, using default)"}"
+                            "  ${e.name.padEnd(maxEnvVarLen + 1)}: ${System.getenv(e.name) ?: "(not set, using default)"}"
                         } +
                     "\n"
         )
