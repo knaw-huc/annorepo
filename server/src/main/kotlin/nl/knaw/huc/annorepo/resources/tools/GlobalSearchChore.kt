@@ -4,12 +4,12 @@ import org.bson.Document
 import org.bson.conversions.Bson
 import org.slf4j.LoggerFactory
 
-class GlobalSearchTask(
+class GlobalSearchChore(
     private val containerNames: List<String>,
     queryMap: HashMap<*, *>,
     private val aggregateStages: List<Bson>,
     private val context: SearchManager.Context
-) : SearchTask(queryMap) {
+) : SearchChore(queryMap) {
     val log = LoggerFactory.getLogger(this.javaClass)
     override fun runSearch(status: Status) {
         status.totalContainersToSearch = containerNames.size

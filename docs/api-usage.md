@@ -22,6 +22,7 @@
     - [Get a global search result page](#get-a-global-search-result-page--experimental)
 - [Indexes](#indexes)
     - [Add an index](#add-index-)
+    - [Read an index creation status](#read-index-creation-status-)
     - [Read an index](#read-index-)
     - [List all indexes](#list-all-indexes-for-a-container-)
     - [Delete an index](#delete-index-)
@@ -945,8 +946,52 @@ Available options for `indexType`:
 #### Response
 
 ```
+HTTP/1.1 201 CREATED
+Location: http://localhost:8080/services/my-container/indexes/body.type/hashed
+Link: <http://localhost:8080/services/my-container/indexes/body.type/hashed/status>; rel="status"
+Content-Type: application/json
+
+{
+    "startedAt": "2023-07-05T18:11:04",
+    "finishedAt": null,
+    "expiresAfter": null,
+    "state": "RUNNING",
+    "errors": [
+
+    ],
+    "processingTimeInMillis": 1
+}
+
+```
+
+As creating an index for a container that already has a lot of annotations might take a while, this endpoint starts the index creation in the background, and returns the current status of the index creation in the body, and the url where to see an up-to-date status in a Link header.
+
+---
+
+### Read index creation status (🔒)
+
+#### Request
+
+```
+GET http://localhost:8080/services/{containerName}/indexes/{fieldName}/{indexType}/status HTTP/1.1
+```
+
+#### Response
+
+```
 HTTP/1.1 200 OK
-Location: http://localhost:8080/services/my-container/indexes/body.metadata/hashed
+Content-Type: application/json
+
+{
+    "startedAt": "2023-07-05T19:09:53",
+    "finishedAt": "2023-07-05T19:09:53",
+    "expiresAfter": "2023-07-05T20:09:53",
+    "state": "DONE",
+    "errors": [
+
+    ],
+    "processingTimeInMillis": 6
+}
 ```
 
 ---
@@ -1348,6 +1393,7 @@ Content-Type: application/json
   "startedAt" : "2022-09-22T15:30:24.854713Z",
   "baseURI" : "http://localhost:8080",
   "withAuthentication" : false,
-  "sourceCode" : "https://github.com/knaw-huc/annorepo"
+  "sourceCode" : "https://github.com/knaw-huc/annorepo",
+  "mongoVersion" : "5.0.8"
 }
 ```

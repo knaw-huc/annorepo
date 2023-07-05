@@ -20,6 +20,7 @@ data class AboutInfo(
     val baseURI: String,
     val withAuthentication: Boolean,
     val sourceCode: String = "https://github.com/knaw-huc/annorepo",
+    val mongoVersion: String,
 )
 
 data class AnnotationIdentifier(
@@ -65,6 +66,15 @@ data class SearchStatusSummary(
     val containersSearched: Int,
     val totalContainersToSearch: Int,
     val hitsFoundSoFar: Int,
+    val errors: List<String>,
+    val processingTimeInMillis: Long
+)
+
+data class ChoreStatusSummary(
+    val startedAt: Date,
+    val finishedAt: Date?,
+    val expiresAfter: Date?,
+    val state: String,
     val errors: List<String>,
     val processingTimeInMillis: Long
 )

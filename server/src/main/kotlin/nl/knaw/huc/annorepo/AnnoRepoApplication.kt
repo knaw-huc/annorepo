@@ -2,6 +2,7 @@ package nl.knaw.huc.annorepo
 
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
+import java.util.Collections.max
 import java.util.concurrent.atomic.AtomicBoolean
 import com.codahale.metrics.health.HealthCheck
 import com.fasterxml.jackson.databind.module.SimpleModule
@@ -37,11 +38,13 @@ import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.filters.JSONPrettyPrintFilter
 import nl.knaw.huc.annorepo.health.MongoDbHealthCheck
 import nl.knaw.huc.annorepo.health.ServerHealthCheck
-import nl.knaw.huc.annorepo.jobs.ExpiredTasksCleanerJob
+import nl.knaw.huc.annorepo.jobs.ExpiredChoresCleanerJob
 import nl.knaw.huc.annorepo.resources.*
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
+import nl.knaw.huc.annorepo.resources.tools.IndexManager
 import nl.knaw.huc.annorepo.resources.tools.SearchManager
 import nl.knaw.huc.annorepo.resources.tools.formatAsSize
+import nl.knaw.huc.annorepo.resources.tools.getMongoVersion
 import nl.knaw.huc.annorepo.service.LocalDateTimeSerializer
 import nl.knaw.huc.annorepo.service.MongoDbUpdater
 import nl.knaw.huc.annorepo.service.UriFactory
@@ -71,35 +74,38 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         }
 
     private fun getJobsBundle(): ConfiguredBundle<in AnnoRepoConfiguration?> {
-        val expiredTasksCleanerJob = ExpiredTasksCleanerJob()
-        return JobsBundle(expiredTasksCleanerJob)
+        val expiredChoresCleanerJob = ExpiredChoresCleanerJob()
+        return JobsBundle(expiredChoresCleanerJob)
     }
 
     override fun run(configuration: AnnoRepoConfiguration?, environment: Environment) {
+        val maxEnvVarLen = max(EnvironmentVariable.values().map { it.name.length })
         log.info(
             "AR_ environment variables:\n\n" +
                     EnvironmentVariable.values()
                         .joinToString("\n") { e ->
-                            "  ${e.name}:\t${System.getenv(e.name) ?: "(not set, using default)"}"
+                            "  ${e.name.padEnd(maxEnvVarLen + 1)}: ${System.getenv(e.name) ?: "(not set, using default)"}"
                         } +
                     "\n"
         )
 
         log.info("connecting to mongodb at ${configuration!!.mongodbURL} ...")
         val mongoClient = createMongoClient(configuration)
-        log.info("connected!")
+        val mongoVersion = mongoClient.getMongoVersion()
+        log.info("connected! version = $mongoVersion")
 
         val appVersion = javaClass.getPackage().implementationVersion
         val userDAO = ARUserDAO(configuration, mongoClient)
         val containerUserDAO = ARContainerUserDAO(configuration, mongoClient)
         val containerAccessChecker = ContainerAccessChecker(containerUserDAO)
         val searchManager = SearchManager(client = mongoClient, configuration = configuration)
+        val indexManager = IndexManager(mongoClient.getDatabase(configuration.databaseName))
         val uriFactory = UriFactory(configuration)
         environment.jersey().apply {
-            register(AboutResource(configuration, name, appVersion))
+            register(AboutResource(configuration, name, appVersion, mongoVersion))
             register(HomePageResource())
             register(W3CResource(configuration, mongoClient, containerUserDAO, uriFactory))
-            register(ContainerServiceResource(configuration, mongoClient, containerUserDAO, uriFactory))
+            register(ContainerServiceResource(configuration, mongoClient, containerUserDAO, uriFactory, indexManager))
             register(
                 GlobalServiceResource(
                     configuration,

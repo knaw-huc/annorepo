@@ -1,27 +1,5 @@
 package nl.knaw.huc.annorepo.resources
 
-import java.io.StringReader
-import java.net.URI
-import java.util.*
-import java.util.concurrent.TimeUnit
-import jakarta.annotation.security.PermitAll
-import jakarta.json.Json
-import jakarta.ws.rs.BadRequestException
-import jakarta.ws.rs.Consumes
-import jakarta.ws.rs.DELETE
-import jakarta.ws.rs.GET
-import jakarta.ws.rs.NotFoundException
-import jakarta.ws.rs.POST
-import jakarta.ws.rs.PUT
-import jakarta.ws.rs.Path
-import jakarta.ws.rs.PathParam
-import jakarta.ws.rs.Produces
-import jakarta.ws.rs.QueryParam
-import jakarta.ws.rs.core.Context
-import jakarta.ws.rs.core.MediaType.APPLICATION_JSON
-import jakarta.ws.rs.core.Response
-import jakarta.ws.rs.core.SecurityContext
-import jakarta.ws.rs.core.UriBuilder
 import com.codahale.metrics.annotation.Timed
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.benmanes.caffeine.cache.Cache
@@ -32,16 +10,16 @@ import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Aggregates.limit
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Filters.eq
-import com.mongodb.client.model.IndexOptions
-import com.mongodb.client.model.Indexes
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
-import org.bson.BsonType
-import org.bson.BsonValue
-import org.bson.Document
-import org.litote.kmongo.findOne
-import org.litote.kmongo.getCollection
-import org.slf4j.LoggerFactory
+import jakarta.annotation.security.PermitAll
+import jakarta.json.Json
+import jakarta.ws.rs.*
+import jakarta.ws.rs.core.Context
+import jakarta.ws.rs.core.MediaType.APPLICATION_JSON
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.SecurityContext
+import jakarta.ws.rs.core.UriBuilder
 import nl.knaw.huc.annorepo.api.*
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
@@ -52,14 +30,19 @@ import nl.knaw.huc.annorepo.api.ResourcePaths.DISTINCT_FIELD_VALUES
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
 import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
-import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
-import nl.knaw.huc.annorepo.resources.tools.AnnotationList
-import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
-import nl.knaw.huc.annorepo.resources.tools.QueryCacheItem
-import nl.knaw.huc.annorepo.resources.tools.makeAnnotationETag
-import nl.knaw.huc.annorepo.resources.tools.simplify
+import nl.knaw.huc.annorepo.resources.tools.*
 import nl.knaw.huc.annorepo.service.JsonLdUtils
 import nl.knaw.huc.annorepo.service.UriFactory
+import org.bson.BsonType
+import org.bson.BsonValue
+import org.bson.Document
+import org.litote.kmongo.findOne
+import org.litote.kmongo.getCollection
+import org.slf4j.LoggerFactory
+import java.io.StringReader
+import java.net.URI
+import java.util.*
+import java.util.concurrent.TimeUnit
 
 @Path(CONTAINER_SERVICES)
 @Produces(APPLICATION_JSON)
@@ -70,6 +53,7 @@ class ContainerServiceResource(
     client: MongoClient,
     private val containerUserDAO: ContainerUserDAO,
     private val uriFactory: UriFactory,
+    private val indexManager: IndexManager
 ) : AbstractContainerResource(configuration, client, ContainerAccessChecker(containerUserDAO)) {
 
     private val paginationStage = limit(configuration.pageSize)
@@ -295,22 +279,22 @@ class ContainerServiceResource(
     ): Response {
         checkUserHasAdminRightsInThisContainer(context, containerName)
 
-        val container = mdb.getCollection(containerName)
-
-        val fieldName = "$ANNOTATION_FIELD.${fieldNameParam}"
         val indexType =
-            IndexType.fromString(indexTypeParam) ?: throw BadRequestException("Unknown indexType $indexTypeParam")
-        val index = when (indexType) {
-            IndexType.HASHED -> Indexes.hashed(fieldName)
-            IndexType.ASCENDING -> Indexes.ascending(fieldName)
-            IndexType.DESCENDING -> Indexes.descending(fieldName)
-            IndexType.TEXT -> Indexes.text(fieldName)
-            else -> throw RuntimeException("Cannot make an index with type $indexType")
-        }
-        val partialFilter = Filters.exists(fieldName)
-        container.createIndex(index, IndexOptions().partialFilterExpression(partialFilter))
+            IndexType.fromString(indexTypeParam) ?: throw BadRequestException(
+                "Unknown indexType $indexTypeParam; expected indexTypes: ${
+                    IndexType.values()
+                        .map { it.name.lowercase() }
+                        .joinToString(", ")
+                }"
+            )
+        val indexChore =
+            indexManager.startIndexCreation(containerName, fieldNameParam, indexTypeParam, indexType)
+        indexManager.getIndexChore(containerName, fieldNameParam, indexTypeParam)
         val location = uriFactory.indexURL(containerName, fieldNameParam, indexTypeParam)
-        return Response.created(location).build()
+        return Response.created(location)
+            .link(uriFactory.indexStatusURL(containerName, fieldNameParam, indexTypeParam), "status")
+            .entity(indexChore.status.summary())
+            .build()
     }
 
     @Operation(description = "Get an index definition")
@@ -329,6 +313,22 @@ class ContainerServiceResource(
         val indexConfig =
             getIndexConfig(container, containerName, fieldName, indexType)
         return Response.ok(indexConfig).build()
+    }
+
+    @Operation(description = "Get an index status")
+    @Timed
+    @GET
+    @Path("{containerName}/indexes/{fieldName}/{indexType}/status")
+    fun getContainerIndexStatus(
+        @PathParam("containerName") containerName: String,
+        @PathParam("fieldName") fieldName: String,
+        @PathParam("indexType") indexType: String,
+        @Context context: SecurityContext,
+    ): Response {
+        checkUserHasAdminRightsInThisContainer(context, containerName)
+
+        val indexChore = indexManager.getIndexChore(containerName, fieldName, indexType) ?: throw NotFoundException()
+        return Response.ok(indexChore.status.summary()).build()
     }
 
     @Operation(description = "Delete a container index")
@@ -354,7 +354,7 @@ class ContainerServiceResource(
     @Operation(description = "Upload annotations in batch to a given container")
     @Timed
     @POST
-    @Path("{containerName}/annotations_batch")
+    @Path("{containerName}/annotations-batch")
     fun postAnnotationsBatch(
         @PathParam("containerName") containerName: String,
         annotations: List<HashMap<String, Any>>,

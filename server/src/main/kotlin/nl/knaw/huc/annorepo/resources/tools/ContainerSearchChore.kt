@@ -3,12 +3,12 @@ package nl.knaw.huc.annorepo.resources.tools
 import org.bson.conversions.Bson
 import org.slf4j.LoggerFactory
 
-class ContainerSearchTask(
+class ContainerSearchChore(
     private val containerName: String,
     private val queryMap: HashMap<*, *>,
     private val aggregateStages: List<Bson>
 ) :
-    SearchTask(queryMap) {
+    SearchChore(queryMap) {
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun runSearch(status: Status) {

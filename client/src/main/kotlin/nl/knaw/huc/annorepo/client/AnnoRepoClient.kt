@@ -20,6 +20,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
 import nl.knaw.huc.annorepo.api.AnnotationPage
+import nl.knaw.huc.annorepo.api.ChoreStatusSummary
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.IndexConfig
 import nl.knaw.huc.annorepo.api.IndexType
@@ -60,6 +61,7 @@ import nl.knaw.huc.annorepo.client.ARResult.GetAboutResult
 import nl.knaw.huc.annorepo.client.ARResult.GetAnnotationResult
 import nl.knaw.huc.annorepo.client.ARResult.GetContainerMetadataResult
 import nl.knaw.huc.annorepo.client.ARResult.GetContainerResult
+import nl.knaw.huc.annorepo.client.ARResult.GetIndexCreationStatusResult
 import nl.knaw.huc.annorepo.client.ARResult.GetIndexResult
 import nl.knaw.huc.annorepo.client.ARResult.GetSearchInfoResult
 import nl.knaw.huc.annorepo.client.ARResult.GetSearchResultPageResult
@@ -582,7 +584,9 @@ class AnnoRepoClient @JvmOverloads constructor(
                 .request(),
             entity = Entity.json(emptyMap<String, Any>()),
             responseHandlers = mapOf(Response.Status.CREATED to { response ->
-                Either.Right(AddIndexResult(response = response))
+                val json = response.readEntityAsJsonString()
+                val statusSummary: ChoreStatusSummary = oMapper.readValue(json)
+                Either.Right(AddIndexResult(response = response, status = statusSummary))
             })
         )
 
@@ -598,11 +602,38 @@ class AnnoRepoClient @JvmOverloads constructor(
         doGet(
             request = webTarget.path(CONTAINER_SERVICES).path(containerName).path(INDEXES).path(fieldName)
                 .path(indexType.name)
-                .request(), responseHandlers = mapOf(Response.Status.OK to { response ->
+                .request(),
+            responseHandlers = mapOf(Response.Status.OK to { response ->
                 val json = response.readEntityAsJsonString()
                 val indexConfig: IndexConfig = oMapper.readValue(json)
                 Either.Right(
                     GetIndexResult(response, indexConfig)
+                )
+            })
+        )
+
+    /**
+     * Get index Creation Status
+     *
+     * @param containerName
+     * @param fieldName
+     * @param indexType
+     * @return
+     */
+    fun getIndexCreationStatus(
+        containerName: String,
+        fieldName: String,
+        indexType: IndexType
+    ): Either<RequestError, GetIndexCreationStatusResult> =
+        doGet(
+            request = webTarget.path(CONTAINER_SERVICES).path(containerName).path(INDEXES).path(fieldName)
+                .path(indexType.name).path(STATUS)
+                .request(),
+            responseHandlers = mapOf(Response.Status.OK to { response ->
+                val json = response.readEntityAsJsonString()
+                val statusSummary: ChoreStatusSummary = oMapper.readValue(json)
+                Either.Right(
+                    GetIndexCreationStatusResult(response, statusSummary)
                 )
             })
         )

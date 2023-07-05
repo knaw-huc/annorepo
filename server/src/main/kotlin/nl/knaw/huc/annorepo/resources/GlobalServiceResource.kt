@@ -57,17 +57,17 @@ class GlobalServiceResource(
                     .map { (k, v) -> aggregateStageGenerator.generateStage(k, v) }
                     .toList()
             val containerNames = accessibleContainers(context.userPrincipal.name)
-            val task: SearchTask =
+            val chore: SearchChore =
                 searchManager.startGlobalSearch(
                     containerNames = containerNames,
                     queryMap = queryMap,
                     aggregateStages = aggregateStages
                 )
-            val id = task.id
+            val id = chore.id
             val location = uriFactory.globalSearchURL(id)
             return Response.created(location)
                 .link(uriFactory.globalSearchStatusURL(id), "status")
-                .entity(task.status.summary())
+                .entity(chore.status.summary())
                 .build()
         } catch (e: Exception) {
             throw BadRequestException(e.message)
@@ -82,11 +82,11 @@ class GlobalServiceResource(
         @PathParam("searchId") searchId: String,
         @QueryParam("page") page: Int = 0
     ): Response {
-        val searchTaskStatus = searchManager.getSearchTask(searchId)?.status ?: throw NotFoundException()
-        return when (searchTaskStatus.state) {
-            SearchTask.State.DONE -> annotationPageResponse(searchTaskStatus, page, searchId)
-            SearchTask.State.FAILED -> serverErrorResponse(searchTaskStatus)
-            else -> acceptedResponse(searchTaskStatus)
+        val searchChoreStatus = searchManager.getSearchChore(searchId)?.status ?: throw NotFoundException()
+        return when (searchChoreStatus.state) {
+            SearchChore.State.DONE -> annotationPageResponse(searchChoreStatus, page, searchId)
+            SearchChore.State.FAILED -> serverErrorResponse(searchChoreStatus)
+            else -> acceptedResponse(searchChoreStatus)
         }
     }
 
@@ -98,23 +98,23 @@ class GlobalServiceResource(
         @PathParam("searchId") searchId: String,
         @Context context: SecurityContext,
     ): Response {
-        val searchTask = searchManager.getSearchTask(searchId) ?: throw NotFoundException()
-        return Response.ok(searchTask.status.summary()).build()
+        val searchChore = searchManager.getSearchChore(searchId) ?: throw NotFoundException()
+        return Response.ok(searchChore.status.summary()).build()
     }
 
-    private fun acceptedResponse(searchTaskStatus: SearchTask.Status): Response =
-        Response.accepted().entity(searchTaskStatus.summary()).build()
+    private fun acceptedResponse(searchChoreStatus: SearchChore.Status): Response =
+        Response.accepted().entity(searchChoreStatus.summary()).build()
 
-    private fun serverErrorResponse(searchTaskStatus: SearchTask.Status): Response =
-        Response.serverError().entity(searchTaskStatus.summary()).build()
+    private fun serverErrorResponse(searchChoreStatus: SearchChore.Status): Response =
+        Response.serverError().entity(searchChoreStatus.summary()).build()
 
     private fun annotationPageResponse(
-        searchTaskStatus: SearchTask.Status,
+        searchChoreStatus: SearchChore.Status,
         page: Int,
         searchId: String
     ): Response {
-        val total = searchTaskStatus.annotationIds.size
-        val annotationIdSelection = searchTaskStatus.annotationIds.subList(
+        val total = searchChoreStatus.annotationIds.size
+        val annotationIdSelection = searchChoreStatus.annotationIds.subList(
             page * configuration.pageSize,
             min((page + 1) * configuration.pageSize, total)
         )

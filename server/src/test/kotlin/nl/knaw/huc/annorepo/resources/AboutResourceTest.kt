@@ -11,6 +11,7 @@ import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 
 private const val APP_NAME = "annorepo"
 private const val VERSION = "0.1.0"
+private const val MONGO_VERSION = "0.1.0"
 private const val BASE_URI = "https://annorepo.com"
 
 @ExtendWith(DropwizardExtensionsSupport::class)
@@ -18,7 +19,7 @@ open class AboutResourceTest {
     private val config: AnnoRepoConfiguration = AnnoRepoConfiguration().apply { externalBaseUrl = BASE_URI }
     private val resource = ResourceExtension
         .builder()
-        .addResource(AboutResource(config, APP_NAME, VERSION))
+        .addResource(AboutResource(config, APP_NAME, VERSION, MONGO_VERSION))
         .build()
 //    private val log = LoggerFactory.getLogger(javaClass)
 
