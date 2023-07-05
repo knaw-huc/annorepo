@@ -1348,6 +1348,7 @@ Content-Type: application/json
   "startedAt" : "2022-09-22T15:30:24.854713Z",
   "baseURI" : "http://localhost:8080",
   "withAuthentication" : false,
-  "sourceCode" : "https://github.com/knaw-huc/annorepo"
+  "sourceCode" : "https://github.com/knaw-huc/annorepo",
+  "mongoVersion" : "5.0.8"
 }
 ```
