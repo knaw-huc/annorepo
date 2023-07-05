@@ -171,6 +171,7 @@ class W3CResource(
                 mdb.getCollection(containerName).drop()
                 val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
                 containerMetadataCollection.deleteOne(eq("name", containerName))
+                containerUserDAO.removeContainerUser(containerName, context.userPrincipal.name)
                 Response.noContent().build()
             }
 
