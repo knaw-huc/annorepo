@@ -1,27 +1,5 @@
 package nl.knaw.huc.annorepo.resources
 
-import java.io.StringReader
-import java.net.URI
-import java.util.*
-import java.util.concurrent.TimeUnit
-import jakarta.annotation.security.PermitAll
-import jakarta.json.Json
-import jakarta.ws.rs.BadRequestException
-import jakarta.ws.rs.Consumes
-import jakarta.ws.rs.DELETE
-import jakarta.ws.rs.GET
-import jakarta.ws.rs.NotFoundException
-import jakarta.ws.rs.POST
-import jakarta.ws.rs.PUT
-import jakarta.ws.rs.Path
-import jakarta.ws.rs.PathParam
-import jakarta.ws.rs.Produces
-import jakarta.ws.rs.QueryParam
-import jakarta.ws.rs.core.Context
-import jakarta.ws.rs.core.MediaType.APPLICATION_JSON
-import jakarta.ws.rs.core.Response
-import jakarta.ws.rs.core.SecurityContext
-import jakarta.ws.rs.core.UriBuilder
 import com.codahale.metrics.annotation.Timed
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.benmanes.caffeine.cache.Cache
@@ -34,12 +12,14 @@ import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Filters.eq
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
-import org.bson.BsonType
-import org.bson.BsonValue
-import org.bson.Document
-import org.litote.kmongo.findOne
-import org.litote.kmongo.getCollection
-import org.slf4j.LoggerFactory
+import jakarta.annotation.security.PermitAll
+import jakarta.json.Json
+import jakarta.ws.rs.*
+import jakarta.ws.rs.core.Context
+import jakarta.ws.rs.core.MediaType.APPLICATION_JSON
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.SecurityContext
+import jakarta.ws.rs.core.UriBuilder
 import nl.knaw.huc.annorepo.api.*
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
@@ -50,15 +30,19 @@ import nl.knaw.huc.annorepo.api.ResourcePaths.DISTINCT_FIELD_VALUES
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
 import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
-import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
-import nl.knaw.huc.annorepo.resources.tools.AnnotationList
-import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
-import nl.knaw.huc.annorepo.resources.tools.IndexManager
-import nl.knaw.huc.annorepo.resources.tools.QueryCacheItem
-import nl.knaw.huc.annorepo.resources.tools.makeAnnotationETag
-import nl.knaw.huc.annorepo.resources.tools.simplify
+import nl.knaw.huc.annorepo.resources.tools.*
 import nl.knaw.huc.annorepo.service.JsonLdUtils
 import nl.knaw.huc.annorepo.service.UriFactory
+import org.bson.BsonType
+import org.bson.BsonValue
+import org.bson.Document
+import org.litote.kmongo.findOne
+import org.litote.kmongo.getCollection
+import org.slf4j.LoggerFactory
+import java.io.StringReader
+import java.net.URI
+import java.util.*
+import java.util.concurrent.TimeUnit
 
 @Path(CONTAINER_SERVICES)
 @Produces(APPLICATION_JSON)
@@ -370,7 +354,7 @@ class ContainerServiceResource(
     @Operation(description = "Upload annotations in batch to a given container")
     @Timed
     @POST
-    @Path("{containerName}/annotations_batch")
+    @Path("{containerName}/annotations-batch")
     fun postAnnotationsBatch(
         @PathParam("containerName") containerName: String,
         annotations: List<HashMap<String, Any>>,
