@@ -89,7 +89,8 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
 
         log.info("connecting to mongodb at ${configuration!!.mongodbURL} ...")
         val mongoClient = createMongoClient(configuration)
-        log.info("connected!")
+        val mongoVersion = mongoClient.getMongoVersion()
+        log.info("connected! version = $mongoVersion")
 
         val appVersion = javaClass.getPackage().implementationVersion
         val userDAO = ARUserDAO(configuration, mongoClient)
@@ -98,7 +99,6 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         val searchManager = SearchManager(client = mongoClient, configuration = configuration)
         val indexManager = IndexManager(mongoClient.getDatabase(configuration.databaseName))
         val uriFactory = UriFactory(configuration)
-        val mongoVersion = mongoClient.getMongoVersion()
         environment.jersey().apply {
             register(AboutResource(configuration, name, appVersion, mongoVersion))
             register(HomePageResource())
