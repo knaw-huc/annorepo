@@ -24,10 +24,8 @@ import nl.knaw.huc.annorepo.client.ARResult.CreateAnnotationResult
 import nl.knaw.huc.annorepo.client.ARResult.CreateContainerResult
 import nl.knaw.huc.annorepo.client.ARResult.CreateSearchResult
 import nl.knaw.huc.annorepo.client.ARResult.DeleteAnnotationResult
-import nl.knaw.huc.annorepo.client.ARResult.DeleteContainerResult
 import nl.knaw.huc.annorepo.client.ARResult.DeleteIndexResult
 import nl.knaw.huc.annorepo.client.ARResult.GetAnnotationResult
-import nl.knaw.huc.annorepo.client.ARResult.GetContainerResult
 import nl.knaw.huc.annorepo.client.ARResult.GetGlobalSearchStatusResult
 import nl.knaw.huc.annorepo.client.ARResult.GetIndexCreationStatusResult
 import nl.knaw.huc.annorepo.client.ARResult.GetIndexResult
@@ -132,28 +130,27 @@ class IntegratedClientKotlinTester {
 
         @Test
         fun testGetContainer() {
-            val either = client.createContainer().map { (_, _, containerName): CreateContainerResult ->
-                client.getContainer(containerName).map { (response, entity, eTag1): GetContainerResult ->
-                    val entityTag = response.entityTag
-                    doSomethingWith(eTag1, entity, entityTag)
-                    true
-                }
-                true
+            either {
+                val containerName = client.createContainer().bind().containerName
+                val (response, entity, eTag1) = client.getContainer(containerName).bind()
+                val entityTag = response.entityTag
+                doSomethingWith(eTag1, entity, entityTag)
+            }.mapLeft<Void> { requestError ->
+                log.error("error=$requestError")
+                fail(requestError.message)
             }
-            assertThat(either).isInstanceOf(
-                Right::class.java
-            )
         }
 
         @Test
         fun testDeleteContainer() {
-            val either = client.createContainer().map { (_, _, containerName, eTag): CreateContainerResult ->
-                client.deleteContainer(containerName, eTag).map { _: DeleteContainerResult -> true }
-                true
+            either {
+                val (response, location, containerName, eTag) = client.createContainer().bind()
+                doSomethingWith(response.status, location)
+                client.deleteContainer(containerName, eTag)
+            }.mapLeft<Void> { requestError ->
+                log.error("error=$requestError")
+                fail(requestError.message)
             }
-            assertThat(either).isInstanceOf(
-                Right::class.java
-            )
         }
     }
 
