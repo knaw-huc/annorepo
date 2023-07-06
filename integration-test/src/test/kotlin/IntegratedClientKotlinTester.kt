@@ -3,7 +3,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import arrow.core.Either
 import arrow.core.Either.Right
-import arrow.core.flatMap
+import arrow.core.raise.either
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.assertj.core.api.Assertions.assertThat
@@ -567,32 +567,19 @@ class IntegratedClientKotlinTester {
     inner class Tests {
         @Test
         fun `after deleting a container, it shouldn't show up in my-containers anymore`() {
-            client.createContainer("test-container")
-                .map { result ->
-                    val containerName = result.containerName
-                    val eTag = result.eTag
-                    Pair(containerName, eTag)
-                }
-                .flatMap { pair ->
-                    val containerName = pair.first
-                    client.getMyContainers()
-                        .map { assertThat(it.containers["ROOT"]).contains(containerName) }
-                        .map { pair }
-                }
-                .flatMap { pair ->
-                    val containerName = pair.first
-                    val eTag = pair.second
-                    client.deleteContainer(containerName, eTag)
-                        .map { containerName }
-                }
-                .flatMap { containerName ->
-                    client.getMyContainers()
-                        .map { assertThat(it.containers["ROOT"]).doesNotContain(containerName) }
-                }
-                .fold(
-                    { failure -> fail(failure.message) },
-                    {}
-                )
+            either {
+                val createResult = client.createContainer("test-container").bind()
+                val containerName = createResult.containerName
+                val eTag = createResult.eTag
+                val myContainers = client.getMyContainers().bind().containers
+                assertThat(myContainers["ROOT"]).contains(containerName)
+                client.deleteContainer(containerName, eTag).bind()
+                val myContainersAfterDelete = client.getMyContainers().bind().containers
+                assertThat(myContainersAfterDelete["ROOT"]).doesNotContain(containerName)
+            }.mapLeft<Void> {
+                log.error("error=$it")
+                fail(it.message)
+            }
         }
     }
 
