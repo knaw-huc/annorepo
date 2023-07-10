@@ -33,6 +33,7 @@ import nl.knaw.huc.annorepo.auth.AROAuthAuthenticator
 import nl.knaw.huc.annorepo.auth.User
 import nl.knaw.huc.annorepo.cli.EnvCommand
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.dao.ARContainerDAO
 import nl.knaw.huc.annorepo.dao.ARContainerUserDAO
 import nl.knaw.huc.annorepo.dao.ARUserDAO
 import nl.knaw.huc.annorepo.filters.JSONPrettyPrintFilter
@@ -96,6 +97,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
 
         val appVersion = javaClass.getPackage().implementationVersion
         val userDAO = ARUserDAO(configuration, mongoClient)
+        val containerDAO = ARContainerDAO(configuration, mongoClient)
         val containerUserDAO = ARContainerUserDAO(configuration, mongoClient)
         val containerAccessChecker = ContainerAccessChecker(containerUserDAO)
         val searchManager = SearchManager(client = mongoClient, configuration = configuration)
@@ -105,7 +107,16 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             register(AboutResource(configuration, name, appVersion, mongoVersion))
             register(HomePageResource())
             register(W3CResource(configuration, mongoClient, containerUserDAO, uriFactory))
-            register(ContainerServiceResource(configuration, mongoClient, containerUserDAO, uriFactory, indexManager))
+            register(
+                ContainerServiceResource(
+                    configuration,
+                    mongoClient,
+                    containerUserDAO,
+                    containerDAO,
+                    uriFactory,
+                    indexManager
+                )
+            )
             register(
                 GlobalServiceResource(
                     configuration,

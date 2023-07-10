@@ -21,24 +21,22 @@ import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Aggregates.limit
 import com.mongodb.client.model.Filters
-import com.mongodb.client.model.Filters.eq
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.bson.BsonType
 import org.bson.BsonValue
 import org.bson.Document
-import org.litote.kmongo.findOne
 import org.litote.kmongo.getCollection
 import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.*
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
-import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.ResourcePaths.CONTAINER_SERVICES
 import nl.knaw.huc.annorepo.api.ResourcePaths.DISTINCT_FIELD_VALUES
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
 import nl.knaw.huc.annorepo.resources.tools.*
 import nl.knaw.huc.annorepo.service.JsonLdUtils
@@ -52,6 +50,7 @@ class ContainerServiceResource(
     private val configuration: AnnoRepoConfiguration,
     client: MongoClient,
     private val containerUserDAO: ContainerUserDAO,
+    private val containerDAO: ContainerDAO,
     private val uriFactory: UriFactory,
     private val indexManager: IndexManager
 ) : AbstractContainerResource(configuration, client, ContainerAccessChecker(containerUserDAO)) {
@@ -204,10 +203,8 @@ class ContainerServiceResource(
     ): Response {
         checkUserHasReadRightsInThisContainer(context, containerName)
 
-        val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(ARConst.CONTAINER_METADATA_COLLECTION)
-        val containerMetadata: ContainerMetadata =
-            containerMetadataCollection.findOne(eq(CONTAINER_NAME_FIELD, containerName))!!
-        return Response.ok(containerMetadata.fieldCounts.toSortedMap()).build()
+        val sortedMap = containerDAO.getAnnotationFields(containerName)
+        return Response.ok(sortedMap).build()
     }
 
     @Operation(description = "Get a list of the fields used in the annotations in a container")
@@ -220,11 +217,7 @@ class ContainerServiceResource(
         @Context context: SecurityContext,
     ): Response {
         checkUserHasReadRightsInThisContainer(context, containerName)
-        val distinctValues =
-            mdb.getCollection(containerName)
-                .distinct("$ANNOTATION_FIELD.$field", BsonValue::class.java)
-                .map { it.toPrimitive()!! }
-                .toList()
+        val distinctValues = containerDAO.getDistinctValues(containerName, field)
         return Response.ok(distinctValues).build()
     }
 
@@ -238,9 +231,8 @@ class ContainerServiceResource(
     ): Response {
         checkUserHasReadRightsInThisContainer(context, containerName)
 
-        val container = mdb.getCollection(containerName)
-        val containerMetadataStore = mdb.getCollection<ContainerMetadata>(ARConst.CONTAINER_METADATA_COLLECTION)
-        val meta = containerMetadataStore.findOne { eq(CONTAINER_NAME_FIELD, containerName) }!!
+        val container = containerDAO.getCollection(containerName)
+        val meta = containerDAO.getContainerMetadata(containerName)!!
 
         val metadata = mapOf(
             "id" to uriFactory.containerURL(containerName),
@@ -263,7 +255,7 @@ class ContainerServiceResource(
     ): Response {
         checkUserHasReadRightsInThisContainer(context, containerName)
 
-        val container = mdb.getCollection(containerName)
+        val container = containerDAO.getCollection(containerName)
         val body = indexData(container, containerName)
         return Response.ok(body).build()
     }
@@ -310,7 +302,7 @@ class ContainerServiceResource(
     ): Response {
         checkUserHasAdminRightsInThisContainer(context, containerName)
 
-        val container = mdb.getCollection(containerName)
+        val container = containerDAO.getCollection(containerName)
         val indexConfig =
             getIndexConfig(container, containerName, fieldName, indexType)
         return Response.ok(indexConfig).build()
@@ -344,7 +336,7 @@ class ContainerServiceResource(
     ): Response {
         checkUserHasAdminRightsInThisContainer(context, containerName)
 
-        val container = mdb.getCollection(containerName)
+        val container = containerDAO.getCollection(containerName)
         val indexConfig =
             getIndexConfig(container, containerName, fieldName, indexType)
         val indexName = "$ANNOTATION_FIELD.${indexConfig.field}_${indexConfig.type.mongoSuffix}"
@@ -364,7 +356,7 @@ class ContainerServiceResource(
         checkUserHasEditRightsInThisContainer(context, containerName)
 
         val annotationIdentifiers = mutableListOf<AnnotationIdentifier>()
-        val container = mdb.getCollection(containerName)
+        val container = containerDAO.getCollection(containerName)
         for (i in annotations.indices) {
             val annotationName = UUID.randomUUID().toString()
             annotationIdentifiers.add(
@@ -393,7 +385,7 @@ class ContainerServiceResource(
     private fun updateFieldCount(containerName: String, fieldsAdded: List<String>, fieldsDeleted: Set<String>) {
         val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(ARConst.CONTAINER_METADATA_COLLECTION)
         val containerMetadata: ContainerMetadata =
-            containerMetadataCollection.findOne(Filters.eq("name", containerName)) ?: return
+            containerDAO.getContainerMetadata(containerName)!!
         val fieldCounts = containerMetadata.fieldCounts.toMutableMap()
         for (field in fieldsAdded.filter { f -> !f.contains("@") }) {
             fieldCounts[field] = fieldCounts.getOrDefault(field, 0) + 1
@@ -489,7 +481,7 @@ class ContainerServiceResource(
             }
 }
 
-private fun BsonValue.toPrimitive(): Any? {
+internal fun BsonValue.toPrimitive(): Any? {
     return when (this.bsonType) {
         BsonType.BOOLEAN -> this.asBoolean().value
         BsonType.DATE_TIME -> this.asDateTime().value
