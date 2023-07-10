@@ -16,8 +16,8 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.ContainerSpecs
-import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.dao.ContainerUserDAO
 import nl.knaw.huc.annorepo.service.UriFactory
 
 class W3CResourceTest {

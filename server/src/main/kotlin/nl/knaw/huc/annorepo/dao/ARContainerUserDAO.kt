@@ -1,4 +1,4 @@
-package nl.knaw.huc.annorepo.auth
+package nl.knaw.huc.annorepo.dao
 
 import com.mongodb.client.MongoClient
 import org.bson.Document

@@ -21,9 +21,9 @@ import org.bson.Document
 import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.Role
-import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.dao.ContainerUserDAO
 import nl.knaw.huc.annorepo.service.UriFactory
 
 @ExtendWith(MockKExtension::class)

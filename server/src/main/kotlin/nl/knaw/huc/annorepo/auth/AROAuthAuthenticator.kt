@@ -4,6 +4,7 @@ import java.util.Optional
 import io.dropwizard.auth.Authenticator
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import nl.knaw.huc.annorepo.dao.UserDAO
 
 class AROAuthAuthenticator(private val userDAO: UserDAO) : Authenticator<String, User> {
     val log: Logger = LoggerFactory.getLogger(javaClass)

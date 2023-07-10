@@ -1,5 +1,17 @@
 package nl.knaw.huc.annorepo.resources
 
+import java.io.StringReader
+import java.net.URI
+import java.util.*
+import java.util.concurrent.TimeUnit
+import jakarta.annotation.security.PermitAll
+import jakarta.json.Json
+import jakarta.ws.rs.*
+import jakarta.ws.rs.core.Context
+import jakarta.ws.rs.core.MediaType.APPLICATION_JSON
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.SecurityContext
+import jakarta.ws.rs.core.UriBuilder
 import com.codahale.metrics.annotation.Timed
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.benmanes.caffeine.cache.Cache
@@ -12,14 +24,12 @@ import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Filters.eq
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
-import jakarta.annotation.security.PermitAll
-import jakarta.json.Json
-import jakarta.ws.rs.*
-import jakarta.ws.rs.core.Context
-import jakarta.ws.rs.core.MediaType.APPLICATION_JSON
-import jakarta.ws.rs.core.Response
-import jakarta.ws.rs.core.SecurityContext
-import jakarta.ws.rs.core.UriBuilder
+import org.bson.BsonType
+import org.bson.BsonValue
+import org.bson.Document
+import org.litote.kmongo.findOne
+import org.litote.kmongo.getCollection
+import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.*
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
@@ -28,21 +38,11 @@ import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.ResourcePaths.CONTAINER_SERVICES
 import nl.knaw.huc.annorepo.api.ResourcePaths.DISTINCT_FIELD_VALUES
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
-import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.dao.ContainerUserDAO
 import nl.knaw.huc.annorepo.resources.tools.*
 import nl.knaw.huc.annorepo.service.JsonLdUtils
 import nl.knaw.huc.annorepo.service.UriFactory
-import org.bson.BsonType
-import org.bson.BsonValue
-import org.bson.Document
-import org.litote.kmongo.findOne
-import org.litote.kmongo.getCollection
-import org.slf4j.LoggerFactory
-import java.io.StringReader
-import java.net.URI
-import java.util.*
-import java.util.concurrent.TimeUnit
 
 @Path(CONTAINER_SERVICES)
 @Produces(APPLICATION_JSON)
@@ -221,8 +221,9 @@ class ContainerServiceResource(
     ): Response {
         checkUserHasReadRightsInThisContainer(context, containerName)
         val distinctValues =
-            mdb.getCollection(containerName).distinct("$ANNOTATION_FIELD.$field", BsonValue::class.java)
-                .map { it.toPrimitive() }
+            mdb.getCollection(containerName)
+                .distinct("$ANNOTATION_FIELD.$field", BsonValue::class.java)
+                .map { it.toPrimitive()!! }
                 .toList()
         return Response.ok(distinctValues).build()
     }

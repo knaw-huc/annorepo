@@ -19,8 +19,8 @@ import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.*
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.ResourcePaths.GLOBAL_SERVICES
-import nl.knaw.huc.annorepo.auth.ContainerUserDAO
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.dao.ContainerUserDAO
 import nl.knaw.huc.annorepo.resources.tools.*
 import nl.knaw.huc.annorepo.service.UriFactory
 

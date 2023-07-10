@@ -4,9 +4,9 @@ import com.mongodb.client.MongoClient
 import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.Role
-import nl.knaw.huc.annorepo.auth.ContainerUserDAO
-import nl.knaw.huc.annorepo.auth.UserDAO
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.dao.ContainerUserDAO
+import nl.knaw.huc.annorepo.dao.UserDAO
 
 class MongoDbUpdater(
     configuration: AnnoRepoConfiguration,

@@ -22,10 +22,10 @@ import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.RejectedUserEntry
 import nl.knaw.huc.annorepo.api.ResourcePaths.ADMIN
 import nl.knaw.huc.annorepo.api.UserEntry
-import nl.knaw.huc.annorepo.auth.FIELD_API_KEY
-import nl.knaw.huc.annorepo.auth.FIELD_USER_NAME
 import nl.knaw.huc.annorepo.auth.RootUser
-import nl.knaw.huc.annorepo.auth.UserDAO
+import nl.knaw.huc.annorepo.dao.FIELD_API_KEY
+import nl.knaw.huc.annorepo.dao.FIELD_USER_NAME
+import nl.knaw.huc.annorepo.dao.UserDAO
 
 @Path(ADMIN)
 @Produces(MediaType.APPLICATION_JSON)

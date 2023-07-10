@@ -1,4 +1,4 @@
-package nl.knaw.huc.annorepo.auth
+package nl.knaw.huc.annorepo.dao
 
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.Role

@@ -29,12 +29,12 @@ import nl.knaw.huc.annorepo.api.ARConst.APP_NAME
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.api.ARConst.EnvironmentVariable
 import nl.knaw.huc.annorepo.api.ContainerMetadata
-import nl.knaw.huc.annorepo.auth.ARContainerUserDAO
 import nl.knaw.huc.annorepo.auth.AROAuthAuthenticator
-import nl.knaw.huc.annorepo.auth.ARUserDAO
 import nl.knaw.huc.annorepo.auth.User
 import nl.knaw.huc.annorepo.cli.EnvCommand
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.dao.ARContainerUserDAO
+import nl.knaw.huc.annorepo.dao.ARUserDAO
 import nl.knaw.huc.annorepo.filters.JSONPrettyPrintFilter
 import nl.knaw.huc.annorepo.health.MongoDbHealthCheck
 import nl.knaw.huc.annorepo.health.ServerHealthCheck

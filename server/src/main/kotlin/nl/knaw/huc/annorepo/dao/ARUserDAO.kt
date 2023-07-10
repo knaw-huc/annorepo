@@ -1,4 +1,4 @@
-package nl.knaw.huc.annorepo.auth
+package nl.knaw.huc.annorepo.dao
 
 import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Filters
@@ -11,6 +11,9 @@ import nl.knaw.huc.annorepo.api.ARConst.USER_COLLECTION
 import nl.knaw.huc.annorepo.api.RejectedUserEntry
 import nl.knaw.huc.annorepo.api.UserAddResults
 import nl.knaw.huc.annorepo.api.UserEntry
+import nl.knaw.huc.annorepo.auth.BasicUser
+import nl.knaw.huc.annorepo.auth.RootUser
+import nl.knaw.huc.annorepo.auth.User
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 
 const val FIELD_API_KEY = "apiKey"
