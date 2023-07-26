@@ -254,7 +254,9 @@ Content-Length: 452
 
 ### Deleting an annotation container (🔒)
 
-Deleting an annotation container is only possible if the container doesn't contain any annotations.
+If the container contains annotations, the delete will return a 400 Bad Request with a warning to delete the annotations first.
+
+You can override this by adding `?force=true` to the request.
 
 The `If-Match` header must contain the ETag of the container.
 
