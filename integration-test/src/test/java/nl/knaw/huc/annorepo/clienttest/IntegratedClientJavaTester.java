@@ -155,7 +155,7 @@ public class IntegratedClientJavaTester {
                             (ARResult.CreateContainerResult result) -> {
                                 String containerName = result.getContainerName();
                                 String eTag = result.getETag();
-                                client.deleteContainer(containerName, eTag).map(
+                                client.deleteContainer(containerName, eTag, false).map(
                                         (ARResult.DeleteContainerResult result2) -> true
                                 );
                                 return true;

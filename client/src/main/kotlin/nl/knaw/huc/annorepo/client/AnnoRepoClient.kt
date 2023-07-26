@@ -201,18 +201,27 @@ class AnnoRepoClient @JvmOverloads constructor(
      *
      * @param containerName
      * @param eTag
+     * @param force
      * @return
      */
-    fun deleteContainer(containerName: String, eTag: String): Either<RequestError, DeleteContainerResult> = doDelete(
-        request = webTarget.path(W3C).path(containerName).request().header(IF_MATCH, eTag),
-        responseHandlers = mapOf(Response.Status.NO_CONTENT to { response ->
-            Either.Right(
-                DeleteContainerResult(
-                    response = response
+    fun deleteContainer(
+        containerName: String,
+        eTag: String,
+        force: Boolean = false
+    ): Either<RequestError, DeleteContainerResult> {
+        val initialPath = webTarget.path(W3C).path(containerName)
+        val path = if (force) initialPath.queryParam("force", true) else initialPath
+        return doDelete(
+            request = path.request().header(IF_MATCH, eTag),
+            responseHandlers = mapOf(Response.Status.NO_CONTENT to { response ->
+                Either.Right(
+                    DeleteContainerResult(
+                        response = response
+                    )
                 )
-            )
-        })
-    )
+            })
+        )
+    }
 
     /**
      * Create annotation

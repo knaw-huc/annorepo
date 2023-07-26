@@ -2,7 +2,8 @@ package nl.knaw.huc.annorepo.resources
 
 import java.io.StringReader
 import java.time.Instant
-import java.util.*
+import java.util.Date
+import java.util.UUID
 import jakarta.annotation.security.PermitAll
 import jakarta.json.Json
 import jakarta.ws.rs.BadRequestException
@@ -35,24 +36,34 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.bson.BSONException
 import org.bson.Document
 import org.bson.json.JsonParseException
-import org.litote.kmongo.*
+import org.litote.kmongo.aggregate
+import org.litote.kmongo.findOne
+import org.litote.kmongo.getCollection
+import org.litote.kmongo.json
+import org.litote.kmongo.replaceOneWithFilter
 import org.slf4j.LoggerFactory
-import nl.knaw.huc.annorepo.api.*
+import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
+import nl.knaw.huc.annorepo.api.AnnotationData
+import nl.knaw.huc.annorepo.api.ContainerMetadata
+import nl.knaw.huc.annorepo.api.ContainerPage
+import nl.knaw.huc.annorepo.api.ContainerSpecs
+import nl.knaw.huc.annorepo.api.ResourcePaths
+import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
+import nl.knaw.huc.annorepo.mappers.PreconditionFailedException
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.makeAnnotationETag
 import nl.knaw.huc.annorepo.resources.tools.simplify
 import nl.knaw.huc.annorepo.service.JsonLdUtils
 import nl.knaw.huc.annorepo.service.UriFactory
 
-private const val ETAG_MISMATCH = "Etag does not match"
 private const val RESOURCE_LINK = "http://www.w3.org/ns/ldp#Resource"
 private const val ANNOTATION_LINK = "http://www.w3.org/ns/ldp#Annotation"
 
@@ -100,8 +111,7 @@ class W3CResource(
             .link("http://www.w3.org/TR/annotation-protocol", "http://www.w3.org/ns/ldp#constrainedBy")
             .allow("POST", "GET", "DELETE", "OPTIONS", "HEAD")
             .tag(eTag)
-            .entity(containerData)
-            .build()
+            .entity(containerData).build()
     }
 
     @Operation(description = "Get an Annotation Container")
@@ -146,42 +156,36 @@ class W3CResource(
     @Path("{containerName}")
     fun deleteContainer(
         @PathParam("containerName") containerName: String,
+        @QueryParam("force") force: Boolean = false,
         @Context req: Request,
         @Context context: SecurityContext,
     ): Response {
         checkUserHasAdminRightsInThisContainer(context, containerName)
-
         val eTag = makeContainerETag(containerName)
-        val valid = req.evaluatePreconditions(eTag)
+        validateETag(req, eTag)
         val containerPage = getContainerPage(containerName, 0, configuration.pageSize)
         return when {
-            valid == null -> {
-                Response.status(Response.Status.PRECONDITION_FAILED)
-                    .entity(ETAG_MISMATCH)
-                    .build()
+            (containerPage == null) -> {
+                Response.status(Response.Status.NOT_FOUND).entity("Container $containerName was not found.").build()
             }
 
-            containerPage == null -> {
-                Response.status(Response.Status.NOT_FOUND)
-                    .entity("Container $containerName was not found.")
-                    .build()
-            }
-
-            containerPage.total == 0L -> {
+            (containerPage.total == 0L || force) -> {
                 mdb.getCollection(containerName).drop()
-                val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
+                val containerMetadataCollection =
+                    mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
                 containerMetadataCollection.deleteOne(eq("name", containerName))
-                containerUserDAO.removeContainerUser(containerName, context.userPrincipal.name)
+                containerUserDAO.getUsersForContainer(containerName).forEach { user ->
+                    containerUserDAO.removeContainerUser(containerName, user.userName)
+                }
                 Response.noContent().build()
             }
 
             else -> {
                 Response.status(Response.Status.BAD_REQUEST)
                     .entity(
-                        "Container $containerName is not empty," +
-                                " all annotations need to be removed from this container first."
-                    )
-                    .build()
+                        "Container $containerName is not empty,"
+                                + " all annotations need to be removed from this container first."
+                    ).build()
             }
         }
     }
@@ -262,28 +266,17 @@ class W3CResource(
         checkUserHasReadRightsInThisContainer(context, containerName)
 
         val container = mdb.getCollection(containerName)
-        val annotationDocument =
-            container.find(Document(ANNOTATION_NAME_FIELD, annotationName))
-                .first()
-                ?.get(ANNOTATION_FIELD, Document::class.java)
+        val annotationDocument = container.find(Document(ANNOTATION_NAME_FIELD, annotationName)).first()
+            ?.get(ANNOTATION_FIELD, Document::class.java)
         return if (annotationDocument != null) {
             val annotationData = AnnotationData(
-                0L,
-                annotationName,
-                annotationDocument.toJson(),
-                Date.from(Instant.now()),
-                Date.from(Instant.now())
+                0L, annotationName, annotationDocument.toJson(), Date.from(Instant.now()), Date.from(Instant.now())
             )
             val entity = annotationData.contentWithAssignedId(containerName, annotationName)
             val eTag = makeAnnotationETag(containerName, annotationName)
-            Response.ok(entity)
-                .header("Vary", "Accept")
-                .allow("POST", "PUT", "GET", "DELETE", "OPTIONS", "HEAD")
-                .link(RESOURCE_LINK, "type")
-                .link(ANNOTATION_LINK, "type")
-                .lastModified(annotationData.modified)
-                .tag(eTag)
-                .build()
+            Response.ok(entity).header("Vary", "Accept").allow("POST", "PUT", "GET", "DELETE", "OPTIONS", "HEAD")
+                .link(RESOURCE_LINK, "type").link(ANNOTATION_LINK, "type").lastModified(annotationData.modified)
+                .tag(eTag).build()
         } else Response.status(Response.Status.NOT_FOUND).build()
     }
 
@@ -303,10 +296,7 @@ class W3CResource(
         checkUserHasEditRightsInThisContainer(context, containerName)
 
         val eTag = makeAnnotationETag(containerName, annotationName)
-        req.evaluatePreconditions(eTag)
-            ?: return Response.status(Response.Status.PRECONDITION_FAILED)
-                .entity(ETAG_MISMATCH)
-                .build()
+        validateETag(req, eTag)
         val annotationDocument = Document.parse(annotationJson)
         val newFields = JsonLdUtils.extractFields(annotationJson)
 
@@ -352,10 +342,7 @@ class W3CResource(
         checkUserHasEditRightsInThisContainer(context, containerName)
 
         val eTag = makeAnnotationETag(containerName, annotationName)
-        req.evaluatePreconditions(eTag)
-            ?: return Response.status(Response.Status.PRECONDITION_FAILED)
-                .entity(ETAG_MISMATCH)
-                .build()
+        validateETag(req, eTag)
 
         val container = mdb.getCollection(containerName)
 
@@ -382,11 +369,7 @@ class W3CResource(
     ): Map<String, Any?> {
         val assignedId = uriFactory.annotationURL(containerName, annotationName).toString()
         val jo: MutableMap<String, Any?> =
-            Json.createReader(StringReader(content!!))
-                .readObject()
-                .toMap()
-                .simplify()
-                .toMutableMap()
+            Json.createReader(StringReader(content!!)).readObject().toMap().simplify().toMutableMap()
         val originalId = jo["id"]
         jo["id"] = assignedId
         if (originalId != null && originalId != assignedId) {
@@ -396,6 +379,13 @@ class W3CResource(
     }
 
     private val paginationStage = Aggregates.limit(configuration.pageSize)
+    private fun validateETag(req: Request, eTag: EntityTag) {
+        try {
+            req.evaluatePreconditions(eTag) ?: throw PreconditionFailedException()
+        } catch (e: Throwable) {
+            throw BadRequestException(e.message)
+        }
+    }
 
     private fun getContainerPage(containerName: String, page: Int, pageSize: Int): ContainerPage? {
         val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
@@ -406,12 +396,9 @@ class W3CResource(
         val annotations = collection.aggregate<Document>(
             Aggregates.match(
                 Filters.exists(ANNOTATION_FIELD)
-            ),
-            Aggregates.skip(page * pageSize), // start at offset
+            ), Aggregates.skip(page * pageSize), // start at offset
             paginationStage // return $pageSize documents or less
-        )
-            .map { document -> toAnnotationMap(document, containerName) }
-            .toList()
+        ).map { document -> toAnnotationMap(document, containerName) }.toList()
 
         val lastPage = lastPage(count, pageSize)
         val prevPage = if (page > 0) {
@@ -440,15 +427,12 @@ class W3CResource(
     private fun lastPage(count: Long, pageSize: Int) = (count - 1).div(pageSize).toInt()
 
     private fun toAnnotationMap(a: Document, containerName: String): Map<String, Any> {
-        return a.get(ANNOTATION_FIELD, Document::class.java)
-            .toMutableMap()
-            .apply<MutableMap<String, Any>> {
-                put(
-                    "id",
-                    uriFactory.annotationURL(containerName, a.getString(ANNOTATION_NAME_FIELD))
-                )
-                remove("@context")
-            }
+        return a.get(ANNOTATION_FIELD, Document::class.java).toMutableMap().apply<MutableMap<String, Any>> {
+            put(
+                "id", uriFactory.annotationURL(containerName, a.getString(ANNOTATION_NAME_FIELD))
+            )
+            remove("@context")
+        }
     }
 
     private fun makeContainerETag(containerName: String): EntityTag =

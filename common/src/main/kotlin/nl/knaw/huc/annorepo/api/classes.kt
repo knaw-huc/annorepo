@@ -32,7 +32,7 @@ data class AnnotationIdentifier(
 data class IndexConfig(
     val field: String,
     val type: IndexType,
-    val url: URI,
+    val url: URI
 )
 
 data class SearchInfo(
