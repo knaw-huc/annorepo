@@ -107,7 +107,7 @@ release:
 	git pull && \
 	git push && \
 	make version-update && \
-	git commit -a -m "bump version to $(call version_fn)" \
+	git commit -a -m "bump version to $(call version_fn)" && \
 	git push && \
 	gh release create v$(call version_fn) && \
 	make deploy
