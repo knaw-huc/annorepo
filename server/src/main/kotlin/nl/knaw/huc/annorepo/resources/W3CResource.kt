@@ -57,7 +57,7 @@ import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
-import nl.knaw.huc.annorepo.mappers.PreconditionFailedException
+import nl.knaw.huc.annorepo.exceptions.PreconditionFailedException
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.makeAnnotationETag
 import nl.knaw.huc.annorepo.resources.tools.simplify

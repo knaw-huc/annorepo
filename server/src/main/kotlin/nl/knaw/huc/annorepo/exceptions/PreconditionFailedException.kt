@@ -1,4 +1,4 @@
-package nl.knaw.huc.annorepo.mappers
+package nl.knaw.huc.annorepo.exceptions
 
 private const val ETAG_MISMATCH = "Etag does not match"
 
