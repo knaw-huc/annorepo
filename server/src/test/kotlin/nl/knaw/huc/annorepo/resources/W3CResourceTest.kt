@@ -18,6 +18,7 @@ import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.ContainerSpecs
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
+import nl.knaw.huc.annorepo.resources.tools.IndexManager
 import nl.knaw.huc.annorepo.service.UriFactory
 
 class W3CResourceTest {
@@ -39,6 +40,7 @@ class W3CResourceTest {
     }
     private val containerUserDAO: ContainerUserDAO = mock()
     private val securityContext: SecurityContext = mock()
+    private val indexManager: IndexManager = mock()
 
     @Disabled
     @Test
@@ -51,7 +53,8 @@ class W3CResourceTest {
                 configuration = configuration,
                 client = client,
                 containerUserDAO = containerUserDAO,
-                uriFactory = UriFactory(configuration)
+                uriFactory = UriFactory(configuration),
+                indexManager = indexManager
             )
         val response = r.createContainer(
             containerSpecs = ContainerSpecs(

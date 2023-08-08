@@ -10,7 +10,11 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import com.mongodb.client.*
+import com.mongodb.client.MongoClient
+import com.mongodb.client.MongoCollection
+import com.mongodb.client.MongoCursor
+import com.mongodb.client.MongoDatabase
+import com.mongodb.client.MongoIterable
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
@@ -24,6 +28,7 @@ import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
+import nl.knaw.huc.annorepo.resources.tools.IndexManager
 import nl.knaw.huc.annorepo.service.UriFactory
 
 @ExtendWith(MockKExtension::class)
@@ -37,7 +42,7 @@ class W3CResourceAccessTest {
                 authorizedRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR, Role.GUEST)
             ) {
                 val response =
-                    resource.readContainer(containerName = containerName, page = 0, context = securityContext)
+                    resource.readContainer(containerName = CONTAINER_NAME, page = 0, context = securityContext)
                 assertNotNull(response)
             }
         }
@@ -49,7 +54,7 @@ class W3CResourceAccessTest {
             ) {
                 val response =
                     resource.deleteContainer(
-                        containerName = containerName,
+                        containerName = CONTAINER_NAME,
                         req = request,
                         context = securityContext
                     )
@@ -69,7 +74,7 @@ class W3CResourceAccessTest {
                 val response =
                     resource.createAnnotation(
                         slug = "slug",
-                        containerName = containerName,
+                        containerName = CONTAINER_NAME,
                         annotationJson = "",
                         context = securityContext
                     )
@@ -84,7 +89,7 @@ class W3CResourceAccessTest {
             ) {
                 val response =
                     resource.readAnnotation(
-                        containerName = containerName,
+                        containerName = CONTAINER_NAME,
                         annotationName = "annotation",
                         context = securityContext
                     )
@@ -99,7 +104,7 @@ class W3CResourceAccessTest {
             ) {
                 val response =
                     resource.updateAnnotation(
-                        containerName = containerName,
+                        containerName = CONTAINER_NAME,
                         annotationName = "annotation",
                         annotationJson = "",
                         req = request,
@@ -116,7 +121,7 @@ class W3CResourceAccessTest {
             ) {
                 val response =
                     resource.deleteAnnotation(
-                        containerName = containerName,
+                        containerName = CONTAINER_NAME,
                         annotationName = "annotation",
                         req = request,
                         context = securityContext
@@ -127,9 +132,9 @@ class W3CResourceAccessTest {
     }
 
     companion object {
-        private const val containerName = "containername"
-        private const val baseURL = "https://annorepo.net"
-        private const val databaseName = "mock"
+        private const val CONTAINER_NAME = "container-name"
+        private const val BASE_URL = "https://annorepo.net"
+        private const val DATABASE_NAME = "mock"
 
         @MockK
         lateinit var config: AnnoRepoConfiguration
@@ -164,6 +169,9 @@ class W3CResourceAccessTest {
         @RelaxedMockK
         lateinit var containerUserDAO: ContainerUserDAO
 
+        @RelaxedMockK
+        lateinit var indexManager: IndexManager
+
         private lateinit var resource: W3CResource
         private val log = LoggerFactory.getLogger(W3CResourceAccessTest::class.java)
 
@@ -171,13 +179,13 @@ class W3CResourceAccessTest {
         @JvmStatic
         internal fun beforeAll() {
             MockKAnnotations.init(this)
-            every { config.externalBaseUrl } returns baseURL
-            every { config.databaseName } returns databaseName
+            every { config.externalBaseUrl } returns BASE_URL
+            every { config.databaseName } returns DATABASE_NAME
             every { config.pageSize } returns 10
             every { config.rangeSelectorType } returns "something"
             every { config.withAuthentication } returns true
-            every { client.getDatabase(databaseName) } returns mongoDatabase
-            every { mongoDatabase.getCollection(containerName) } returns mongoCollection
+            every { client.getDatabase(DATABASE_NAME) } returns mongoDatabase
+            every { mongoDatabase.getCollection(CONTAINER_NAME) } returns mongoCollection
             every {
                 mongoDatabase.getCollection(
                     "_containerMetadata",
@@ -188,8 +196,14 @@ class W3CResourceAccessTest {
             every { mongoDatabase.createCollection("slug") } returns Unit
             every { collectionNames.iterator() } returns mongoCursor
             every { mongoCursor.hasNext() } returns true
-            every { mongoCursor.next() } returns containerName
-            resource = W3CResource(config, client, containerUserDAO, UriFactory(config))
+            every { mongoCursor.next() } returns CONTAINER_NAME
+            resource = W3CResource(
+                configuration = config,
+                client = client,
+                containerUserDAO = containerUserDAO,
+                uriFactory = UriFactory(config),
+                indexManager = indexManager
+            )
         }
 
         private fun useRootUser() {
@@ -197,7 +211,7 @@ class W3CResourceAccessTest {
         }
 
         private fun useUserWithRole(userName: String, role: Role?) {
-            every { containerUserDAO.getUserRole(containerName, userName) } returns role
+            every { containerUserDAO.getUserRole(CONTAINER_NAME, userName) } returns role
             every { userPrincipal.name } returns userName
             every { securityContext.userPrincipal } returns userPrincipal
         }
