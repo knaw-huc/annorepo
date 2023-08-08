@@ -19,10 +19,11 @@ class IndexManager(val mdb: MongoDatabase) {
         containerName: String,
         fieldName: String,
         indexTypeName: String,
-        indexType: IndexType
+        indexType: IndexType,
+        isJsonField: Boolean = true
     ): IndexChore {
         val container = mdb.getCollection(containerName)
-        val fullFieldName = "${ARConst.ANNOTATION_FIELD}.${fieldName}"
+        val fullFieldName = if (isJsonField) "${ARConst.ANNOTATION_FIELD}.${fieldName}" else fieldName
         val index = when (indexType) {
             HASHED -> Indexes.hashed(fullFieldName)
             ASCENDING -> Indexes.ascending(fullFieldName)

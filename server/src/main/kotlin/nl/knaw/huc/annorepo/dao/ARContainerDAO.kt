@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
-import nl.knaw.huc.annorepo.resources.toPrimitive
+import nl.knaw.huc.annorepo.resources.tools.toPrimitive
 
 class ARContainerDAO(configuration: AnnoRepoConfiguration, client: MongoClient) : ContainerDAO {
     private val MAX_CACHE_SIZE: Long = 100

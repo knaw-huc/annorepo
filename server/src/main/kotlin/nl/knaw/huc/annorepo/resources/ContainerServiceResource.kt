@@ -2,11 +2,21 @@ package nl.knaw.huc.annorepo.resources
 
 import java.io.StringReader
 import java.net.URI
-import java.util.*
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 import jakarta.annotation.security.PermitAll
 import jakarta.json.Json
-import jakarta.ws.rs.*
+import jakarta.ws.rs.BadRequestException
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.NotFoundException
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.Context
 import jakarta.ws.rs.core.MediaType.APPLICATION_JSON
 import jakarta.ws.rs.core.Response
@@ -23,22 +33,34 @@ import com.mongodb.client.model.Aggregates.limit
 import com.mongodb.client.model.Filters
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
-import org.bson.BsonType
-import org.bson.BsonValue
 import org.bson.Document
 import org.litote.kmongo.getCollection
 import org.slf4j.LoggerFactory
-import nl.knaw.huc.annorepo.api.*
+import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
+import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
+import nl.knaw.huc.annorepo.api.AnnotationIdentifier
+import nl.knaw.huc.annorepo.api.AnnotationPage
+import nl.knaw.huc.annorepo.api.ContainerMetadata
+import nl.knaw.huc.annorepo.api.ContainerUserEntry
+import nl.knaw.huc.annorepo.api.IndexConfig
+import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.ResourcePaths.CONTAINER_SERVICES
 import nl.knaw.huc.annorepo.api.ResourcePaths.DISTINCT_FIELD_VALUES
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
+import nl.knaw.huc.annorepo.api.SearchInfo
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
-import nl.knaw.huc.annorepo.resources.tools.*
+import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
+import nl.knaw.huc.annorepo.resources.tools.AnnotationList
+import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
+import nl.knaw.huc.annorepo.resources.tools.IndexManager
+import nl.knaw.huc.annorepo.resources.tools.QueryCacheItem
+import nl.knaw.huc.annorepo.resources.tools.makeAnnotationETag
+import nl.knaw.huc.annorepo.resources.tools.simplify
 import nl.knaw.huc.annorepo.service.JsonLdUtils
 import nl.knaw.huc.annorepo.service.UriFactory
 
@@ -481,18 +503,5 @@ class ContainerServiceResource(
             }
 }
 
-internal fun BsonValue.toPrimitive(): Any? {
-    return when (this.bsonType) {
-        BsonType.BOOLEAN -> this.asBoolean().value
-        BsonType.DATE_TIME -> this.asDateTime().value
-        BsonType.DECIMAL128 -> this.asDecimal128().value
-        BsonType.DOUBLE -> this.asDouble().value
-        BsonType.INT32 -> this.asInt32().value
-        BsonType.INT64 -> this.asInt64().value
-        BsonType.STRING -> this.asString().value
-        BsonType.TIMESTAMP -> this.asTimestamp().value
-        else -> this
-    }
-}
 
 

@@ -8,9 +8,11 @@ import com.mongodb.client.MongoDatabase
 import org.assertj.core.api.Assertions.assertThat
 import org.litote.kmongo.KMongo
 import org.slf4j.LoggerFactory
+import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ARContainerDAO
 import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
+import nl.knaw.huc.annorepo.resources.tools.hasAnnotationNameIndex
 import nl.knaw.huc.annorepo.resources.tools.toSimpleValue
 
 class MongoTester {
@@ -59,6 +61,32 @@ class MongoTester {
         val cachedDistinctValues = containerDAO.getDistinctValues("large-container", "body.type")
         log.info("{}", cachedDistinctValues)
         assertThat(cachedDistinctValues).isEqualTo(distinctValues)
+    }
+
+    private fun allAnnotationContainers(): List<String> = mdb.listCollectionNames()
+        .filter { it != ARConst.CONTAINER_METADATA_COLLECTION }
+        .filter { !it.startsWith('_') }
+        .sorted<String>()
+        .toList()
+
+    @Test
+    fun testIndexes() {
+        val containerDAO = ARContainerDAO(configuration, mongoClient)
+        val allContainers = allAnnotationContainers()
+        for (cn in allContainers) {
+            log.info("container {}", cn)
+            val collection = containerDAO.getCollection(cn)
+            val indexes = collection.listIndexes().toList()
+            log.info("  indexes:")
+            for (i in indexes) {
+                log.info("  - {}", i["name"])
+            }
+            val names =
+                collection.listIndexes().filterNotNull().map { it["name"] }
+            val hasAnnotationNameIndex = collection.hasAnnotationNameIndex()
+            log.info("names={}", names)
+            log.info("{}", hasAnnotationNameIndex)
+        }
     }
 
     private fun Map<String, JsonValue>.simplify(): Map<String, Any?> {

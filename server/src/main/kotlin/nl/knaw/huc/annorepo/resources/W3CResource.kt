@@ -53,12 +53,14 @@ import nl.knaw.huc.annorepo.api.AnnotationData
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.ContainerPage
 import nl.knaw.huc.annorepo.api.ContainerSpecs
+import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
 import nl.knaw.huc.annorepo.exceptions.PreconditionFailedException
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
+import nl.knaw.huc.annorepo.resources.tools.IndexManager
 import nl.knaw.huc.annorepo.resources.tools.makeAnnotationETag
 import nl.knaw.huc.annorepo.resources.tools.simplify
 import nl.knaw.huc.annorepo.service.JsonLdUtils
@@ -76,6 +78,7 @@ class W3CResource(
     client: MongoClient,
     private val containerUserDAO: ContainerUserDAO,
     private val uriFactory: UriFactory,
+    private val indexManager: IndexManager
 ) : AbstractContainerResource(configuration, client, ContainerAccessChecker(containerUserDAO)) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -101,6 +104,14 @@ class W3CResource(
             val userName = context.userPrincipal.name
             containerUserDAO.addContainerUser(containerName, userName, Role.ADMIN)
         }
+        indexManager.startIndexCreation(
+            containerName = containerName,
+            fieldName = ANNOTATION_NAME_FIELD,
+            isJsonField = false,
+            indexTypeName = "annotation_name",
+            indexType = IndexType.HASHED
+        )
+
         val containerData = getContainerPage(containerName, 0, configuration.pageSize)
         val uri = uriFactory.containerURL(containerName)
         val eTag = makeContainerETag(containerName)

@@ -106,7 +106,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         environment.jersey().apply {
             register(AboutResource(configuration, name, appVersion, mongoVersion))
             register(HomePageResource())
-            register(W3CResource(configuration, mongoClient, containerUserDAO, uriFactory))
+            register(W3CResource(configuration, mongoClient, containerUserDAO, uriFactory, indexManager))
             register(
                 ContainerServiceResource(
                     configuration,
@@ -172,7 +172,9 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             configuration = configuration,
             client = mongoClient,
             userDAO = userDAO,
-            containerUserDAO = containerUserDAO
+            containerUserDAO = containerUserDAO,
+            containerDAO = containerDAO,
+            indexManager = indexManager
         ).run()
     }
 
