@@ -163,7 +163,7 @@ class IntegratedClientKotlinTester {
                 .withTarget("http://example.org/target").build()
 
             // Create
-            client.createAnnotation(containerName, annotation).fold(
+            client.createAnnotation(containerName, annotation, null).fold(
                 { error: RequestError ->
                     handleError(error)
                     false
@@ -253,6 +253,7 @@ class IntegratedClientKotlinTester {
             })
             assertThat(success).isTrue
         }
+
     }
 
     @Nested
@@ -406,13 +407,15 @@ class IntegratedClientKotlinTester {
         @Test
         fun testListIndexes() {
             val containerName = "republic"
-            val success = client.listIndexes(containerName).fold({ error: RequestError ->
-                handleError(error)
-                false
-            }, { (_, indexes): ListIndexesResult ->
-                doSomethingWith(indexes)
-                true
-            })
+            val success = client.listIndexes(containerName).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    false
+                },
+                { (_, indexes): ListIndexesResult ->
+                    doSomethingWith(indexes)
+                    true
+                })
             assertThat(success).isTrue
         }
 
@@ -423,8 +426,10 @@ class IntegratedClientKotlinTester {
         @Test
         fun testFieldInfo() {
             val containerName = "republic"
-            client.getFieldInfo(containerName).fold({ error: RequestError -> handleError(error) },
-                { (_, fieldInfo): AnnotationFieldInfoResult -> doSomethingWith(fieldInfo) })
+            client.getFieldInfo(containerName).fold(
+                { error: RequestError -> handleError(error) },
+                { (_, fieldInfo): AnnotationFieldInfoResult -> doSomethingWith(fieldInfo) }
+            )
         }
 
         @Test
@@ -435,7 +440,8 @@ class IntegratedClientKotlinTester {
                     { error: RequestError -> handleError(error) },
                     { (_, distinctValues): ARResult.DistinctAnnotationFieldValuesResult ->
                         doSomethingWith(distinctValues)
-                    })
+                    }
+                )
         }
     }
 
@@ -578,6 +584,43 @@ class IntegratedClientKotlinTester {
                 fail(it.message)
             }
         }
+
+        @Test
+        fun `you should be able to reuse an annotation name after deleting the existing annotation with that name`() {
+            either {
+                val createResult = client.createContainer("test-container").bind()
+                val containerName = createResult.containerName
+                val containerETag = createResult.eTag
+
+                val annotation1 = WebAnnotation.Builder().withBody("http://example.org/annotation1")
+                    .withTarget("http://example.org/target").build()
+                val preferredAnnotationName = "my-annotation"
+                val createAnnotationResult =
+                    client.createAnnotation(containerName, annotation1, preferredAnnotationName).bind()
+                val annotationETag = createAnnotationResult.eTag
+                val annotationName = createAnnotationResult.annotationName
+                assertThat(annotationName).isEqualTo(preferredAnnotationName)
+
+                client.deleteAnnotation(containerName, annotationName, annotationETag).bind()
+
+                val annotation2 = WebAnnotation.Builder().withBody("http://example.org/annotation2")
+                    .withTarget("http://example.org/target2").build()
+                val createAnnotationResult2 =
+                    client.createAnnotation(containerName, annotation2, preferredAnnotationName).bind()
+                val annotationName2 = createAnnotationResult2.annotationName
+                assertThat(annotationName2).isEqualTo(preferredAnnotationName)
+                log.info("this link will be valid for 10 seconds:")
+                println(createAnnotationResult2.location)
+                Thread.sleep(10_000)
+
+                client.deleteContainer(containerName, containerETag, force = true).bind()
+            }.mapLeft<Void> {
+                log.error("error=$it")
+                fail(it.message)
+            }
+
+        }
+
     }
 
     companion object {

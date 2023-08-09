@@ -2,9 +2,6 @@ package nl.knaw.huc.annorepo.integration
 
 import java.net.URI
 import jakarta.ws.rs.core.EntityTag
-import kotlinx.cli.ArgParser
-import kotlinx.cli.ArgType
-import kotlinx.cli.required
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -12,6 +9,9 @@ import com.fasterxml.jackson.databind.ObjectWriter
 import com.github.ajalt.mordant.rendering.TextColors.*
 import com.github.ajalt.mordant.table.table
 import com.github.ajalt.mordant.terminal.Terminal
+import kotlinx.cli.ArgParser
+import kotlinx.cli.ArgType
+import kotlinx.cli.required
 import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.UserEntry
 import nl.knaw.huc.annorepo.client.ARResult
@@ -196,7 +196,7 @@ class IntegrationTest {
                 val annotation: Map<String, Any> = mapOf("body" to mapOf("id" to "urn:example:blahblahblah"))
                 t.printStep("Adding annotation with body.id field: ")
                 t.printJson(annotation)
-                val car = createAnnotation(containerName, annotation).getOrElse { throw Exception() }
+                val car = createAnnotation(containerName, annotation, null).getOrElse { throw Exception() }
 //                t.println(green(car.toString()))
 
                 val fc1 = getFieldInfo(containerName).getOrElse { throw Exception() }

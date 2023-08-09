@@ -231,25 +231,35 @@ class AnnoRepoClient @JvmOverloads constructor(
      * @return
      */
     fun createAnnotation(
-        containerName: String, annotation: Any,
-    ): Either<RequestError, CreateAnnotationResult> = doPost(
-        request = webTarget.path(W3C).path(containerName).request(),
-        entity = Entity.json(annotation),
-        responseHandlers = mapOf(Response.Status.CREATED to { response ->
-            val location = response.location()!!
-            val annotationName = extractAnnotationName(location.toString())
-            val eTag = response.eTag() ?: ""
-            Either.Right(
-                CreateAnnotationResult(
-                    response = response,
-                    location = location,
-                    containerName = containerName,
-                    annotationName = annotationName,
-                    eTag = eTag
+        containerName: String,
+        annotation: Any,
+        preferredAnnotationName: String? = null,
+    ): Either<RequestError, CreateAnnotationResult> {
+        val target = webTarget.path(W3C).path(containerName)
+        val request = if (preferredAnnotationName != null) {
+            target.request().header("slug", preferredAnnotationName)
+        } else {
+            target.request()
+        }
+        return doPost(
+            request = request,
+            entity = Entity.json(annotation),
+            responseHandlers = mapOf(Response.Status.CREATED to { response ->
+                val location = response.location()!!
+                val annotationName = extractAnnotationName(location.toString())
+                val eTag = response.eTag() ?: ""
+                Either.Right(
+                    CreateAnnotationResult(
+                        response = response,
+                        location = location,
+                        containerName = containerName,
+                        annotationName = annotationName,
+                        eTag = eTag
+                    )
                 )
-            )
-        })
-    )
+            })
+        )
+    }
 
     /**
      * Read annotation

@@ -174,7 +174,7 @@ public class IntegratedClientJavaTester {
                     .withBody("http://example.org/annotation1")
                     .withTarget("http://example.org/target")
                     .build();
-            Boolean success = client.createAnnotation(containerName, annotation).fold(
+            Boolean success = client.createAnnotation(containerName, annotation, null).fold(
                     (RequestError error) -> {
                         handleError(error);
                         return false;
