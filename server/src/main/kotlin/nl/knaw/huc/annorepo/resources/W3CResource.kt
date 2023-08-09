@@ -259,7 +259,7 @@ class W3CResource(
 
     private fun jsonParseExceptionMessage(annotationJson: String, e: RuntimeException): String {
         log.error("json parsing error for input:\n{}\n", annotationJson)
-        log.error("error:\n{}", e)
+        log.error("error:\n{}", e.message)
         return "The given json does not parse: '$annotationJson'"
     }
 
