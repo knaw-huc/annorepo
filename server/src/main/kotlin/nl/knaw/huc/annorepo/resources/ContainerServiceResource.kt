@@ -149,15 +149,12 @@ class ContainerServiceResource(
             val aggregateStages = queryMap
                 .map { (k, v) -> aggregateStageGenerator.generateStage(k, v!!) }
                 .toList()
-            val container = mdb.getCollection(containerName)
-            val count = container.aggregate(aggregateStages).count()
 
             val id = UUID.randomUUID().toString()
-            queryCache.put(id, QueryCacheItem(queryMap, aggregateStages, count))
+            queryCache.put(id, QueryCacheItem(queryMap, aggregateStages, -1))
             val location = uriFactory.searchURL(containerName, id)
             return Response.created(location)
                 .link(uriFactory.searchInfoURL(containerName, id), "info")
-                .entity(mapOf("hits" to count))
                 .build()
         } catch (e: RuntimeException) {
             e.printStackTrace()
@@ -177,7 +174,15 @@ class ContainerServiceResource(
     ): Response {
         checkUserHasReadRightsInThisContainer(context, containerName)
 
-        val queryCacheItem = getQueryCacheItem(searchId)
+        var queryCacheItem = getQueryCacheItem(searchId)
+        if (queryCacheItem.count < 1) {
+            val count = mdb.getCollection(containerName)
+                .aggregate(queryCacheItem.aggregateStages)
+                .count()
+            val newQueryCacheItem = QueryCacheItem(queryCacheItem.queryMap, queryCacheItem.aggregateStages, count)
+            queryCacheItem = newQueryCacheItem
+            queryCache.put(searchId, newQueryCacheItem)
+        }
         val aggregateStages = queryCacheItem.aggregateStages.toMutableList().apply {
             add(Aggregates.skip(page * configuration.pageSize))
             add(paginationStage)
