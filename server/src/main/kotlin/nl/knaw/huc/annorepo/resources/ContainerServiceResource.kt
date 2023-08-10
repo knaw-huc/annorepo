@@ -297,9 +297,7 @@ class ContainerServiceResource(
         val indexType =
             IndexType.fromString(indexTypeParam) ?: throw BadRequestException(
                 "Unknown indexType $indexTypeParam; expected indexTypes: ${
-                    IndexType.values()
-                        .map { it.name.lowercase() }
-                        .joinToString(", ")
+                    IndexType.entries.joinToString(", ") { it.name.lowercase() }
                 }"
             )
         val indexChore =
