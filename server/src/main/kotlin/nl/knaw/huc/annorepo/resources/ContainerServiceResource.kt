@@ -34,6 +34,7 @@ import com.mongodb.client.model.Filters
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.bson.Document
+import org.bson.conversions.Bson
 import org.litote.kmongo.getCollection
 import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
@@ -152,6 +153,7 @@ class ContainerServiceResource(
 
             val id = UUID.randomUUID().toString()
             queryCache.put(id, QueryCacheItem(queryMap, aggregateStages, -1))
+            log.debug("explain aggregate =\n\n{}\n", asMongoExplain(containerName, aggregateStages))
             val location = uriFactory.searchURL(containerName, id)
             return Response.created(location)
                 .link(uriFactory.searchInfoURL(containerName, id), "info")
@@ -504,6 +506,17 @@ class ContainerServiceResource(
                     "id", uriFactory.annotationURL(containerName, document.getString(ANNOTATION_NAME_FIELD))
                 )
             }
+
+    private fun asMongoExplain(containerName: String, aggregateStages: List<Bson>): String {
+        val stages = aggregateStages.joinToString(", ") { it.toBsonDocument().toString() }
+        return """
+            db["$containerName"].aggregate(
+                [$stages],
+                { explain: true }
+            )
+        """.trimIndent()
+    }
+
 }
 
 
