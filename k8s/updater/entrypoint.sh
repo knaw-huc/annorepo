@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 if [[ -z "${AR_ADMIN_BACKEND}" ]]; then
   echo "environment variable AR_ADMIN_BACKEND not defined!"
 else
