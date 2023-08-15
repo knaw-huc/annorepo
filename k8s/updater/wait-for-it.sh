@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 #   Use this script to test if a given TCP host/port are available
 
 # The MIT License (MIT)
