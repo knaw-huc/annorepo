@@ -51,7 +51,7 @@
         <kotlinx-cli-jvm.version>0.3.5</kotlinx-cli-jvm.version>
         <kmongo.version>4.9.0</kmongo.version>
         <mongodb.version>4.10.0</mongodb.version>
-        <mordant.version>2.0.1</mordant.version>
+        <mordant.version>2.1.0</mordant.version>
         <problem.version>0.27.1</problem.version>
         <slf4j.version>2.0.3</slf4j.version>
         <log4j.version>1.2.17</log4j.version>
