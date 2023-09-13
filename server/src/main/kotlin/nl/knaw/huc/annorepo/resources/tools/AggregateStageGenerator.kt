@@ -94,8 +94,8 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
                     Filters.and(
                         Filters.eq("${ANNOTATION_FIELD_PREFIX}target.source", rangeParameters.source),
                         Filters.eq("${ANNOTATION_FIELD_PREFIX}target.selector.type", configuration.rangeSelectorType),
-                        Filters.lt("${ANNOTATION_FIELD_PREFIX}target.selector.start", rangeParameters.end),
-                        Filters.gt("${ANNOTATION_FIELD_PREFIX}target.selector.end", rangeParameters.start),
+                        Filters.lte("${ANNOTATION_FIELD_PREFIX}target.selector.start", rangeParameters.end),
+                        Filters.gte("${ANNOTATION_FIELD_PREFIX}target.selector.end", rangeParameters.start),
                     )
                 )
             }
