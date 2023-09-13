@@ -1,4 +1,4 @@
-FROM openjdk:22-jdk-slim-bullseye
+FROM openjdk:22-ea-12-jdk-slim
 
 RUN apt update && \
     apt install -y curl && \
