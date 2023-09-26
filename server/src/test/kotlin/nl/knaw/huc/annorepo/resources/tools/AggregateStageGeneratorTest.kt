@@ -290,8 +290,8 @@ class AggregateStageGeneratorTest {
                   "@and": [
                      { "annotation.target.source": "$source"},
                      { "annotation.target.selector.type": "$selector"},
-                     { "annotation.target.selector.start": { "@lt": ${end.toFloat()} } },
-                     { "annotation.target.selector.end":   { "@gt": ${start.toFloat()} } }
+                     { "annotation.target.selector.start": { "@lte": ${end.toFloat()} } },
+                     { "annotation.target.selector.end":   { "@gte": ${start.toFloat()} } }
                   ]
                }
             }""".trimIndent().replace('@', '$')
