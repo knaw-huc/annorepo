@@ -116,25 +116,35 @@ release:
 tests:
 	mvn test -Dmaven.plugin.validation=VERBOSE
 
+.PHONY: start-mongodb
+run-mongodb:
+	docker start mongodb6 || docker run --name mongodb6 -d -p 27017:27017 mongo:6.0.7
+
 .PHONY: help
 help:
 	@echo "make-tools for $(TAG)"
 	@echo
 	@echo "Please use \`make <target>', where <target> is one of:"
 	@echo "  tests                     to test the project"
+	@echo "  clean                     to remove generated files"
+	@echo
 	@echo "  build                     to test and build the project"
 	@echo "  build-server              to test and build just the server"
 	@echo "  build-client              to test and build just the client"
+	@echo
+	@echo "  start-mongodb             to start a local mongodb"
 	@echo "  run-server-with-auth      to start the server app with authorization on"
 	@echo "  run-server-without-auth   to start the server app with authorization off"
+	@echo "  run-env                   to run the annorepo env command"
+	@echo
 	@echo "  docker-run                to start the server app in docker"
 	@echo "  docker-stop               to stop the server app in docker"
-	@echo "  run-env                   to run the annorepo env command"
+	@echo
 	@echo "  docker-image              to build the docker image of the app"
 	@echo "  push                      to push the linux/amd64 docker image to registry.diginfra.net"
-	@echo "  clean                     to remove generated files"
+	@echo
 	@echo "  version-update            to update the project version"
+	@echo "  dokka                     to generate dokka html"
 	@echo "  deploy                    to deploy annorepo-client and annorepo-common"
 	@echo "  release                   to create a new release on github + deploy the new client"
-	@echo "  dokka                     to generate dokka html"
 	@echo
