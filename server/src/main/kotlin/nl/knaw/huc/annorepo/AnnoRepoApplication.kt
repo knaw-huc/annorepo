@@ -127,6 +127,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
                 )
             )
             register(BatchResource(configuration, mongoClient, containerAccessChecker))
+            register(GrpcResource(configuration))
             if (configuration.prettyPrint) {
                 register(JSONPrettyPrintFilter())
             }

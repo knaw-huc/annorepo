@@ -8,6 +8,7 @@ object ResourcePaths {
     const val LIST = "_list"
     const val CONTAINER_SERVICES = "services"
     const val GLOBAL_SERVICES = "global"
+    const val GRPC = "grpc"
     const val MY = "my"
     const val W3C = "w3c"
 
