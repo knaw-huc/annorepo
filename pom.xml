@@ -47,7 +47,7 @@
         <jakarta.ws.rs-api.version>3.1.0</jakarta.ws.rs-api.version>
         <jaxb-api.version>2.3.1</jaxb-api.version>
         <jena.version>4.9.0</jena.version>
-        <json.version>20230227</json.version>
+        <json.version>20231013</json.version>
         <kotlinx-cli-jvm.version>0.3.6</kotlinx-cli-jvm.version>
         <kmongo.version>4.9.0</kmongo.version>
         <mongodb.version>4.10.0</mongodb.version>
