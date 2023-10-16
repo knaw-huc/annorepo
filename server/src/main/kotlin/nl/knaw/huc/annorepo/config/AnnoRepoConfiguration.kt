@@ -62,4 +62,9 @@ open class AnnoRepoConfiguration : JobConfiguration() {
         contact = ARConst.APP_NAME
     }
 
+    @Valid
+    @NotNull
+    @JsonProperty
+    var grpc: GrpcFactory = GrpcFactory()
+
 }

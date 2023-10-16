@@ -149,28 +149,17 @@
         </dependency>
 
         <!-- gRPC dependencies -->
-        <!--        <dependency>-->
-        <!--            <groupId>io.grpc</groupId>-->
-        <!--            <artifactId>grpc-netty-shaded</artifactId>-->
-        <!--            <version>${grpc.version}</version>-->
-        <!--            <scope>runtime</scope>-->
-        <!--        </dependency>-->
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-netty-shaded</artifactId>
+            <version>${grpc.version}</version>
+            <scope>runtime</scope>
+        </dependency>
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-protobuf</artifactId>
             <version>${grpc.version}</version>
         </dependency>
-        <!--        <dependency>-->
-        <!--            <groupId>io.grpc</groupId>-->
-        <!--            <artifactId>grpc-stub</artifactId>-->
-        <!--            <version>${grpc.version}</version>-->
-        <!--        </dependency>-->
-        <!--        <dependency> &lt;!&ndash; necessary for Java 9+ &ndash;&gt;-->
-        <!--            <groupId>org.apache.tomcat</groupId>-->
-        <!--            <artifactId>annotations-api</artifactId>-->
-        <!--            <version>${annotations-api.version}</version>-->
-        <!--            <scope>provided</scope>-->
-        <!--        </dependency>-->
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-kotlin-stub</artifactId>

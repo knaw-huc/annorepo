@@ -28,3 +28,6 @@ logging:
     nl.knaw.huc: INFO
     org: WARN
     org.glassfish: ERROR
+
+grpc:
+  port: ${AR_GRPC_PORT:-8000}

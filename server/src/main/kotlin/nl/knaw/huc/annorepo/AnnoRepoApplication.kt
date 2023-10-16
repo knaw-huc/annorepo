@@ -37,6 +37,7 @@ import nl.knaw.huc.annorepo.dao.ARContainerDAO
 import nl.knaw.huc.annorepo.dao.ARContainerUserDAO
 import nl.knaw.huc.annorepo.dao.ARUserDAO
 import nl.knaw.huc.annorepo.filters.JSONPrettyPrintFilter
+import nl.knaw.huc.annorepo.grpc.AnnotationUploadService
 import nl.knaw.huc.annorepo.health.MongoDbHealthCheck
 import nl.knaw.huc.annorepo.health.ServerHealthCheck
 import nl.knaw.huc.annorepo.jobs.ExpiredChoresCleanerJob
@@ -94,6 +95,11 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         val mongoClient = createMongoClient(configuration)
         val mongoVersion = mongoClient.getMongoVersion()
         log.info("connected! version = $mongoVersion")
+
+        configuration.grpc
+            .builder(environment)
+            .addService(AnnotationUploadService().bindService())
+            .build()
 
         val appVersion = javaClass.getPackage().implementationVersion
         val userDAO = ARUserDAO(configuration, mongoClient)
