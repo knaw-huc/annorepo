@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package nl.knaw.huc.annorepo.grpc.v1;
+
+option java_multiple_files = true;
+option java_outer_classname = "AnnotationUploadServiceProto";
+option java_package = "nl.knaw.huc.annorepo.grpc";
+
+service AnnotationUploadService {
+  rpc AddAnnotations(stream AddAnnotationsRequest) returns (stream AddAnnotationsResponse);
+}
+
+message AddAnnotationsRequest {
+  string container_name = 1;
+  repeated string annotations = 2;
+}
+
+message AnnotationIdentifier {
+  string id = 1;
+  string etag = 2;
+}
+
+message AddAnnotationsResponse {
+  repeated AnnotationIdentifier annotation_identifiers = 1;
+}
