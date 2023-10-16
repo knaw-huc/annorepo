@@ -88,6 +88,7 @@
         <joda-time.version>2.12.5</joda-time.version>
         <os-maven-plugin.version>1.7.0</os-maven-plugin.version>
         <protobuf-maven-plugin.version>0.6.1</protobuf-maven-plugin.version>
+        <another-protobuf-maven-plugin.version>2.1.0</another-protobuf-maven-plugin.version>
     </properties>
 
     <dependencies>

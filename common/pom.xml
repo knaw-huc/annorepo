@@ -148,6 +148,9 @@
                 </executions>
             </plugin>
             <plugin>
+                <!--                <groupId>dev.cookiecode</groupId>-->
+                <!--                <artifactId>another-protobuf-maven-plugin</artifactId>-->
+                <!--                <version>${another-protobuf-maven-plugin.version}</version>-->
                 <groupId>org.xolstice.maven.plugins</groupId>
                 <artifactId>protobuf-maven-plugin</artifactId>
                 <version>${protobuf-maven-plugin.version}</version>
