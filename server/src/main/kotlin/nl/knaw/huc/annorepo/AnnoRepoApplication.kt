@@ -80,10 +80,10 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
     }
 
     override fun run(configuration: AnnoRepoConfiguration?, environment: Environment) {
-        val maxEnvVarLen = max(EnvironmentVariable.values().map { it.name.length })
+        val maxEnvVarLen = max(EnvironmentVariable.entries.map { it.name.length })
         log.info(
             "AR_ environment variables:\n\n" +
-                    EnvironmentVariable.values()
+                    EnvironmentVariable.entries
                         .joinToString("\n") { e ->
                             "  ${e.name.padEnd(maxEnvVarLen + 1)}: ${System.getenv(e.name) ?: "(not set, using default)"}"
                         } +
