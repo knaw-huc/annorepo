@@ -13,10 +13,10 @@ internal class ProtoBufTest {
     @Test
     fun `test AnnotationUploadService`() {
         val addAnnotationsRequest =
-            AddAnnotationsRequest.newBuilder().setContainerName("my-container").addAllAnnotations(listOf("")).build()
-        assertThat(addAnnotationsRequest.annotationsCount).isEqualTo(1)
+            AddAnnotationsRequest.newBuilder().setContainerName("my-container").addAllAnnotation(listOf("")).build()
+        assertThat(addAnnotationsRequest.annotationCount).isEqualTo(1)
         val ai = AnnotationIdentifier.newBuilder().setId("").setEtag("").build()
-        val addAnnotationsResponse = AddAnnotationsResponse.newBuilder().addAnnotationIdentifiers(ai)
-        assertThat(addAnnotationsResponse.annotationIdentifiersCount).isEqualTo(1)
+        val addAnnotationsResponse = AddAnnotationsResponse.newBuilder().addAnnotationIdentifier(ai)
+        assertThat(addAnnotationsResponse.annotationIdentifierCount).isEqualTo(1)
     }
 }

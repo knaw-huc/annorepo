@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory
 /**
  * Dropwizard lifecycle management for a gRPC server.
  */
-// TODO attach name for logging purposes
 class ManagedGrpcServer(
     private val server: Server,
     private val shutdownTimeout: Duration = Duration.seconds(5)
