@@ -121,11 +121,19 @@ tests:
 start-mongodb:
 	docker start mongodb6 || docker run --name mongodb6 -d -p 27017:27017 mongo:6.0.7
 
-.make/compiled-protocol-buffers: .make common/src/proto/*.proto
-	protoc	--proto_path=common/src/proto \
-	--java_out=common/src/generated/java/ \
-	--kotlin_out=common/src/generated/kotlin/ \
-	common/src/proto/*.proto
+.make/compiled-protocol-buffers: .make common/src/main/proto/*.proto
+	mkdir -p common/target/python
+	python -m grpc_tools.protoc \
+	-I common/src/main/proto \
+	--python_out=common/target/python \
+	--pyi_out=common/target/python \
+	--grpc_python_out=common/target/python \
+	common/src/main/proto/*.proto
+#	protoc	--proto_path=common/src/main/proto \
+#	--python_out=common/target/python \
+#	--pyi_out=common/target/python \
+#	--grpc_python_out=common/target/python \
+#	common/src/main/proto/*.proto
 	@touch $@
 
 .PHONY: compile-protocol-buffers
