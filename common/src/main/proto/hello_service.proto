@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package nl.knaw.huc.annorepo.grpc.v1;
+
+option java_multiple_files = true;
+option java_outer_classname = "HelloServiceProto";
+option java_package = "nl.knaw.huc.annorepo.grpc";
+
+service HelloService {
+  rpc SayHello(SayHelloRequest) returns (SayHelloResponse);
+}
+
+message SayHelloRequest {
+  string name = 1;
+  string api_key = 2;
+}
+
+message SayHelloResponse {
+  string message = 1;
+}

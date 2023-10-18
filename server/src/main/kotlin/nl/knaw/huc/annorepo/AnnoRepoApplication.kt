@@ -38,6 +38,7 @@ import nl.knaw.huc.annorepo.dao.ARContainerUserDAO
 import nl.knaw.huc.annorepo.dao.ARUserDAO
 import nl.knaw.huc.annorepo.filters.JSONPrettyPrintFilter
 import nl.knaw.huc.annorepo.grpc.AnnotationUploadService
+import nl.knaw.huc.annorepo.grpc.SayHelloService
 import nl.knaw.huc.annorepo.health.MongoDbHealthCheck
 import nl.knaw.huc.annorepo.health.ServerHealthCheck
 import nl.knaw.huc.annorepo.jobs.ExpiredChoresCleanerJob
@@ -99,6 +100,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         configuration.grpc
             .builder(environment)
             .addService(AnnotationUploadService().bindService())
+            .addService(SayHelloService().bindService())
             .build()
 
         val appVersion = javaClass.getPackage().implementationVersion

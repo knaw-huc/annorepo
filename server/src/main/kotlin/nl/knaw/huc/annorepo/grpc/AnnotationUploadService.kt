@@ -15,10 +15,10 @@ class AnnotationUploadService : AnnotationUploadServiceGrpcKt.AnnotationUploadSe
                 AddAnnotationsResponse
                     .newBuilder()
                     .addAllAnnotationIdentifier(
-                        it.annotationList.map {
+                        List(it.annotationList.size) { i ->
                             annotationIdentifier {
-                                this.id = "x"
-                                this.etag = "etag"
+                                this.id = "x$i"
+                                this.etag = "etag$i"
                             }
                         }
                     ).build()
