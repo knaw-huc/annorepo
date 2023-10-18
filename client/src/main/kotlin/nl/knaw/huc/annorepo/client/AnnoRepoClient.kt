@@ -92,6 +92,7 @@ class AnnoRepoClient @JvmOverloads constructor(
 
     lateinit var serverVersion: String
     var serverNeedsAuthentication: Boolean? = null
+    var grcpPort: Int? = null
 
     init {
         log.info("checking annorepo server at $serverURI ...")
@@ -104,7 +105,8 @@ class AnnoRepoClient @JvmOverloads constructor(
                 val aboutInfo = getAboutResult.aboutInfo
                 serverVersion = aboutInfo.version
                 serverNeedsAuthentication = aboutInfo.withAuthentication
-                log.info("$serverURI runs version $serverVersion ; needs authentication: $serverNeedsAuthentication")
+                grcpPort = aboutInfo.grpcPort
+                log.info("$serverURI runs version $serverVersion ; needs authentication: $serverNeedsAuthentication; gRCP port: $grcpPort")
             })
     }
 
