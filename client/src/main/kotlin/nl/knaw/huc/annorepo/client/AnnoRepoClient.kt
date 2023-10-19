@@ -14,6 +14,10 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import io.grpc.ManagedChannel
+import io.grpc.ManagedChannelBuilder
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
 import org.glassfish.jersey.client.filter.EncodingFilter
 import org.glassfish.jersey.message.GZipEncoder
 import org.slf4j.Logger
@@ -92,7 +96,8 @@ class AnnoRepoClient @JvmOverloads constructor(
 
     lateinit var serverVersion: String
     var serverNeedsAuthentication: Boolean? = null
-    var grcpPort: Int? = null
+    private var grcpPort: Int? = null
+    lateinit var grcpHost: String
 
     init {
         log.info("checking annorepo server at $serverURI ...")
@@ -106,6 +111,7 @@ class AnnoRepoClient @JvmOverloads constructor(
                 serverVersion = aboutInfo.version
                 serverNeedsAuthentication = aboutInfo.withAuthentication
                 grcpPort = aboutInfo.grpcPort
+                grcpHost = URI(aboutInfo.baseURI).host
                 log.info("$serverURI runs version $serverVersion ; needs authentication: $serverNeedsAuthentication; gRCP port: $grcpPort")
             })
     }
@@ -835,6 +841,11 @@ class AnnoRepoClient @JvmOverloads constructor(
                 )
             })
     )
+
+    suspend fun <R> usingGrpc(block: suspend CoroutineScope.(AnnoRepoGrpcClient) -> R): R {
+        val channel: ManagedChannel = ManagedChannelBuilder.forAddress(grcpHost, grcpPort!!).usePlaintext().build()
+        return AnnoRepoGrpcClient(channel).use { client -> coroutineScope { block(client) } }
+    }
 
     // private functions
     private fun <T> doGet(
