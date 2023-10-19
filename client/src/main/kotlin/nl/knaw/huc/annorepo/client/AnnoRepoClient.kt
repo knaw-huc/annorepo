@@ -16,8 +16,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.coroutineScope
 import org.glassfish.jersey.client.filter.EncodingFilter
 import org.glassfish.jersey.message.GZipEncoder
 import org.slf4j.Logger
@@ -842,9 +840,9 @@ class AnnoRepoClient @JvmOverloads constructor(
             })
     )
 
-    suspend fun <R> usingGrpc(block: suspend CoroutineScope.(AnnoRepoGrpcClient) -> R): R {
+    suspend fun <R> usingGrpc(block: suspend (AnnoRepoGrpcClient) -> R): R {
         val channel: ManagedChannel = ManagedChannelBuilder.forAddress(grcpHost, grcpPort!!).usePlaintext().build()
-        return AnnoRepoGrpcClient(channel).use { client -> coroutineScope { block(client) } }
+        return AnnoRepoGrpcClient(channel).use { client -> block(client) }
     }
 
     // private functions
