@@ -845,7 +845,7 @@ class AnnoRepoClient @JvmOverloads constructor(
 
     suspend fun <R> usingGrpc(block: suspend (AnnoRepoGrpcClient) -> R): R {
         val channel: ManagedChannel = ManagedChannelBuilder.forAddress(grcpHost, grcpPort!!).usePlaintext().build()
-        return AnnoRepoGrpcClient(channel).use { client -> block(client) }
+        return AnnoRepoGrpcClient(channel, apiKey!!).use { client -> block(client) }
     }
 
     // private functions

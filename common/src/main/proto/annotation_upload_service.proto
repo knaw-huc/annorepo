@@ -7,12 +7,13 @@ option java_outer_classname = "AnnotationUploadServiceProto";
 option java_package = "nl.knaw.huc.annorepo.grpc";
 
 service AnnotationUploadService {
-  rpc AddAnnotations(stream AddAnnotationsRequest) returns (stream AddAnnotationsResponse);
+  rpc AddAnnotations(AddAnnotationsRequest) returns (AddAnnotationsResponse);
 }
 
 message AddAnnotationsRequest {
-  string container_name = 1;
-  repeated string annotation = 2;
+  string api_key = 1;
+  string container_name = 2;
+  repeated string annotation = 3;
 }
 
 message AnnotationIdentifier {
@@ -22,4 +23,9 @@ message AnnotationIdentifier {
 
 message AddAnnotationsResponse {
   repeated AnnotationIdentifier annotation_identifier = 1;
+}
+
+message NamedAnnotation {
+  string preferred_name = 1;
+  string annotation = 2;
 }
