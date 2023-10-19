@@ -10,10 +10,12 @@ import nl.knaw.huc.annorepo.api.AnnotationPage
 import nl.knaw.huc.annorepo.api.ChoreStatusSummary
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.IndexConfig
+import nl.knaw.huc.annorepo.api.MetadataMap
 import nl.knaw.huc.annorepo.api.RejectedUserEntry
 import nl.knaw.huc.annorepo.api.SearchInfo
 import nl.knaw.huc.annorepo.api.SearchStatusSummary
 import nl.knaw.huc.annorepo.api.UserEntry
+import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 
 sealed class ARResult {
     abstract val response: Response
@@ -47,7 +49,7 @@ sealed class ARResult {
 
     data class GetContainerMetadataResult(
         override val response: Response,
-        val metadata: Map<String, Any>,
+        val metadata: MetadataMap,
     ) : ARResult()
 
     data class DeleteContainerResult(
@@ -65,7 +67,7 @@ sealed class ARResult {
     data class GetAnnotationResult(
         override val response: Response,
         val eTag: String,
-        val annotation: Map<String, Any>,
+        val annotation: WebAnnotationAsMap,
     ) : ARResult()
 
     data class DeleteAnnotationResult(

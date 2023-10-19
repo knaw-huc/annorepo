@@ -26,6 +26,8 @@ import nl.knaw.huc.annorepo.api.ChoreStatusSummary
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.IndexConfig
 import nl.knaw.huc.annorepo.api.IndexType
+import nl.knaw.huc.annorepo.api.MetadataMap
+import nl.knaw.huc.annorepo.api.QueryAsMap
 import nl.knaw.huc.annorepo.api.ResourcePaths.ABOUT
 import nl.knaw.huc.annorepo.api.ResourcePaths.ADMIN
 import nl.knaw.huc.annorepo.api.ResourcePaths.BATCH
@@ -45,6 +47,7 @@ import nl.knaw.huc.annorepo.api.SearchInfo
 import nl.knaw.huc.annorepo.api.SearchStatusSummary
 import nl.knaw.huc.annorepo.api.UserAddResults
 import nl.knaw.huc.annorepo.api.UserEntry
+import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 import nl.knaw.huc.annorepo.client.ARResult.AddIndexResult
 import nl.knaw.huc.annorepo.client.ARResult.AddUsersResult
 import nl.knaw.huc.annorepo.client.ARResult.AnnotationFieldInfoResult
@@ -193,7 +196,7 @@ class AnnoRepoClient @JvmOverloads constructor(
         request = webTarget.path(CONTAINER_SERVICES).path(containerName).path(METADATA).request(),
         responseHandlers = mapOf(Response.Status.OK to { response ->
             val json = response.readEntityAsJsonString()
-            val metadata: Map<String, Any> = oMapper.readValue(json)
+            val metadata: MetadataMap = oMapper.readValue(json)
             Either.Right(
                 GetContainerMetadataResult(
                     response = response, metadata = metadata
@@ -281,7 +284,7 @@ class AnnoRepoClient @JvmOverloads constructor(
         responseHandlers = mapOf(Response.Status.OK to { response ->
             val eTag = response.eTag() ?: ""
             val json = response.readEntityAsJsonString()
-            val annotation: Map<String, Any> = oMapper.readValue(json)
+            val annotation: WebAnnotationAsMap = oMapper.readValue(json)
             Either.Right(
                 GetAnnotationResult(
                     response = response,
@@ -412,7 +415,7 @@ class AnnoRepoClient @JvmOverloads constructor(
      * @param query
      * @return
      */
-    fun createSearch(containerName: String, query: Map<String, Any>): Either<RequestError, CreateSearchResult> = doPost(
+    fun createSearch(containerName: String, query: QueryAsMap): Either<RequestError, CreateSearchResult> = doPost(
         request = webTarget.path(CONTAINER_SERVICES).path(containerName).path(SEARCH).request(),
         entity = Entity.json(query),
         responseHandlers = mapOf(Response.Status.CREATED to { response ->
@@ -479,7 +482,7 @@ class AnnoRepoClient @JvmOverloads constructor(
      * @return
      */
     fun filterContainerAnnotations(
-        containerName: String, query: Map<String, Any>,
+        containerName: String, query: QueryAsMap,
     ): Either<RequestError, FilterContainerAnnotationsResult> =
         createSearch(containerName, query)
             .flatMap { createSearchResult ->
@@ -501,7 +504,7 @@ class AnnoRepoClient @JvmOverloads constructor(
      * @return
      */
     fun filterContainerAnnotations2(
-        containerName: String, query: Map<String, Any>,
+        containerName: String, query: QueryAsMap,
     ): Sequence<Either<RequestError, String>> =
         createSearch(containerName, query).fold(
             { e -> sequenceOf(Either.Left(e)) },
@@ -517,7 +520,7 @@ class AnnoRepoClient @JvmOverloads constructor(
      * @param query
      * @return
      */
-    fun createGlobalSearch(query: Map<String, Any>): Either<RequestError, CreateSearchResult> = doPost(
+    fun createGlobalSearch(query: QueryAsMap): Either<RequestError, CreateSearchResult> = doPost(
         request = webTarget.path(GLOBAL_SERVICES).path(SEARCH).request(),
         entity = Entity.json(query),
         responseHandlers = mapOf(Response.Status.CREATED to { response ->

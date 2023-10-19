@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder
 class ContainerPage(
     val id: String,
     val label: String,
-    annotations: List<Map<String, Any>>,
+    annotations: List<WebAnnotationAsMap>,
     page: Int = 0,
     val total: Long = 0,
     lastPage: Int,

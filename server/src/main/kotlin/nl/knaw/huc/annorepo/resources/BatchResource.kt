@@ -1,6 +1,6 @@
 package nl.knaw.huc.annorepo.resources
 
-import java.util.*
+import java.util.UUID
 import jakarta.annotation.security.PermitAll
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
@@ -26,6 +26,7 @@ import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.ResourcePaths
+import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.makeAnnotationETag
@@ -50,7 +51,7 @@ class BatchResource(
     @Deprecated("use postAnnotationsBatch in ContainerServiceResource")
     fun postAnnotationsBatch(
         @PathParam("containerName") containerName: String,
-        annotations: List<HashMap<String, Any>>,
+        annotations: List<WebAnnotationAsMap>,
         @Context context: SecurityContext,
     ): Response {
         checkUserHasEditRightsInThisContainer(context, containerName)

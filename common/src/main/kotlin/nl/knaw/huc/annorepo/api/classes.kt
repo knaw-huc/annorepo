@@ -3,6 +3,10 @@ package nl.knaw.huc.annorepo.api
 import java.net.URI
 import java.util.Date
 
+typealias WebAnnotationAsMap = Map<String, Any>
+typealias QueryAsMap = Map<String, Any>
+typealias MetadataMap = Map<String, Any>
+
 data class RejectedUserEntry(
     val userEntry: Map<String, String>,
     val reason: String,
@@ -37,7 +41,7 @@ data class IndexConfig(
 )
 
 data class SearchInfo(
-    val query: Map<String, Any>,
+    val query: QueryAsMap,
     val hits: Int,
 )
 

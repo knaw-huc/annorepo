@@ -56,6 +56,7 @@ import nl.knaw.huc.annorepo.api.ContainerSpecs
 import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.api.Role
+import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
 import nl.knaw.huc.annorepo.exceptions.PreconditionFailedException
@@ -437,13 +438,15 @@ class W3CResource(
 
     private fun lastPage(count: Long, pageSize: Int) = (count - 1).div(pageSize).toInt()
 
-    private fun toAnnotationMap(a: Document, containerName: String): Map<String, Any> {
-        return a.get(ANNOTATION_FIELD, Document::class.java).toMutableMap().apply<MutableMap<String, Any>> {
-            put(
-                "id", uriFactory.annotationURL(containerName, a.getString(ANNOTATION_NAME_FIELD))
-            )
-            remove("@context")
-        }
+    private fun toAnnotationMap(a: Document, containerName: String): WebAnnotationAsMap {
+        return a.get(ANNOTATION_FIELD, Document::class.java)
+            .toMutableMap()
+            .apply<MutableMap<String, Any>> {
+                put(
+                    "id", uriFactory.annotationURL(containerName, a.getString(ANNOTATION_NAME_FIELD))
+                )
+                remove("@context")
+            }
     }
 
     private fun makeContainerETag(containerName: String): EntityTag =

@@ -14,6 +14,7 @@ import kotlinx.cli.ArgType
 import kotlinx.cli.required
 import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.UserEntry
+import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 import nl.knaw.huc.annorepo.client.ARResult
 import nl.knaw.huc.annorepo.client.AnnoRepoClient
 import nl.knaw.huc.annorepo.client.FilterContainerAnnotationsResult
@@ -79,7 +80,7 @@ class IntegrationTest {
         runTest(t, "Testing the batch upload") {
             inTemporaryContainer(this, t) { containerName ->
                 val batchSize = 314
-                val annotations = mutableListOf<Map<String, Any>>()
+                val annotations = mutableListOf<WebAnnotationAsMap>()
                 for (i in 1..batchSize) {
                     annotations.add(
                         mapOf(
@@ -193,7 +194,7 @@ class IntegrationTest {
                 val fc0 = getFieldInfo(containerName).getOrElse { throw RuntimeException() }
                 t.printAssertion("Initially, fieldCounts should be empty", fc0.fieldInfo.isEmpty())
 
-                val annotation: Map<String, Any> = mapOf("body" to mapOf("id" to "urn:example:blahblahblah"))
+                val annotation: WebAnnotationAsMap = mapOf("body" to mapOf("id" to "urn:example:blahblahblah"))
                 t.printStep("Adding annotation with body.id field: ")
                 t.printJson(annotation)
                 val car = createAnnotation(containerName, annotation, null).getOrElse { throw Exception() }
@@ -206,7 +207,7 @@ class IntegrationTest {
                     fc1.fieldInfo.getOrDefault("body.id", 0) == 1
                 )
 
-                val newAnnotation: Map<String, Any> = mapOf("body" to "urn:example:blahblahblah")
+                val newAnnotation: WebAnnotationAsMap = mapOf("body" to "urn:example:blahblahblah")
                 t.printStep("Updating the annotation: ")
                 t.printJson(newAnnotation)
                 val uar = updateAnnotation(

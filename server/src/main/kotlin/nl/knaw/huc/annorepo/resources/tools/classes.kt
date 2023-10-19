@@ -2,9 +2,10 @@ package nl.knaw.huc.annorepo.resources.tools
 
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
+import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 
 typealias AggregateStageList = List<Bson>
-typealias AnnotationList = List<Map<String, Any>>
+typealias AnnotationList = List<WebAnnotationAsMap>
 
 data class QueryCacheItem(val queryMap: Map<String, Any?>, val aggregateStages: AggregateStageList, val count: Int)
 

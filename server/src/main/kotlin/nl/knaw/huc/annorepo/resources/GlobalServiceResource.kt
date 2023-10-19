@@ -1,11 +1,21 @@
 package nl.knaw.huc.annorepo.resources
 
 import java.net.URI
-import java.util.*
 import jakarta.annotation.security.PermitAll
-import jakarta.ws.rs.*
-import jakarta.ws.rs.core.*
+import jakarta.ws.rs.BadRequestException
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.NotFoundException
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.Context
 import jakarta.ws.rs.core.MediaType.APPLICATION_JSON
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.SecurityContext
+import jakarta.ws.rs.core.UriBuilder
 import kotlin.math.min
 import com.codahale.metrics.annotation.Timed
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -16,12 +26,19 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.bson.Document
 import org.bson.types.ObjectId
 import org.slf4j.LoggerFactory
-import nl.knaw.huc.annorepo.api.*
+import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
+import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
+import nl.knaw.huc.annorepo.api.AnnotationPage
 import nl.knaw.huc.annorepo.api.ResourcePaths.GLOBAL_SERVICES
+import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
-import nl.knaw.huc.annorepo.resources.tools.*
+import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
+import nl.knaw.huc.annorepo.resources.tools.AnnotationList
+import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
+import nl.knaw.huc.annorepo.resources.tools.SearchChore
+import nl.knaw.huc.annorepo.resources.tools.SearchManager
 import nl.knaw.huc.annorepo.service.UriFactory
 
 @Path(GLOBAL_SERVICES)
@@ -118,7 +135,7 @@ class GlobalServiceResource(
             page * configuration.pageSize,
             min((page + 1) * configuration.pageSize, total)
         )
-        val selection: MutableList<Map<String, Any>> = mutableListOf()
+        val selection: MutableList<WebAnnotationAsMap> = mutableListOf()
         val grouped = annotationIdSelection.groupBy { it.collectionName }
         for (collectionName in grouped.keys) {
             val objectIds: List<ObjectId> = grouped[collectionName]?.map { it.objectId } ?: listOf()
@@ -137,7 +154,7 @@ class GlobalServiceResource(
         return Response.ok(annotationPage).build()
     }
 
-    private fun toAnnotationMap(a: Document, containerName: String): Map<String, Any> =
+    private fun toAnnotationMap(a: Document, containerName: String): WebAnnotationAsMap =
         a.get(ARConst.ANNOTATION_FIELD, Document::class.java)
             .toMutableMap()
             .apply<MutableMap<String, Any>> {

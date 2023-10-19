@@ -48,10 +48,12 @@ import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.IndexConfig
 import nl.knaw.huc.annorepo.api.IndexType
+import nl.knaw.huc.annorepo.api.QueryAsMap
 import nl.knaw.huc.annorepo.api.ResourcePaths.CONTAINER_SERVICES
 import nl.knaw.huc.annorepo.api.ResourcePaths.DISTINCT_FIELD_VALUES
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
 import nl.knaw.huc.annorepo.api.SearchInfo
+import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
@@ -214,7 +216,7 @@ class ContainerServiceResource(
 
         val queryCacheItem = getQueryCacheItem(searchId)
 //        val info = mapOf("query" to queryCacheItem.queryMap, "hits" to queryCacheItem.count)
-        val query = queryCacheItem.queryMap as Map<String, Any>
+        val query = queryCacheItem.queryMap as QueryAsMap
         val searchInfo = SearchInfo(
             query = query,
             hits = queryCacheItem.count
@@ -377,7 +379,7 @@ class ContainerServiceResource(
     @Path("{containerName}/annotations-batch")
     fun postAnnotationsBatch(
         @PathParam("containerName") containerName: String,
-        annotations: List<HashMap<String, Any>>,
+        annotations: List<WebAnnotationAsMap>,
         @Context context: SecurityContext,
     ): Response {
         checkUserHasEditRightsInThisContainer(context, containerName)
@@ -498,7 +500,7 @@ class ContainerServiceResource(
     private fun searchPageUri(searchUri: URI, page: Int) =
         UriBuilder.fromUri(searchUri).queryParam("page", page).build().toString()
 
-    private fun toAnnotationMap(document: Document, containerName: String): Map<String, Any> =
+    private fun toAnnotationMap(document: Document, containerName: String): WebAnnotationAsMap =
         document[ANNOTATION_FIELD, Document::class.java]
             .toMutableMap()
             .apply<MutableMap<String, Any>> {

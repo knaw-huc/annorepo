@@ -30,6 +30,15 @@ class WebAnnotation private constructor(
         }
     }
 
+    fun asMap(): WebAnnotationAsMap {
+        return mapOf(
+            "@context" to ANNO_JSONLD_URL,
+            "type" to "Annotation",
+            "body" to body!!,
+            "target" to target!!
+        )
+    }
+
     companion object {
         @JvmStatic
         fun template(): MutableMap<String, Any> =

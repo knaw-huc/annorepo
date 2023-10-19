@@ -14,6 +14,7 @@ import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.api.UserEntry
 import nl.knaw.huc.annorepo.api.WebAnnotation
+import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 import nl.knaw.huc.annorepo.client.ARResult
 import nl.knaw.huc.annorepo.client.ARResult.AddIndexResult
 import nl.knaw.huc.annorepo.client.ARResult.AddUsersResult
@@ -194,7 +195,7 @@ class IntegratedClientKotlinTester {
         }
 
         private fun continueWithUpdate(
-            annotation: Map<String, Any>,
+            annotation: WebAnnotationAsMap,
             eTag: String,
             containerName: String,
             annotationName: String
