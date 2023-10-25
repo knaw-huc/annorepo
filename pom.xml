@@ -27,6 +27,7 @@
         <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ss'Z'</maven.build.timestamp.format>
 
         <kotlin.version>1.9.10</kotlin.version>
+        <kotlin.code.style>official</kotlin.code.style>
         <java.version>17</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
@@ -47,7 +48,7 @@
         <jakarta.ws.rs-api.version>3.1.0</jakarta.ws.rs-api.version>
         <jaxb-api.version>2.3.1</jaxb-api.version>
         <jena.version>4.9.0</jena.version>
-        <json.version>20230227</json.version>
+        <json.version>20231013</json.version>
         <kotlinx-cli-jvm.version>0.3.6</kotlinx-cli-jvm.version>
         <kotlinx-coroutines-core.version>1.7.3</kotlinx-coroutines-core.version>
         <kmongo.version>4.10.0</kmongo.version>
@@ -195,7 +196,6 @@
                 <version>${wagon-ssh.version}</version>
             </extension>
         </extensions>
-
     </build>
 
     <organization>
