@@ -2,6 +2,8 @@ all: help
 TAG = annorepo
 DOCKER_DOMAIN = registry.diginfra.net/tt
 SHELL=/bin/bash
+CLIENT_SRC=$(shell find client/src/ -type f)
+COMMON_SRC=$(shell find common/src/ -type f)
 version_fn = $(shell cat .make/.version 2>/dev/null)
 
 .make:
@@ -24,6 +26,13 @@ build-server: .make/.version server/target/annorepo-server-$(call version_fn).ja
 
 .PHONY: build-client
 build-client: .make/.version client/target/annorepo-client-$(call version_fn).jar client/readme.md
+
+.make/install-client: .make client/pom.xml $(CLIENT_SRC) common/pom.xml $(COMMON_SRC)
+	mvn --projects client --also-make install
+	@touch $@
+
+.PHONY: install-client
+install-client: .make/install-client
 
 .PHONY: run-server-with-auth
 run-server-with-auth: build-server
@@ -119,7 +128,7 @@ tests:
 
 .PHONY: start-mongodb
 start-mongodb:
-	docker start mongodb6 || docker run --name mongodb6 -d -p 27017:27017 mongo:6.0.7
+	docker start mongodb6 || docker run --name mongodb6 -d -p 27017:27017 -v ~/local/mongo:/data/db mongo:6.0.7
 
 .make/compiled-protocol-buffers: .make common/src/main/proto/*.proto
 	mkdir -p common/target/python
@@ -147,6 +156,7 @@ help:
 	@echo "  tests                     - to test the project"
 	@echo "  clean                     - to remove generated files"
 	@echo "  compile-protocol-buffers  - to compile all .proto files"
+	@echo "  install-client            - to install the client code in the local maven repository"
 	@echo
 	@echo "  build                     - to test and build the project"
 	@echo "  build-server              - to test and build just the server"
