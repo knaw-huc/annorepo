@@ -844,8 +844,15 @@ class AnnoRepoClient @JvmOverloads constructor(
     )
 
     suspend fun <R> usingGrpc(block: suspend (AnnoRepoGrpcClient) -> R): R {
-        val channel: ManagedChannel = ManagedChannelBuilder.forAddress(grcpHost, grcpPort!!).usePlaintext().build()
-        return AnnoRepoGrpcClient(channel, apiKey!!).use { client -> block(client) }
+        if (apiKey == null) {
+            throw RuntimeException("apiKey == null")
+        }
+        val channel: ManagedChannel = ManagedChannelBuilder
+            .forAddress(grcpHost, grcpPort!!)
+            .usePlaintext()
+            .build()
+        return AnnoRepoGrpcClient(channel, apiKey)
+            .use { client -> block(client) }
     }
 
     // private functions
@@ -988,6 +995,7 @@ class AnnoRepoClient @JvmOverloads constructor(
         private val log: Logger = LoggerFactory.getLogger(AnnoRepoClient::class.java)
         private val oMapper: ObjectMapper = ObjectMapper().registerKotlinModule()
         private const val PROPERTY_FILE = "annorepo-client.properties"
+        const val TWO_HUNDRED_MB = 200 * 1024 * 1024
 
         private val classVersion: String by lazy {
             val resourceAsStream = AnnoRepoClient::class.java.getResourceAsStream(PROPERTY_FILE)

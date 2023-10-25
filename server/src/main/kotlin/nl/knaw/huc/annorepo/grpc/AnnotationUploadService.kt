@@ -1,8 +1,11 @@
 package nl.knaw.huc.annorepo.grpc
 
+import java.util.UUID
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 
@@ -22,6 +25,14 @@ class AnnotationUploadService : AnnotationUploadServiceGrpcKt.AnnotationUploadSe
                     }
                 }
             ).build()
+    }
+
+    override fun addAnnotation(requests: Flow<AddAnnotationRequest>): Flow<AddAnnotationResponse> {
+        return requests.map {
+            addAnnotationResponse {
+                annotationIdentifier = annotationIdentifier { id = UUID.randomUUID().toString(); etag = "my-etag" }
+            }
+        }
     }
 
     private fun processRequest(request: AddAnnotationsRequest) {

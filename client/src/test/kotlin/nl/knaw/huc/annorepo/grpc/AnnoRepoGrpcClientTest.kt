@@ -3,6 +3,7 @@ package nl.knaw.huc.annorepo.grpc
 import java.net.URI
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import nl.knaw.huc.annorepo.api.WebAnnotation
@@ -13,7 +14,7 @@ class AnnoRepoGrpcClientTest {
     @Disabled
     @Test
     fun `connect to grpc server via annorepo client`() = runBlocking {
-        val arc = AnnoRepoClient(serverURI = URI("http://localhost:8080"), apiKey = "something-or-other")
+        val arc = AnnoRepoClient(serverURI = URI("http://localhost:2023"), apiKey = "something-or-other")
         val annotations1 = listOf(
             webAnnotation("annotation-1")
         )
@@ -31,6 +32,12 @@ class AnnoRepoGrpcClientTest {
             client.sayHello(
                 "GRPC", "xxxxxxxxx"
             )
+            val annotations2 = listOf(
+                webAnnotation("annotation-1"),
+                webAnnotation("annotation-2")
+            )
+            val resultFlow = client.addContainerAnnotation("mycontainer", annotations2)
+            assertThat(resultFlow.count()).isEqualTo(2)
         }
         arc.usingGrpc { client ->
             client.sayHello("WORLD", "aaaaa")
