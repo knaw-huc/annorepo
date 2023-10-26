@@ -1,4 +1,4 @@
-FROM openjdk:22-ea-18-jdk-slim
+FROM openjdk:22-ea-19
 
 RUN apt update && \
     apt install -y curl && \
