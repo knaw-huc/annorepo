@@ -1,15 +1,20 @@
 package nl.knaw.huc.annorepo.grpc
 
-import java.util.UUID
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
+import nl.knaw.huc.annorepo.api.AnnotationIdentifier
 import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
+import nl.knaw.huc.annorepo.dao.ContainerDAO
 
-class AnnotationUploadService : AnnotationUploadServiceGrpcKt.AnnotationUploadServiceCoroutineImplBase() {
+class AnnotationUploadService(
+    private val containerDAO: ContainerDAO,
+) : AnnotationUploadServiceGrpcKt.AnnotationUploadServiceCoroutineImplBase() {
     val log = LoggerFactory.getLogger(AnnotationUploadService::class.java)
     private val objectMapper = ObjectMapper().registerKotlinModule()
 
@@ -28,11 +33,39 @@ class AnnotationUploadService : AnnotationUploadServiceGrpcKt.AnnotationUploadSe
     }
 
     override fun addAnnotation(requests: Flow<AddAnnotationRequest>): Flow<AddAnnotationResponse> {
-        return requests.map {
-            addAnnotationResponse {
-                annotationIdentifier = annotationIdentifier { id = UUID.randomUUID().toString(); etag = "my-etag" }
+        val containerName = "grpc-test-container"
+        log.info("context={}", context)
+
+        val annotationFlow: Flow<WebAnnotationAsMap> =
+            requests.map {
+                val json = it.annotationJson
+                objectMapper.readValue<WebAnnotationAsMap>(json)
             }
-        }
+
+        return storeAnnotations(containerName, annotationFlow)
+            .onEach {
+                log.info("identifier={}", it)
+            }
+            .map { identifier ->
+                addAnnotationResponse {
+                    annotationIdentifier = annotationIdentifier {
+                        id = identifier.annotationName
+                        etag = identifier.etag
+                    }
+                }
+            }
+            .asFlow()
+    }
+
+    private fun storeAnnotations(
+        containerName: String,
+        annotationFlow: Flow<WebAnnotationAsMap>
+    ): List<AnnotationIdentifier> {
+        val annotations: MutableList<WebAnnotationAsMap> = mutableListOf()
+        runBlocking { annotationFlow.collect { annotations.add(it) } }
+        log.info("TODO: store ${annotations.size} annotations in $containerName")
+//        checkUserHasEditRightsInThisContainer(context, containerName)
+        return containerDAO.addAnnotationsInBatch(containerName, annotations)
     }
 
     private fun processRequest(request: AddAnnotationsRequest) {

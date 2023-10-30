@@ -23,28 +23,22 @@ import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.SecurityContext
 import jakarta.ws.rs.core.UriBuilder
 import com.codahale.metrics.annotation.Timed
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Aggregates.limit
-import com.mongodb.client.model.Filters
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.bson.Document
 import org.bson.conversions.Bson
-import org.litote.kmongo.getCollection
 import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
-import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
-import nl.knaw.huc.annorepo.api.AnnotationIdentifier
 import nl.knaw.huc.annorepo.api.AnnotationPage
-import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.IndexConfig
 import nl.knaw.huc.annorepo.api.IndexType
@@ -62,9 +56,7 @@ import nl.knaw.huc.annorepo.resources.tools.AnnotationList
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.IndexManager
 import nl.knaw.huc.annorepo.resources.tools.QueryCacheItem
-import nl.knaw.huc.annorepo.resources.tools.makeAnnotationETag
 import nl.knaw.huc.annorepo.resources.tools.simplify
-import nl.knaw.huc.annorepo.service.JsonLdUtils
 import nl.knaw.huc.annorepo.service.UriFactory
 
 @Path(CONTAINER_SERVICES)
@@ -384,49 +376,8 @@ class ContainerServiceResource(
     ): Response {
         checkUserHasEditRightsInThisContainer(context, containerName)
 
-        val annotationIdentifiers = mutableListOf<AnnotationIdentifier>()
-        val container = containerDAO.getCollection(containerName)
-        for (i in annotations.indices) {
-            val annotationName = UUID.randomUUID().toString()
-            annotationIdentifiers.add(
-                AnnotationIdentifier(
-                    containerName = containerName,
-                    annotationName = annotationName,
-                    etag = makeAnnotationETag(containerName, annotationName).value
-                )
-            )
-        }
-        val documents = annotations.mapIndexed { index, annotationMap ->
-            val name = annotationIdentifiers[index].annotationName
-            Document(ANNOTATION_NAME_FIELD, name).append(ANNOTATION_FIELD, Document(annotationMap))
-        }
-        container.insertMany(documents)
-
-        val fields = mutableListOf<String>()
-        for (annotation in annotations) {
-            val annotationJson = ObjectMapper().writeValueAsString(annotation)
-            fields.addAll(JsonLdUtils.extractFields(annotationJson).toSet())
-        }
-        updateFieldCount(containerName, fields, emptySet())
+        val annotationIdentifiers = containerDAO.addAnnotationsInBatch(containerName, annotations)
         return Response.ok(annotationIdentifiers).build()
-    }
-
-    private fun updateFieldCount(containerName: String, fieldsAdded: List<String>, fieldsDeleted: Set<String>) {
-        val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(ARConst.CONTAINER_METADATA_COLLECTION)
-        val containerMetadata: ContainerMetadata =
-            containerDAO.getContainerMetadata(containerName)!!
-        val fieldCounts = containerMetadata.fieldCounts.toMutableMap()
-        for (field in fieldsAdded.filter { f -> !f.contains("@") }) {
-            fieldCounts[field] = fieldCounts.getOrDefault(field, 0) + 1
-        }
-        for (field in fieldsDeleted.filter { f -> !f.contains("@") }) {
-            fieldCounts[field] = fieldCounts.getOrDefault(field, 1) - 1
-            if (fieldCounts[field] == 0) {
-                fieldCounts.remove(field)
-            }
-        }
-        val newContainerMetadata = containerMetadata.copy(fieldCounts = fieldCounts)
-        containerMetadataCollection.replaceOne(Filters.eq("name", containerName), newContainerMetadata)
     }
 
     private fun getIndexConfig(

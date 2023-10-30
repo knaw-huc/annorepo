@@ -38,6 +38,7 @@ import nl.knaw.huc.annorepo.dao.ARContainerUserDAO
 import nl.knaw.huc.annorepo.dao.ARUserDAO
 import nl.knaw.huc.annorepo.filters.JSONPrettyPrintFilter
 import nl.knaw.huc.annorepo.grpc.AnnotationUploadService
+import nl.knaw.huc.annorepo.grpc.GrpcServerInterceptor
 import nl.knaw.huc.annorepo.grpc.SayHelloService
 import nl.knaw.huc.annorepo.health.MongoDbHealthCheck
 import nl.knaw.huc.annorepo.health.ServerHealthCheck
@@ -97,12 +98,6 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         val mongoVersion = mongoClient.getMongoVersion()
         log.info("connected! version = $mongoVersion")
 
-        configuration.grpc
-            .builder(environment)
-            .addService(AnnotationUploadService().bindService())
-            .addService(SayHelloService().bindService())
-            .build()
-
         val appVersion = javaClass.getPackage().implementationVersion
         val userDAO = ARUserDAO(configuration, mongoClient)
         val containerDAO = ARContainerDAO(configuration, mongoClient)
@@ -111,6 +106,14 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         val searchManager = SearchManager(client = mongoClient, configuration = configuration)
         val indexManager = IndexManager(mongoClient.getDatabase(configuration.databaseName))
         val uriFactory = UriFactory(configuration)
+
+        configuration.grpc
+            .builder(environment)
+            .addService(AnnotationUploadService(containerDAO).bindService())
+            .addService(SayHelloService().bindService())
+            .intercept(GrpcServerInterceptor())
+            .build()
+
         environment.jersey().apply {
             register(AboutResource(configuration, name, appVersion, mongoVersion))
             register(HomePageResource())

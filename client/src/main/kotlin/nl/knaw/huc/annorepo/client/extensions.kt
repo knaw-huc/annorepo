@@ -1,6 +1,7 @@
 package nl.knaw.huc.annorepo.client
 
 import arrow.core.Either
+import io.grpc.Metadata
 
 fun Sequence<Either<RequestError, String>>.untangled(): Either<RequestError, List<String>> {
     val list: MutableList<String> = mutableListOf()
@@ -16,4 +17,8 @@ fun Sequence<Either<RequestError, String>>.untangled(): Either<RequestError, Lis
     } else {
         Either.Left(error!!)
     }
+}
+
+internal fun Metadata.setAsciiKey(key: String, value: String) {
+    put(Metadata.Key.of(key, Metadata.ASCII_STRING_MARSHALLER), value)
 }
