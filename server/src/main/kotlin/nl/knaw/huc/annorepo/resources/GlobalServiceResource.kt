@@ -19,7 +19,6 @@ import jakarta.ws.rs.core.UriBuilder
 import kotlin.math.min
 import com.codahale.metrics.annotation.Timed
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Filters.`in`
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
@@ -33,6 +32,7 @@ import nl.knaw.huc.annorepo.api.AnnotationPage
 import nl.knaw.huc.annorepo.api.ResourcePaths.GLOBAL_SERVICES
 import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
 import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
 import nl.knaw.huc.annorepo.resources.tools.AnnotationList
@@ -47,11 +47,11 @@ import nl.knaw.huc.annorepo.service.UriFactory
 @SecurityRequirement(name = SECURITY_SCHEME_NAME)
 class GlobalServiceResource(
     private val configuration: AnnoRepoConfiguration,
-    client: MongoClient,
+    private val containerDAO: ContainerDAO,
     private val containerUserDAO: ContainerUserDAO,
     private val searchManager: SearchManager,
     private val uriFactory: UriFactory
-) : AbstractContainerResource(configuration, client, ContainerAccessChecker(containerUserDAO)) {
+) : AbstractContainerResource(configuration, containerDAO, ContainerAccessChecker(containerUserDAO)) {
 
     private val aggregateStageGenerator = AggregateStageGenerator(configuration)
 
@@ -139,7 +139,7 @@ class GlobalServiceResource(
         val grouped = annotationIdSelection.groupBy { it.collectionName }
         for (collectionName in grouped.keys) {
             val objectIds: List<ObjectId> = grouped[collectionName]?.map { it.objectId } ?: listOf()
-            mdb.getCollection(collectionName)
+            containerDAO.getCollection(collectionName)
                 .find(`in`("_id", objectIds))
                 .map { toAnnotationMap(it, collectionName) }
                 .forEach(selection::add)

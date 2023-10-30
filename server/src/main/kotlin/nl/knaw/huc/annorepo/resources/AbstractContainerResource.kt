@@ -2,17 +2,16 @@ package nl.knaw.huc.annorepo.resources
 
 import jakarta.ws.rs.NotFoundException
 import jakarta.ws.rs.core.SecurityContext
-import com.mongodb.client.MongoClient
-import com.mongodb.client.MongoDatabase
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 
 abstract class AbstractContainerResource(
     private val configuration: AnnoRepoConfiguration,
-    client: MongoClient,
+    private val containerDAO: ContainerDAO,
     private val containerAccessChecker: ContainerAccessChecker,
 ) {
-    protected val mdb: MongoDatabase = client.getDatabase(configuration.databaseName)
+//    protected val mdb: MongoDatabase = client.getDatabase(configuration.databaseName)
 
     protected fun checkUserHasAdminRightsInThisContainer(context: SecurityContext, containerName: String) {
         checkContainerExists(containerName)
@@ -36,7 +35,7 @@ abstract class AbstractContainerResource(
     }
 
     private fun checkContainerExists(containerName: String) {
-        if (!mdb.listCollectionNames().contains(containerName)) {
+        if (!containerDAO.containerExists(containerName)) {
             throw NotFoundException("Annotation Container '$containerName' not found")
         }
     }

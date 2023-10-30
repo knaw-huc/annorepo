@@ -17,4 +17,10 @@ interface ContainerDAO {
         containerName: String,
         annotations: List<WebAnnotationAsMap>
     ): List<AnnotationIdentifier>
+
+    fun containerExists(containerName: String): Boolean
+
+    fun getContainerMetadataCollection(): MongoCollection<ContainerMetadata>
+    fun createCollection(containerName: String)
+    fun listCollectionNames(): List<String>
 }

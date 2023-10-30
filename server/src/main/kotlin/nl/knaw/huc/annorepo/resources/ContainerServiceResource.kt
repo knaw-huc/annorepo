@@ -25,7 +25,6 @@ import jakarta.ws.rs.core.UriBuilder
 import com.codahale.metrics.annotation.Timed
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Aggregates.limit
@@ -65,12 +64,11 @@ import nl.knaw.huc.annorepo.service.UriFactory
 @SecurityRequirement(name = SECURITY_SCHEME_NAME)
 class ContainerServiceResource(
     private val configuration: AnnoRepoConfiguration,
-    client: MongoClient,
     private val containerUserDAO: ContainerUserDAO,
     private val containerDAO: ContainerDAO,
     private val uriFactory: UriFactory,
     private val indexManager: IndexManager
-) : AbstractContainerResource(configuration, client, ContainerAccessChecker(containerUserDAO)) {
+) : AbstractContainerResource(configuration, containerDAO, ContainerAccessChecker(containerUserDAO)) {
 
     private val paginationStage = limit(configuration.pageSize)
     private val aggregateStageGenerator = AggregateStageGenerator(configuration)
@@ -172,7 +170,7 @@ class ContainerServiceResource(
 
         var queryCacheItem = getQueryCacheItem(searchId)
         if (queryCacheItem.count < 1) {
-            val count = mdb.getCollection(containerName)
+            val count = containerDAO.getCollection(containerName)
                 .aggregate(queryCacheItem.aggregateStages)
                 .count()
             val newQueryCacheItem = QueryCacheItem(queryCacheItem.queryMap, queryCacheItem.aggregateStages, count)
@@ -186,7 +184,7 @@ class ContainerServiceResource(
 //        log.debug("aggregateStages=\n  {}", Joiner.on("\n  ").join(aggregateStages))
 
         val annotations =
-            mdb.getCollection(containerName)
+            containerDAO.getCollection(containerName)
                 .aggregate(aggregateStages)
                 .map { a -> toAnnotationMap(a, containerName) }
                 .toList()

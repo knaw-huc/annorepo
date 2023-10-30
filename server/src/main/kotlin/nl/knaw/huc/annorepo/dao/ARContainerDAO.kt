@@ -41,8 +41,18 @@ class ARContainerDAO(configuration: AnnoRepoConfiguration, client: MongoClient) 
     override fun getAnnotationFields(containerName: String): SortedMap<String, Int> =
         getContainerMetadata(containerName)!!.fieldCounts.toSortedMap()
 
-    override fun getContainerMetadata(containerName: String): ContainerMetadata? =
+    override fun getContainerMetadataCollection(): MongoCollection<ContainerMetadata> =
         mdb.getCollection<ContainerMetadata>(ARConst.CONTAINER_METADATA_COLLECTION)
+
+    override fun createCollection(containerName: String) {
+        mdb.createCollection(containerName)
+    }
+
+    override fun listCollectionNames(): List<String> =
+        mdb.listCollectionNames().toList()
+
+    override fun getContainerMetadata(containerName: String): ContainerMetadata? =
+        getContainerMetadataCollection()
             .findOne(Filters.eq(ARConst.CONTAINER_NAME_FIELD, containerName))
 
     override fun getDistinctValues(containerName: String, field: String): List<Any> {
@@ -87,8 +97,10 @@ class ARContainerDAO(configuration: AnnoRepoConfiguration, client: MongoClient) 
         return annotationIdentifiers
     }
 
+    override fun containerExists(containerName: String): Boolean = mdb.listCollectionNames().contains(containerName)
+
     private fun updateFieldCount(containerName: String, fieldsAdded: List<String>, fieldsDeleted: Set<String>) {
-        val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(ARConst.CONTAINER_METADATA_COLLECTION)
+        val containerMetadataCollection = getContainerMetadataCollection()
         val containerMetadata: ContainerMetadata =
             getContainerMetadata(containerName)!!
         val fieldCounts = containerMetadata.fieldCounts.toMutableMap()

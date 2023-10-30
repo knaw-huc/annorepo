@@ -27,6 +27,7 @@ import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
 import nl.knaw.huc.annorepo.resources.tools.IndexManager
 import nl.knaw.huc.annorepo.service.UriFactory
@@ -170,6 +171,9 @@ class W3CResourceAccessTest {
         lateinit var containerUserDAO: ContainerUserDAO
 
         @RelaxedMockK
+        lateinit var containerDAO: ContainerDAO
+
+        @RelaxedMockK
         lateinit var indexManager: IndexManager
 
         private lateinit var resource: W3CResource
@@ -197,9 +201,10 @@ class W3CResourceAccessTest {
             every { collectionNames.iterator() } returns mongoCursor
             every { mongoCursor.hasNext() } returns true
             every { mongoCursor.next() } returns CONTAINER_NAME
+            every { containerDAO.containerExists(CONTAINER_NAME) } returns true
             resource = W3CResource(
                 configuration = config,
-                client = client,
+                containerDAO = containerDAO,
                 containerUserDAO = containerUserDAO,
                 uriFactory = UriFactory(config),
                 indexManager = indexManager

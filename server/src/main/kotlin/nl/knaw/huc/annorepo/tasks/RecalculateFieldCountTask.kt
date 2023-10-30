@@ -5,23 +5,18 @@ import jakarta.ws.rs.BadRequestException
 import com.codahale.metrics.annotation.Metered
 import com.google.common.collect.SortedMultiset
 import com.google.common.collect.TreeMultiset
-import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Filters.eq
 import com.mongodb.client.model.Filters.exists
 import io.dropwizard.servlets.tasks.Task
 import org.litote.kmongo.findOne
-import org.litote.kmongo.getCollection
 import org.litote.kmongo.json
-import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.api.ContainerMetadata
-import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.service.JsonLdUtils
 
 class RecalculateFieldCountTask(
-    val client: MongoClient,
-    configuration: AnnoRepoConfiguration
+    val containerDAO: ContainerDAO
 ) : Task("recalculate-field-count") {
-    private val mdb = client.getDatabase(configuration.databaseName)
 
     @Metered
     override fun execute(parameters: MutableMap<String, MutableList<String>>, output: PrintWriter) {
@@ -33,7 +28,7 @@ class RecalculateFieldCountTask(
         } else {
             output.println("Recalculating the field count for all containers:")
             output.flush()
-            val containerNames = mdb.listCollectionNames()
+            val containerNames = containerDAO.listCollectionNames()
                 .filter { name -> !name.startsWith("_") }
                 .sorted()
             for (containerName in containerNames) {
@@ -46,7 +41,7 @@ class RecalculateFieldCountTask(
     private fun recalculateFieldCount(output: PrintWriter, containerName: String) {
         output.println("Recalculating the field count for container $containerName")
         output.flush()
-        val container = mdb.getCollection(containerName)
+        val container = containerDAO.getCollection(containerName)
         val fields = container.find(exists("annotation"))
             .flatMap { d -> JsonLdUtils.extractFields(d["annotation"]!!.json) }
             .filter { f -> !f.contains("@") }
@@ -60,7 +55,7 @@ class RecalculateFieldCountTask(
             fieldCounts[e.element] = e.count
         }
 
-        val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
+        val containerMetadataCollection = containerDAO.getContainerMetadataCollection()
         val containerMetadata: ContainerMetadata =
             containerMetadataCollection.findOne(eq("name", containerName)) ?: return
         val newContainerMetadata = containerMetadata.copy(fieldCounts = fieldCounts)
@@ -68,7 +63,7 @@ class RecalculateFieldCountTask(
     }
 
     private fun checkContainerExists(containerName: String) {
-        if (!mdb.listCollectionNames().contains(containerName)) {
+        if (!containerDAO.listCollectionNames().contains(containerName)) {
             throw BadRequestException("Annotation Container '$containerName' not found")
         }
     }

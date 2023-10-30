@@ -1,5 +1,6 @@
 package nl.knaw.huc.annorepo.grpc
 
+import jakarta.ws.rs.NotFoundException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
@@ -34,7 +35,6 @@ class AnnotationUploadService(
 
     override fun addAnnotation(requests: Flow<AddAnnotationRequest>): Flow<AddAnnotationResponse> {
         val containerName = "grpc-test-container"
-        log.info("context={}", context)
 
         val annotationFlow: Flow<WebAnnotationAsMap> =
             requests.map {
@@ -64,6 +64,10 @@ class AnnotationUploadService(
         val annotations: MutableList<WebAnnotationAsMap> = mutableListOf()
         runBlocking { annotationFlow.collect { annotations.add(it) } }
         log.info("TODO: store ${annotations.size} annotations in $containerName")
+        if (containerDAO.containerExists(containerName)){
+            throw NotFoundException("Annotation Container '$containerName' not found")
+
+        }
 //        checkUserHasEditRightsInThisContainer(context, containerName)
         return containerDAO.addAnnotationsInBatch(containerName, annotations)
     }

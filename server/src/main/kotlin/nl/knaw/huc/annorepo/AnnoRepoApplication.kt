@@ -99,9 +99,11 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         log.info("connected! version = $mongoVersion")
 
         val appVersion = javaClass.getPackage().implementationVersion
+
         val userDAO = ARUserDAO(configuration, mongoClient)
         val containerDAO = ARContainerDAO(configuration, mongoClient)
         val containerUserDAO = ARContainerUserDAO(configuration, mongoClient)
+
         val containerAccessChecker = ContainerAccessChecker(containerUserDAO)
         val searchManager = SearchManager(client = mongoClient, configuration = configuration)
         val indexManager = IndexManager(mongoClient.getDatabase(configuration.databaseName))
@@ -117,11 +119,10 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         environment.jersey().apply {
             register(AboutResource(configuration, name, appVersion, mongoVersion))
             register(HomePageResource())
-            register(W3CResource(configuration, mongoClient, containerUserDAO, uriFactory, indexManager))
+            register(W3CResource(configuration, containerDAO, containerUserDAO, uriFactory, indexManager))
             register(
                 ContainerServiceResource(
                     configuration,
-                    mongoClient,
                     containerUserDAO,
                     containerDAO,
                     uriFactory,
@@ -131,14 +132,13 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             register(
                 GlobalServiceResource(
                     configuration,
-                    mongoClient,
+                    containerDAO,
                     containerUserDAO,
                     searchManager,
                     uriFactory
                 )
             )
-            register(BatchResource(configuration, mongoClient, containerAccessChecker))
-            register(GrpcResource(configuration))
+            register(BatchResource(configuration, containerDAO, containerAccessChecker))
             if (configuration.prettyPrint) {
                 register(JSONPrettyPrintFilter())
             }
@@ -162,7 +162,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         }
 
         environment.admin().apply {
-            addTask(RecalculateFieldCountTask(mongoClient, configuration))
+            addTask(RecalculateFieldCountTask(containerDAO))
             addTask(UpdateTask(mongoClient, configuration))
             addTask(JVMInfoTask())
         }

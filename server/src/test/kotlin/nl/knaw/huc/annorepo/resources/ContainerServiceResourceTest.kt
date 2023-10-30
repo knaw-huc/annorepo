@@ -10,7 +10,11 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import com.mongodb.client.*
+import com.mongodb.client.MongoClient
+import com.mongodb.client.MongoCollection
+import com.mongodb.client.MongoCursor
+import com.mongodb.client.MongoDatabase
+import com.mongodb.client.MongoIterable
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
@@ -301,6 +305,7 @@ class ContainerServiceResourceTest {
         @JvmStatic
         internal fun beforeAll() {
             MockKAnnotations.init(this)
+            every { containerDAO.containerExists(containerName) } returns true
             every { config.externalBaseUrl } returns baseURL
             every { config.databaseName } returns databaseName
             every { config.pageSize } returns 10
@@ -314,7 +319,6 @@ class ContainerServiceResourceTest {
             every { mongoCursor.next() } returns containerName
             resource = ContainerServiceResource(
                 config,
-                client,
                 containerUserDAO,
                 containerDAO,
                 UriFactory(config),

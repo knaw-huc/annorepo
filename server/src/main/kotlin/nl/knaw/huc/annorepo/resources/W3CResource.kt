@@ -26,7 +26,6 @@ import jakarta.ws.rs.core.SecurityContext
 import kotlin.collections.set
 import kotlin.math.abs
 import com.codahale.metrics.annotation.Timed
-import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Filters.eq
@@ -38,7 +37,6 @@ import org.bson.Document
 import org.bson.json.JsonParseException
 import org.litote.kmongo.aggregate
 import org.litote.kmongo.findOne
-import org.litote.kmongo.getCollection
 import org.litote.kmongo.json
 import org.litote.kmongo.replaceOneWithFilter
 import org.slf4j.LoggerFactory
@@ -46,7 +44,6 @@ import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
-import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.AnnotationData
@@ -58,6 +55,7 @@ import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
 import nl.knaw.huc.annorepo.exceptions.PreconditionFailedException
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
@@ -76,11 +74,11 @@ private const val ANNOTATION_LINK = "http://www.w3.org/ns/ldp#Annotation"
 @SecurityRequirement(name = SECURITY_SCHEME_NAME)
 class W3CResource(
     private val configuration: AnnoRepoConfiguration,
-    client: MongoClient,
+    private val containerDAO: ContainerDAO,
     private val containerUserDAO: ContainerUserDAO,
     private val uriFactory: UriFactory,
     private val indexManager: IndexManager
-) : AbstractContainerResource(configuration, client, ContainerAccessChecker(containerUserDAO)) {
+) : AbstractContainerResource(configuration, containerDAO, ContainerAccessChecker(containerUserDAO)) {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -95,11 +93,11 @@ class W3CResource(
     ): Response {
         log.debug("{}", containerSpecs)
         var containerName = slug ?: UUID.randomUUID().toString()
-        if (mdb.listCollectionNames().contains(containerName)) {
+        if (containerDAO.containerExists(containerName)) {
             log.debug("A container with the suggested name $containerName already exists, generating a new name.")
             containerName = UUID.randomUUID().toString()
         }
-        mdb.createCollection(containerName)
+        containerDAO.createCollection(containerName)
         setupCollectionMetadata(containerName, containerSpecs.label)
         if (configuration.withAuthentication) {
             val userName = context.userPrincipal.name
@@ -182,9 +180,9 @@ class W3CResource(
             }
 
             (containerPage.total == 0L || force) -> {
-                mdb.getCollection(containerName).drop()
+                containerDAO.getCollection(containerName).drop()
                 val containerMetadataCollection =
-                    mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
+                    containerDAO.getContainerMetadataCollection()
                 containerMetadataCollection.deleteOne(eq("name", containerName))
                 containerUserDAO.getUsersForContainer(containerName).forEach { user ->
                     containerUserDAO.removeContainerUser(containerName, user.userName)
@@ -216,7 +214,7 @@ class W3CResource(
         checkUserHasEditRightsInThisContainer(context, containerName)
 
         var name = slug ?: UUID.randomUUID().toString()
-        val container = mdb.getCollection(containerName)
+        val container = containerDAO.getCollection(containerName)
         val existingAnnotationDocument = container.find(Document(ANNOTATION_NAME_FIELD, name)).first()
         if (existingAnnotationDocument != null) {
             log.warn(
@@ -277,7 +275,7 @@ class W3CResource(
         log.debug("read annotation $annotationName in container $containerName")
         checkUserHasReadRightsInThisContainer(context, containerName)
 
-        val container = mdb.getCollection(containerName)
+        val container = containerDAO.getCollection(containerName)
         val annotationDocument = container.find(Document(ANNOTATION_NAME_FIELD, annotationName)).first()
             ?.get(ANNOTATION_FIELD, Document::class.java)
         return if (annotationDocument != null) {
@@ -312,7 +310,7 @@ class W3CResource(
         val annotationDocument = Document.parse(annotationJson)
         val newFields = JsonLdUtils.extractFields(annotationJson)
 
-        val container = mdb.getCollection(containerName)
+        val container = containerDAO.getCollection(containerName)
         val oldAnnotation = container.find(Document(ANNOTATION_NAME_FIELD, annotationName)).first()
             ?: return Response.status(Response.Status.NOT_FOUND).build()
         val doc = Document(ANNOTATION_NAME_FIELD, annotationName).append(ANNOTATION_FIELD, annotationDocument)
@@ -356,7 +354,7 @@ class W3CResource(
         val eTag = makeAnnotationETag(containerName, annotationName)
         validateETag(req, eTag)
 
-        val container = mdb.getCollection(containerName)
+        val container = containerDAO.getCollection(containerName)
 
         val oldAnnotation = container.find(Document(ANNOTATION_NAME_FIELD, annotationName)).first()
             ?: return Response.status(Response.Status.NOT_FOUND).build()
@@ -367,7 +365,7 @@ class W3CResource(
     }
 
     private fun setupCollectionMetadata(name: String, label: String) {
-        val containerMetadataStore = mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
+        val containerMetadataStore = containerDAO.getContainerMetadataCollection()
         val result = containerMetadataStore.replaceOneWithFilter(
             filter = eq(CONTAINER_NAME_FIELD, name),
             replacement = ContainerMetadata(name, label),
@@ -400,9 +398,9 @@ class W3CResource(
     }
 
     private fun getContainerPage(containerName: String, page: Int, pageSize: Int): ContainerPage? {
-        val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
+        val containerMetadataCollection = containerDAO.getContainerMetadataCollection()
         val metadata = containerMetadataCollection.findOne(Document(CONTAINER_NAME_FIELD, containerName)) ?: return null
-        val collection = mdb.getCollection(containerName)
+        val collection = containerDAO.getCollection(containerName)
         val uri = uriFactory.containerURL(containerName)
         val count = collection.countDocuments()
         val annotations = collection.aggregate<Document>(
@@ -453,7 +451,7 @@ class W3CResource(
         EntityTag(abs(containerName.hashCode()).toString(), true)
 
     private fun updateFieldCount(containerName: String, fieldsAdded: Set<String>, fieldsDeleted: Set<String>) {
-        val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
+        val containerMetadataCollection = containerDAO.getContainerMetadataCollection()
         val containerMetadata: ContainerMetadata =
             containerMetadataCollection.findOne(eq(CONTAINER_NAME_FIELD, containerName)) ?: return
         val fieldCounts = containerMetadata.fieldCounts.toMutableMap()
