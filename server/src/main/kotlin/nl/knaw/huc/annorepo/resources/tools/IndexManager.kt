@@ -1,6 +1,5 @@
 package nl.knaw.huc.annorepo.resources.tools
 
-import com.mongodb.client.MongoDatabase
 import com.mongodb.client.model.Indexes
 import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ARConst
@@ -10,8 +9,9 @@ import nl.knaw.huc.annorepo.api.IndexType.ASCENDING
 import nl.knaw.huc.annorepo.api.IndexType.DESCENDING
 import nl.knaw.huc.annorepo.api.IndexType.HASHED
 import nl.knaw.huc.annorepo.api.IndexType.TEXT
+import nl.knaw.huc.annorepo.dao.ContainerDAO
 
-class IndexManager(val mdb: MongoDatabase) {
+class IndexManager(val containerDAO: ContainerDAO) {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -22,7 +22,7 @@ class IndexManager(val mdb: MongoDatabase) {
         indexType: IndexType,
         isJsonField: Boolean = true
     ): IndexChore {
-        val container = mdb.getCollection(containerName)
+        val container = containerDAO.getCollection(containerName)
         val fullFieldName = if (isJsonField) "${ARConst.ANNOTATION_FIELD}.${fieldName}" else fieldName
         val index = when (indexType) {
             HASHED -> Indexes.hashed(fullFieldName)

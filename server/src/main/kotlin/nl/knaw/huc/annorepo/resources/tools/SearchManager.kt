@@ -1,22 +1,21 @@
 package nl.knaw.huc.annorepo.resources.tools
 
-import com.mongodb.client.MongoClient
-import com.mongodb.client.MongoDatabase
 import org.bson.conversions.Bson
 import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.SearchChoreIndex
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.service.UriFactory
 
 class SearchManager(
     configuration: AnnoRepoConfiguration,
-    client: MongoClient
+    val containerDAO: ContainerDAO
 ) {
-    data class Context(val uriFactory: UriFactory, val mdb: MongoDatabase)
+    data class Context(val uriFactory: UriFactory, val containerDAO: ContainerDAO)
 
     val context = Context(
         uriFactory = UriFactory(configuration),
-        mdb = client.getDatabase(configuration.databaseName)
+        containerDAO = containerDAO
     )
 
     private val log = LoggerFactory.getLogger(javaClass)

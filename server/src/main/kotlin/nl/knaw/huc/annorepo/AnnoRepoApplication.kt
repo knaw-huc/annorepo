@@ -105,8 +105,8 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         val containerUserDAO = ARContainerUserDAO(configuration, mongoClient)
 
         val containerAccessChecker = ContainerAccessChecker(containerUserDAO)
-        val searchManager = SearchManager(client = mongoClient, configuration = configuration)
-        val indexManager = IndexManager(mongoClient.getDatabase(configuration.databaseName))
+        val searchManager = SearchManager(containerDAO = containerDAO, configuration = configuration)
+        val indexManager = IndexManager(containerDAO)
         val uriFactory = UriFactory(configuration)
 
         configuration.grpc

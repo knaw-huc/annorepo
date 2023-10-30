@@ -14,7 +14,7 @@ class GlobalSearchChore(
     override fun runSearch(status: Status) {
         status.totalContainersToSearch = containerNames.size
         for (containerName in containerNames) {
-            context.mdb.getCollection(containerName)
+            context.containerDAO.getCollection(containerName)
                 .aggregate(aggregateStages)
                 .map { a -> toMongoDocumentId(a, containerName) }
                 .forEach(status.annotationIds::add)

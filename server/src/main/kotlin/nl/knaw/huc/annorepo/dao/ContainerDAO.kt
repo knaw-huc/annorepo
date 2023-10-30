@@ -8,8 +8,13 @@ import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 
 interface ContainerDAO {
+    fun containerExists(containerName: String): Boolean
+
+    fun listCollectionNames(): List<String>
     fun getCollectionStats(containerName: String): Document
     fun getAnnotationFields(containerName: String): SortedMap<String, Int>
+    fun createCollection(containerName: String)
+    fun getContainerMetadataCollection(): MongoCollection<ContainerMetadata>
     fun getContainerMetadata(containerName: String): ContainerMetadata?
     fun getDistinctValues(containerName: String, field: String): List<Any>
     fun getCollection(containerName: String): MongoCollection<Document>
@@ -18,9 +23,4 @@ interface ContainerDAO {
         annotations: List<WebAnnotationAsMap>
     ): List<AnnotationIdentifier>
 
-    fun containerExists(containerName: String): Boolean
-
-    fun getContainerMetadataCollection(): MongoCollection<ContainerMetadata>
-    fun createCollection(containerName: String)
-    fun listCollectionNames(): List<String>
 }
