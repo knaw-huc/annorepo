@@ -132,6 +132,7 @@ class AnnoRepoClient @JvmOverloads constructor(
     fun createContainer(
         preferredName: String? = null,
         label: String = "A container for web annotations",
+        readOnlyForAnonymousUsers: Boolean = false
     ): Either<RequestError, CreateContainerResult> {
         var request = webTarget.path(W3C).request()
         if (preferredName != null) {
@@ -139,7 +140,7 @@ class AnnoRepoClient @JvmOverloads constructor(
         }
         return doPost(
             request = request,
-            entity = Entity.json(containerSpecs(label)),
+            entity = Entity.json(containerSpecs(label, readOnlyForAnonymousUsers)),
             responseHandlers = mapOf(Response.Status.CREATED to { response ->
                 val location = response.location()!!
                 val containerName = extractContainerName(location.toString())
@@ -962,12 +963,16 @@ class AnnoRepoClient @JvmOverloads constructor(
         return builder
     }
 
-    private fun containerSpecs(label: String) = mapOf(
+    private fun containerSpecs(label: String, readOnlyForAnonymousUsers: Boolean) = mapOf(
         "@context" to listOf(
             "http://www.w3.org/ns/anno.jsonld", "http://www.w3.org/ns/ldp.jsonld"
-        ), "type" to listOf(
+        ),
+        "type" to listOf(
             "BasicContainer", "AnnotationCollection"
-        ), "label" to label
+        ),
+        "label" to label,
+        "readOnlyForAnonymousUsers" to readOnlyForAnonymousUsers
+
     )
 
     companion object {
