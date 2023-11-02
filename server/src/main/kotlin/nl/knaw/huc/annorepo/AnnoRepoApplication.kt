@@ -106,7 +106,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         environment.jersey().apply {
             register(AboutResource(configuration, name, appVersion, mongoVersion))
             register(HomePageResource())
-            register(W3CResource(configuration, mongoClient, containerUserDAO, uriFactory, indexManager))
+            register(W3CResource(configuration, mongoClient, containerDAO, containerUserDAO, uriFactory, indexManager))
             register(
                 ContainerServiceResource(
                     configuration,
@@ -122,11 +122,12 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
                     configuration,
                     mongoClient,
                     containerUserDAO,
+                    containerDAO,
                     searchManager,
                     uriFactory
                 )
             )
-            register(BatchResource(configuration, mongoClient, containerAccessChecker))
+            register(BatchResource(configuration, mongoClient, containerDAO, containerAccessChecker))
             if (configuration.prettyPrint) {
                 register(JSONPrettyPrintFilter())
             }

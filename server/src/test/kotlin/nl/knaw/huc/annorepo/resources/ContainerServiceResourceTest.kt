@@ -10,7 +10,11 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import com.mongodb.client.*
+import com.mongodb.client.MongoClient
+import com.mongodb.client.MongoCollection
+import com.mongodb.client.MongoCursor
+import com.mongodb.client.MongoDatabase
+import com.mongodb.client.MongoIterable
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
@@ -19,6 +23,8 @@ import io.mockk.junit5.MockKExtension
 import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
 import org.bson.Document
 import org.slf4j.LoggerFactory
+import nl.knaw.huc.annorepo.api.ARConst
+import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.auth.RootUser
@@ -312,6 +318,11 @@ class ContainerServiceResourceTest {
             every { collectionNames.iterator() } returns mongoCursor
             every { mongoCursor.hasNext() } returns true
             every { mongoCursor.next() } returns containerName
+            every { containerDAO.getContainerMetadata(ARConst.CONTAINER_METADATA_COLLECTION) } returns ContainerMetadata(
+                name = "name",
+                label = "label",
+                isReadOnlyForAnonymous = false
+            )
             resource = ContainerServiceResource(
                 config,
                 client,
