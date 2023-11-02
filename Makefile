@@ -1,7 +1,10 @@
 all: help
 TAG = annorepo
 DOCKER_DOMAIN = registry.diginfra.net/tt
-version_fn = $(shell cat .make/.version)
+SHELL=/bin/bash
+CLIENT_SRC=$(shell find client/src/ -type f)
+COMMON_SRC=$(shell find common/src/ -type f)
+version_fn = $(shell cat .make/.version 2>/dev/null)
 
 .make:
 	mkdir -p .make
@@ -23,6 +26,13 @@ build-server: .make/.version server/target/annorepo-server-$(call version_fn).ja
 
 .PHONY: build-client
 build-client: .make/.version client/target/annorepo-client-$(call version_fn).jar client/readme.md
+
+.make/install-client: .make client/pom.xml $(CLIENT_SRC) common/pom.xml $(COMMON_SRC)
+	mvn --projects client --also-make install
+	@touch $@
+
+.PHONY: install-client
+install-client: .make/install-client
 
 .PHONY: run-server-with-auth
 run-server-with-auth: build-server
@@ -68,7 +78,7 @@ push:   clean build-server .make/.push-server .make/.push-updater
 
 .PHONY: clean
 clean:
-	rm -rf .make
+	rm -rf .make */src/generated/*/*
 	mvn clean
 
 .PHONY: version-update
@@ -116,25 +126,55 @@ release:
 tests:
 	mvn test -Dmaven.plugin.validation=VERBOSE
 
+.PHONY: start-mongodb
+start-mongodb:
+	docker start mongodb6 || docker run --name mongodb6 -d -p 27017:27017 -v ~/local/mongo:/data/db mongo:6.0.7
+
+.make/compiled-protocol-buffers: .make common/src/main/proto/*.proto
+	mkdir -p common/target/python
+	python -m grpc_tools.protoc \
+	-I common/src/main/proto \
+	--python_out=common/target/python \
+	--pyi_out=common/target/python \
+	--grpc_python_out=common/target/python \
+	common/src/main/proto/*.proto
+#	protoc	--proto_path=common/src/main/proto \
+#	--python_out=common/target/python \
+#	--pyi_out=common/target/python \
+#	--grpc_python_out=common/target/python \
+#	common/src/main/proto/*.proto
+	@touch $@
+
+.PHONY: compile-protocol-buffers
+compile-protocol-buffers: .make/compiled-protocol-buffers
+
 .PHONY: help
 help:
 	@echo "make-tools for $(TAG)"
 	@echo
 	@echo "Please use \`make <target>', where <target> is one of:"
-	@echo "  tests                     to test the project"
-	@echo "  build                     to test and build the project"
-	@echo "  build-server              to test and build just the server"
-	@echo "  build-client              to test and build just the client"
-	@echo "  run-server-with-auth      to start the server app with authorization on"
-	@echo "  run-server-without-auth   to start the server app with authorization off"
-	@echo "  docker-run                to start the server app in docker"
-	@echo "  docker-stop               to stop the server app in docker"
-	@echo "  run-env                   to run the annorepo env command"
-	@echo "  docker-image              to build the docker image of the app"
-	@echo "  push                      to push the linux/amd64 docker image to registry.diginfra.net"
-	@echo "  clean                     to remove generated files"
-	@echo "  version-update            to update the project version"
-	@echo "  deploy                    to deploy annorepo-client and annorepo-common"
-	@echo "  release                   to create a new release on github + deploy the new client"
-	@echo "  dokka                     to generate dokka html"
+	@echo "  tests                     - to test the project"
+	@echo "  clean                     - to remove generated files"
+	@echo "  compile-protocol-buffers  - to compile all .proto files"
+	@echo "  install-client            - to install the client code in the local maven repository"
+	@echo
+	@echo "  build                     - to test and build the project"
+	@echo "  build-server              - to test and build just the server"
+	@echo "  build-client              - to test and build just the client"
+	@echo
+	@echo "  start-mongodb             - to start a local mongodb"
+	@echo "  run-server-with-auth      - to start the server app with authorization on"
+	@echo "  run-server-without-auth   - to start the server app with authorization off"
+	@echo "  run-env                   - to run the annorepo env command"
+	@echo
+	@echo "  docker-run                - to start the server app in docker"
+	@echo "  docker-stop               - to stop the server app in docker"
+	@echo
+	@echo "  docker-image              - to build the docker image of the app"
+	@echo "  push                      - to push the linux/amd64 docker image to registry.diginfra.net"
+	@echo
+	@echo "  version-update            - to update the project version"
+	@echo "  dokka                     - to generate dokka html"
+	@echo "  deploy                    - to deploy annorepo-client and annorepo-common"
+	@echo "  release                   - to create a new release on github + deploy the new client"
 	@echo
