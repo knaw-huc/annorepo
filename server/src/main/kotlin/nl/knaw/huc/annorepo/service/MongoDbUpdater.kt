@@ -64,7 +64,6 @@ class MongoDbUpdater(
                     indexType = IndexType.HASHED
                 )
             }
-
         }
     }
 

@@ -50,9 +50,9 @@ abstract class AbstractContainerResource(
     }
 
     private fun checkContainerIsReadOnlyForAnonymous(containerName: String): Boolean {
-        val containerMetadata: ContainerMetadata =
-            containerDAO.getContainerMetadata(containerName)!!
-        return containerMetadata.isReadOnlyForAnonymous
+        val containerMetadata: ContainerMetadata? =
+            containerDAO.getContainerMetadata(containerName)
+        return containerMetadata?.isReadOnlyForAnonymous ?: false
     }
 
     private fun checkContainerExists(containerName: String) {
