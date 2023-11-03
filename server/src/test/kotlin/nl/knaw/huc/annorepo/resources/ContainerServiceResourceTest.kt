@@ -201,6 +201,19 @@ class ContainerServiceResourceTest {
                 }
             }
         }
+
+        @Nested
+        inner class SetAnonymousReadAccessForContainerTest {
+            @Test
+            fun `setAnonymousUserReadAccess endpoint can be used by root and admin, but not by others`() {
+                assertRoleAuthorizationForBlock(
+                    authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
+                ) {
+                    val response = resource.setAnonymousUserReadAccess(containerName, true, securityContext)
+                    assertNotNull(response)
+                }
+            }
+        }
     }
 
     @Nested

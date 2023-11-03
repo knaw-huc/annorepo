@@ -152,6 +152,19 @@ class IntegratedClientKotlinTester {
                 fail(requestError.message)
             }
         }
+
+        @Test
+        fun testSetReadOlyAccessForAnonymousUser() {
+            either {
+                val (response, location, containerName, eTag) = client.createContainer().bind()
+                val (response2) = client.setAnonymousUserReadAccess(containerName, true).bind()
+                doSomethingWith(response2.status)
+                client.deleteContainer(containerName, eTag)
+            }.mapLeft<Void> { requestError ->
+                log.error("error=$requestError")
+                fail(requestError.message)
+            }
+        }
     }
 
     @Nested

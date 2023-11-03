@@ -50,6 +50,10 @@ sealed class ARResult {
         val metadata: Map<String, Any>,
     ) : ARResult()
 
+    data class SetAnonymousUserReadAccessResult(
+        override val response: Response
+    ) : ARResult()
+
     data class DeleteContainerResult(
         override val response: Response,
     ) : ARResult()
