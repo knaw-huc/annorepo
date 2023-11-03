@@ -4,6 +4,8 @@ import jakarta.ws.rs.NotFoundException
 import jakarta.ws.rs.core.SecurityContext
 import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoDatabase
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ContainerDAO
@@ -16,6 +18,7 @@ abstract class AbstractContainerResource(
     private val containerAccessChecker: ContainerAccessChecker,
 ) {
     protected val mdb: MongoDatabase = client.getDatabase(configuration.databaseName)
+    val log: Logger = LoggerFactory.getLogger(javaClass)
 
     protected fun checkUserHasAdminRightsInThisContainer(context: SecurityContext, containerName: String) {
         checkContainerExists(containerName)

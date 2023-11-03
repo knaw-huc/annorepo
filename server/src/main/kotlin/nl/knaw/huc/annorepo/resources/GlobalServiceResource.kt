@@ -25,7 +25,6 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.bson.Document
 import org.bson.types.ObjectId
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
@@ -55,8 +54,6 @@ class GlobalServiceResource(
 ) : AbstractContainerResource(configuration, client, containerDAO, ContainerAccessChecker(containerUserDAO)) {
 
     private val aggregateStageGenerator = AggregateStageGenerator(configuration)
-
-    private val log = LoggerFactory.getLogger(javaClass)
 
     @Operation(description = "Find annotations in accessible containers matching the given query")
     @Timed

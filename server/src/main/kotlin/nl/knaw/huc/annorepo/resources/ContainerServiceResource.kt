@@ -36,7 +36,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.bson.Document
 import org.bson.conversions.Bson
 import org.litote.kmongo.getCollection
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
@@ -83,7 +82,6 @@ class ContainerServiceResource(
 
     private val queryCache: Cache<String, QueryCacheItem> =
         Caffeine.newBuilder().expireAfterAccess(1, TimeUnit.HOURS).maximumSize(1000).build()
-    private val log = LoggerFactory.getLogger(javaClass)
 
     @Operation(description = "Show the users with access to this container")
     @Timed
