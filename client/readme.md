@@ -14,7 +14,7 @@ Add the following to your `pom.xml`
 <dependency>
     <groupId>io.github.knaw-huc</groupId>
     <artifactId>annorepo-client</artifactId>
-    <version>0.6.0-SNAPSHOT</version>
+    <version>0.6.0</version>
 </dependency>
 ```
 
@@ -126,6 +126,7 @@ Parameters:
 
 - `preferredName`: optional String, indicating the preferred name for the container. May be overridden by the server.
 - `label`: optional String, a human-readable label for the container.
+- `readOnlyForAnonymousUsers`: optional Boolean, set to `true` to make the container read-only for anonymous users (default: false).
 
 If the annorepo instance has authorization enabled, the user creating a container will automatically get `Role.ADMIN`
 rights to that container.
@@ -136,7 +137,8 @@ rights to that container.
 ```kotlin
 val preferredName = "my-container"
 val label = "A container for all my annotations"
-val success = client.createContainer(preferredName, label).fold(
+val readOnlyForAnonymousUsers = true
+val success = client.createContainer(preferredName, label, readOnlyForAnonymousUsers).fold(
     { error: RequestError ->
         handleError(error)
         false
@@ -153,7 +155,8 @@ val success = client.createContainer(preferredName, label).fold(
 ```java
 String preferredName = "my-container";
 String label = "A container for all my annotations";
-Boolean success = client.createContainer(preferredName,label).fold(
+Boolean readOnlyForAnonymousUsers = true;
+Boolean success = client.createContainer(preferredName,label,readOnlyForAnonymousUsers).fold(
     (RequestError error) -> {
         handleError(error);
         return false;
@@ -221,6 +224,23 @@ client.deleteContainer(containerName, eTag)
 ```java
 client.deleteContainer(containerName, eTag).map(
         (ARResult.DeleteContainerResult result) -> true
+);
+```
+
+### Changing the `read-only for anonynous users` setting for a container 
+
+**Kotlin:**
+
+```kotlin
+client.setAnonymousUserReadAccess(containerName, true)
+    .map { result: SetAnonymousUserReadAccessResult -> true }
+```
+
+**Java**
+
+```java
+client.setAnonymousUserReadAccess(containerName, true).map(
+        (ARResult.SetAnonymousUserReadAccessResult result) -> true
 );
 ```
 
