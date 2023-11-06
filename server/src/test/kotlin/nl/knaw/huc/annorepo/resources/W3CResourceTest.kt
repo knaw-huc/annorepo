@@ -62,7 +62,8 @@ class W3CResourceTest {
             containerSpecs = ContainerSpecs(
                 context = mutableListOf(),
                 type = listOf(),
-                label = "container label"
+                label = "container label",
+                readOnlyForAnonymousUsers = true
             ), slug = "container",
             context = securityContext
         )

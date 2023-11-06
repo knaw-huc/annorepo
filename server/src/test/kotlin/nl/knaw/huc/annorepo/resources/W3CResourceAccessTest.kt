@@ -168,10 +168,10 @@ class W3CResourceAccessTest {
         lateinit var mongoCursor: MongoCursor<String>
 
         @RelaxedMockK
-        lateinit var containerUserDAO: ContainerUserDAO
+        lateinit var containerDAO: ContainerDAO
 
         @RelaxedMockK
-        lateinit var containerDAO: ContainerDAO
+        lateinit var containerUserDAO: ContainerUserDAO
 
         @RelaxedMockK
         lateinit var indexManager: IndexManager

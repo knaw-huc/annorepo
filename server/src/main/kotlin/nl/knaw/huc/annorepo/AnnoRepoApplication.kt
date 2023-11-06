@@ -1,5 +1,6 @@
 package nl.knaw.huc.annorepo
 
+import java.security.Principal
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.util.Collections.max
@@ -10,6 +11,7 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Indexes
 import io.dropwizard.auth.AuthDynamicFeature
+import io.dropwizard.auth.chained.ChainedAuthFilter
 import io.dropwizard.auth.oauth.OAuthCredentialAuthFilter
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor
 import io.dropwizard.configuration.SubstitutingSourceProvider
@@ -30,6 +32,7 @@ import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.api.ARConst.EnvironmentVariable
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.auth.AROAuthAuthenticator
+import nl.knaw.huc.annorepo.auth.UnauthenticatedAuthFilter
 import nl.knaw.huc.annorepo.auth.User
 import nl.knaw.huc.annorepo.cli.EnvCommand
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
@@ -99,7 +102,6 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         log.info("connected! version = $mongoVersion")
 
         val appVersion = javaClass.getPackage().implementationVersion
-
         val userDAO = ARUserDAO(configuration, mongoClient)
         val containerDAO = ARContainerDAO(configuration, mongoClient)
         val containerUserDAO = ARContainerUserDAO(configuration, mongoClient)
@@ -145,12 +147,16 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             if (configuration.withAuthentication) {
                 register(AdminResource(userDAO))
                 register(MyResource(containerUserDAO))
+                val oauthFilter = OAuthCredentialAuthFilter.Builder<User>()
+                    .setAuthenticator(AROAuthAuthenticator(userDAO))
+                    .setPrefix("Bearer")
+                    .buildAuthFilter()
+                val anonymousFilter = UnauthenticatedAuthFilter<User>()
                 register(
                     AuthDynamicFeature(
-                        OAuthCredentialAuthFilter.Builder<User>()
-                            .setAuthenticator(AROAuthAuthenticator(userDAO))
-                            .setPrefix("Bearer")
-                            .buildAuthFilter()
+                        ChainedAuthFilter<User, Principal>(
+                            listOf(oauthFilter, anonymousFilter)
+                        )
                     )
                 )
             }

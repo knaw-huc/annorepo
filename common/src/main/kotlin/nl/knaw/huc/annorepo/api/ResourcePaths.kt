@@ -21,5 +21,7 @@ object ResourcePaths {
     const val SEARCH = "search"
     const val STATUS = "status"
     const val METADATA = "metadata"
+    const val SETTINGS = "settings"
+    const val READ_ONLY_FOR_ANONYMOUS = "isReadOnlyForAnonymous"
     const val DISTINCT_FIELD_VALUES = "distinct-values"
 }

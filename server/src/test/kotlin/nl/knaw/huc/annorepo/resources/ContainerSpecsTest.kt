@@ -22,7 +22,8 @@ internal class ContainerSpecsTest {
                 "BasicContainer",
                 "AnnotationCollection"
             ),
-            label = "A Container for Web Annotations"
+            label = "A Container for Web Annotations",
+            readOnlyForAnonymousUsers = true
         )
         val json = objectMapper.writeValueAsString(spec)
         val expectedJson = """{
@@ -34,7 +35,8 @@ internal class ContainerSpecsTest {
             "BasicContainer",
             "AnnotationCollection"
           ],
-          "label": "A Container for Web Annotations"
+          "label": "A Container for Web Annotations",
+          "readOnlyForAnonymousUsers": true
         }""".trimIndent()
         assertThatJson(json).isEqualTo(expectedJson)
 

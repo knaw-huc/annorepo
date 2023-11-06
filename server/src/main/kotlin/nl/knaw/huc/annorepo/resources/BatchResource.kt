@@ -28,8 +28,6 @@ class BatchResource(
     private val containerDAO: ContainerDAO,
     containerAccessChecker: ContainerAccessChecker,
 ) : AbstractContainerResource(configuration, containerDAO, containerAccessChecker) {
-//    private val log = LoggerFactory.getLogger(javaClass)
-//    private val uriFactory = UriFactory(configuration)
 
     @Operation(description = "Upload annotations in batch to a given container")
     @Timed
@@ -41,7 +39,7 @@ class BatchResource(
         annotations: List<WebAnnotationAsMap>,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasEditRightsInThisContainer(context, containerName)
+        context.checkUserHasEditRightsInThisContainer(containerName)
         val annotationIdentifiers = containerDAO.addAnnotationsInBatch(containerName, annotations)
         return Response.ok(annotationIdentifiers).build()
     }

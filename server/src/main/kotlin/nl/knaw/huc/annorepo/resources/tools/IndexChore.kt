@@ -19,7 +19,7 @@ class IndexChore(
 ) :
     Runnable {
 
-    class Status() {
+    class Status {
         var state = State.CREATED
         var startTime: Instant = Instant.now()
         var endTime: Instant? = null
