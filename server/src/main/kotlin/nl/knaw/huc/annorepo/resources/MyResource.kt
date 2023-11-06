@@ -1,6 +1,6 @@
 package nl.knaw.huc.annorepo.resources
 
-import java.util.*
+import java.util.TreeMap
 import jakarta.annotation.security.PermitAll
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.Path
