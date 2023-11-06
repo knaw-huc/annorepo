@@ -7,6 +7,7 @@
     - [Create](#creating-an-annotation-container-)
     - [Read](#reading-an-annotation-container-)
     - [Delete](#deleting-an-annotation-container-)
+    - [Read-Only setting](#changing-the-read-only-for-anonymous-users-setting-for-an-annotation-container-)
 - [Annotations](#annotations):
     - [Create](#adding-an-annotation-to-a-given-annotation-container-)
     - [Read](#reading-an-annotation-)
@@ -69,8 +70,7 @@ that in a way similar to that used by [elucidate](https://github.com/dlcs/elucid
 - Gzip compression is enabled by default:
     - Add the header `Content-Encoding: gzip` when sending gzip-compressed data.
     - Add the header `Accept-Encoding: gzip` to receive the data gzip-compressed. (Data smaller than 256 bytes will not
-      be
-      compressed)
+      be compressed)
 
 ---
 
@@ -99,7 +99,8 @@ Content-Type: application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"
     "BasicContainer",
     "AnnotationCollection"
   ],
-  "label": "A Container for Web Annotations"
+  "label": "A Container for Web Annotations",
+  "readOnlyForAnonymousUsers": true
 }
 ```
 
@@ -143,6 +144,7 @@ Content-Length: 548
 
 Use a `slug` header to choose your own container name. If a container with the same name already exists, AnnoRepo will
 generate a new one.
+Setting `readOnlyForAnonymousUsers` to `true` will give anonymous users (those without an api-key) read-only access to the public endpoints. Default is `false`
 
 #### Request
 
@@ -272,6 +274,27 @@ If-Match: "{etag}"
 
 ```
 HTTP/1.1 204 No Content
+```
+
+### Changing the `read-only for anonymous users` setting for an annotation container (🔒)
+
+Send `true` to the endpoint to make the container read-only for anonymous users.
+Send `false` to the endpoint to lock the container for anonymous users.
+
+#### Request
+
+```
+PUT http://localhost:8080/services/{containerName}/settings/isReadOnlyForAnonymous HTTP/1.1
+
+Content-Type: application/json
+
+true
+```
+
+#### Response
+
+```
+HTTP/1.1 200 OK
 ```
 
 ---
