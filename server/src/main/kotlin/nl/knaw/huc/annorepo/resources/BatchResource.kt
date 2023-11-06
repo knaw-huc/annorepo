@@ -55,7 +55,7 @@ class BatchResource(
         annotations: List<HashMap<String, Any>>,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasEditRightsInThisContainer(context, containerName)
+        context.checkUserHasEditRightsInThisContainer(containerName)
 
         val annotationIdentifiers = mutableListOf<AnnotationIdentifier>()
         val container = mdb.getCollection(containerName)

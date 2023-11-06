@@ -92,6 +92,7 @@ class W3CResource(
         @Context context: SecurityContext,
     ): Response {
 //        log.debug("containerSpecs={}", containerSpecs)
+        context.checkUserHasContainerCreationRights()
         var containerName = slug ?: UUID.randomUUID().toString()
         if (mdb.listCollectionNames().contains(containerName)) {
             log.debug("A container with the suggested name $containerName already exists, generating a new name.")
@@ -134,7 +135,7 @@ class W3CResource(
         @Context context: SecurityContext,
     ): Response {
         log.debug("read Container $containerName, page $page")
-        checkUserHasReadRightsInThisContainer(context, containerName)
+        context.checkUserHasReadRightsInThisContainer(containerName)
 
         val containerPage = getContainerPage(containerName, page ?: 0, configuration.pageSize)
         val uri = uriFactory.containerURL(containerName)
@@ -170,7 +171,7 @@ class W3CResource(
         @Context req: Request,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasAdminRightsInThisContainer(context, containerName)
+        context.checkUserHasAdminRightsInThisContainer(containerName)
         val eTag = makeContainerETag(containerName)
         validateETag(req, eTag)
         val containerPage = getContainerPage(containerName, 0, configuration.pageSize)
@@ -211,7 +212,7 @@ class W3CResource(
         annotationJson: String,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasEditRightsInThisContainer(context, containerName)
+        context.checkUserHasEditRightsInThisContainer(containerName)
 
         var name = slug ?: UUID.randomUUID().toString()
         val container = mdb.getCollection(containerName)
@@ -256,12 +257,6 @@ class W3CResource(
         }
     }
 
-    private fun jsonParseExceptionMessage(annotationJson: String, e: RuntimeException): String {
-        log.error("json parsing error for input:\n{}\n", annotationJson)
-        log.error("error:\n{}", e.message)
-        return "The given json does not parse: '$annotationJson'"
-    }
-
     @Operation(description = "Get an Annotation")
     @Timed
     @GET
@@ -273,7 +268,7 @@ class W3CResource(
         @Context context: SecurityContext,
     ): Response {
         log.debug("read annotation $annotationName in container $containerName")
-        checkUserHasReadRightsInThisContainer(context, containerName)
+        context.checkUserHasReadRightsInThisContainer(containerName)
 
         val container = mdb.getCollection(containerName)
         val annotationDocument = container.find(Document(ANNOTATION_NAME_FIELD, annotationName)).first()
@@ -303,7 +298,7 @@ class W3CResource(
         annotationJson: String,
     ): Response {
         log.debug("annotation=\n$annotationJson")
-        checkUserHasEditRightsInThisContainer(context, containerName)
+        context.checkUserHasEditRightsInThisContainer(containerName)
 
         val eTag = makeAnnotationETag(containerName, annotationName)
         validateETag(req, eTag)
@@ -349,7 +344,7 @@ class W3CResource(
         @Context context: SecurityContext,
     ): Response {
         log.debug("delete annotation $annotationName in container $containerName")
-        checkUserHasEditRightsInThisContainer(context, containerName)
+        context.checkUserHasEditRightsInThisContainer(containerName)
 
         val eTag = makeAnnotationETag(containerName, annotationName)
         validateETag(req, eTag)
@@ -362,6 +357,12 @@ class W3CResource(
         updateFieldCount(containerName, emptySet(), oldFields)
         container.findOneAndDelete(Document(ANNOTATION_NAME_FIELD, annotationName))
         return Response.noContent().build()
+    }
+
+    private fun jsonParseExceptionMessage(annotationJson: String, e: RuntimeException): String {
+        log.error("json parsing error for input:\n{}\n", annotationJson)
+        log.error("error:\n{}", e.message)
+        return "The given json does not parse: '$annotationJson'"
     }
 
     private fun setupCollectionMetadata(name: String, label: String, readOnlyForAnonymousUsers: Boolean) {

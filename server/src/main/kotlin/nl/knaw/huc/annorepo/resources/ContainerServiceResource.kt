@@ -99,7 +99,7 @@ class ContainerServiceResource(
         setting: Boolean,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasAdminRightsInThisContainer(context, containerName)
+        context.checkUserHasAdminRightsInThisContainer(containerName)
         val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(ARConst.CONTAINER_METADATA_COLLECTION)
         val containerMetadata: ContainerMetadata =
             containerDAO.getContainerMetadata(containerName)!!
@@ -116,7 +116,7 @@ class ContainerServiceResource(
         @PathParam("containerName") containerName: String,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasAdminRightsInThisContainer(context, containerName)
+        context.checkUserHasAdminRightsInThisContainer(containerName)
 
         val users = containerUserDAO.getUsersForContainer(containerName)
         return Response.ok(users).build()
@@ -133,7 +133,7 @@ class ContainerServiceResource(
         containerUsers: List<ContainerUserEntry>,
     ): Response {
 //        log.info("containerUsers={}", containerUsers)
-        checkUserHasAdminRightsInThisContainer(context, containerName)
+        context.checkUserHasAdminRightsInThisContainer(containerName)
 
         for (user in containerUsers) {
             containerUserDAO.removeContainerUser(containerName, user.userName)
@@ -152,7 +152,7 @@ class ContainerServiceResource(
         @PathParam("userName") userName: String,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasAdminRightsInThisContainer(context, containerName)
+        context.checkUserHasAdminRightsInThisContainer(containerName)
         containerUserDAO.removeContainerUser(containerName, userName)
         return Response.ok().build()
     }
@@ -167,7 +167,7 @@ class ContainerServiceResource(
         queryJson: String,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasReadRightsInThisContainer(context, containerName)
+        context.checkUserHasReadRightsInThisContainer(containerName)
         try {
             val queryMap: Map<String, Any?> = Json.createReader(StringReader(queryJson)).readObject().toMap().simplify()
             val aggregateStages = queryMap
@@ -197,7 +197,7 @@ class ContainerServiceResource(
         @QueryParam("page") page: Int = 0,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasReadRightsInThisContainer(context, containerName)
+        context.checkUserHasReadRightsInThisContainer(containerName)
 
         var queryCacheItem = getQueryCacheItem(searchId)
         if (queryCacheItem.count < 1) {
@@ -233,7 +233,7 @@ class ContainerServiceResource(
         @PathParam("searchId") searchId: String,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasReadRightsInThisContainer(context, containerName)
+        context.checkUserHasReadRightsInThisContainer(containerName)
 
         val queryCacheItem = getQueryCacheItem(searchId)
 //        val info = mapOf("query" to queryCacheItem.queryMap, "hits" to queryCacheItem.count)
@@ -253,7 +253,7 @@ class ContainerServiceResource(
         @PathParam("containerName") containerName: String,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasReadRightsInThisContainer(context, containerName)
+        context.checkUserHasReadRightsInThisContainer(containerName)
 
         val sortedMap = containerDAO.getAnnotationFields(containerName)
         return Response.ok(sortedMap).build()
@@ -268,7 +268,7 @@ class ContainerServiceResource(
         @PathParam("field") field: String,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasReadRightsInThisContainer(context, containerName)
+        context.checkUserHasReadRightsInThisContainer(containerName)
         val distinctValues = containerDAO.getDistinctValues(containerName, field)
         return Response.ok(distinctValues).build()
     }
@@ -281,7 +281,7 @@ class ContainerServiceResource(
         @PathParam("containerName") containerName: String,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasReadRightsInThisContainer(context, containerName)
+        context.checkUserHasReadRightsInThisContainer(containerName)
 
         val container = containerDAO.getCollection(containerName)
         val meta = containerDAO.getContainerMetadata(containerName)!!
@@ -305,7 +305,7 @@ class ContainerServiceResource(
         @PathParam("containerName") containerName: String,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasReadRightsInThisContainer(context, containerName)
+        context.checkUserHasReadRightsInThisContainer(containerName)
 
         val container = containerDAO.getCollection(containerName)
         val body = indexData(container, containerName)
@@ -322,7 +322,7 @@ class ContainerServiceResource(
         @PathParam("indexType") indexTypeParam: String,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasAdminRightsInThisContainer(context, containerName)
+        context.checkUserHasAdminRightsInThisContainer(containerName)
 
         val indexType =
             IndexType.fromString(indexTypeParam) ?: throw BadRequestException(
@@ -350,7 +350,7 @@ class ContainerServiceResource(
         @PathParam("indexType") indexType: String,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasAdminRightsInThisContainer(context, containerName)
+        context.checkUserHasAdminRightsInThisContainer(containerName)
 
         val container = containerDAO.getCollection(containerName)
         val indexConfig =
@@ -368,7 +368,7 @@ class ContainerServiceResource(
         @PathParam("indexType") indexType: String,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasAdminRightsInThisContainer(context, containerName)
+        context.checkUserHasAdminRightsInThisContainer(containerName)
 
         val indexChore = indexManager.getIndexChore(containerName, fieldName, indexType) ?: throw NotFoundException()
         return Response.ok(indexChore.status.summary()).build()
@@ -384,7 +384,7 @@ class ContainerServiceResource(
         @PathParam("indexType") indexType: String,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasAdminRightsInThisContainer(context, containerName)
+        context.checkUserHasAdminRightsInThisContainer(containerName)
 
         val container = containerDAO.getCollection(containerName)
         val indexConfig =
@@ -403,7 +403,7 @@ class ContainerServiceResource(
         annotations: List<HashMap<String, Any>>,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasEditRightsInThisContainer(context, containerName)
+        context.checkUserHasEditRightsInThisContainer(containerName)
 
         val annotationIdentifiers = mutableListOf<AnnotationIdentifier>()
         val container = containerDAO.getCollection(containerName)

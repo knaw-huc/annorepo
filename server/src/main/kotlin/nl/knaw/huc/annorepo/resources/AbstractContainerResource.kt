@@ -1,5 +1,6 @@
 package nl.knaw.huc.annorepo.resources
 
+import jakarta.ws.rs.NotAuthorizedException
 import jakarta.ws.rs.NotFoundException
 import jakarta.ws.rs.core.SecurityContext
 import com.mongodb.client.MongoClient
@@ -20,32 +21,37 @@ abstract class AbstractContainerResource(
     protected val mdb: MongoDatabase = client.getDatabase(configuration.databaseName)
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
-    protected fun checkUserHasAdminRightsInThisContainer(context: SecurityContext, containerName: String) {
+    protected fun SecurityContext.checkUserHasAdminRightsInThisContainer(containerName: String) {
         checkContainerExists(containerName)
         if (configuration.withAuthentication) {
-            containerAccessChecker.checkUserHasAdminRightsInThisContainer(context.userPrincipal, containerName)
+            containerAccessChecker.checkUserHasAdminRightsInThisContainer(userPrincipal, containerName)
         }
     }
 
-    protected fun checkUserHasEditRightsInThisContainer(context: SecurityContext, containerName: String) {
+    protected fun SecurityContext.checkUserHasEditRightsInThisContainer(containerName: String) {
         checkContainerExists(containerName)
         if (configuration.withAuthentication) {
-            containerAccessChecker.checkUserHasEditRightsInThisContainer(context.userPrincipal, containerName)
+            containerAccessChecker.checkUserHasEditRightsInThisContainer(userPrincipal, containerName)
         }
     }
 
-    protected fun checkUserHasReadRightsInThisContainer(
-        context: SecurityContext,
+    protected fun SecurityContext.checkUserHasReadRightsInThisContainer(
         containerName: String
     ) {
         checkContainerExists(containerName)
         val anonymousHasAccess = checkContainerIsReadOnlyForAnonymous(containerName)
         if (configuration.withAuthentication) {
             containerAccessChecker.checkUserHasReadRightsInThisContainer(
-                context.userPrincipal,
+                userPrincipal,
                 containerName,
                 anonymousHasAccess
             )
+        }
+    }
+
+    protected fun SecurityContext.checkUserHasContainerCreationRights() {
+        if (configuration.withAuthentication && userPrincipal == null) {
+            throw NotAuthorizedException("Anonymous user does not have access rights to this endpoint")
         }
     }
 
