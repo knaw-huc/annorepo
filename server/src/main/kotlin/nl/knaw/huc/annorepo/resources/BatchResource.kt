@@ -1,6 +1,6 @@
 package nl.knaw.huc.annorepo.resources
 
-import java.util.*
+import java.util.UUID
 import jakarta.annotation.security.PermitAll
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
@@ -27,6 +27,7 @@ import nl.knaw.huc.annorepo.api.AnnotationIdentifier
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.makeAnnotationETag
 import nl.knaw.huc.annorepo.service.JsonLdUtils
@@ -38,8 +39,9 @@ import nl.knaw.huc.annorepo.service.JsonLdUtils
 class BatchResource(
     configuration: AnnoRepoConfiguration,
     client: MongoClient,
+    containerDAO: ContainerDAO,
     containerAccessChecker: ContainerAccessChecker,
-) : AbstractContainerResource(configuration, client, containerAccessChecker) {
+) : AbstractContainerResource(configuration, client, containerDAO, containerAccessChecker) {
 //    private val log = LoggerFactory.getLogger(javaClass)
 //    private val uriFactory = UriFactory(configuration)
 

@@ -1,11 +1,21 @@
 package nl.knaw.huc.annorepo.resources
 
 import java.net.URI
-import java.util.*
 import jakarta.annotation.security.PermitAll
-import jakarta.ws.rs.*
-import jakarta.ws.rs.core.*
+import jakarta.ws.rs.BadRequestException
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.NotFoundException
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.Context
 import jakarta.ws.rs.core.MediaType.APPLICATION_JSON
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.SecurityContext
+import jakarta.ws.rs.core.UriBuilder
 import kotlin.math.min
 import com.codahale.metrics.annotation.Timed
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -15,13 +25,19 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.bson.Document
 import org.bson.types.ObjectId
-import org.slf4j.LoggerFactory
-import nl.knaw.huc.annorepo.api.*
+import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
+import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
+import nl.knaw.huc.annorepo.api.AnnotationPage
 import nl.knaw.huc.annorepo.api.ResourcePaths.GLOBAL_SERVICES
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
-import nl.knaw.huc.annorepo.resources.tools.*
+import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
+import nl.knaw.huc.annorepo.resources.tools.AnnotationList
+import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
+import nl.knaw.huc.annorepo.resources.tools.SearchChore
+import nl.knaw.huc.annorepo.resources.tools.SearchManager
 import nl.knaw.huc.annorepo.service.UriFactory
 
 @Path(GLOBAL_SERVICES)
@@ -32,13 +48,12 @@ class GlobalServiceResource(
     private val configuration: AnnoRepoConfiguration,
     client: MongoClient,
     private val containerUserDAO: ContainerUserDAO,
+    containerDAO: ContainerDAO,
     private val searchManager: SearchManager,
     private val uriFactory: UriFactory
-) : AbstractContainerResource(configuration, client, ContainerAccessChecker(containerUserDAO)) {
+) : AbstractContainerResource(configuration, client, containerDAO, ContainerAccessChecker(containerUserDAO)) {
 
     private val aggregateStageGenerator = AggregateStageGenerator(configuration)
-
-    private val log = LoggerFactory.getLogger(javaClass)
 
     @Operation(description = "Find annotations in accessible containers matching the given query")
     @Timed

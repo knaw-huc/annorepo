@@ -35,7 +35,9 @@ import nl.knaw.huc.annorepo.api.ResourcePaths.INDEXES
 import nl.knaw.huc.annorepo.api.ResourcePaths.INFO
 import nl.knaw.huc.annorepo.api.ResourcePaths.METADATA
 import nl.knaw.huc.annorepo.api.ResourcePaths.MY
+import nl.knaw.huc.annorepo.api.ResourcePaths.READ_ONLY_FOR_ANONYMOUS
 import nl.knaw.huc.annorepo.api.ResourcePaths.SEARCH
+import nl.knaw.huc.annorepo.api.ResourcePaths.SETTINGS
 import nl.knaw.huc.annorepo.api.ResourcePaths.STATUS
 import nl.knaw.huc.annorepo.api.ResourcePaths.USERS
 import nl.knaw.huc.annorepo.api.ResourcePaths.W3C
@@ -67,6 +69,7 @@ import nl.knaw.huc.annorepo.client.ARResult.GetSearchInfoResult
 import nl.knaw.huc.annorepo.client.ARResult.GetSearchResultPageResult
 import nl.knaw.huc.annorepo.client.ARResult.ListIndexesResult
 import nl.knaw.huc.annorepo.client.ARResult.MyContainersResult
+import nl.knaw.huc.annorepo.client.ARResult.SetAnonymousUserReadAccessResult
 import nl.knaw.huc.annorepo.client.ARResult.UsersResult
 import nl.knaw.huc.annorepo.client.RequestError.ConnectionError
 
@@ -132,6 +135,7 @@ class AnnoRepoClient @JvmOverloads constructor(
     fun createContainer(
         preferredName: String? = null,
         label: String = "A container for web annotations",
+        readOnlyForAnonymousUsers: Boolean = false
     ): Either<RequestError, CreateContainerResult> {
         var request = webTarget.path(W3C).request()
         if (preferredName != null) {
@@ -139,7 +143,7 @@ class AnnoRepoClient @JvmOverloads constructor(
         }
         return doPost(
             request = request,
-            entity = Entity.json(containerSpecs(label)),
+            entity = Entity.json(containerSpecs(label, readOnlyForAnonymousUsers)),
             responseHandlers = mapOf(Response.Status.CREATED to { response ->
                 val location = response.location()!!
                 val containerName = extractContainerName(location.toString())
@@ -192,6 +196,27 @@ class AnnoRepoClient @JvmOverloads constructor(
                 GetContainerMetadataResult(
                     response = response, metadata = metadata
                 )
+            )
+        })
+    )
+
+    /**
+     * Set read-only access for anonymous user for the given container
+     *
+     * @param containerName
+     * @return
+     */
+    fun setAnonymousUserReadAccess(
+        containerName: String,
+        readOnlyAccess: Boolean
+    ): Either<RequestError, SetAnonymousUserReadAccessResult> = doPut(
+        request = webTarget
+            .path(CONTAINER_SERVICES).path(containerName).path(SETTINGS).path(READ_ONLY_FOR_ANONYMOUS)
+            .request(),
+        entity = Entity.json(readOnlyAccess),
+        responseHandlers = mapOf(Response.Status.OK to { response ->
+            Either.Right(
+                SetAnonymousUserReadAccessResult(response = response)
             )
         })
     )
@@ -962,12 +987,16 @@ class AnnoRepoClient @JvmOverloads constructor(
         return builder
     }
 
-    private fun containerSpecs(label: String) = mapOf(
+    private fun containerSpecs(label: String, readOnlyForAnonymousUsers: Boolean) = mapOf(
         "@context" to listOf(
             "http://www.w3.org/ns/anno.jsonld", "http://www.w3.org/ns/ldp.jsonld"
-        ), "type" to listOf(
+        ),
+        "type" to listOf(
             "BasicContainer", "AnnotationCollection"
-        ), "label" to label
+        ),
+        "label" to label,
+        "readOnlyForAnonymousUsers" to readOnlyForAnonymousUsers
+
     )
 
     companion object {

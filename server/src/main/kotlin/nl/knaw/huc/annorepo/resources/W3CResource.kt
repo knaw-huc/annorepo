@@ -41,7 +41,6 @@ import org.litote.kmongo.findOne
 import org.litote.kmongo.getCollection
 import org.litote.kmongo.json
 import org.litote.kmongo.replaceOneWithFilter
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
@@ -57,6 +56,7 @@ import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
 import nl.knaw.huc.annorepo.exceptions.PreconditionFailedException
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
@@ -76,12 +76,11 @@ private const val ANNOTATION_LINK = "http://www.w3.org/ns/ldp#Annotation"
 class W3CResource(
     private val configuration: AnnoRepoConfiguration,
     client: MongoClient,
+    containerDAO: ContainerDAO,
     private val containerUserDAO: ContainerUserDAO,
     private val uriFactory: UriFactory,
     private val indexManager: IndexManager
-) : AbstractContainerResource(configuration, client, ContainerAccessChecker(containerUserDAO)) {
-
-    private val log = LoggerFactory.getLogger(javaClass)
+) : AbstractContainerResource(configuration, client, containerDAO, ContainerAccessChecker(containerUserDAO)) {
 
     @Operation(description = "Create an Annotation Container")
     @Timed
@@ -92,14 +91,14 @@ class W3CResource(
         @HeaderParam("slug") slug: String?,
         @Context context: SecurityContext,
     ): Response {
-        log.debug("{}", containerSpecs)
+//        log.debug("containerSpecs={}", containerSpecs)
         var containerName = slug ?: UUID.randomUUID().toString()
         if (mdb.listCollectionNames().contains(containerName)) {
             log.debug("A container with the suggested name $containerName already exists, generating a new name.")
             containerName = UUID.randomUUID().toString()
         }
         mdb.createCollection(containerName)
-        setupCollectionMetadata(containerName, containerSpecs.label)
+        setupCollectionMetadata(containerName, containerSpecs.label, containerSpecs.readOnlyForAnonymousUsers)
         if (configuration.withAuthentication) {
             val userName = context.userPrincipal.name
             containerUserDAO.addContainerUser(containerName, userName, Role.ADMIN)
@@ -365,11 +364,11 @@ class W3CResource(
         return Response.noContent().build()
     }
 
-    private fun setupCollectionMetadata(name: String, label: String) {
+    private fun setupCollectionMetadata(name: String, label: String, readOnlyForAnonymousUsers: Boolean) {
         val containerMetadataStore = mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
         val result = containerMetadataStore.replaceOneWithFilter(
             filter = eq(CONTAINER_NAME_FIELD, name),
-            replacement = ContainerMetadata(name, label),
+            replacement = ContainerMetadata(name, label, isReadOnlyForAnonymous = readOnlyForAnonymousUsers),
             replaceOptions = ReplaceOptions().upsert(true)
         )
         log.debug("replace result={}", result)
