@@ -41,16 +41,16 @@
         <dropwizard.version>4.0.2</dropwizard.version>
         <dropwizard-jobs.version>5.1.3</dropwizard-jobs.version>
         <jackson-databind.version>2.13.4.1</jackson-databind.version>
-        <jackson-module-kotlin.version>2.15.2</jackson-module-kotlin.version>
+        <jackson-module-kotlin.version>2.15.3</jackson-module-kotlin.version>
         <jackson-annotations.version>2.15.2</jackson-annotations.version>
         <jakarta.json.version>2.0.1</jakarta.json.version>
         <jakarta.ws.rs-api.version>3.1.0</jakarta.ws.rs-api.version>
         <jaxb-api.version>2.3.1</jaxb-api.version>
-        <jena.version>4.9.0</jena.version>
+        <jena.version>4.10.0</jena.version>
         <json.version>20231013</json.version>
         <kotlinx-cli-jvm.version>0.3.6</kotlinx-cli-jvm.version>
-        <kmongo.version>4.9.0</kmongo.version>
-        <mongodb.version>4.10.0</mongodb.version>
+        <kmongo.version>4.10.0</kmongo.version>
+        <mongodb.version>4.10.1</mongodb.version>
         <mordant.version>2.2.0</mordant.version>
         <problem.version>0.27.1</problem.version>
         <slf4j.version>2.0.3</slf4j.version>

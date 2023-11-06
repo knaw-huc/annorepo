@@ -140,7 +140,7 @@
         <dependency>
             <groupId>org.litote.kmongo</groupId>
             <artifactId>kmongo-native</artifactId>
-            <version>${mongodb.version}</version>
+            <version>${kmongo.version}</version>
         </dependency>
         <dependency>
             <groupId>joda-time</groupId>
