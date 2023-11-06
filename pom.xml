@@ -41,6 +41,8 @@
         <dropwizard.version>4.0.2</dropwizard.version>
         <dropwizard-jobs.version>5.1.3</dropwizard-jobs.version>
         <jackson-databind.version>2.13.4.1</jackson-databind.version>
+        <jackson-module-kotlin.version>2.15.2</jackson-module-kotlin.version>
+        <jackson-annotations.version>2.15.3</jackson-annotations.version>
         <jackson-module-kotlin.version>2.15.3</jackson-module-kotlin.version>
         <jackson-annotations.version>2.15.3</jackson-annotations.version>
         <jakarta.json.version>2.0.1</jakarta.json.version>
