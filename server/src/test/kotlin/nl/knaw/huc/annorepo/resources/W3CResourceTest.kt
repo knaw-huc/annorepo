@@ -17,6 +17,7 @@ import org.mockito.kotlin.mock
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.ContainerSpecs
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
 import nl.knaw.huc.annorepo.resources.tools.IndexManager
 import nl.knaw.huc.annorepo.service.UriFactory
@@ -38,6 +39,7 @@ class W3CResourceTest {
     private val configuration: AnnoRepoConfiguration = mock {
         on { databaseName }.doReturn("annorepo")
     }
+    private val containerDAO: ContainerDAO = mock()
     private val containerUserDAO: ContainerUserDAO = mock()
     private val securityContext: SecurityContext = mock()
     private val indexManager: IndexManager = mock()
@@ -52,6 +54,7 @@ class W3CResourceTest {
             W3CResource(
                 configuration = configuration,
                 client = client,
+                containerDAO = containerDAO,
                 containerUserDAO = containerUserDAO,
                 uriFactory = UriFactory(configuration),
                 indexManager = indexManager
@@ -60,7 +63,8 @@ class W3CResourceTest {
             containerSpecs = ContainerSpecs(
                 context = mutableListOf(),
                 type = listOf(),
-                label = "container label"
+                label = "container label",
+                readOnlyForAnonymousUsers = true
             ), slug = "container",
             context = securityContext
         )

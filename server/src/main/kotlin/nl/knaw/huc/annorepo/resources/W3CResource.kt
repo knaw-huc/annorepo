@@ -41,7 +41,6 @@ import org.litote.kmongo.findOne
 import org.litote.kmongo.getCollection
 import org.litote.kmongo.json
 import org.litote.kmongo.replaceOneWithFilter
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
@@ -57,6 +56,7 @@ import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
 import nl.knaw.huc.annorepo.exceptions.PreconditionFailedException
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
@@ -76,12 +76,11 @@ private const val ANNOTATION_LINK = "http://www.w3.org/ns/ldp#Annotation"
 class W3CResource(
     private val configuration: AnnoRepoConfiguration,
     client: MongoClient,
+    containerDAO: ContainerDAO,
     private val containerUserDAO: ContainerUserDAO,
     private val uriFactory: UriFactory,
     private val indexManager: IndexManager
-) : AbstractContainerResource(configuration, client, ContainerAccessChecker(containerUserDAO)) {
-
-    private val log = LoggerFactory.getLogger(javaClass)
+) : AbstractContainerResource(configuration, client, containerDAO, ContainerAccessChecker(containerUserDAO)) {
 
     @Operation(description = "Create an Annotation Container")
     @Timed
@@ -92,14 +91,15 @@ class W3CResource(
         @HeaderParam("slug") slug: String?,
         @Context context: SecurityContext,
     ): Response {
-        log.debug("{}", containerSpecs)
+//        log.debug("containerSpecs={}", containerSpecs)
+        context.checkUserHasContainerCreationRights()
         var containerName = slug ?: UUID.randomUUID().toString()
         if (mdb.listCollectionNames().contains(containerName)) {
             log.debug("A container with the suggested name $containerName already exists, generating a new name.")
             containerName = UUID.randomUUID().toString()
         }
         mdb.createCollection(containerName)
-        setupCollectionMetadata(containerName, containerSpecs.label)
+        setupCollectionMetadata(containerName, containerSpecs.label, containerSpecs.readOnlyForAnonymousUsers)
         if (configuration.withAuthentication) {
             val userName = context.userPrincipal.name
             containerUserDAO.addContainerUser(containerName, userName, Role.ADMIN)
@@ -135,7 +135,7 @@ class W3CResource(
         @Context context: SecurityContext,
     ): Response {
         log.debug("read Container $containerName, page $page")
-        checkUserHasReadRightsInThisContainer(context, containerName)
+        context.checkUserHasReadRightsInThisContainer(containerName)
 
         val containerPage = getContainerPage(containerName, page ?: 0, configuration.pageSize)
         val uri = uriFactory.containerURL(containerName)
@@ -171,7 +171,7 @@ class W3CResource(
         @Context req: Request,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasAdminRightsInThisContainer(context, containerName)
+        context.checkUserHasAdminRightsInThisContainer(containerName)
         val eTag = makeContainerETag(containerName)
         validateETag(req, eTag)
         val containerPage = getContainerPage(containerName, 0, configuration.pageSize)
@@ -212,7 +212,7 @@ class W3CResource(
         annotationJson: String,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasEditRightsInThisContainer(context, containerName)
+        context.checkUserHasEditRightsInThisContainer(containerName)
 
         var name = slug ?: UUID.randomUUID().toString()
         val container = mdb.getCollection(containerName)
@@ -257,12 +257,6 @@ class W3CResource(
         }
     }
 
-    private fun jsonParseExceptionMessage(annotationJson: String, e: RuntimeException): String {
-        log.error("json parsing error for input:\n{}\n", annotationJson)
-        log.error("error:\n{}", e.message)
-        return "The given json does not parse: '$annotationJson'"
-    }
-
     @Operation(description = "Get an Annotation")
     @Timed
     @GET
@@ -274,7 +268,7 @@ class W3CResource(
         @Context context: SecurityContext,
     ): Response {
         log.debug("read annotation $annotationName in container $containerName")
-        checkUserHasReadRightsInThisContainer(context, containerName)
+        context.checkUserHasReadRightsInThisContainer(containerName)
 
         val container = mdb.getCollection(containerName)
         val annotationDocument = container.find(Document(ANNOTATION_NAME_FIELD, annotationName)).first()
@@ -304,7 +298,7 @@ class W3CResource(
         annotationJson: String,
     ): Response {
         log.debug("annotation=\n$annotationJson")
-        checkUserHasEditRightsInThisContainer(context, containerName)
+        context.checkUserHasEditRightsInThisContainer(containerName)
 
         val eTag = makeAnnotationETag(containerName, annotationName)
         validateETag(req, eTag)
@@ -350,7 +344,7 @@ class W3CResource(
         @Context context: SecurityContext,
     ): Response {
         log.debug("delete annotation $annotationName in container $containerName")
-        checkUserHasEditRightsInThisContainer(context, containerName)
+        context.checkUserHasEditRightsInThisContainer(containerName)
 
         val eTag = makeAnnotationETag(containerName, annotationName)
         validateETag(req, eTag)
@@ -365,11 +359,17 @@ class W3CResource(
         return Response.noContent().build()
     }
 
-    private fun setupCollectionMetadata(name: String, label: String) {
+    private fun jsonParseExceptionMessage(annotationJson: String, e: RuntimeException): String {
+        log.error("json parsing error for input:\n{}\n", annotationJson)
+        log.error("error:\n{}", e.message)
+        return "The given json does not parse: '$annotationJson'"
+    }
+
+    private fun setupCollectionMetadata(name: String, label: String, readOnlyForAnonymousUsers: Boolean) {
         val containerMetadataStore = mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
         val result = containerMetadataStore.replaceOneWithFilter(
             filter = eq(CONTAINER_NAME_FIELD, name),
-            replacement = ContainerMetadata(name, label),
+            replacement = ContainerMetadata(name, label, isReadOnlyForAnonymous = readOnlyForAnonymousUsers),
             replaceOptions = ReplaceOptions().upsert(true)
         )
         log.debug("replace result={}", result)

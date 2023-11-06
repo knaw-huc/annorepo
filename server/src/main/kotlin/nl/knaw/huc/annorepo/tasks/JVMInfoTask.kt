@@ -6,8 +6,7 @@ import com.codahale.metrics.annotation.Metered
 import io.dropwizard.servlets.tasks.Task
 import nl.knaw.huc.annorepo.resources.tools.formatAsSize
 
-class JVMInfoTask(
-) : Task("jvm-info") {
+class JVMInfoTask : Task("jvm-info") {
 
     @Metered
     override fun execute(parameters: MutableMap<String, MutableList<String>>, output: PrintWriter) {

@@ -2,6 +2,7 @@ package nl.knaw.huc.annorepo.resources.tools
 
 import org.bson.Document
 import org.bson.conversions.Bson
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class GlobalSearchChore(
@@ -10,7 +11,7 @@ class GlobalSearchChore(
     private val aggregateStages: List<Bson>,
     private val context: SearchManager.Context
 ) : SearchChore(queryMap) {
-    val log = LoggerFactory.getLogger(this.javaClass)
+    val log: Logger = LoggerFactory.getLogger(this.javaClass)
     override fun runSearch(status: Status) {
         status.totalContainersToSearch = containerNames.size
         for (containerName in containerNames) {

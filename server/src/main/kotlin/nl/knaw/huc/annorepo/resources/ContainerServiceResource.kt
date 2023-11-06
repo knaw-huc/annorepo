@@ -36,7 +36,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.bson.Document
 import org.bson.conversions.Bson
 import org.litote.kmongo.getCollection
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
@@ -51,6 +50,13 @@ import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.ResourcePaths.CONTAINER_SERVICES
 import nl.knaw.huc.annorepo.api.ResourcePaths.DISTINCT_FIELD_VALUES
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
+import nl.knaw.huc.annorepo.api.ResourcePaths.INDEXES
+import nl.knaw.huc.annorepo.api.ResourcePaths.INFO
+import nl.knaw.huc.annorepo.api.ResourcePaths.METADATA
+import nl.knaw.huc.annorepo.api.ResourcePaths.READ_ONLY_FOR_ANONYMOUS
+import nl.knaw.huc.annorepo.api.ResourcePaths.SEARCH
+import nl.knaw.huc.annorepo.api.ResourcePaths.SETTINGS
+import nl.knaw.huc.annorepo.api.ResourcePaths.USERS
 import nl.knaw.huc.annorepo.api.SearchInfo
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ContainerDAO
@@ -76,24 +82,41 @@ class ContainerServiceResource(
     private val containerDAO: ContainerDAO,
     private val uriFactory: UriFactory,
     private val indexManager: IndexManager
-) : AbstractContainerResource(configuration, client, ContainerAccessChecker(containerUserDAO)) {
+) : AbstractContainerResource(configuration, client, containerDAO, ContainerAccessChecker(containerUserDAO)) {
 
     private val paginationStage = limit(configuration.pageSize)
     private val aggregateStageGenerator = AggregateStageGenerator(configuration)
 
     private val queryCache: Cache<String, QueryCacheItem> =
         Caffeine.newBuilder().expireAfterAccess(1, TimeUnit.HOURS).maximumSize(1000).build()
-    private val log = LoggerFactory.getLogger(javaClass)
+
+    @Operation(description = "Turn read-only access to this container for anonymous users on or off")
+    @Timed
+    @PUT
+    @Path("{containerName}/$SETTINGS/$READ_ONLY_FOR_ANONYMOUS")
+    fun setAnonymousUserReadAccess(
+        @PathParam("containerName") containerName: String,
+        setting: Boolean,
+        @Context context: SecurityContext,
+    ): Response {
+        context.checkUserHasAdminRightsInThisContainer(containerName)
+        val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(ARConst.CONTAINER_METADATA_COLLECTION)
+        val containerMetadata: ContainerMetadata =
+            containerDAO.getContainerMetadata(containerName)!!
+        val newContainerMetadata = containerMetadata.copy(isReadOnlyForAnonymous = setting)
+        containerMetadataCollection.replaceOne(Filters.eq("name", containerName), newContainerMetadata)
+        return Response.ok().build()
+    }
 
     @Operation(description = "Show the users with access to this container")
     @Timed
     @GET
-    @Path("{containerName}/users")
+    @Path("{containerName}/$USERS")
     fun readContainerUsers(
         @PathParam("containerName") containerName: String,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasAdminRightsInThisContainer(context, containerName)
+        context.checkUserHasAdminRightsInThisContainer(containerName)
 
         val users = containerUserDAO.getUsersForContainer(containerName)
         return Response.ok(users).build()
@@ -102,7 +125,7 @@ class ContainerServiceResource(
     @Operation(description = "Add users with given role to this container")
     @Timed
     @POST
-    @Path("{containerName}/users")
+    @Path("{containerName}/$USERS")
     @Consumes(APPLICATION_JSON)
     fun addContainerUsers(
         @PathParam("containerName") containerName: String,
@@ -110,7 +133,7 @@ class ContainerServiceResource(
         containerUsers: List<ContainerUserEntry>,
     ): Response {
 //        log.info("containerUsers={}", containerUsers)
-        checkUserHasAdminRightsInThisContainer(context, containerName)
+        context.checkUserHasAdminRightsInThisContainer(containerName)
 
         for (user in containerUsers) {
             containerUserDAO.removeContainerUser(containerName, user.userName)
@@ -123,13 +146,13 @@ class ContainerServiceResource(
     @Operation(description = "Remove the user with the given userName from this container")
     @Timed
     @DELETE
-    @Path("{containerName}/users/{userName}")
+    @Path("{containerName}/$USERS/{userName}")
     fun deleteContainerUser(
         @PathParam("containerName") containerName: String,
         @PathParam("userName") userName: String,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasAdminRightsInThisContainer(context, containerName)
+        context.checkUserHasAdminRightsInThisContainer(containerName)
         containerUserDAO.removeContainerUser(containerName, userName)
         return Response.ok().build()
     }
@@ -137,14 +160,14 @@ class ContainerServiceResource(
     @Operation(description = "Find annotations in the given container matching the given query")
     @Timed
     @POST
-    @Path("{containerName}/search")
+    @Path("{containerName}/$SEARCH")
     @Consumes(APPLICATION_JSON)
     fun createSearch(
         @PathParam("containerName") containerName: String,
         queryJson: String,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasReadRightsInThisContainer(context, containerName)
+        context.checkUserHasReadRightsInThisContainer(containerName)
         try {
             val queryMap: Map<String, Any?> = Json.createReader(StringReader(queryJson)).readObject().toMap().simplify()
             val aggregateStages = queryMap
@@ -167,14 +190,14 @@ class ContainerServiceResource(
     @Operation(description = "Get the given search result page")
     @Timed
     @GET
-    @Path("{containerName}/search/{searchId}")
+    @Path("{containerName}/$SEARCH/{searchId}")
     fun getSearchResultPage(
         @PathParam("containerName") containerName: String,
         @PathParam("searchId") searchId: String,
         @QueryParam("page") page: Int = 0,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasReadRightsInThisContainer(context, containerName)
+        context.checkUserHasReadRightsInThisContainer(containerName)
 
         var queryCacheItem = getQueryCacheItem(searchId)
         if (queryCacheItem.count < 1) {
@@ -204,13 +227,13 @@ class ContainerServiceResource(
     @Operation(description = "Get information about the given search")
     @Timed
     @GET
-    @Path("{containerName}/search/{searchId}/info")
+    @Path("{containerName}/$SEARCH/{searchId}/$INFO")
     fun getSearchInfo(
         @PathParam("containerName") containerName: String,
         @PathParam("searchId") searchId: String,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasReadRightsInThisContainer(context, containerName)
+        context.checkUserHasReadRightsInThisContainer(containerName)
 
         val queryCacheItem = getQueryCacheItem(searchId)
 //        val info = mapOf("query" to queryCacheItem.queryMap, "hits" to queryCacheItem.count)
@@ -230,7 +253,7 @@ class ContainerServiceResource(
         @PathParam("containerName") containerName: String,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasReadRightsInThisContainer(context, containerName)
+        context.checkUserHasReadRightsInThisContainer(containerName)
 
         val sortedMap = containerDAO.getAnnotationFields(containerName)
         return Response.ok(sortedMap).build()
@@ -245,7 +268,7 @@ class ContainerServiceResource(
         @PathParam("field") field: String,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasReadRightsInThisContainer(context, containerName)
+        context.checkUserHasReadRightsInThisContainer(containerName)
         val distinctValues = containerDAO.getDistinctValues(containerName, field)
         return Response.ok(distinctValues).build()
     }
@@ -253,12 +276,12 @@ class ContainerServiceResource(
     @Operation(description = "Get some container metadata")
     @Timed
     @GET
-    @Path("{containerName}/metadata")
+    @Path("{containerName}/$METADATA")
     fun getMetadataForContainer(
         @PathParam("containerName") containerName: String,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasReadRightsInThisContainer(context, containerName)
+        context.checkUserHasReadRightsInThisContainer(containerName)
 
         val container = containerDAO.getCollection(containerName)
         val meta = containerDAO.getContainerMetadata(containerName)!!
@@ -277,12 +300,12 @@ class ContainerServiceResource(
     @Operation(description = "List a container's indexes")
     @Timed
     @GET
-    @Path("{containerName}/indexes")
+    @Path("{containerName}/$INDEXES")
     fun getContainerIndexes(
         @PathParam("containerName") containerName: String,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasReadRightsInThisContainer(context, containerName)
+        context.checkUserHasReadRightsInThisContainer(containerName)
 
         val container = containerDAO.getCollection(containerName)
         val body = indexData(container, containerName)
@@ -292,14 +315,14 @@ class ContainerServiceResource(
     @Operation(description = "Add an index")
     @Timed
     @PUT
-    @Path("{containerName}/indexes/{fieldName}/{indexType}")
+    @Path("{containerName}/$INDEXES/{fieldName}/{indexType}")
     fun addContainerIndex(
         @PathParam("containerName") containerName: String,
         @PathParam("fieldName") fieldNameParam: String,
         @PathParam("indexType") indexTypeParam: String,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasAdminRightsInThisContainer(context, containerName)
+        context.checkUserHasAdminRightsInThisContainer(containerName)
 
         val indexType =
             IndexType.fromString(indexTypeParam) ?: throw BadRequestException(
@@ -320,14 +343,14 @@ class ContainerServiceResource(
     @Operation(description = "Get an index definition")
     @Timed
     @GET
-    @Path("{containerName}/indexes/{fieldName}/{indexType}")
+    @Path("{containerName}/$INDEXES/{fieldName}/{indexType}")
     fun getContainerIndexDefinition(
         @PathParam("containerName") containerName: String,
         @PathParam("fieldName") fieldName: String,
         @PathParam("indexType") indexType: String,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasAdminRightsInThisContainer(context, containerName)
+        context.checkUserHasAdminRightsInThisContainer(containerName)
 
         val container = containerDAO.getCollection(containerName)
         val indexConfig =
@@ -338,14 +361,14 @@ class ContainerServiceResource(
     @Operation(description = "Get an index status")
     @Timed
     @GET
-    @Path("{containerName}/indexes/{fieldName}/{indexType}/status")
+    @Path("{containerName}/$INDEXES/{fieldName}/{indexType}/status")
     fun getContainerIndexStatus(
         @PathParam("containerName") containerName: String,
         @PathParam("fieldName") fieldName: String,
         @PathParam("indexType") indexType: String,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasAdminRightsInThisContainer(context, containerName)
+        context.checkUserHasAdminRightsInThisContainer(containerName)
 
         val indexChore = indexManager.getIndexChore(containerName, fieldName, indexType) ?: throw NotFoundException()
         return Response.ok(indexChore.status.summary()).build()
@@ -354,14 +377,14 @@ class ContainerServiceResource(
     @Operation(description = "Delete a container index")
     @Timed
     @DELETE
-    @Path("{containerName}/indexes/{fieldName}/{indexType}")
+    @Path("{containerName}/$INDEXES/{fieldName}/{indexType}")
     fun deleteContainerIndex(
         @PathParam("containerName") containerName: String,
         @PathParam("fieldName") fieldName: String,
         @PathParam("indexType") indexType: String,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasAdminRightsInThisContainer(context, containerName)
+        context.checkUserHasAdminRightsInThisContainer(containerName)
 
         val container = containerDAO.getCollection(containerName)
         val indexConfig =
@@ -380,7 +403,7 @@ class ContainerServiceResource(
         annotations: List<HashMap<String, Any>>,
         @Context context: SecurityContext,
     ): Response {
-        checkUserHasEditRightsInThisContainer(context, containerName)
+        context.checkUserHasEditRightsInThisContainer(containerName)
 
         val annotationIdentifiers = mutableListOf<AnnotationIdentifier>()
         val container = containerDAO.getCollection(containerName)

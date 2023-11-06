@@ -22,7 +22,7 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
                 if (key.startsWith(":")) {
                     throw BadRequestException("Unknown query function: '$key'")
                 } else {
-                    log.info("key={}, value={} ({})", key, value, value.javaClass)
+                    log.debug("key={}, value={} ({})", key, value, value.javaClass)
                     fieldMatchStage(key, value)
                 }
             }

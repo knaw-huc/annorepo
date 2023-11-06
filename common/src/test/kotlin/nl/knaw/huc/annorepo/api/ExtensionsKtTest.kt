@@ -3,7 +3,7 @@ package nl.knaw.huc.annorepo.api
 import org.junit.jupiter.api.Test
 import org.assertj.core.api.Assertions.assertThat
 
-class ExtensionsTest() {
+class ExtensionsTest {
     @Test
     fun `these names are not valid`() {
         val invalidNames = listOf(

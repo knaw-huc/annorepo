@@ -3,21 +3,17 @@ package nl.knaw.huc.annorepo.api
 import java.beans.ConstructorProperties
 import java.util.Date
 
-class AnnotationData {
-    var id: Long = 0
-    var name: String? = null
-    var content: String? = null
-    var created: Date? = null
-    var modified: Date? = null
-
-    @ConstructorProperties("id", "name")
-    constructor(id: Long, name: String, content: String, created: Date, modified: Date) {
-        this.id = id
-        this.name = name
-        this.content = content
-        this.created = created
-        this.modified = modified
-    }
+class AnnotationData @ConstructorProperties("id", "name") constructor(
+    var id: Long,
+    name: String,
+    content: String,
+    created: Date,
+    modified: Date
+) {
+    var name: String? = name
+    var content: String? = content
+    var created: Date? = created
+    var modified: Date? = modified
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

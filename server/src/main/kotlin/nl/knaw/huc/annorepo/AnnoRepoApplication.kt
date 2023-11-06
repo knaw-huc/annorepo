@@ -1,5 +1,6 @@
 package nl.knaw.huc.annorepo
 
+import java.security.Principal
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.util.Collections.max
@@ -10,6 +11,7 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Indexes
 import io.dropwizard.auth.AuthDynamicFeature
+import io.dropwizard.auth.chained.ChainedAuthFilter
 import io.dropwizard.auth.oauth.OAuthCredentialAuthFilter
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor
 import io.dropwizard.configuration.SubstitutingSourceProvider
@@ -30,6 +32,7 @@ import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.api.ARConst.EnvironmentVariable
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.auth.AROAuthAuthenticator
+import nl.knaw.huc.annorepo.auth.UnauthenticatedAuthFilter
 import nl.knaw.huc.annorepo.auth.User
 import nl.knaw.huc.annorepo.cli.EnvCommand
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
@@ -80,10 +83,10 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
     }
 
     override fun run(configuration: AnnoRepoConfiguration?, environment: Environment) {
-        val maxEnvVarLen = max(EnvironmentVariable.values().map { it.name.length })
+        val maxEnvVarLen = max(EnvironmentVariable.entries.map { it.name.length })
         log.info(
             "AR_ environment variables:\n\n" +
-                    EnvironmentVariable.values()
+                    EnvironmentVariable.entries
                         .joinToString("\n") { e ->
                             "  ${e.name.padEnd(maxEnvVarLen + 1)}: ${System.getenv(e.name) ?: "(not set, using default)"}"
                         } +
@@ -106,7 +109,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         environment.jersey().apply {
             register(AboutResource(configuration, name, appVersion, mongoVersion))
             register(HomePageResource())
-            register(W3CResource(configuration, mongoClient, containerUserDAO, uriFactory, indexManager))
+            register(W3CResource(configuration, mongoClient, containerDAO, containerUserDAO, uriFactory, indexManager))
             register(
                 ContainerServiceResource(
                     configuration,
@@ -122,23 +125,28 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
                     configuration,
                     mongoClient,
                     containerUserDAO,
+                    containerDAO,
                     searchManager,
                     uriFactory
                 )
             )
-            register(BatchResource(configuration, mongoClient, containerAccessChecker))
+            register(BatchResource(configuration, mongoClient, containerDAO, containerAccessChecker))
             if (configuration.prettyPrint) {
                 register(JSONPrettyPrintFilter())
             }
             if (configuration.withAuthentication) {
                 register(AdminResource(userDAO))
                 register(MyResource(containerUserDAO))
+                val oauthFilter = OAuthCredentialAuthFilter.Builder<User>()
+                    .setAuthenticator(AROAuthAuthenticator(userDAO))
+                    .setPrefix("Bearer")
+                    .buildAuthFilter()
+                val anonymousFilter = UnauthenticatedAuthFilter<User>()
                 register(
                     AuthDynamicFeature(
-                        OAuthCredentialAuthFilter.Builder<User>()
-                            .setAuthenticator(AROAuthAuthenticator(userDAO))
-                            .setPrefix("Bearer")
-                            .buildAuthFilter()
+                        ChainedAuthFilter<User, Principal>(
+                            listOf(oauthFilter, anonymousFilter)
+                        )
                     )
                 )
             }

@@ -7,7 +7,7 @@ enum class IndexType(val mongoSuffix: String) {
     TEXT("text");
 
     companion object {
-        private val nameSet: Set<String> = IndexType.values()
+        private val nameSet: Set<String> = entries
             .map { it.name }
             .toSet()
 
