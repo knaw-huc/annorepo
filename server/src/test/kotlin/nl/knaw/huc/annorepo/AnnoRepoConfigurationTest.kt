@@ -22,7 +22,7 @@ class AnnoRepoConfigurationTest {
     fun `all AR_ env variables in config yml are also in ARConst EnvironmentVariable`() {
         val text = Path.of("../config.yml").toFile().readText()
         val re = Regex("AR_[A-Z0-9_]+")
-        val definedEnvs = ARConst.EnvironmentVariable.values().map { it.name }.toSet()
+        val definedEnvs = ARConst.EnvironmentVariable.entries.map { it.name }.toSet()
         val foundEnvs = re.findAll(text).map { it.value }
         val undefinedEnvs = foundEnvs.filter { !definedEnvs.contains(it) }.toList()
         assertThat(undefinedEnvs).isEmpty()

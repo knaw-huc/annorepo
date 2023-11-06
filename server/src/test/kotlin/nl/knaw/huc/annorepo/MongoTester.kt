@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 import com.mongodb.client.MongoDatabase
 import org.assertj.core.api.Assertions.assertThat
 import org.litote.kmongo.KMongo
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
@@ -20,7 +21,7 @@ class MongoTester {
     private val mdb: MongoDatabase = mongoClient.getDatabase("annorepo")
     private val configuration = AnnoRepoConfiguration()
     private val aggregateStageGenerator = AggregateStageGenerator(configuration)
-    val log = LoggerFactory.getLogger(MongoTester::class.java)
+    private val log: Logger = LoggerFactory.getLogger(javaClass)
 
     @Test
     fun test() {

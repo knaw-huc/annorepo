@@ -48,7 +48,7 @@ class GlobalServiceResource(
     private val configuration: AnnoRepoConfiguration,
     client: MongoClient,
     private val containerUserDAO: ContainerUserDAO,
-    private val containerDAO: ContainerDAO,
+    containerDAO: ContainerDAO,
     private val searchManager: SearchManager,
     private val uriFactory: UriFactory
 ) : AbstractContainerResource(configuration, client, containerDAO, ContainerAccessChecker(containerUserDAO)) {

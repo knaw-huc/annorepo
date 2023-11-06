@@ -1,6 +1,7 @@
 package nl.knaw.huc.annorepo.service
 
 import com.mongodb.client.MongoClient
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
@@ -21,7 +22,7 @@ class MongoDbUpdater(
     private val containerDAO: ContainerDAO,
     val indexManager: IndexManager
 ) {
-    val log = LoggerFactory.getLogger(MongoDbUpdater::class.java)
+    val log: Logger = LoggerFactory.getLogger(javaClass)
     private val mdb = client.getDatabase(configuration.databaseName)
 
     fun run() {
