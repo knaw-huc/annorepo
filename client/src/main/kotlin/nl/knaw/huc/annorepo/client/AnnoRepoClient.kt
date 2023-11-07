@@ -266,7 +266,7 @@ class AnnoRepoClient @JvmOverloads constructor(
      */
     fun createAnnotation(
         containerName: String,
-        annotation: Any,
+        annotation: WebAnnotationAsMap,
         preferredAnnotationName: String? = null,
     ): Either<RequestError, CreateAnnotationResult> {
         val target = webTarget.path(W3C).path(containerName)
@@ -330,7 +330,7 @@ class AnnoRepoClient @JvmOverloads constructor(
      * @return
      */
     fun updateAnnotation(
-        containerName: String, annotationName: String, eTag: String, annotation: Any,
+        containerName: String, annotationName: String, eTag: String, annotation: WebAnnotationAsMap,
     ): Either<RequestError, CreateAnnotationResult> {
         val path = webTarget.path(W3C).path(containerName).path(annotationName)
         val location = path.uri
@@ -420,7 +420,7 @@ class AnnoRepoClient @JvmOverloads constructor(
      * @return
      */
     fun batchUpload(
-        containerName: String, annotations: List<Any>,
+        containerName: String, annotations: List<WebAnnotationAsMap>,
     ): Either<RequestError, BatchUploadResult> = doPost(
         request = webTarget.path(BATCH).path(containerName).path("annotations").request(),
         entity = Entity.json(annotations),
