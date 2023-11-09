@@ -170,7 +170,7 @@ public class IntegratedClientJavaTester {
         @Test
         void testCreateAnnotation() {
             String containerName = "my-container";
-            WebAnnotation annotation = new WebAnnotation.Builder()
+            Map<String, Object> annotation = new WebAnnotation.Builder()
                     .withBody("http://example.org/annotation1")
                     .withTarget("http://example.org/target")
                     .build();
@@ -214,7 +214,7 @@ public class IntegratedClientJavaTester {
             String containerName = "my-container";
             String annotationName = "my-annotation";
             String eTag = "abcde";
-            WebAnnotation updatedAnnotation = new WebAnnotation.Builder()
+            Map<String, Object> updatedAnnotation = new WebAnnotation.Builder()
                     .withBody("http://example.org/annotation2")
                     .withTarget("http://example.org/target")
                     .build();
@@ -253,16 +253,16 @@ public class IntegratedClientJavaTester {
         @Test
         void testBatchUpload() {
             String containerName = "my-container";
-            WebAnnotation annotation1 = new WebAnnotation.Builder()
+            Map<String, Object> annotation1 = new WebAnnotation.Builder()
                     .withBody("http://example.org/annotation1")
                     .withTarget("http://example.org/target1")
                     .build();
-            WebAnnotation annotation2 = new WebAnnotation.Builder()
+            Map<String, Object> annotation2 = new WebAnnotation.Builder()
                     .withBody("http://example.org/annotation2")
                     .withTarget("http://example.org/target2")
                     .build();
 
-            List<WebAnnotation> annotations = List.of(annotation1, annotation2);
+            List<Map<String, Object>> annotations = List.of(annotation1, annotation2);
             Boolean success = client.batchUpload(containerName, annotations).fold(
                     (RequestError error) -> {
                         handleError(error);

@@ -52,5 +52,4 @@ class AnnoRepoGrpcClientTest {
             mapOf("id" to "target")
         )
         .build()
-        .asMap()
 }

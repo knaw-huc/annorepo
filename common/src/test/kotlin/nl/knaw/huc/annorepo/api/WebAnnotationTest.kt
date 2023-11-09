@@ -19,9 +19,8 @@ internal class WebAnnotationTest {
     }
 
     @Test
-    fun `builder build should return WebAnnotation`() {
+    fun `builder build should return WebAnnotationAsMap`() {
         val wa = WebAnnotation.Builder().withTarget("http://example.org/target-id").build()
-        assertThat(wa.type).isEqualTo("Annotation")
         log.info("wa={}", wa)
         logJsonSerialization(wa)
     }
@@ -43,7 +42,6 @@ internal class WebAnnotationTest {
             .withBody("http://example.org/body-id")
             .withTarget("http://example.org/target-id")
             .build()
-        assertThat(wa.type).isEqualTo("Annotation")
         log.info("wa={}", wa)
         logJsonSerialization(wa)
     }
@@ -59,7 +57,6 @@ internal class WebAnnotationTest {
                 )
             )
             .build()
-        assertThat(wa.type).isEqualTo("Annotation")
         log.info("wa={}", wa)
         logJsonSerialization(wa)
     }

@@ -173,8 +173,10 @@ class IntegratedClientKotlinTester {
         @Test
         fun testAnnotationCRUD() {
             val containerName = "my-container"
-            val annotation = WebAnnotation.Builder().withBody("http://example.org/annotation1")
-                .withTarget("http://example.org/target").build()
+            val annotation = WebAnnotation.Builder()
+                .withBody("http://example.org/annotation1")
+                .withTarget("http://example.org/target")
+                .build()
 
             // Create
             client.createAnnotation(containerName, annotation, null).fold(

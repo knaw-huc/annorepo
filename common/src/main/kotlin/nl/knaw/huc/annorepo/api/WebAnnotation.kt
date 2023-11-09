@@ -22,22 +22,21 @@ class WebAnnotation private constructor(
         fun withBody(body: Any) = apply { this.body = body }
         fun withTarget(target: Any) = apply { this.target = target }
 
-        fun build(): WebAnnotation {
+        fun build(): WebAnnotationAsMap {
             if (target == null) {
                 throw MissingTargetException()
             }
-            return WebAnnotation(body, target)
+            return WebAnnotation(body, target).asMap()
         }
     }
 
-    fun asMap(): WebAnnotationAsMap {
-        return mapOf(
+    fun asMap(): WebAnnotationAsMap =
+        mapOf(
             "@context" to ANNO_JSONLD_URL,
             "type" to "Annotation",
-            "body" to body!!,
-            "target" to target!!
+            "body" to (body ?: "no body"),
+            "target" to (target ?: "no target")
         )
-    }
 
     companion object {
         @JvmStatic
