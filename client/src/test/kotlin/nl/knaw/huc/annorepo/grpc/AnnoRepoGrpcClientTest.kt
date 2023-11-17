@@ -4,6 +4,7 @@ import java.net.URI
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlinx.coroutines.flow.count
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import nl.knaw.huc.annorepo.api.WebAnnotation
@@ -19,7 +20,8 @@ class AnnoRepoGrpcClientTest {
             webAnnotation("annotation-1")
         )
         arc.usingGrpc { client ->
-            val identifiers: List<AnnotationIdentifier> = client.addContainerAnnotations("my-container", annotations1)
+            val identifiers: List<AnnotationIdentifier> =
+                client.addContainerAnnotations("my-container", annotations1).toList()
             assertThat(identifiers).hasSize(1)
             val identifiers2 = client.addContainerAnnotations(
                 "my-container1",
@@ -27,7 +29,7 @@ class AnnoRepoGrpcClientTest {
                     webAnnotation("annotation-2"),
                     webAnnotation("annotation-3")
                 )
-            )
+            ).toList()
             assertThat(identifiers2).hasSize(2)
             client.sayHello(
                 "GRPC", "xxxxxxxxx"
@@ -36,7 +38,7 @@ class AnnoRepoGrpcClientTest {
                 webAnnotation("annotation-1"),
                 webAnnotation("annotation-2")
             )
-            val resultFlow = client.addContainerAnnotation("mycontainer", annotations2)
+            val resultFlow = client.addContainerAnnotations("mycontainer", annotations2)
             assertThat(resultFlow.count()).isEqualTo(2)
         }
         arc.usingGrpc { client ->

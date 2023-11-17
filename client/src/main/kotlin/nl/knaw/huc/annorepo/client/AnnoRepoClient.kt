@@ -101,7 +101,7 @@ class AnnoRepoClient @JvmOverloads constructor(
     lateinit var serverVersion: String
     var serverNeedsAuthentication: Boolean? = null
     private var grpcPort: Int? = null
-    lateinit var grpcHost: String
+    private lateinit var grpcHost: String
 
     init {
         log.info("checking annorepo server at $serverURI ...")
