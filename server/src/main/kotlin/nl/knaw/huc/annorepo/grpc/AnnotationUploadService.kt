@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
+import nl.knaw.huc.annorepo.api.GRPC_METADATA_KEY_CONTAINER_NAME
 import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 import nl.knaw.huc.annorepo.dao.ContainerDAO
 
@@ -36,7 +37,8 @@ class AnnotationUploadService(
 
     override fun addAnnotation(requests: Flow<AddAnnotationRequest>): Flow<AddAnnotationResponse> {
 //        log.info("addAnnotation({})", requests)
-        val containerName = "grpc-test-container"
+        val headers = GrpcServerInterceptor.HEADERS_VALUE.get()
+        val containerName = headers[GRPC_METADATA_KEY_CONTAINER_NAME] ?: "unknown"
 
         val annotationFlow: Flow<WebAnnotationAsMap> =
             requests

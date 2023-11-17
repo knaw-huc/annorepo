@@ -10,6 +10,8 @@ import io.grpc.stub.MetadataUtils
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
+import nl.knaw.huc.annorepo.api.GRPC_METADATA_KEY_API_KEY
+import nl.knaw.huc.annorepo.api.GRPC_METADATA_KEY_CONTAINER_NAME
 import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 import nl.knaw.huc.annorepo.grpc.AddAnnotationsResponse
 import nl.knaw.huc.annorepo.grpc.AnnotationIdentifier
@@ -21,7 +23,7 @@ import nl.knaw.huc.annorepo.grpc.sayHelloRequest
 
 class AnnoRepoGrpcClient(private val channel: ManagedChannel, private val apiKey: String) : Closeable {
     private val metadata = Metadata().apply {
-        setAsciiKey("api-key", apiKey)
+        setAsciiKey(GRPC_METADATA_KEY_API_KEY, apiKey)
     }
 
     private val uploadStub: AnnotationUploadServiceCoroutineStub =
@@ -40,7 +42,7 @@ class AnnoRepoGrpcClient(private val channel: ManagedChannel, private val apiKey
             this.apiKey = "not-used"
             this.containerName = "not-used"
         }
-        metadata.setAsciiKey("container-name", containerName)
+        metadata.setAsciiKey(GRPC_METADATA_KEY_CONTAINER_NAME, containerName)
         val response: AddAnnotationsResponse = uploadStub
             .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(metadata))
             .addAnnotations(request)
@@ -57,7 +59,7 @@ class AnnoRepoGrpcClient(private val channel: ManagedChannel, private val apiKey
                 this.containerName = "not-used"
             }
         }.asFlow()
-        metadata.setAsciiKey("container-name", containerName)
+        metadata.setAsciiKey(GRPC_METADATA_KEY_CONTAINER_NAME, containerName)
         return uploadStub
             .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(metadata))
             .addAnnotation(requests)
