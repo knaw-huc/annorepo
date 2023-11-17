@@ -23,8 +23,7 @@ class GrpcServerInterceptor : ServerInterceptor {
         headers: Metadata,
         next: ServerCallHandler<ReqT, RespT>
     ): ServerCall.Listener<ReqT> {
-        var ctx = Context.current()
-        ctx = ctx.withValue(HEADERS_VALUE, extractHeaders(headers))
+        val ctx = Context.current().withValue(HEADERS_VALUE, extractHeaders(headers))
         return Contexts.interceptCall(ctx, call, headers, next)
     }
 
