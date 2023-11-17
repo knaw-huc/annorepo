@@ -100,8 +100,8 @@ class AnnoRepoClient @JvmOverloads constructor(
 
     lateinit var serverVersion: String
     var serverNeedsAuthentication: Boolean? = null
-    private var grcpPort: Int? = null
-    lateinit var grcpHost: String
+    private var grpcPort: Int? = null
+    lateinit var grpcHost: String
 
     init {
         log.info("checking annorepo server at $serverURI ...")
@@ -114,9 +114,9 @@ class AnnoRepoClient @JvmOverloads constructor(
                 val aboutInfo = getAboutResult.aboutInfo
                 serverVersion = aboutInfo.version
                 serverNeedsAuthentication = aboutInfo.withAuthentication
-                grcpPort = aboutInfo.grpcPort
-                grcpHost = URI(aboutInfo.baseURI).host
-                log.info("$serverURI runs version $serverVersion ; needs authentication: $serverNeedsAuthentication; gRCP port: $grcpPort")
+                grpcPort = aboutInfo.grpcPort
+                grpcHost = URI(aboutInfo.baseURI).host
+                log.info("$serverURI runs version $serverVersion ; needs authentication: $serverNeedsAuthentication; gRPC port: $grpcPort")
             })
     }
 
@@ -873,7 +873,7 @@ class AnnoRepoClient @JvmOverloads constructor(
             throw RuntimeException("apiKey == null")
         }
         val channel: ManagedChannel = ManagedChannelBuilder
-            .forAddress(grcpHost, grcpPort!!)
+            .forAddress(grpcHost, grpcPort!!)
             .usePlaintext()
             .build()
         return AnnoRepoGrpcClient(channel, apiKey)
