@@ -116,7 +116,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             .builder(environment)
             .addService(AnnotationUploadService(containerDAO).bindService())
             .addService(SayHelloService().bindService())
-            .intercept(GrpcServerInterceptor())
+            .intercept(GrpcServerInterceptor(userDAO, containerUserDAO))
             .build()
 
         environment.jersey().apply {
