@@ -21,40 +21,20 @@ class AnnotationUploadService(
     val log: Logger = LoggerFactory.getLogger(AnnotationUploadService::class.java)
     private val objectMapper = ObjectMapper().registerKotlinModule()
 
-    override suspend fun addAnnotations(request: AddAnnotationsRequest): AddAnnotationsResponse {
-//        log.info("addAnnotations({})", request)
-        processRequest(request)
-        return AddAnnotationsResponse
-            .newBuilder()
-            .addAllAnnotationIdentifier(
-                List(request.annotationList.size) { i ->
-                    annotationIdentifier {
-                        this.id = "x$i"
-                        this.etag = "etag$i"
-                    }
-                }
-            ).build()
-    }
-
-    override fun addAnnotation(requests: Flow<AddAnnotationRequest>): Flow<AddAnnotationResponse> {
-//        log.info("addAnnotation({})", requests)
+    override fun addAnnotations(requests: Flow<AddAnnotationsRequest>): Flow<AddAnnotationsResponse> {
         val headers = GrpcServerInterceptor.HEADERS_VALUE.get()
         val containerName = headers[GRPC_METADATA_KEY_CONTAINER_NAME] ?: "unknown"
 
         val annotationFlow: Flow<WebAnnotationAsMap> =
             requests
-//                .onEach { log.info("request = {}", it) }
                 .map {
                     val json = it.annotationJson
                     objectMapper.readValue<WebAnnotationAsMap>(json)
                 }
 
         return storeAnnotations(containerName, annotationFlow)
-//            .onEach {
-//                log.info("identifier={}", it)
-//            }
             .map { identifier ->
-                addAnnotationResponse {
+                addAnnotationsResponse {
                     annotationIdentifier = annotationIdentifier {
                         id = identifier.annotationName
                         etag = identifier.etag
@@ -67,26 +47,13 @@ class AnnotationUploadService(
     private fun storeAnnotations(
         containerName: String,
         annotationFlow: Flow<WebAnnotationAsMap>
-    ): List<AnnotationIdentifier> {
-//        log.info("storeAnnotations")
-        return runBlocking {
+    ): List<AnnotationIdentifier> =
+        runBlocking {
             val annotations: MutableList<WebAnnotationAsMap> = mutableListOf()
             annotationFlow.collect(annotations::add)
-//            log.info("annotations.size={}", annotations.size)
             if (!containerDAO.containerExists(containerName)) {
                 throw NotFoundException("Annotation Container '$containerName' not found")
             }
-//        checkUserHasEditRightsInThisContainer(context, containerName)
             containerDAO.addAnnotationsInBatch(containerName, annotations)
         }
-    }
-
-    private fun processRequest(request: AddAnnotationsRequest) {
-        val containerName = request.containerName
-        val annotationJsonList = request.annotationList
-        val annotationList =
-            annotationJsonList.map { objectMapper.readValue<WebAnnotationAsMap>(it) }.toList()
-        log.info("container:{}", containerName)
-        log.info("annotations:{}", annotationList)
-    }
 }

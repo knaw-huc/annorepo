@@ -16,7 +16,7 @@ import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 import nl.knaw.huc.annorepo.grpc.AnnotationIdentifier
 import nl.knaw.huc.annorepo.grpc.AnnotationUploadServiceGrpcKt.AnnotationUploadServiceCoroutineStub
 import nl.knaw.huc.annorepo.grpc.HelloServiceGrpcKt.HelloServiceCoroutineStub
-import nl.knaw.huc.annorepo.grpc.addAnnotationRequest
+import nl.knaw.huc.annorepo.grpc.addAnnotationsRequest
 import nl.knaw.huc.annorepo.grpc.sayHelloRequest
 
 class AnnoRepoGrpcClient(private val channel: ManagedChannel, private val apiKey: String) : Closeable {
@@ -35,15 +35,14 @@ class AnnoRepoGrpcClient(private val channel: ManagedChannel, private val apiKey
         annotations: List<WebAnnotationAsMap>
     ): Flow<AnnotationIdentifier> {
         val requests = annotations.map {
-            addAnnotationRequest {
+            addAnnotationsRequest {
                 this.annotationJson = objectMapper.writeValueAsString(it)
-                this.containerName = "not-used"
             }
         }.asFlow()
         metadata.setAsciiKey(GRPC_METADATA_KEY_CONTAINER_NAME, containerName)
         return uploadStub
             .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(metadata))
-            .addAnnotation(requests)
+            .addAnnotations(requests)
             .map { it.annotationIdentifier }
     }
 
