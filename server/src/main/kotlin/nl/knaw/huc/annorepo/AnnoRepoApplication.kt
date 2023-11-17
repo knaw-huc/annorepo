@@ -68,6 +68,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         bootstrap.configurationSourceProvider = SubstitutingSourceProvider(
             bootstrap.configurationSourceProvider, EnvironmentVariableSubstitutor()
         )
+//        bootstrap.addBundle(GrpcBridgeBundle())
         bootstrap.addBundle(getSwaggerBundle())
         bootstrap.addBundle(JdbiExceptionsBundle())
         bootstrap.addBundle(getJobsBundle())

@@ -20,7 +20,8 @@ class AnnotationUploadService(
     private val objectMapper = ObjectMapper().registerKotlinModule()
 
     override suspend fun addAnnotations(request: AddAnnotationsRequest): AddAnnotationsResponse {
-        val processed = processRequest(request)
+//        log.info("addAnnotations({})", request)
+        processRequest(request)
         return AddAnnotationsResponse
             .newBuilder()
             .addAllAnnotationIdentifier(
@@ -34,18 +35,21 @@ class AnnotationUploadService(
     }
 
     override fun addAnnotation(requests: Flow<AddAnnotationRequest>): Flow<AddAnnotationResponse> {
+//        log.info("addAnnotation({})", requests)
         val containerName = "grpc-test-container"
 
         val annotationFlow: Flow<WebAnnotationAsMap> =
-            requests.map {
-                val json = it.annotationJson
-                objectMapper.readValue<WebAnnotationAsMap>(json)
-            }
+            requests
+//                .onEach { log.info("request = {}", it) }
+                .map {
+                    val json = it.annotationJson
+                    objectMapper.readValue<WebAnnotationAsMap>(json)
+                }
 
         return storeAnnotations(containerName, annotationFlow)
-            .onEach {
-                log.info("identifier={}", it)
-            }
+//            .onEach {
+//                log.info("identifier={}", it)
+//            }
             .map { identifier ->
                 addAnnotationResponse {
                     annotationIdentifier = annotationIdentifier {
@@ -61,15 +65,17 @@ class AnnotationUploadService(
         containerName: String,
         annotationFlow: Flow<WebAnnotationAsMap>
     ): List<AnnotationIdentifier> {
-        val annotations: MutableList<WebAnnotationAsMap> = mutableListOf()
-        runBlocking { annotationFlow.collect { annotations.add(it) } }
-        log.info("TODO: store ${annotations.size} annotations in $containerName")
-        if (containerDAO.containerExists(containerName)){
-            throw NotFoundException("Annotation Container '$containerName' not found")
-
-        }
+//        log.info("storeAnnotations")
+        return runBlocking {
+            val annotations: MutableList<WebAnnotationAsMap> = mutableListOf()
+            annotationFlow.collect(annotations::add)
+//            log.info("annotations.size={}", annotations.size)
+            if (!containerDAO.containerExists(containerName)) {
+                throw NotFoundException("Annotation Container '$containerName' not found")
+            }
 //        checkUserHasEditRightsInThisContainer(context, containerName)
-        return containerDAO.addAnnotationsInBatch(containerName, annotations)
+            containerDAO.addAnnotationsInBatch(containerName, annotations)
+        }
     }
 
     private fun processRequest(request: AddAnnotationsRequest) {

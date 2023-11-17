@@ -16,8 +16,9 @@ class GrpcServerInterceptor : ServerInterceptor {
         val keyName = "api-key"
         val apiKey = headers.asciiKeyValue(keyName)
 
-        log.debug("keys received: {}", headers.keys())
-        log.debug("api-key received = $apiKey")
+        log.info("keys received: {}", headers.keys())
+        log.info("api-key received = $apiKey")
+        log.info("containerName = {}", headers.asciiKeyValue("container-name"))
 
         return next.startCall(call, headers)
     }

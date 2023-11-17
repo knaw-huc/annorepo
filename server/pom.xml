@@ -149,9 +149,15 @@
         </dependency>
 
         <!-- gRPC dependencies -->
+        <!--        <dependency>-->
+        <!--            <groupId>io.grpc</groupId>-->
+        <!--            <artifactId>grpc-netty-shaded</artifactId>-->
+        <!--            <version>${grpc.version}</version>-->
+        <!--            <scope>runtime</scope>-->
+        <!--        </dependency>-->
         <dependency>
             <groupId>io.grpc</groupId>
-            <artifactId>grpc-netty-shaded</artifactId>
+            <artifactId>grpc-netty</artifactId>
             <version>${grpc.version}</version>
             <scope>runtime</scope>
         </dependency>
@@ -170,7 +176,11 @@
             <artifactId>protobuf-kotlin</artifactId>
             <version>${protobuf.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>dev.resteasy.grpc</groupId>
+            <artifactId>grpc-bridge</artifactId>
+            <version>${grpc-bridge.version}</version>
+        </dependency>
         <!-- test dependencies -->
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
