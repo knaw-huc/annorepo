@@ -24,4 +24,5 @@ object ResourcePaths {
     const val SETTINGS = "settings"
     const val READ_ONLY_FOR_ANONYMOUS = "isReadOnlyForAnonymous"
     const val DISTINCT_FIELD_VALUES = "distinct-values"
+    const val ANNOTATIONS_BATCH = "annotations-batch"
 }

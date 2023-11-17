@@ -30,7 +30,7 @@ import nl.knaw.huc.annorepo.api.MetadataMap
 import nl.knaw.huc.annorepo.api.QueryAsMap
 import nl.knaw.huc.annorepo.api.ResourcePaths.ABOUT
 import nl.knaw.huc.annorepo.api.ResourcePaths.ADMIN
-import nl.knaw.huc.annorepo.api.ResourcePaths.BATCH
+import nl.knaw.huc.annorepo.api.ResourcePaths.ANNOTATIONS_BATCH
 import nl.knaw.huc.annorepo.api.ResourcePaths.CONTAINER_SERVICES
 import nl.knaw.huc.annorepo.api.ResourcePaths.DISTINCT_FIELD_VALUES
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
@@ -422,7 +422,7 @@ class AnnoRepoClient @JvmOverloads constructor(
     fun batchUpload(
         containerName: String, annotations: List<WebAnnotationAsMap>,
     ): Either<RequestError, BatchUploadResult> = doPost(
-        request = webTarget.path(BATCH).path(containerName).path("annotations").request(),
+        request = webTarget.path(CONTAINER_SERVICES).path(containerName).path(ANNOTATIONS_BATCH).request(),
         entity = Entity.json(annotations),
         responseHandlers = mapOf(Response.Status.OK to { response ->
             val entityJson: String = response.readEntityAsJsonString()

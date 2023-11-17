@@ -43,6 +43,7 @@ import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.IndexConfig
 import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.QueryAsMap
+import nl.knaw.huc.annorepo.api.ResourcePaths.ANNOTATIONS_BATCH
 import nl.knaw.huc.annorepo.api.ResourcePaths.CONTAINER_SERVICES
 import nl.knaw.huc.annorepo.api.ResourcePaths.DISTINCT_FIELD_VALUES
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
@@ -391,7 +392,7 @@ class ContainerServiceResource(
     @Operation(description = "Upload annotations in batch to a given container")
     @Timed
     @POST
-    @Path("{containerName}/annotations-batch")
+    @Path("{containerName}/${ANNOTATIONS_BATCH}")
     fun postAnnotationsBatch(
         @PathParam("containerName") containerName: String,
         annotations: List<WebAnnotationAsMap>,
