@@ -8,6 +8,7 @@ import io.grpc.ServerCall
 import io.grpc.ServerCallHandler
 import io.grpc.ServerInterceptor
 import io.grpc.Status
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.GRPC_METADATA_KEY_API_KEY
 import nl.knaw.huc.annorepo.api.GRPC_METADATA_KEY_CONTAINER_NAME
@@ -16,8 +17,11 @@ import nl.knaw.huc.annorepo.dao.ContainerUserDAO
 import nl.knaw.huc.annorepo.dao.UserDAO
 
 @Singleton
-class GrpcServerInterceptor(val userDAO: UserDAO, val containerUserDAO: ContainerUserDAO) : ServerInterceptor {
-    val log = LoggerFactory.getLogger(javaClass)
+class GrpcServerInterceptor(
+    private val userDAO: UserDAO,
+    private val containerUserDAO: ContainerUserDAO
+) : ServerInterceptor {
+    val log: Logger = LoggerFactory.getLogger(javaClass)
 
     companion object {
         private const val HEADERS_KEY = "headers"
@@ -57,13 +61,13 @@ class GrpcServerInterceptor(val userDAO: UserDAO, val containerUserDAO: Containe
         return object : ServerCall.Listener<ReqT>() {}
     }
 
-    private fun extractHeaders(headers: Metadata?) =
-        headers?.keys()!!.associateWith {
+    private fun extractHeaders(headers: Metadata): Map<String, String> =
+        headers.keys()?.associateWith {
             headers.get(Metadata.Key.of(it, Metadata.ASCII_STRING_MARSHALLER)) as String
-        }
+        } ?: mapOf()
 
     private fun writeAccessDeniedForContainer(headersMap: Map<String, String>): Boolean {
-        val apiKey = headersMap[GRPC_METADATA_KEY_API_KEY] ?: "no-key"
+        val apiKey = headersMap[GRPC_METADATA_KEY_API_KEY]
         val containerName = headersMap[GRPC_METADATA_KEY_CONTAINER_NAME] ?: "no-container-name"
         val userName = userDAO.userForApiKey(apiKey)?.name ?: "no-user"
         val role = containerUserDAO.getUserRole(containerName, userName)
