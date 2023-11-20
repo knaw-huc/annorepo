@@ -14,6 +14,7 @@ object ARConst {
         AR_WITH_AUTHENTICATION,
         AR_PRETTY_PRINT,
         AR_RANGE_SELECTOR_TYPE,
+        AR_GRPC_HOSTNAME,
         AR_GRPC_PORT
     }
 

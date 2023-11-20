@@ -25,6 +25,7 @@ data class AboutInfo(
     val withAuthentication: Boolean,
     val sourceCode: String = "https://github.com/knaw-huc/annorepo",
     val mongoVersion: String,
+    val grpcHostName: String,
     val grpcPort: Int
 )
 

@@ -24,6 +24,7 @@ class AboutResource(configuration: AnnoRepoConfiguration, appName: String, versi
         baseURI = configuration.externalBaseUrl,
         withAuthentication = configuration.withAuthentication,
         mongoVersion = mongoVersion,
+        grpcHostName = configuration.grpc.hostName,
         grpcPort = configuration.grpc.port
     )
 

@@ -9,6 +9,9 @@ class GrpcFactory {
     @JsonProperty("port")
     var port: Int = 8000
 
+    @JsonProperty("hostname")
+    var hostName: String = "localhost"
+
     @JsonProperty("shutdownPeriod")
     var shutdownPeriod: Duration = Duration.seconds(5)
 

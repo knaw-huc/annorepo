@@ -29,5 +29,10 @@ logging:
     org: WARN
     org.glassfish: ERROR
 
+admin:
+  tasks:
+    printStackTraceOnError: true
+
 grpc:
+  hostname: ${AR_GRPC_HOSTNAME:-localhost}
   port: ${AR_GRPC_PORT:-8000}

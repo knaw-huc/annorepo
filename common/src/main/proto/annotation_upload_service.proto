@@ -11,7 +11,7 @@ service AnnotationUploadService {
 }
 
 message AddAnnotationsRequest {
-  string annotation_json = 2;
+  string annotation_json = 1;
 }
 
 message AnnotationIdentifier {
