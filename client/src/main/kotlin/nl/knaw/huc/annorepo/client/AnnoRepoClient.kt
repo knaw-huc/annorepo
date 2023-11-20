@@ -112,11 +112,11 @@ class AnnoRepoClient @JvmOverloads constructor(
             },
             { getAboutResult ->
                 val aboutInfo = getAboutResult.aboutInfo
-                serverVersion = aboutInfo.version
-                serverNeedsAuthentication = aboutInfo.withAuthentication
-                grpcPort = aboutInfo.grpcPort
+                serverVersion = aboutInfo["version"].toString()
+                serverNeedsAuthentication = aboutInfo["withAuthentication"].toString().toBoolean()
+                grpcPort = aboutInfo["grpcPort"].toString().toInt()
 //                grpcHost = URI(aboutInfo.baseURI).host
-                grpcHost = aboutInfo.grpcHostName
+                grpcHost = aboutInfo["grpcHostName"].toString()
                 log.info("$serverURI runs version $serverVersion ; needs authentication: $serverNeedsAuthentication; gRPC port: $grpcPort")
             })
     }

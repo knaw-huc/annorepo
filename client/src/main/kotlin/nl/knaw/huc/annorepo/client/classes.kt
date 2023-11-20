@@ -4,7 +4,6 @@ import java.net.URI
 import java.util.stream.Stream
 import jakarta.ws.rs.core.Response
 import arrow.core.Either
-import nl.knaw.huc.annorepo.api.AboutInfo
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
 import nl.knaw.huc.annorepo.api.AnnotationPage
 import nl.knaw.huc.annorepo.api.ChoreStatusSummary
@@ -22,7 +21,7 @@ sealed class ARResult {
 
     data class GetAboutResult(
         override val response: Response,
-        val aboutInfo: AboutInfo,
+        val aboutInfo: Map<String, Any>,
     ) : ARResult()
 
     /**
