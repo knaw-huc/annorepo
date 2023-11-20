@@ -52,7 +52,7 @@ class IntegrationTest {
                 val aboutInfo = aboutResult.aboutInfo
                 val passed = MyBool(true)
                 t.printJson(aboutInfo)
-                t.printAssertion("/about info should have a version field", aboutInfo.version.isNotBlank())
+                t.printAssertion("/about info should have a version field", aboutInfo.containsKey("version"))
                 passed.value
             }
         }
