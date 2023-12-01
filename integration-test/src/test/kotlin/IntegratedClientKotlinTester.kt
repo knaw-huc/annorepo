@@ -496,7 +496,7 @@ class IntegratedClientKotlinTester {
         val aboutInfo = getAboutResult!!.aboutInfo
         doSomethingWith(aboutInfo)
         assertThat(aboutInfo).isNotNull
-        assertThat(aboutInfo.appName).isEqualTo("AnnoRepo")
+        assertThat(aboutInfo["appName"]).isEqualTo("AnnoRepo")
     }
 
     @Nested

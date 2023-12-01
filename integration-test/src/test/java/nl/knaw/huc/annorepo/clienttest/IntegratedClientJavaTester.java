@@ -687,10 +687,10 @@ public class IntegratedClientJavaTester {
     void testAbout() {
         var getAboutResult = client.getAbout().getOrNull();
         assertThat(getAboutResult).isNotNull();
-        AboutInfo aboutInfo = getAboutResult.getAboutInfo();
+        Map<String, Object> aboutInfo = getAboutResult.getAboutInfo();
         doSomethingWith(aboutInfo);
         assertThat(aboutInfo).isNotNull();
-        assertThat(aboutInfo.getAppName()).isEqualTo("AnnoRepo");
+        assertThat(aboutInfo.get("appName")).isEqualTo("AnnoRepo");
     }
 
 }
