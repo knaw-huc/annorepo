@@ -1,4 +1,4 @@
-FROM openjdk:22-jdk-slim
+FROM openjdk:22-ea-25
 
 RUN apt update && \
     apt install -y curl && \
