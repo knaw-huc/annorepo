@@ -91,16 +91,14 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
             is Map<*, *> -> {
                 val rangeParameters = rangeParameters(rawParameters)
                 Aggregates.match(
-                    Filters.and(
-                        Filters.elemMatch(
-                            "${ANNOTATION_FIELD_PREFIX}target",
-                            Filters.and(
-                                Filters.eq("type", "Text"),
-                                Filters.eq("source", rangeParameters.source),
-                                Filters.eq("selector.type", configuration.rangeSelectorType),
-                                Filters.lte("selector.start", rangeParameters.end),
-                                Filters.gte("selector.end", rangeParameters.start),
-                            )
+                    Filters.elemMatch(
+                        "${ANNOTATION_FIELD_PREFIX}target",
+                        Filters.and(
+                            Filters.eq("type", "Text"),
+                            Filters.eq("source", rangeParameters.source),
+                            Filters.eq("selector.type", configuration.rangeSelectorType),
+                            Filters.lte("selector.start", rangeParameters.end),
+                            Filters.gte("selector.end", rangeParameters.start),
                         )
                     )
                 )
@@ -114,16 +112,14 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
             is Map<*, *> -> {
                 val rangeParameters = rangeParameters(rawParameters)
                 Aggregates.match(
-                    Filters.and(
-                        Filters.elemMatch(
-                            "${ANNOTATION_FIELD_PREFIX}target",
-                            Filters.and(
-                                Filters.eq("type", "Text"),
-                                Filters.eq("source", rangeParameters.source),
-                                Filters.eq("selector.type", configuration.rangeSelectorType),
-                                Filters.gte("selector.start", rangeParameters.start),
-                                Filters.lte("selector.end", rangeParameters.end),
-                            )
+                    Filters.elemMatch(
+                        "${ANNOTATION_FIELD_PREFIX}target",
+                        Filters.and(
+                            Filters.eq("type", "Text"),
+                            Filters.eq("source", rangeParameters.source),
+                            Filters.eq("selector.type", configuration.rangeSelectorType),
+                            Filters.gte("selector.start", rangeParameters.start),
+                            Filters.lte("selector.end", rangeParameters.end),
                         )
                     )
                 )

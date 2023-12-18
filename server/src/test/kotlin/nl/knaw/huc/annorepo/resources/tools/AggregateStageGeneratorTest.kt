@@ -79,19 +79,17 @@ class AggregateStageGeneratorTest {
         val expected = """
             { 
                 "@match": { 
-                    "@and": [
-                        { "annotation.target" : {
-                            "@elemMatch": {
-                                "@and": [
-                                    { "type": "Text"},
-                                    { "source": "$source"},
-                                    { "selector.type": "$selector"},
-                                    { "selector.start": { "@gte": ${start.toFloat()} } },
-                                    { "selector.end":   { "@lte": ${end.toFloat()} } }
-                                ]
-                            }
-                        }}
-                    ]
+                    "annotation.target" : {
+                        "@elemMatch": {
+                            "@and": [
+                                { "type": "Text"},
+                                { "source": "$source"},
+                                { "selector.type": "$selector"},
+                                { "selector.start": { "@gte": ${start.toFloat()} } },
+                                { "selector.end":   { "@lte": ${end.toFloat()} } }
+                            ]
+                        }
+                    }
                 }
             }""".trimIndent().replace('@', '$')
         assertThatJson(stage.json).isEqualTo(expected)
@@ -293,20 +291,18 @@ class AggregateStageGeneratorTest {
         log.info("{}", stage)
         val expected = """
             { 
-                "@match": { 
-                    "@and": [
-                        { "annotation.target" : {
-                            "@elemMatch": {
-                                "@and": [
-                                    { "type": "Text"},
-                                    { "source": "$source"},
-                                    { "selector.type": "$selector"},
-                                    { "selector.start": { "@lte": ${end.toFloat()} } },
-                                    { "selector.end":   { "@gte": ${start.toFloat()} } }
-                                ]
-                            }
-                        }}
-                    ]
+                "@match": {
+                    "annotation.target" : {
+                        "@elemMatch": {
+                            "@and": [
+                                { "type": "Text"},
+                                { "source": "$source"},
+                                { "selector.type": "$selector"},
+                                { "selector.start": { "@lte": ${end.toFloat()} } },
+                                { "selector.end":   { "@gte": ${start.toFloat()} } }
+                            ]
+                        }
+                    }
                 }
             }""".trimIndent().replace('@', '$')
         assertThatJson(stage.json).isEqualTo(expected)
