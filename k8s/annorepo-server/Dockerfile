@@ -1,8 +1,7 @@
 FROM openjdk:22-ea-25
 
-RUN apt update && \
-    apt install -y curl && \
-    rm -rf /var/lib/apt/lists/* && \
+RUN microdnf update && \
+    microdnf install -y curl && \
     groupadd -r annorepo && \
     useradd --no-log-init -r -g annorepo annorepo
 USER annorepo
