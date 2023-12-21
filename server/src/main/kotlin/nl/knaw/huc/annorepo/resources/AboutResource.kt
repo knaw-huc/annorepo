@@ -23,9 +23,9 @@ class AboutResource(configuration: AnnoRepoConfiguration, appName: String, versi
         startedAt = Instant.now().toString(),
         baseURI = configuration.externalBaseUrl,
         withAuthentication = configuration.withAuthentication,
-        mongoVersion = mongoVersion,
-        grpcHostName = configuration.grpc.hostName,
-        grpcPort = configuration.grpc.port
+        mongoVersion = mongoVersion
+//        grpcHostName = configuration.grpc.hostName,
+//        grpcPort = configuration.grpc.port
     )
 
     @Operation(description = "Get some info about the server")
