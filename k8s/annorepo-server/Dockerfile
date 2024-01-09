@@ -1,4 +1,4 @@
-FROM openjdk:22-ea-25
+FROM openjdk:22-ea-28-jdk-oracle
 
 RUN microdnf update && \
     microdnf install -y curl && \
