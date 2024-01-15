@@ -41,9 +41,9 @@
         <dropwizard-jobs.version>5.1.4</dropwizard-jobs.version>
         <dropwizard-swagger-ui.version>4.6.2</dropwizard-swagger-ui.version>
         <dropwizard-swagger.version>4.0.0-1</dropwizard-swagger.version>
-        <dropwizard.version>4.0.4</dropwizard.version>
+        <dropwizard.version>4.0.5</dropwizard.version>
         <grpc.kotlin.version>1.4.1</grpc.kotlin.version>
-        <grpc.version>1.60.0</grpc.version>
+        <grpc.version>1.60.1</grpc.version>
         <jackson-annotations.version>2.16.0</jackson-annotations.version>
         <jackson-databind.version>2.13.4.1</jackson-databind.version>
         <jackson-module-kotlin.version>2.16.0</jackson-module-kotlin.version>
