@@ -33,6 +33,8 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.bson.Document
 import org.bson.conversions.Bson
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
@@ -78,7 +80,7 @@ class ContainerServiceResource(
     private val uriFactory: UriFactory,
     private val indexManager: IndexManager
 ) : AbstractContainerResource(configuration, containerDAO, ContainerAccessChecker(containerUserDAO)) {
-
+    private val log: Logger = LoggerFactory.getLogger(javaClass)
     private val paginationStage = limit(configuration.pageSize)
     private val aggregateStageGenerator = AggregateStageGenerator(configuration)
 
@@ -171,7 +173,9 @@ class ContainerServiceResource(
 
             val id = UUID.randomUUID().toString()
             queryCache.put(id, QueryCacheItem(queryMap, aggregateStages, -1))
-//            log.debug("explain aggregate =\n\n{}\n", asMongoExplain(containerName, aggregateStages))
+            if (log.isDebugEnabled) {
+                log.debug("explain aggregate =\n\n{}\n", asMongoExplain(containerName, aggregateStages))
+            }
             val location = uriFactory.searchURL(containerName, id)
             return Response.created(location)
                 .link(uriFactory.searchInfoURL(containerName, id), "info")
