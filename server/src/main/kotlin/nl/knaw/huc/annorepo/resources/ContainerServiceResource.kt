@@ -173,9 +173,9 @@ class ContainerServiceResource(
 
             val id = UUID.randomUUID().toString()
             queryCache.put(id, QueryCacheItem(queryMap, aggregateStages, -1))
-            if (log.isDebugEnabled) {
-                log.debug("explain aggregate =\n\n{}\n", asMongoExplain(containerName, aggregateStages))
-            }
+            log.atDebug().setMessage("explain aggregate =\n\n{}\n")
+                .addArgument { asMongoExplain(containerName, aggregateStages) }
+                .log()
             val location = uriFactory.searchURL(containerName, id)
             return Response.created(location)
                 .link(uriFactory.searchInfoURL(containerName, id), "info")

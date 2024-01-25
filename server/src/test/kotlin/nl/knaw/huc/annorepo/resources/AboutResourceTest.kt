@@ -38,4 +38,5 @@ open class AboutResourceTest {
         assertThat(json.read("$.version", String::class.java)).isEqualTo(VERSION)
         assertThat(json.read("$.baseURI", String::class.java)).isEqualTo(BASE_URI)
     }
+
 }
