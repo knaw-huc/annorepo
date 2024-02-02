@@ -403,7 +403,7 @@ class W3CResource(
         val metadata = containerMetadataCollection.findOne(Document(CONTAINER_NAME_FIELD, containerName)) ?: return null
         val collection = containerDAO.getCollection(containerName)
         val uri = uriFactory.containerURL(containerName)
-        val count = collection.countDocuments()
+        val count = collection.estimatedDocumentCount()
         val annotations = collection.aggregate<Document>(
             Aggregates.match(
                 Filters.exists(ANNOTATION_FIELD)
