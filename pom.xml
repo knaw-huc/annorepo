@@ -8,7 +8,7 @@
 
     <groupId>io.github.knaw-huc</groupId>
     <artifactId>annorepo</artifactId>
-    <version>0.6.1</version>
+    <version>0.6.2</version>
     <packaging>pom</packaging>
 
     <name>AnnoRepo</name>
@@ -43,7 +43,7 @@
         <dropwizard-swagger.version>4.0.5-1</dropwizard-swagger.version>
         <dropwizard.version>4.0.5</dropwizard.version>
         <grpc.kotlin.version>1.4.1</grpc.kotlin.version>
-        <grpc.version>1.60.1</grpc.version>
+        <grpc.version>1.61.0</grpc.version>
         <jackson-annotations.version>2.16.1</jackson-annotations.version>
         <jackson-databind.version>2.13.4.1</jackson-databind.version>
         <jackson-module-kotlin.version>2.16.1</jackson-module-kotlin.version>
