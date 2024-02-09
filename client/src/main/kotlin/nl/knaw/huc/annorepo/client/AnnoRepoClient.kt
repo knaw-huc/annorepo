@@ -117,7 +117,7 @@ class AnnoRepoClient @JvmOverloads constructor(
                 grpcPort = aboutInfo["grpcPort"].toString().toInt()
 //                grpcHost = URI(aboutInfo.baseURI).host
                 grpcHost = aboutInfo["grpcHostName"].toString()
-                log.info("$serverURI runs version $serverVersion ; needs authentication: $serverNeedsAuthentication; gRPC port: $grpcPort")
+                log.info("$serverURI runs version $serverVersion ; authentication needed for write actions: $serverNeedsAuthentication; gRPC port: $grpcPort")
             })
     }
 
