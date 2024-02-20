@@ -4,12 +4,10 @@ import java.io.StringReader
 import jakarta.json.Json
 import jakarta.json.JsonValue
 import org.junit.jupiter.api.Test
+import org.apache.logging.log4j.kotlin.logger
 import org.assertj.core.api.Assertions.assertThat
-import org.slf4j.LoggerFactory
 
 class JsonValueExtensionsTest {
-    private val log = LoggerFactory.getLogger(this.javaClass)
-
     @Test
     fun `simplifying a complex JsonValue works as expected`() {
         val json = """
@@ -29,18 +27,18 @@ class JsonValueExtensionsTest {
             }
         """.trimIndent()
         val jsonValue: JsonValue = Json.createReader(StringReader(json)).readValue()
-        log.info("{}", jsonValue)
+        logger.info { jsonValue }
         val simpleValue = jsonValue.toSimpleValue()
-        log.info("{}", simpleValue)
+        logger.info { simpleValue }
         assertThat(simpleValue is Map<*, *>).isTrue
 
         val map = simpleValue as Map<*, *>
         val arrayOfStrings = map["arrayOfStrings"]
-        log.info("{}", arrayOfStrings)
+        logger.info { arrayOfStrings }
         assertThat(arrayOfStrings.isStringArray()).isTrue
 
         val arrayOfInts = map["arrayOfInts"]
-        log.info("{}", arrayOfInts)
+        logger.info { arrayOfInts }
         assertThat(arrayOfInts.isNumberArray()).isTrue
     }
 

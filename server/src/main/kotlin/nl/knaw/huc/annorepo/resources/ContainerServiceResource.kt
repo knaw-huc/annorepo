@@ -31,10 +31,9 @@ import com.mongodb.client.model.Aggregates.limit
 import com.mongodb.client.model.Filters
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import org.apache.logging.log4j.kotlin.logger
 import org.bson.Document
 import org.bson.conversions.Bson
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
@@ -80,7 +79,7 @@ class ContainerServiceResource(
     private val uriFactory: UriFactory,
     private val indexManager: IndexManager
 ) : AbstractContainerResource(configuration, containerDAO, ContainerAccessChecker(containerUserDAO)) {
-    private val log: Logger = LoggerFactory.getLogger(javaClass)
+
     private val paginationStage = limit(configuration.pageSize)
     private val aggregateStageGenerator = AggregateStageGenerator(configuration)
 
@@ -129,7 +128,7 @@ class ContainerServiceResource(
         @Context context: SecurityContext,
         containerUsers: List<ContainerUserEntry>,
     ): Response {
-//        log.info("containerUsers={}", containerUsers)
+//        logger.info{"containerUsers={}", containerUsers)
         context.checkUserHasAdminRightsInThisContainer(containerName)
 
         for (user in containerUsers) {
@@ -173,9 +172,7 @@ class ContainerServiceResource(
 
             val id = UUID.randomUUID().toString()
             queryCache.put(id, QueryCacheItem(queryMap, aggregateStages, -1))
-            log.atDebug().setMessage("explain aggregate =\n\n{}\n")
-                .addArgument { asMongoExplain(containerName, aggregateStages) }
-                .log()
+            logger.debug { "explain aggregate =\n\n${asMongoExplain(containerName, aggregateStages)}\n" }
             val location = uriFactory.searchURL(containerName, id)
             return Response.created(location)
                 .link(uriFactory.searchInfoURL(containerName, id), "info")
@@ -420,8 +417,7 @@ class ContainerServiceResource(
 
     private fun indexData(container: MongoCollection<Document>, containerName: String): List<IndexConfig> =
         container.listIndexes()
-            .map { it.toMap().asIndexConfig(containerName) }
-            .filterNotNull()
+            .mapNotNull { it.toMap().asIndexConfig(containerName) }
             .toList()
 
     private fun Map<String, Any>.asIndexConfig(containerName: String): IndexConfig? {

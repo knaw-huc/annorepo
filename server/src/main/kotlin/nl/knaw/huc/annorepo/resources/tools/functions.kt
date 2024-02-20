@@ -8,8 +8,6 @@ import com.mongodb.client.MongoCollection
 import org.bson.BsonType
 import org.bson.BsonValue
 import org.bson.Document
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
 import nl.knaw.huc.annorepo.api.IndexType
 
@@ -40,7 +38,6 @@ fun BsonValue.toPrimitive(): Any? =
 
 val ANNOTATION_NAME_INDEX_NAME = "${ANNOTATION_NAME_FIELD}_${IndexType.HASHED.name.lowercase()}"
 
-val log: Logger = LoggerFactory.getLogger("functions")
 fun MongoCollection<Document>.hasAnnotationNameIndex(): Boolean =
     listIndexes()
         .filterNotNull()

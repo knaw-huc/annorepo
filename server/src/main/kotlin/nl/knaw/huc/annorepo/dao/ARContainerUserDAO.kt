@@ -2,7 +2,6 @@ package nl.knaw.huc.annorepo.dao
 
 import com.mongodb.client.MongoClient
 import org.bson.Document
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.Role
@@ -15,7 +14,6 @@ const val FIELD_ROLE = "role"
 class ARContainerUserDAO(configuration: AnnoRepoConfiguration, mongoClient: MongoClient) : ContainerUserDAO {
     private val mdb = mongoClient.getDatabase(configuration.databaseName)
     private val containerUserCollection = mdb.getCollection(ARConst.CONTAINER_USER_COLLECTION)
-    private val log = LoggerFactory.getLogger(ARContainerUserDAO::class.java)
 
     override fun addContainerUser(containerName: String, userName: String, role: Role) {
         containerUserCollection.insertOne(

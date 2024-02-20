@@ -1,7 +1,6 @@
 package nl.knaw.huc.annorepo.resources.tools
 
 import org.bson.conversions.Bson
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.SearchChoreIndex
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ContainerDAO
@@ -17,8 +16,6 @@ class SearchManager(
         uriFactory = UriFactory(configuration),
         containerDAO = containerDAO
     )
-
-    private val log = LoggerFactory.getLogger(javaClass)
 
     fun startGlobalSearch(
         containerNames: List<String>,

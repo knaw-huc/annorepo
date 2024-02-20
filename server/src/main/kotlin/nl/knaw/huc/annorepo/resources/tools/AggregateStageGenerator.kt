@@ -5,13 +5,11 @@ import jakarta.json.JsonString
 import jakarta.ws.rs.BadRequestException
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Filters
+import org.apache.logging.log4j.kotlin.logger
 import org.bson.conversions.Bson
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 
 class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
-    val log: Logger = LoggerFactory.getLogger(this::class.java)
 
     fun generateStage(key: Any, value: Any): Bson =
         when (key) {
@@ -22,7 +20,7 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
                 if (key.startsWith(":")) {
                     throw BadRequestException("Unknown query function: '$key'")
                 } else {
-                    log.debug("key={}, value={} ({})", key, value, value.javaClass)
+                    logger.debug { "key=$key, value=$value (${value.javaClass})" }
                     fieldMatchStage(key, value)
                 }
             }
@@ -40,7 +38,7 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
             return when (k) {
                 IS_NOT_IN ->
                     try {
-                        val valueAsList = (v as Array<Any>).toList()
+                        val valueAsList = (v as Array<*>).toList()
                         Aggregates.match(
                             Filters.nin("$ANNOTATION_FIELD_PREFIX$field", valueAsList)
                         )
@@ -50,7 +48,7 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
 
                 IS_IN ->
                     try {
-                        val valueAsList = (v as Array<Any>).toList()
+                        val valueAsList = (v as Array<*>).toList()
                         Aggregates.match(
                             Filters.`in`("$ANNOTATION_FIELD_PREFIX$field", valueAsList)
                         )
@@ -156,5 +154,4 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
             else -> throw BadRequestException("parameter '$key' should be a string, but is ${sourceValue?.javaClass}")
         }
     }
-
 }

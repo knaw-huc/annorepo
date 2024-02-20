@@ -4,7 +4,6 @@ const val ANNOREPO_BASE_URL = "http://localhost:9999"
 
 class AnnoRepoClientTest {
 
-//    private val log = LoggerFactory.getLogger(javaClass)
 //    private val client = AnnoRepoClient(URI.create(ANNOREPO_BASE_URL), javaClass.canonicalName)
 //
 //    @Test
@@ -14,7 +13,7 @@ class AnnoRepoClientTest {
 //            { error -> fail<String>("Unexpected error: $error") },
 //            { aboutInfo ->
 //                assertThat(aboutInfo.version).isNotBlank
-//                log.info("{}", aboutInfo)
+//                logger.info{"{}", aboutInfo)
 //            }
 //        )
 //    }

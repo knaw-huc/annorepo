@@ -2,16 +2,11 @@ package nl.knaw.huc.annorepo.resources.tools
 
 import java.security.Principal
 import jakarta.ws.rs.NotAuthorizedException
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
 
 class ContainerAccessChecker(private val containerUserDAO: ContainerUserDAO) {
-
-    val log: Logger = LoggerFactory.getLogger(javaClass)
-
     fun checkUserHasAdminRightsInThisContainer(userPrincipal: Principal?, containerName: String) {
         checkUserRightsInThisContainer(userPrincipal, containerName, setOf(Role.ADMIN), false)
     }
@@ -37,8 +32,8 @@ class ContainerAccessChecker(private val containerUserDAO: ContainerUserDAO) {
         rolesWithAccessRights: Set<Role>,
         anonymousHasAccess: Boolean = false,
     ) {
-//        log.info("userPrincipal={}", userPrincipal)
-//        log.info("anonymousHasAccess={}", anonymousHasAccess)
+//        logger.info{"userPrincipal={}", userPrincipal)
+//        logger.info{"anonymousHasAccess={}", anonymousHasAccess)
         if (userPrincipal is RootUser) {
             return
         }

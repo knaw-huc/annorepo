@@ -20,9 +20,9 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.junit5.MockKExtension
+import org.apache.logging.log4j.kotlin.logger
 import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
 import org.bson.Document
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.auth.RootUser
@@ -177,7 +177,6 @@ class W3CResourceAccessTest {
         lateinit var indexManager: IndexManager
 
         private lateinit var resource: W3CResource
-        private val log = LoggerFactory.getLogger(W3CResourceAccessTest::class.java)
 
         @BeforeAll
         @JvmStatic
@@ -239,23 +238,24 @@ class W3CResourceAccessTest {
                 } catch (e: NotAuthorizedException) {
                     fail("User with role $role should have been authorized!")
                 } catch (e: RuntimeException) {
-                    log.info(e.stackTraceToString())
+                    logger.info { e.stackTraceToString() }
+                }
+                for (unAuthorizedRole in unauthorizedRoles) {
+                    if (unAuthorizedRole == Role.ROOT) {
+                        useRootUser()
+                    } else {
+                        useUserWithRole("unauthorized_user", unAuthorizedRole)
+                    }
+                    try {
+                        block()
+                        fail("User with role $unAuthorizedRole is unexpectedly authorized!")
+                    } catch (e: NotAuthorizedException) {
+                        assertThat(e.message).isEqualTo("HTTP 401 Unauthorized")
+                    }
                 }
             }
-            for (role in unauthorizedRoles) {
-                if (role == Role.ROOT) {
-                    useRootUser()
-                } else {
-                    useUserWithRole("unauthorized_user", role)
-                }
-                try {
-                    block()
-                    fail("User with role $role is unexpectedly authorized!")
-                } catch (e: NotAuthorizedException) {
-                    assertThat(e.message).isEqualTo("HTTP 401 Unauthorized")
-                }
-            }
-        }
 
+        }
     }
 }
+

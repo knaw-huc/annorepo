@@ -12,12 +12,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.bson.Document
 import org.junit.jupiter.api.Test
 import org.litote.kmongo.aggregate
-import org.slf4j.LoggerFactory
 
 class MongodbTest {
-
-    private val logger = LoggerFactory.getLogger(javaClass)
-
     @Test
     fun testMongodb1() {
         logger.info("a")
@@ -39,22 +35,22 @@ class MongodbTest {
         MongoClients.create("mongodb://localhost/").use { client ->
             val database = client.getDatabase("annorepo")
             val rcResult = database.runCommand(Document("dbStats", 1).append("scale", 1024))
-            logger.info("rcResult = $rcResult")
+            logger.info { "rcResult = $rcResult" }
 
             val toys: MongoCollection<Document> = database.getCollection("annotation")
 
             val toy = Document("name", "yoyo").append("ages", Document("min", 5))
-            logger.info("toy=$toy")
+            logger.info { "toy=$toy" }
 
             val id = toys.insertOne(toy).insertedId?.asObjectId()?.value
-            logger.info("id=$id")
+            logger.info { "id=$id" }
 
             val yoyo = toys.find(Document("name", "yoyo")).first()
-            logger.info("$yoyo")
+            logger.info { "$yoyo" }
 
             val toy2 = Document("name", "yoyo").append("ages", "9-12")
             val id2 = toys.insertOne(toy2).insertedId?.asObjectId()?.value
-            logger.info("id2=$id2")
+            logger.info { "id2=$id2" }
 
             val result = toys.find(Document("name", "yoyo"))
             result.forEach { a ->

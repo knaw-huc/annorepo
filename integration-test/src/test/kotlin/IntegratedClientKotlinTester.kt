@@ -6,9 +6,9 @@ import arrow.core.Either.Right
 import arrow.core.raise.either
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.apache.logging.log4j.kotlin.logger
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.Role
@@ -53,14 +53,14 @@ class IntegratedClientKotlinTester {
 
         @Test
         fun testClientConstructor2() {
-            val client = AnnoRepoClient(BASE_URI, apiKey)
+            val client = AnnoRepoClient(BASE_URI, API_KEY)
             assertThat(client.serverVersion).isNotBlank
         }
 
         @Test
         fun testClientConstructor3() {
             val client = AnnoRepoClient(
-                BASE_URI, apiKey, "custom-user-agent"
+                BASE_URI, API_KEY, "custom-user-agent"
             )
             assertThat(client.serverVersion).isNotBlank
         }
@@ -137,7 +137,7 @@ class IntegratedClientKotlinTester {
                 val entityTag = response.entityTag
                 doSomethingWith(eTag1, entity, entityTag)
             }.mapLeft<Void> { requestError ->
-                log.error("error=$requestError")
+                logger.error { "error=$requestError" }
                 fail(requestError.message)
             }
         }
@@ -149,7 +149,7 @@ class IntegratedClientKotlinTester {
                 doSomethingWith(response.status, location)
                 client.deleteContainer(containerName, eTag)
             }.mapLeft<Void> { requestError ->
-                log.error("error=$requestError")
+                logger.error { "error=$requestError" }
                 fail(requestError.message)
             }
         }
@@ -162,7 +162,7 @@ class IntegratedClientKotlinTester {
                 doSomethingWith(response2.status)
                 client.deleteContainer(containerName, eTag)
             }.mapLeft<Void> { requestError ->
-                log.error("error=$requestError")
+                logger.error { "error=$requestError" }
                 fail(requestError.message)
             }
         }
@@ -278,13 +278,14 @@ class IntegratedClientKotlinTester {
         fun testFilterContainerAnnotations() {
             val containerName = "republic"
             val query = mapOf("body.type" to "Page")
-            client.filterContainerAnnotations(containerName, query).fold({ error: RequestError -> handleError(error) },
-                { (searchId, annotations): FilterContainerAnnotationsResult ->
-                    annotations.forEach { a: Either<RequestError, String> ->
-                        a.fold({ e: RequestError -> handleError(e) },
-                            { jsonString: String -> doSomethingWith(searchId, jsonString) })
-                    }
-                })
+            client.filterContainerAnnotations(containerName, query)
+                .fold({ error: RequestError -> handleError(error) },
+                    { (searchId, annotations): FilterContainerAnnotationsResult ->
+                        annotations.forEach { a: Either<RequestError, String> ->
+                            a.fold({ e: RequestError -> handleError(e) },
+                                { jsonString: String -> doSomethingWith(searchId, jsonString) })
+                        }
+                    })
         }
 
         @Test
@@ -554,7 +555,11 @@ class IntegratedClientKotlinTester {
             val containerUserEntries = listOf(ContainerUserEntry(userName, Role.EDITOR))
             client.addContainerUsers(containerName, containerUserEntries)
                 .fold({ error: RequestError -> handleError(error) },
-                    { (_, newContainerUsersList): ContainerUsersResult -> doSomethingWith(newContainerUsersList) })
+                    { (_, newContainerUsersList): ContainerUsersResult ->
+                        doSomethingWith(
+                            newContainerUsersList
+                        )
+                    })
         }
 
         @Test
@@ -596,7 +601,7 @@ class IntegratedClientKotlinTester {
                 val myContainersAfterDelete = client.getMyContainers().bind().containers
                 assertThat(myContainersAfterDelete["ROOT"]).doesNotContain(containerName)
             }.mapLeft<Void> {
-                log.error("error=$it")
+                logger.error { "error=$it" }
                 fail(it.message)
             }
         }
@@ -625,13 +630,13 @@ class IntegratedClientKotlinTester {
                     client.createAnnotation(containerName, annotation2, preferredAnnotationName).bind()
                 val annotationName2 = createAnnotationResult2.annotationName
                 assertThat(annotationName2).isEqualTo(preferredAnnotationName)
-                log.info("this link will be valid for 10 seconds:")
+                logger.info { "this link will be valid for 10 seconds:" }
                 println(createAnnotationResult2.location)
                 Thread.sleep(10_000)
 
                 client.deleteContainer(containerName, containerETag, force = true).bind()
             }.mapLeft<Void> {
-                log.error("error=$it")
+                logger.error { "error=$it" }
                 fail(it.message)
             }
 
@@ -642,9 +647,8 @@ class IntegratedClientKotlinTester {
     companion object {
         const val BASE_URL = "http://localhost:2023"
         val BASE_URI: URI = URI.create(BASE_URL)
-        private const val apiKey = "root"
-        val client = AnnoRepoClient(BASE_URI, apiKey, "integrated-client-tester")
-        private val log = LoggerFactory.getLogger(IntegratedClientKotlinTester::class.java)
+        private const val API_KEY = "root"
+        val client = AnnoRepoClient(BASE_URI, API_KEY, "integrated-client-tester")
 
         private fun handleError(error: RequestError) {
             println(error)
@@ -654,7 +658,7 @@ class IntegratedClientKotlinTester {
         private fun doSomethingWith(vararg objects: Any) {
             for (o in objects) {
                 try {
-                    log.info("{}", ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(o))
+                    logger.info { ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(o) }
                 } catch (e: JsonProcessingException) {
                     e.printStackTrace()
                 }

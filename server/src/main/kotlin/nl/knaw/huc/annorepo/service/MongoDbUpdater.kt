@@ -1,8 +1,7 @@
 package nl.knaw.huc.annorepo.service
 
 import com.mongodb.client.MongoClient
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import org.apache.logging.log4j.kotlin.logger
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
 import nl.knaw.huc.annorepo.api.IndexType
@@ -22,7 +21,6 @@ class MongoDbUpdater(
     private val containerDAO: ContainerDAO,
     val indexManager: IndexManager
 ) {
-    val log: Logger = LoggerFactory.getLogger(javaClass)
     private val mdb = client.getDatabase(configuration.databaseName)
 
     fun run() {
@@ -33,7 +31,7 @@ class MongoDbUpdater(
     private fun updateContainerUsers() {
         val allContainerUsers = containerUserDAO.getAll()
         if (allContainerUsers.isEmpty()) { // < v0.5.0
-            log.info("No container users found, adding all users to all containers as admin")
+            logger.info { "No container users found, adding all users to all containers as admin" }
             val userNames = userDAO.allUserEntries().map { it.userName }
             for (containerName in allAnnotationContainers()) {
                 for (userName in userNames) {
@@ -41,7 +39,7 @@ class MongoDbUpdater(
                 }
             }
         } else {
-            log.info("No container user update necessary")
+            logger.info { "No container user update necessary" }
         }
     }
 
@@ -53,10 +51,10 @@ class MongoDbUpdater(
 
     private fun updateAnnotationNameIndex() {
         for (containerName in allAnnotationContainers()) {
-            log.info("Container $containerName")
+            logger.info { "Container $containerName" }
             val container = containerDAO.getCollection(containerName)
             if (!container.hasAnnotationNameIndex()) {
-                log.info("> creating annotation_name index")
+                logger.info { "> creating annotation_name index" }
                 indexManager.startIndexCreation(
                     containerName = containerName,
                     fieldName = ANNOTATION_NAME_FIELD,

@@ -17,7 +17,6 @@ import jakarta.ws.rs.core.SecurityContext
 import com.codahale.metrics.annotation.Timed
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.RejectedUserEntry
 import nl.knaw.huc.annorepo.api.ResourcePaths.ADMIN
@@ -34,8 +33,6 @@ import nl.knaw.huc.annorepo.dao.UserDAO
 class AdminResource(
     private val userDAO: UserDAO,
 ) {
-    private val log = LoggerFactory.getLogger(javaClass)
-
     @Operation(description = "Get username, api-key for all registered users")
     @Timed
     @GET

@@ -24,9 +24,9 @@ import io.dropwizard.jobs.JobsBundle
 import io.federecio.dropwizard.swagger.SwaggerBundle
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
 import org.apache.commons.lang3.StringUtils
+import org.apache.logging.log4j.kotlin.logger
 import org.litote.kmongo.KMongo
 import org.litote.kmongo.getCollection
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ARConst.APP_NAME
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.api.ARConst.EnvironmentVariable
@@ -60,7 +60,6 @@ import nl.knaw.huc.annorepo.tasks.RecalculateFieldCountTask
 import nl.knaw.huc.annorepo.tasks.UpdateTask
 
 class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
-    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun getName(): String = APP_NAME
 
@@ -88,19 +87,19 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
 
     override fun run(configuration: AnnoRepoConfiguration?, environment: Environment) {
         val maxEnvVarLen = max(EnvironmentVariable.entries.map { it.name.length })
-        log.info(
+        logger.info {
             "AR_ environment variables:\n\n" +
                     EnvironmentVariable.entries
                         .joinToString("\n") { e ->
                             "  ${e.name.padEnd(maxEnvVarLen + 1)}: ${System.getenv(e.name) ?: "(not set, using default)"}"
                         } +
                     "\n"
-        )
+        }
 
-        log.info("connecting to mongodb at ${configuration!!.mongodbURL} ...")
-        val mongoClient = createMongoClient(configuration)
+        logger.info { "connecting to mongodb at ${configuration!!.mongodbURL} ..." }
+        val mongoClient = createMongoClient(configuration!!)
         val mongoVersion = mongoClient.getMongoVersion()
-        log.info("connected! version = $mongoVersion")
+        logger.info { "connected! version = $mongoVersion" }
 
         val appVersion = javaClass.getPackage().implementationVersion
         val userDAO = ARUserDAO(configuration, mongoClient)
@@ -178,14 +177,14 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
 
         doHealthChecks(environment)
 
-        log.info(
+        logger.info {
             "\n\n  Starting $name (v$appVersion)\n" +
                     "    locally accessible at    " +
                     "http://localhost:${System.getenv(EnvironmentVariable.AR_SERVER_PORT.name) ?: 8080}\n" +
-                    "    externally accessible at ${configuration.externalBaseUrl}\n"
-        )
+                    "    externally accessible at ${configuration?.externalBaseUrl}\n"
+        }
         val heapSpace = Runtime.getRuntime().totalMemory().formatAsSize
-        log.info("Heap space = $heapSpace")
+        logger.info { "Heap space = $heapSpace" }
 
         MongoDbUpdater(
             configuration = configuration,
@@ -203,7 +202,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         val metadataCollectionExists = mdb.listCollectionNames()
             .firstOrNull { it == CONTAINER_METADATA_COLLECTION } == CONTAINER_METADATA_COLLECTION
         if (!metadataCollectionExists) {
-            log.debug("creating container metadata collection + index")
+            logger.debug { "creating container metadata collection + index" }
             mdb.createCollection(CONTAINER_METADATA_COLLECTION)
             val containerMetadataCollection = mdb.getCollection<ContainerMetadata>(CONTAINER_METADATA_COLLECTION)
             containerMetadataCollection.createIndex(Indexes.ascending("name"))
@@ -226,14 +225,16 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
     private fun doHealthChecks(environment: Environment) {
         val results = environment.healthChecks().runHealthChecks()
         val healthy = AtomicBoolean(true)
-        log.info("Health checks:")
+        logger.info { "Health checks:" }
         results.forEach { (name: String?, result: HealthCheck.Result) ->
-            log.info(
-                "  {}: {}, message='{}'",
-                name,
-                if (result.isHealthy) "healthy" else "unhealthy",
-                StringUtils.defaultIfBlank(result.message, "")
-            )
+            logger.info {
+                "  $name: ${if (result.isHealthy) "healthy" else "unhealthy"}, message='${
+                    StringUtils.defaultIfBlank(
+                        result.message,
+                        ""
+                    )
+                }'"
+            }
             healthy.set(healthy.get() && result.isHealthy)
         }
         if (!healthy.get()) {

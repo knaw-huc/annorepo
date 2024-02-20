@@ -21,7 +21,6 @@ open class AboutResourceTest {
         .builder()
         .addResource(AboutResource(config, APP_NAME, VERSION, MONGO_VERSION))
         .build()
-//    private val log = LoggerFactory.getLogger(javaClass)
 
     @Test
     fun `about endpoint returns expected json`() {

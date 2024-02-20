@@ -3,7 +3,7 @@ package nl.knaw.huc.annorepo.grpc
 import io.dropwizard.lifecycle.Managed
 import io.dropwizard.util.Duration
 import io.grpc.Server
-import org.slf4j.LoggerFactory
+import org.apache.logging.log4j.kotlin.logger
 
 /**
  * Dropwizard lifecycle management for a gRPC server.
@@ -14,24 +14,20 @@ class ManagedGrpcServer(
 ) : Managed {
 
     override fun start() {
-        log.info("Starting gRPC server")
+        logger.info { "Starting gRPC server" }
         server.start()
-        log.info("gRPC server started on port {}", server.port)
+        logger.info { "gRPC server started on port ${server.port}" }
     }
 
     override fun stop() {
-        log.info("Stopping gRPC server on port {}", server.port)
+        logger.info { "Stopping gRPC server on port ${server.port}" }
         val terminatedCleanly = server.shutdown().awaitTermination(shutdownTimeout.quantity, shutdownTimeout.unit)
         if (terminatedCleanly) {
-            log.info("gRPC server stopped and terminated cleanly.")
+            logger.info { "gRPC server stopped and terminated cleanly." }
         } else {
-            log.info("gRPC server did not terminate cleanly after $shutdownTimeout")
-            log.info("Shutting down gRPC server forcefully.")
+            logger.info { "gRPC server did not terminate cleanly after $shutdownTimeout" }
+            logger.info { "Shutting down gRPC server forcefully." }
             server.shutdownNow()
         }
-    }
-
-    companion object {
-        private val log = LoggerFactory.getLogger(ManagedGrpcServer::class.java)
     }
 }

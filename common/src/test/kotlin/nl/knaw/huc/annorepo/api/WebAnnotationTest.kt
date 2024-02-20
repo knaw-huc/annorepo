@@ -3,12 +3,11 @@ package nl.knaw.huc.annorepo.api
 import org.junit.jupiter.api.Test
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.ObjectWriter
+import org.apache.logging.log4j.kotlin.logger
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Fail.fail
-import org.slf4j.LoggerFactory
 
 internal class WebAnnotationTest {
-    private val log = LoggerFactory.getLogger(javaClass)
     private val objectWriter: ObjectWriter = ObjectMapper().writerWithDefaultPrettyPrinter()
 
     @Test
@@ -21,7 +20,7 @@ internal class WebAnnotationTest {
     @Test
     fun `builder build should return WebAnnotationAsMap`() {
         val wa = WebAnnotation.Builder().withTarget("http://example.org/target-id").build()
-        log.info("wa={}", wa)
+        logger.info { "wa=$wa" }
         logJsonSerialization(wa)
     }
 
@@ -42,7 +41,7 @@ internal class WebAnnotationTest {
             .withBody("http://example.org/body-id")
             .withTarget("http://example.org/target-id")
             .build()
-        log.info("wa={}", wa)
+        logger.info { "wa=$wa" }
         logJsonSerialization(wa)
     }
 
@@ -57,13 +56,13 @@ internal class WebAnnotationTest {
                 )
             )
             .build()
-        log.info("wa={}", wa)
+        logger.info { "wa=$wa" }
         logJsonSerialization(wa)
     }
 
     private fun logJsonSerialization(wa: Any) {
         val asJson = objectWriter.writeValueAsString(wa)
-        log.info("json={}", asJson)
+        logger.info { "json=$asJson" }
     }
 
 }

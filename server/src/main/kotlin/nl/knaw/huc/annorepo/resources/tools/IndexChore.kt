@@ -5,10 +5,10 @@ import java.util.concurrent.TimeUnit
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.IndexOptions
+import org.apache.logging.log4j.kotlin.logger
 import org.bson.Document
 import org.bson.conversions.Bson
 import org.joda.time.Instant
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ChoreStatusSummary
 
 class IndexChore(
@@ -43,8 +43,6 @@ class IndexChore(
         CREATED, RUNNING, DONE, FAILED
     }
 
-    private val log = LoggerFactory.getLogger(javaClass)
-
     val status = Status()
 
     override fun run() {
@@ -53,7 +51,7 @@ class IndexChore(
         try {
             val partialFilter = Filters.exists(fieldName)
             val createIndex = container.createIndex(index, IndexOptions().partialFilterExpression(partialFilter))
-            log.info("created index: $createIndex")
+            logger.info { "created index: $createIndex" }
             status.state = State.DONE
         } catch (t: Throwable) {
             t.printStackTrace()
@@ -61,7 +59,7 @@ class IndexChore(
             status.errors += "${t.javaClass}: ${t.message ?: ""}"
         }
         status.endTime = Instant.now()
-        log.debug("query done")
+        logger.debug { "query done" }
     }
 
 }

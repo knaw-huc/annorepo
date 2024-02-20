@@ -1,10 +1,8 @@
 package nl.knaw.huc.annorepo.api
 
 import org.junit.jupiter.api.Test
-import org.slf4j.LoggerFactory
 
 internal class ProtoBufTest {
-    private val log = LoggerFactory.getLogger(javaClass)
 
     @Test
     fun `test AnnotationUploadService`() {

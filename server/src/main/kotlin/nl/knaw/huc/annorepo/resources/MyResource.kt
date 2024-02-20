@@ -12,7 +12,6 @@ import jakarta.ws.rs.core.SecurityContext
 import com.codahale.metrics.annotation.Timed
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.ResourcePaths.MY
 import nl.knaw.huc.annorepo.auth.RootUser
@@ -25,8 +24,6 @@ import nl.knaw.huc.annorepo.dao.ContainerUserDAO
 class MyResource(
     private val containerUserDAO: ContainerUserDAO
 ) {
-    private val log = LoggerFactory.getLogger(javaClass)
-
     @Operation(description = "List all containers the authenticated user has access to, grouped by role")
     @Timed
     @GET
