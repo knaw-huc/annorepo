@@ -36,6 +36,11 @@
             <artifactId>kotlinx-coroutines-core</artifactId>
             <version>${kotlinx-coroutines-core.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api-kotlin</artifactId>
+            <version>${log4j-api-kotlin.version}</version>
+        </dependency>
 
         <!-- protobuf/grpc -->
         <dependency>
