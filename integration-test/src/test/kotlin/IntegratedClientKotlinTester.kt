@@ -279,7 +279,8 @@ class IntegratedClientKotlinTester {
             val containerName = "republic"
             val query = mapOf("body.type" to "Page")
             client.filterContainerAnnotations(containerName, query)
-                .fold({ error: RequestError -> handleError(error) },
+                .fold(
+                    { error: RequestError -> handleError(error) },
                     { (searchId, annotations): FilterContainerAnnotationsResult ->
                         annotations.forEach { a: Either<RequestError, String> ->
                             a.fold({ e: RequestError -> handleError(e) },
@@ -345,10 +346,13 @@ class IntegratedClientKotlinTester {
         @Test
         fun testGetGlobalSearchResultPage() {
             val query = mapOf("type" to "Annotation")
-            val optionalQueryId = client.createGlobalSearch(query = query).fold({ error: RequestError ->
-                handleError(error)
-                null
-            }, { (_, _, queryId): CreateSearchResult -> queryId })
+            val optionalQueryId = client.createGlobalSearch(query = query).fold(
+                { error: RequestError ->
+                    handleError(error)
+                    null
+                },
+                { (_, _, queryId): CreateSearchResult -> queryId }
+            )
             assertThat(optionalQueryId).isNotNull()
             optionalQueryId?.apply {
                 client.getGlobalSearchResultPage(queryId = this, page = 0, retryUntilDone = true)
