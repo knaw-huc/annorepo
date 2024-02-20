@@ -38,6 +38,7 @@ import nl.knaw.huc.annorepo.cli.EnvCommand
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ARContainerDAO
 import nl.knaw.huc.annorepo.dao.ARContainerUserDAO
+import nl.knaw.huc.annorepo.dao.ARCustomQueryDAO
 import nl.knaw.huc.annorepo.dao.ARUserDAO
 import nl.knaw.huc.annorepo.filters.JSONPrettyPrintFilter
 import nl.knaw.huc.annorepo.grpc.AnnotationUploadService
@@ -106,6 +107,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         val userDAO = ARUserDAO(configuration, mongoClient)
         val containerDAO = ARContainerDAO(configuration, mongoClient)
         val containerUserDAO = ARContainerUserDAO(configuration, mongoClient)
+        val customQueryDAO = ARCustomQueryDAO(configuration, mongoClient)
 
         val containerAccessChecker = ContainerAccessChecker(containerUserDAO)
         val searchManager = SearchManager(containerDAO = containerDAO, configuration = configuration)
@@ -128,8 +130,9 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
                     configuration,
                     containerUserDAO,
                     containerDAO,
+                    customQueryDAO,
                     uriFactory,
-                    indexManager
+                    indexManager,
                 )
             )
             register(

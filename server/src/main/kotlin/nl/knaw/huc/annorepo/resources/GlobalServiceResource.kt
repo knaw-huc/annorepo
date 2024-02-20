@@ -28,6 +28,7 @@ import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.AnnotationPage
+import nl.knaw.huc.annorepo.api.ResourcePaths.CUSTOM_QUERY
 import nl.knaw.huc.annorepo.api.ResourcePaths.GLOBAL_SERVICES
 import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
@@ -114,6 +115,19 @@ class GlobalServiceResource(
     ): Response {
         val searchChore = searchManager.getSearchChore(searchId) ?: throw NotFoundException()
         return Response.ok(searchChore.status.summary()).build()
+    }
+
+    @Operation(description = "Create a custom query")
+    @Timed
+    @POST
+    @Path(CUSTOM_QUERY)
+    @Consumes(APPLICATION_JSON)
+    fun createCustomQuery(
+        customQueryJson: String,
+        @Context context: SecurityContext,
+    ): Response {
+        context.checkUserHasAdminRights()
+        return Response.ok().build()
     }
 
     private fun acceptedResponse(searchChoreStatus: SearchChore.Status): Response =

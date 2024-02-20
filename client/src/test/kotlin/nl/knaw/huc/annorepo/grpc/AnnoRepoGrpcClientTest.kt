@@ -15,7 +15,7 @@ class AnnoRepoGrpcClientTest {
     @Disabled
     @Test
     fun `connect to grpc server via annorepo client`() = runBlocking {
-        val arc = AnnoRepoClient(serverURI = URI("http://localhost:2023"), apiKey = "something-or-other")
+        val arc = AnnoRepoClient(serverURI = URI("http://localhost:2023"), apiKey = "root")
         val annotations1 = listOf(
             webAnnotation("annotation-1")
         )

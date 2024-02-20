@@ -342,7 +342,7 @@ class ContainerServiceResourceTest {
                 containerUserDAO,
                 containerDAO,
                 UriFactory(config),
-                indexManager
+                indexManager,
             )
         }
 

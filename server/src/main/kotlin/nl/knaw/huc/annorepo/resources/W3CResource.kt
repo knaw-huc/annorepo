@@ -92,7 +92,7 @@ class W3CResource(
         @Context context: SecurityContext,
     ): Response {
 //        log.debug("containerSpecs={}", containerSpecs)
-        context.checkUserHasContainerCreationRights()
+        context.checkUserHasAdminRights()
         var containerName = slug ?: UUID.randomUUID().toString()
         if (containerDAO.containerExists(containerName)) {
             log.debug("A container with the suggested name $containerName already exists, generating a new name.")

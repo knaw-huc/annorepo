@@ -31,6 +31,7 @@ import com.mongodb.client.model.Aggregates.limit
 import com.mongodb.client.model.Filters
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import org.apache.logging.log4j.kotlin.logger
 import org.bson.Document
 import org.bson.conversions.Bson
 import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
@@ -45,6 +46,7 @@ import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.QueryAsMap
 import nl.knaw.huc.annorepo.api.ResourcePaths.ANNOTATIONS_BATCH
 import nl.knaw.huc.annorepo.api.ResourcePaths.CONTAINER_SERVICES
+import nl.knaw.huc.annorepo.api.ResourcePaths.CUSTOM_QUERY
 import nl.knaw.huc.annorepo.api.ResourcePaths.DISTINCT_FIELD_VALUES
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
 import nl.knaw.huc.annorepo.api.ResourcePaths.INDEXES
@@ -59,6 +61,7 @@ import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
+import nl.knaw.huc.annorepo.dao.CustomQueryDAO
 import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
 import nl.knaw.huc.annorepo.resources.tools.AnnotationList
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
@@ -75,6 +78,7 @@ class ContainerServiceResource(
     private val configuration: AnnoRepoConfiguration,
     private val containerUserDAO: ContainerUserDAO,
     private val containerDAO: ContainerDAO,
+    private val customQueryDAO: CustomQueryDAO,
     private val uriFactory: UriFactory,
     private val indexManager: IndexManager
 ) : AbstractContainerResource(configuration, containerDAO, ContainerAccessChecker(containerUserDAO)) {
@@ -171,7 +175,7 @@ class ContainerServiceResource(
 
             val id = UUID.randomUUID().toString()
             queryCache.put(id, QueryCacheItem(queryMap, aggregateStages, -1))
-//            log.debug("explain aggregate =\n\n{}\n", asMongoExplain(containerName, aggregateStages))
+            logger.debug { "explain aggregate =\n\n${asMongoExplain(containerName, aggregateStages)}\n" }
             val location = uriFactory.searchURL(containerName, id)
             return Response.created(location)
                 .link(uriFactory.searchInfoURL(containerName, id), "info")
@@ -404,6 +408,21 @@ class ContainerServiceResource(
         return Response.ok(annotationIdentifiers).build()
     }
 
+    @Operation(description = "Get the results of the given custom query")
+    @Timed
+    @GET
+    @Path("{containerName}/${CUSTOM_QUERY}/{queryName}")
+    fun getCustomQueryResult(
+        @PathParam("containerName") containerName: String,
+        @PathParam("queryName") queryName: String,
+        @Context context: SecurityContext,
+    ): Response {
+        context.checkUserHasReadRightsInThisContainer(containerName)
+        val customQuery = customQueryDAO.getCustomQuery(queryName)
+
+        return Response.ok().build()
+    }
+
     private fun getIndexConfig(
         container: MongoCollection<Document>,
         containerName: String,
@@ -416,8 +435,7 @@ class ContainerServiceResource(
 
     private fun indexData(container: MongoCollection<Document>, containerName: String): List<IndexConfig> =
         container.listIndexes()
-            .map { it.toMap().asIndexConfig(containerName) }
-            .filterNotNull()
+            .mapNotNull { it.toMap().asIndexConfig(containerName) }
             .toList()
 
     private fun Map<String, Any>.asIndexConfig(containerName: String): IndexConfig? {
