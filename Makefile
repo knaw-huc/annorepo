@@ -150,11 +150,17 @@ start-mongodb:
 .PHONY: compile-protocol-buffers
 compile-protocol-buffers: .make/compiled-protocol-buffers
 
+.PHONY: git-pull
+git-pull:
+	current=$(shell git branch --show-current)
+	git checkout main && git pull && git checkout develop && git merge main && git push && git checkout $(current)
+
 .PHONY: help
 help:
 	@echo "make-tools for $(TAG)"
 	@echo
 	@echo "Please use \`make <target>', where <target> is one of:"
+	@echo "  git-pull                  - to pull git changes from the main branch ( + update the develop branch)"
 	@echo "  tests                     - to test the project"
 	@echo "  clean                     - to remove generated files"
 	@echo "  compile-protocol-buffers  - to compile all .proto files"
