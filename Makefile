@@ -153,7 +153,8 @@ compile-protocol-buffers: .make/compiled-protocol-buffers
 .PHONY: git-pull
 git-pull:
 	current=$(shell git branch --show-current)
-	git checkout main && git pull && git checkout develop && git merge main && git push && git checkout $(current)
+	git checkout main && git pull && git checkout develop && git merge main && git push
+	git checkout $(current)
 
 .PHONY: help
 help:
