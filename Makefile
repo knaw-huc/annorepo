@@ -150,11 +150,12 @@ start-mongodb:
 .PHONY: compile-protocol-buffers
 compile-protocol-buffers: .make/compiled-protocol-buffers
 
+current_branch=$(shell git branch --show-current)
+
 .PHONY: git-pull
 git-pull:
-	current=$(shell git branch --show-current)
 	git checkout main && git pull && git checkout develop && git merge main && git push
-	git checkout $(current)
+	git checkout $(current_branch)
 
 .PHONY: help
 help:
