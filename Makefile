@@ -154,7 +154,10 @@ current_branch=$(shell git branch --show-current)
 
 .PHONY: git-pull
 git-pull:
-	git checkout main && echo && git pull && echo && git checkout develop && echo && git merge main && echo && git push && echo
+	git checkout main && git pull
+	echo
+	git checkout develop && git merge main && git push
+	echo
 	git checkout $(current_branch)
 
 .PHONY: help
