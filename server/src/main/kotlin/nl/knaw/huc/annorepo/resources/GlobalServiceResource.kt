@@ -22,6 +22,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.mongodb.client.model.Filters.`in`
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import org.apache.jena.atlas.json.JSON
+import org.apache.jena.atlas.json.JsonObject
+import org.apache.jena.atlas.json.JsonParseException
 import org.bson.Document
 import org.bson.types.ObjectId
 import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
@@ -127,7 +130,24 @@ class GlobalServiceResource(
         @Context context: SecurityContext,
     ): Response {
         context.checkUserHasAdminRights()
-        return Response.ok().build()
+        val (name, query) = parseJson(customQueryJson)
+        return Response.created(uriFactory.customQueryURL(name)).build()
+    }
+
+    private fun parseJson(jsonString: String): Pair<String, JsonObject> {
+        try {
+            val jsonObject = JSON.parse(jsonString)
+            val keys = jsonObject.keys()
+            if (keys.contains("name") && keys.contains("query")) {
+                val name = jsonObject.getString("name")
+                val query = jsonObject.getObj("query")
+                return Pair(name, query)
+            } else {
+                throw BadRequestException("invalid customQueryJson: no 'name' and/or 'query' fields found")
+            }
+        } catch (e: JsonParseException) {
+            throw BadRequestException("invalid json: ${e.message}")
+        }
     }
 
     private fun acceptedResponse(searchChoreStatus: SearchChore.Status): Response =
