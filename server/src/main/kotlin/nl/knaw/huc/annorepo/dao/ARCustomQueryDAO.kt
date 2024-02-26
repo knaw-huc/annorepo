@@ -14,7 +14,9 @@ class ARCustomQueryDAO(
     private val mdb = mongoClient.getDatabase(configuration.databaseName)
     private val customQueryCollection = mdb.getCollection<CustomQuery>(ARConst.CUSTOM_QUERY_COLLECTION)
 
-    override fun getAllCustomQueries(): List<CustomQuery> = customQueryCollection.find().toList()
+    override fun getAllCustomQueries(): List<CustomQuery> =
+        customQueryCollection.find().sortedBy { cq -> cq.name.lowercase() }
+
     override fun nameIsTaken(name: String): Boolean = getByName(name) != null
 
     override fun getByName(name: String): CustomQuery? {
