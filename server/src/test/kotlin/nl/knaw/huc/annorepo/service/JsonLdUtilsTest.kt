@@ -11,6 +11,7 @@ import org.apache.jena.riot.RDFParser
 import org.apache.jena.riot.RDFWriter
 import org.apache.jena.riot.system.ErrorHandler
 import org.apache.jena.sparql.core.DatasetGraph
+import org.apache.logging.log4j.kotlin.logger
 import org.assertj.core.api.Assertions.assertThat
 import nl.knaw.huc.annorepo.service.JsonLdUtils.checkFieldContext
 import nl.knaw.huc.annorepo.service.JsonLdUtils.extractFields
@@ -125,34 +126,50 @@ class JsonLdUtilsTest {
     fun `reading jsonld with jena`() {
         val jsonld = """
             {
-              "@context": "http://www.w3.org/ns/anno.jsonld",
+              "@context": ["http://www.w3.org/ns/anno.jsonld",{"ex":"http://example.org/"}],
               "id": "urn:something",
               "type": "Annotation",
               "body": {
                 "type": "TextualBody",
-                "extra": "additional value",
+                "ex:extra": "additional value",
                 "value": "I like this page!"
               },
               "target": "http://www.example.com/index.html",
-              "mycustomfield": "my custom value"
+              "ex:mycustomfield": "my custom value"
             }
         """.trimMargin()
         println("|$jsonld|")
 //        var dataset: Dataset
         // The parsers will do the necessary character set conversion.
-        jsonld.byteInputStream().use { `in` ->
+        jsonld.byteInputStream().use { byteArrayInputStream ->
             val errorHandler = MyErrorHandler()
             val model = RDFParser
-                .source(`in`)
+                .source(byteArrayInputStream)
                 .lang(RDFLanguages.JSONLD)
                 .errorHandler(errorHandler)
+                .canonicalValues(true)
+                .checking(true)
+                .strict(true)
                 .build()
                 .toModel()
             println(model)
         }
-        val model = ModelFactory.createDefaultModel()
+        val model = ModelFactory.createDefaultModel().apply {
+            setNsPrefix("oa", "http://www.w3.org/ns/oa#")
+            setNsPrefix("dc", "http://purl.org/dc/elements/1.1/")
+            setNsPrefix("dcterms", "http://purl.org/dc/terms/")
+            setNsPrefix("dctypes", "http://purl.org/dc/dcmitype/")
+            setNsPrefix("foaf", "http://xmlns.com/foaf/0.1/")
+//            setNsPrefix("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#")
+            setNsPrefix("rdfs", "http://www.w3.org/2000/01/rdf-schema#")
+            setNsPrefix("skos", "http://www.w3.org/2004/02/skos/core#")
+            setNsPrefix("xsd", "http://www.w3.org/2001/XMLSchema#")
+            setNsPrefix("iana", "http://www.iana.org/assignments/relation/")
+            setNsPrefix("owl", "http://www.w3.org/2002/07/owl#")
+            setNsPrefix("as", "http://www.w3.org/ns/activitystreams#")
+            setNsPrefix("schema", "http://schema.org/")
+        }
         model.read(jsonld.byteInputStream(), "", "JSON-LD")
-//        model.setNsPrefix("oa", "http://www.w3.org/ns/oa#")
         println()
         model.write(System.out, "TTL")
         println()
@@ -160,7 +177,7 @@ class JsonLdUtilsTest {
         val ctx = JsonLDWriteContext()
         ctx.setFrame("""{"@type":"http://www.w3.org/ns/oa#Annotation"}""")
         RDFWriter.create()
-            .format(RDFFormat.JSONLD10_FRAME_PRETTY)
+            .format(RDFFormat.JSONLD_PRETTY)
             .source(g)
             .context(ctx)
             .build()
@@ -169,15 +186,15 @@ class JsonLdUtilsTest {
 
     class MyErrorHandler : ErrorHandler {
         override fun warning(p0: String?, p1: Long, p2: Long) {
-            TODO("Not yet implemented")
+            logger.warn { "warning at $p1,$p2: $p0" }
         }
 
         override fun error(p0: String?, p1: Long, p2: Long) {
-            TODO("Not yet implemented")
+            logger.error { "error at $p1,$p2: $p0" }
         }
 
         override fun fatal(p0: String?, p1: Long, p2: Long) {
-            TODO("Not yet implemented")
+            logger.fatal { "fatal at $p1,$p2: $p0" }
         }
 
     }
