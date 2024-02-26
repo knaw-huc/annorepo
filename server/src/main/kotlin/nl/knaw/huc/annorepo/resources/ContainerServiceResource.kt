@@ -43,6 +43,7 @@ import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.IndexConfig
 import nl.knaw.huc.annorepo.api.IndexType
+import nl.knaw.huc.annorepo.api.PropertySet
 import nl.knaw.huc.annorepo.api.QueryAsMap
 import nl.knaw.huc.annorepo.api.ResourcePaths.ANNOTATIONS_BATCH
 import nl.knaw.huc.annorepo.api.ResourcePaths.CONTAINER_SERVICES
@@ -168,7 +169,7 @@ class ContainerServiceResource(
     ): Response {
         context.checkUserHasReadRightsInThisContainer(containerName)
         try {
-            val queryMap: Map<String, Any?> = Json.createReader(StringReader(queryJson)).readObject().toMap().simplify()
+            val queryMap: PropertySet = Json.createReader(StringReader(queryJson)).readObject().toMap().simplify()
             val aggregateStages = queryMap
                 .map { (k, v) -> aggregateStageGenerator.generateStage(k, v!!) }
                 .toList()

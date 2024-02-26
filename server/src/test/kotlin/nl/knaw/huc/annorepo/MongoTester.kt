@@ -10,6 +10,7 @@ import org.litote.kmongo.KMongo
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ARConst
+import nl.knaw.huc.annorepo.api.PropertySet
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ARContainerDAO
 import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
@@ -27,7 +28,7 @@ class MongoTester {
     fun test() {
         val containerName = "republic"
         val queryJson = """{"body.id":"urn:republic:NL-HaNA_1.01.02_3783_0051-page-101"}"""
-        val queryMap: Map<String, Any?> = Json.createReader(StringReader(queryJson)).readObject().toMap().simplify()
+        val queryMap: PropertySet = Json.createReader(StringReader(queryJson)).readObject().toMap().simplify()
 //        val queryMap: Map<String, Any?> = mapOf("body.id" to "urn:republic:NL-HaNA_1.01.02_3783_0051-page-101")
         println(queryMap)
 
@@ -90,7 +91,7 @@ class MongoTester {
         }
     }
 
-    private fun Map<String, JsonValue>.simplify(): Map<String, Any?> {
+    private fun Map<String, JsonValue>.simplify(): PropertySet {
         val newMap = mutableMapOf<String, Any?>()
         for (e in entries) {
             log.info("e={}", e)

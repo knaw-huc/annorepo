@@ -3,6 +3,7 @@ package nl.knaw.huc.annorepo.resources.tools
 import jakarta.json.JsonNumber
 import jakarta.json.JsonString
 import jakarta.json.JsonValue
+import nl.knaw.huc.annorepo.api.PropertySet
 
 fun JsonValue.toSimpleValue(): Any? {
     return when (valueType) {
@@ -17,7 +18,7 @@ fun JsonValue.toSimpleValue(): Any? {
     }
 }
 
-fun JsonValue.toSimpleMap(): Map<String, Any?> {
+fun JsonValue.toSimpleMap(): PropertySet {
     val jsonObject = asJsonObject()
     val map = mutableMapOf<String, Any?>()
     jsonObject.forEach { (key, value) -> map[key] = value.toSimpleValue() }
@@ -43,7 +44,7 @@ fun JsonValue.toSimpleString(): String {
     return jsonString.string
 }
 
-fun Map<String, JsonValue>.simplify(): Map<String, Any?> {
+fun Map<String, JsonValue>.simplify(): PropertySet {
     val newMap = mutableMapOf<String, Any?>()
     for (e in entries) {
         val v = e.value
