@@ -245,6 +245,28 @@ class ContainerServiceResource(
         return Response.ok(searchInfo).build()
     }
 
+    @Operation(description = "Get the results of the given custom query")
+    @Timed
+    @GET
+    @Path("{containerName}/${CUSTOM_QUERY}/{queryName}")
+    fun getCustomQueryResult(
+        @PathParam("containerName") containerName: String,
+        @PathParam("queryName") queryName: String,
+        @Context context: SecurityContext,
+    ): Response {
+        context.checkUserHasReadRightsInThisContainer(containerName)
+        val customQuery = customQueryDAO.getByName(queryName)
+            ?: throw NotFoundException("No custom query '$queryName' found")
+        val total = 0
+        val page = 0
+        val annotations: AnnotationList = emptyList()
+        val annotationPage =
+            buildAnnotationPage(uriFactory.customContainerQueryURL(containerName, queryName), annotations, page, total)
+        return Response.ok(annotationPage)
+            .link(uriFactory.customQueryURL(queryName), "using")
+            .build()
+    }
+
     @Operation(description = "Get a list of the fields used in the annotations in a container")
     @Timed
     @GET
@@ -407,21 +429,6 @@ class ContainerServiceResource(
 
         val annotationIdentifiers = containerDAO.addAnnotationsInBatch(containerName, annotations)
         return Response.ok(annotationIdentifiers).build()
-    }
-
-    @Operation(description = "Get the results of the given custom query")
-    @Timed
-    @GET
-    @Path("{containerName}/${CUSTOM_QUERY}/{queryName}")
-    fun getCustomQueryResult(
-        @PathParam("containerName") containerName: String,
-        @PathParam("queryName") queryName: String,
-        @Context context: SecurityContext,
-    ): Response {
-        context.checkUserHasReadRightsInThisContainer(containerName)
-        val customQuery = customQueryDAO.getByName(queryName)
-
-        return Response.ok().build()
     }
 
     private fun getIndexConfig(
