@@ -1,15 +1,14 @@
 package nl.knaw.huc.annorepo.resources
 
 import org.junit.jupiter.api.Test
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.assertj.core.api.Assertions.assertThat
 import nl.knaw.huc.annorepo.api.ContainerPage
 
 internal class ContainerPageTest {
 
-    private val objectMapper = ObjectMapper().registerKotlinModule()
+    private val objectMapper = jacksonObjectMapper()
 
     @Test
     fun `a ContainerPage without next serializes as expected`() {

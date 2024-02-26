@@ -1,14 +1,13 @@
 package nl.knaw.huc.annorepo.resources
 
 import org.junit.jupiter.api.Test
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.AnnotationPage
 
 internal class AnnotationPageTest {
-    private val objectMapper = ObjectMapper().registerKotlinModule()
+    private val objectMapper = jacksonObjectMapper()
 
     @Test
     fun `an AnnotationPage with minimal fields serializes as expected`() {

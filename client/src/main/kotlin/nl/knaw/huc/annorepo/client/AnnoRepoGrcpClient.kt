@@ -2,8 +2,7 @@ package nl.knaw.huc.annorepo.client
 
 import java.io.Closeable
 import java.util.concurrent.TimeUnit
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.grpc.ManagedChannel
 import io.grpc.Metadata
 import io.grpc.stub.MetadataUtils
@@ -28,7 +27,7 @@ class AnnoRepoGrpcClient(private val channel: ManagedChannel, private val apiKey
         AnnotationUploadServiceCoroutineStub(channel = channel)
     private val helloStub: HelloServiceCoroutineStub =
         HelloServiceCoroutineStub(channel = channel)
-    private val objectMapper = ObjectMapper().registerKotlinModule()
+    private val objectMapper = jacksonObjectMapper()
 
     fun addContainerAnnotations(
         containerName: String,
