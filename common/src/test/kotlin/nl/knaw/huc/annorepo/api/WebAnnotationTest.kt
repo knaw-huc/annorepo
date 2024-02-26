@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.ObjectWriter
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Fail.fail
+import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.slf4j.LoggerFactory
 
 internal class WebAnnotationTest {
@@ -27,13 +27,13 @@ internal class WebAnnotationTest {
 
     @Test
     fun `builder build should throw an exception when no target is specified`() {
-        try {
-            val wa = WebAnnotation.Builder().build()
-            logJsonSerialization(wa)
-            fail<String>("Expected a MissingTargetException")
-        } catch (e: MissingTargetException) {
-            assertThat(e).isNotNull
-        }
+        assertThatExceptionOfType(MissingTargetException::class.java)
+            .isThrownBy {
+                val wa = WebAnnotation.Builder().build()
+                logJsonSerialization(wa)
+            }
+            .withMessage("WebAnnotation must have 1 or more targets")
+
     }
 
     @Test

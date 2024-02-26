@@ -9,6 +9,7 @@ import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.junit5.MockKExtension
 import net.javacrumbs.jsonunit.assertj.assertThatJson
 import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
+import org.assertj.core.api.AssertionsForInterfaceTypes.assertThatExceptionOfType
 import org.litote.kmongo.json
 import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
@@ -51,13 +52,9 @@ class AggregateStageGeneratorTest {
     @Test
     fun `query key starting with colon should be a defined query function`() {
         val asg = AggregateStageGenerator(config)
-        try {
-            asg.generateStage(":myQueryFunction", mapOf("parameter1" to "value1"))
-            fail("expected BadRequestException")
-        } catch (bre: BadRequestException) {
-            log.info(bre.toString())
-            assertThat(bre.message).isEqualTo("Unknown query function: ':myQueryFunction'")
-        }
+        assertThatExceptionOfType(BadRequestException::class.java)
+            .isThrownBy { asg.generateStage(":myQueryFunction", mapOf("parameter1" to "value1")) }
+            .withMessage("Unknown query function: ':myQueryFunction'")
     }
 
     @Test

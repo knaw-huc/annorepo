@@ -18,22 +18,24 @@ import jakarta.ws.rs.core.SecurityContext
 import jakarta.ws.rs.core.UriBuilder
 import kotlin.math.min
 import com.codahale.metrics.annotation.Timed
+import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.mongodb.client.model.Filters.`in`
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
-import org.apache.jena.atlas.json.JSON
-import org.apache.jena.atlas.json.JsonObject
-import org.apache.jena.atlas.json.JsonParseException
 import org.bson.Document
 import org.bson.types.ObjectId
 import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.AnnotationPage
+import nl.knaw.huc.annorepo.api.PropertySet
 import nl.knaw.huc.annorepo.api.ResourcePaths.CUSTOM_QUERY
 import nl.knaw.huc.annorepo.api.ResourcePaths.GLOBAL_SERVICES
 import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
+import nl.knaw.huc.annorepo.api.required
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
@@ -57,6 +59,7 @@ class GlobalServiceResource(
 ) : AbstractContainerResource(configuration, containerDAO, ContainerAccessChecker(containerUserDAO)) {
 
     private val aggregateStageGenerator = AggregateStageGenerator(configuration)
+    private val objectMapper = jacksonObjectMapper()
 
     @Operation(description = "Find annotations in accessible containers matching the given query")
     @Timed
@@ -134,13 +137,13 @@ class GlobalServiceResource(
         return Response.created(uriFactory.customQueryURL(name)).build()
     }
 
-    private fun parseJson(jsonString: String): Pair<String, JsonObject> {
+    private fun parseJson(jsonString: String): Pair<String, PropertySet> {
         try {
-            val jsonObject = JSON.parse(jsonString)
-            val keys = jsonObject.keys()
+            val propertySet: PropertySet = objectMapper.readValue<PropertySet>(jsonString)
+            val keys = propertySet.keys
             if (keys.contains("name") && keys.contains("query")) {
-                val name = jsonObject.getString("name")
-                val query = jsonObject.getObj("query")
+                val name = propertySet.required<String>("name")
+                val query = propertySet.required<PropertySet>("query")
                 return Pair(name, query)
             } else {
                 throw BadRequestException("invalid customQueryJson: no 'name' and/or 'query' fields found")

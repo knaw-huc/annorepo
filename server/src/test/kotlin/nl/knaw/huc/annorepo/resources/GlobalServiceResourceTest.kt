@@ -44,7 +44,10 @@ class GlobalServiceResourceTest {
             println(response)
             fail("expected a BadRequestException")
         } catch (e: BadRequestException) {
-            assertThat(e).hasMessage("invalid json: Not a JSON object START: [KEYWORD:Hello]")
+            assertThat(e).hasMessage(
+                """invalid json: Unrecognized token 'Hello': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')
+ at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 6]"""
+            )
         }
     }
 

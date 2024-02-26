@@ -21,6 +21,7 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.junit5.MockKExtension
 import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
+import org.assertj.core.api.AssertionsForInterfaceTypes.assertThatExceptionOfType
 import org.bson.Document
 import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ARConst
@@ -404,12 +405,10 @@ class ContainerServiceResourceTest {
                 } else {
                     useUserWithRole("unauthorized_user", role)
                 }
-                try {
-                    block()
-                    fail("User with role $role is unexpectedly authorized!")
-                } catch (e: NotAuthorizedException) {
-                    assertThat(e.message).isEqualTo("HTTP 401 Unauthorized")
-                }
+                assertThatExceptionOfType(NotAuthorizedException::class.java)
+                    .isThrownBy { block() }
+                    .withMessage("HTTP 401 Unauthorized")
+
             }
         }
     }
