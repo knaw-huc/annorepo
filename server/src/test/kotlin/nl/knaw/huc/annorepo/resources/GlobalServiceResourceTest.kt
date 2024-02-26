@@ -2,19 +2,24 @@ package nl.knaw.huc.annorepo.resources
 
 import jakarta.ws.rs.BadRequestException
 import jakarta.ws.rs.core.SecurityContext
-import kotlin.test.fail
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
+import io.mockk.just
+import io.mockk.runs
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
+import nl.knaw.huc.annorepo.dao.CustomQuery
+import nl.knaw.huc.annorepo.dao.CustomQueryDAO
 import nl.knaw.huc.annorepo.resources.tools.SearchManager
 import nl.knaw.huc.annorepo.service.UriFactory
 
@@ -25,7 +30,7 @@ class GlobalServiceResourceTest {
     fun `test createCustomQuery with valid json`() {
         val customQueryString = """
             {
-              "name": "all-resolutions",
+              "name": "$CUSTOM_QUERY_NAME",
               "query": {
                 "body.type":"Resolution"
               }
@@ -37,18 +42,55 @@ class GlobalServiceResourceTest {
     }
 
     @Test
+    fun `createCustomQuery with existing name throws exception`() {
+        val customQueryString = """
+            {
+              "name": "$CUSTOM_QUERY_NAME",
+              "query": {
+                "body.type":"Resolution"
+              }
+            }
+        """.trimIndent()
+        every { customQueryDAO.nameIsTaken(CUSTOM_QUERY_NAME) } returns true
+        assertThatExceptionOfType(BadRequestException::class.java)
+            .isThrownBy {
+                val response = resource.createCustomQuery(customQueryString, securityContext)
+                println(response)
+            }.withMessage(
+                """A custom query with the name '$CUSTOM_QUERY_NAME' already exists"""
+            )
+    }
+
+    @Test
     fun `test createCustomQuery with invalid json`() {
         val customQueryString = "Hello World"
-        try {
-            val response = resource.createCustomQuery(customQueryString, securityContext)
-            println(response)
-            fail("expected a BadRequestException")
-        } catch (e: BadRequestException) {
-            assertThat(e).hasMessage(
+        assertThatExceptionOfType(BadRequestException::class.java)
+            .isThrownBy {
+                val response = resource.createCustomQuery(customQueryString, securityContext)
+                println(response)
+            }.withMessage(
                 """invalid json: Unrecognized token 'Hello': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')
  at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 6]"""
             )
-        }
+    }
+
+    @Test
+    fun `test getCustomQuery with valid name`() {
+        val response = resource.getCustomQuery("all-resolutions", securityContext)
+        println(response)
+        println(response.location)
+    }
+
+    @Test
+    fun `test customquery as json`() {
+        val json = jacksonObjectMapper().writeValueAsString(allResolutionsCustomQuery)
+        assertThat(json).isEqualTo("""{"name":"all-resolutions","description":"","queryTemplate":"{\"body.type\":\"Resolution\"}"}""")
+    }
+
+    @Test
+    fun `test getCustomQueries`() {
+        val response = resource.getCustomQueries(securityContext)
+        println(response)
     }
 
     companion object {
@@ -65,13 +107,21 @@ class GlobalServiceResourceTest {
         lateinit var containerUserDAO: ContainerUserDAO
 
         @MockK
+        lateinit var customQueryDAO: CustomQueryDAO
+
+        @MockK
         lateinit var searchManager: SearchManager
 
         @MockK
         lateinit var securityContext: SecurityContext
 
-        lateinit var uriFactory: UriFactory
+        private lateinit var uriFactory: UriFactory
         lateinit var resource: GlobalServiceResource
+        const val CUSTOM_QUERY_NAME = "all-resolutions"
+        private val allResolutionsCustomQuery = CustomQuery(
+            name = CUSTOM_QUERY_NAME,
+            queryTemplate = """{"body.type":"Resolution"}"""
+        )
 
         @BeforeAll
         @JvmStatic
@@ -79,9 +129,25 @@ class GlobalServiceResourceTest {
             MockKAnnotations.init(this)
             every { configuration.externalBaseUrl } returns BASE_URL
             every { configuration.withAuthentication } returns true
+
             every { securityContext.userPrincipal } returns RootUser()
+
+            every { customQueryDAO.store(any()) } just runs
+            every { customQueryDAO.nameIsTaken(any()) } returns false
+            every { customQueryDAO.getByName(CUSTOM_QUERY_NAME) } returns allResolutionsCustomQuery
+            every { customQueryDAO.getAllCustomQueries() } returns listOf(
+                allResolutionsCustomQuery
+            )
+
             uriFactory = UriFactory(configuration)
-            resource = GlobalServiceResource(configuration, containerDAO, containerUserDAO, searchManager, uriFactory)
+            resource = GlobalServiceResource(
+                configuration = configuration,
+                containerDAO = containerDAO,
+                containerUserDAO = containerUserDAO,
+                customQueryDAO = customQueryDAO,
+                searchManager = searchManager,
+                uriFactory = uriFactory
+            )
         }
     }
 }

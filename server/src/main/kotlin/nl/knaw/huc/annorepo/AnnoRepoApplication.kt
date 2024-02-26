@@ -127,21 +127,22 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             register(W3CResource(configuration, containerDAO, containerUserDAO, uriFactory, indexManager))
             register(
                 ContainerServiceResource(
-                    configuration,
-                    containerUserDAO,
-                    containerDAO,
-                    customQueryDAO,
-                    uriFactory,
-                    indexManager,
+                    configuration = configuration,
+                    containerUserDAO = containerUserDAO,
+                    containerDAO = containerDAO,
+                    customQueryDAO = customQueryDAO,
+                    uriFactory = uriFactory,
+                    indexManager = indexManager,
                 )
             )
             register(
                 GlobalServiceResource(
-                    configuration,
-                    containerDAO,
-                    containerUserDAO,
-                    searchManager,
-                    uriFactory
+                    configuration = configuration,
+                    containerDAO = containerDAO,
+                    containerUserDAO = containerUserDAO,
+                    customQueryDAO = customQueryDAO,
+                    searchManager = searchManager,
+                    uriFactory = uriFactory
                 )
             )
             register(BatchResource(configuration, containerDAO, containerAccessChecker))

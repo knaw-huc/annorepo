@@ -1,5 +1,3 @@
 package nl.knaw.huc.annorepo.dao
 
-class CustomQuery(name: String, queryTemplate: String) {
-
-}
+data class CustomQuery(val name: String, val description: String = "", val queryTemplate: String)

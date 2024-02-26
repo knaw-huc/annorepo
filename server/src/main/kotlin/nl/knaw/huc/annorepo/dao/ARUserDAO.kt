@@ -20,7 +20,8 @@ const val FIELD_API_KEY = "apiKey"
 const val FIELD_USER_NAME = "userName"
 
 class ARUserDAO(
-    private val configuration: AnnoRepoConfiguration, mongoClient: MongoClient,
+    private val configuration: AnnoRepoConfiguration,
+    mongoClient: MongoClient,
 ) : UserDAO {
 
     private val mdb = mongoClient.getDatabase(configuration.databaseName)

@@ -39,6 +39,8 @@ import nl.knaw.huc.annorepo.api.required
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
+import nl.knaw.huc.annorepo.dao.CustomQuery
+import nl.knaw.huc.annorepo.dao.CustomQueryDAO
 import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
 import nl.knaw.huc.annorepo.resources.tools.AnnotationList
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
@@ -54,6 +56,7 @@ class GlobalServiceResource(
     private val configuration: AnnoRepoConfiguration,
     private val containerDAO: ContainerDAO,
     private val containerUserDAO: ContainerUserDAO,
+    private val customQueryDAO: CustomQueryDAO,
     private val searchManager: SearchManager,
     private val uriFactory: UriFactory
 ) : AbstractContainerResource(configuration, containerDAO, ContainerAccessChecker(containerUserDAO)) {
@@ -134,7 +137,39 @@ class GlobalServiceResource(
     ): Response {
         context.checkUserHasAdminRights()
         val (name, query) = parseJson(customQueryJson)
+        if (customQueryDAO.nameIsTaken(name)) {
+            throw BadRequestException("A custom query with the name '$name' already exists")
+        }
+        val customQuery = CustomQuery(name = name, queryTemplate = objectMapper.writeValueAsString(query))
+        customQueryDAO.store(customQuery)
         return Response.created(uriFactory.customQueryURL(name)).build()
+    }
+
+    @Operation(description = "Read a custom query")
+    @Timed
+    @GET
+    @Path("$CUSTOM_QUERY/{customQueryName}")
+    @Consumes(APPLICATION_JSON)
+    fun getCustomQuery(
+        @PathParam("customQueryName") customQueryName: String,
+        @Context context: SecurityContext,
+    ): Response {
+        context.checkUserHasAdminRights()
+        val customQuery = customQueryDAO.getByName(customQueryName)
+        return Response.ok(customQuery).build()
+    }
+
+    @Operation(description = "List all custom queries")
+    @Timed
+    @GET
+    @Path(CUSTOM_QUERY)
+    @Consumes(APPLICATION_JSON)
+    fun getCustomQueries(
+        @Context context: SecurityContext,
+    ): Response {
+        context.checkUserHasAdminRights()
+        val allQueries = customQueryDAO.getAllCustomQueries()
+        return Response.ok(allQueries).build()
     }
 
     private fun parseJson(jsonString: String): Pair<String, PropertySet> {

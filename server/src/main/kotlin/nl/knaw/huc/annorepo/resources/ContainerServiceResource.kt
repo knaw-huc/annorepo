@@ -419,7 +419,7 @@ class ContainerServiceResource(
         @Context context: SecurityContext,
     ): Response {
         context.checkUserHasReadRightsInThisContainer(containerName)
-        val customQuery = customQueryDAO.getCustomQuery(queryName)
+        val customQuery = customQueryDAO.getByName(queryName)
 
         return Response.ok().build()
     }
