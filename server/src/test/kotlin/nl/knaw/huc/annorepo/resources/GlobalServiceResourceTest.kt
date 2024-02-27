@@ -1,5 +1,7 @@
 package nl.knaw.huc.annorepo.resources
 
+import java.time.Instant
+import java.util.Date
 import jakarta.ws.rs.BadRequestException
 import jakarta.ws.rs.core.SecurityContext
 import org.junit.jupiter.api.BeforeAll
@@ -12,8 +14,9 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.just
 import io.mockk.runs
-import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatExceptionOfType
+import org.skyscreamer.jsonassert.JSONAssert
+import org.skyscreamer.jsonassert.JSONCompareMode
 import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ContainerDAO
@@ -82,9 +85,20 @@ class GlobalServiceResourceTest {
     }
 
     @Test
-    fun `test customquery as json`() {
+    fun `test custom query as json`() {
         val json = jacksonObjectMapper().writeValueAsString(allResolutionsCustomQuery)
-        assertThat(json).isEqualTo("""{"name":"all-resolutions","description":"","queryTemplate":"{\"body.type\":\"Resolution\"}"}""")
+        val expected = """
+            {
+                "name": "all-resolutions",
+                "description": "",
+                "created": "2024-02-27T12:30:00+0000",
+                "createdBy": "",
+                "public": true,
+                "queryTemplate": "{\"body.type\":\"Resolution\"}"
+            }
+            """
+        JSONAssert.assertEquals(expected, json, JSONCompareMode.LENIENT)
+
     }
 
     @Test
@@ -120,7 +134,8 @@ class GlobalServiceResourceTest {
         const val CUSTOM_QUERY_NAME = "all-resolutions"
         private val allResolutionsCustomQuery = CustomQuery(
             name = CUSTOM_QUERY_NAME,
-            queryTemplate = """{"body.type":"Resolution"}"""
+            queryTemplate = """{"body.type":"Resolution"}""",
+            created = Date.from(Instant.parse("2024-02-27T12:30:00Z"))
         )
 
         @BeforeAll

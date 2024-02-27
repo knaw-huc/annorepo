@@ -35,6 +35,7 @@ import nl.knaw.huc.annorepo.api.PropertySet
 import nl.knaw.huc.annorepo.api.ResourcePaths.CUSTOM_QUERY
 import nl.knaw.huc.annorepo.api.ResourcePaths.GLOBAL_SERVICES
 import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
+import nl.knaw.huc.annorepo.api.optional
 import nl.knaw.huc.annorepo.api.required
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ContainerDAO
@@ -136,11 +137,17 @@ class GlobalServiceResource(
         @Context context: SecurityContext,
     ): Response {
         context.checkUserHasAdminRights()
-        val (name, query) = parseJson(customQueryJson)
+        val userName = context.userPrincipal.name
+        val (name, query, public) = parseJson(customQueryJson)
         if (customQueryDAO.nameIsTaken(name)) {
             throw BadRequestException("A custom query with the name '$name' already exists")
         }
-        val customQuery = CustomQuery(name = name, queryTemplate = objectMapper.writeValueAsString(query))
+        val customQuery = CustomQuery(
+            name = name,
+            queryTemplate = objectMapper.writeValueAsString(query),
+            createdBy = userName,
+            public = public ?: true
+        )
         customQueryDAO.store(customQuery)
         return Response.created(uriFactory.customQueryURL(name)).build()
     }
@@ -172,14 +179,15 @@ class GlobalServiceResource(
         return Response.ok(allQueries).build()
     }
 
-    private fun parseJson(jsonString: String): Pair<String, PropertySet> {
+    private fun parseJson(jsonString: String): Triple<String, PropertySet, Boolean?> {
         try {
             val propertySet: PropertySet = objectMapper.readValue<PropertySet>(jsonString)
             val keys = propertySet.keys
             if (keys.contains("name") && keys.contains("query")) {
                 val name = propertySet.required<String>("name")
                 val query = propertySet.required<PropertySet>("query")
-                return Pair(name, query)
+                val public: Boolean? = propertySet.optional<Boolean>("public")
+                return Triple(name, query, public)
             } else {
                 throw BadRequestException("invalid customQueryJson: no 'name' and/or 'query' fields found")
             }

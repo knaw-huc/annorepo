@@ -249,16 +249,16 @@ class ContainerServiceResource(
     @Timed
     @GET
     @Path("{containerName}/${CUSTOM_QUERY}/{queryName}")
-    fun getCustomQueryResult(
+    fun getCustomQueryResultPage(
         @PathParam("containerName") containerName: String,
         @PathParam("queryName") queryName: String,
+        @QueryParam("page") page: Int = 0,
         @Context context: SecurityContext,
     ): Response {
         context.checkUserHasReadRightsInThisContainer(containerName)
         val customQuery = customQueryDAO.getByName(queryName)
             ?: throw NotFoundException("No custom query '$queryName' found")
         val total = 0
-        val page = 0
         val annotations: AnnotationList = emptyList()
         val annotationPage =
             buildAnnotationPage(uriFactory.customContainerQueryURL(containerName, queryName), annotations, page, total)
