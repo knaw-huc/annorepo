@@ -15,4 +15,39 @@ class PropertySetTest {
         )
         assertThat(propertySet.required<String>("a", "b", "c")).isEqualTo("d")
     }
+
+    @Test
+    fun `test existing optional with multiple keys`() {
+        val propertySet: PropertySet = mapOf(
+            "a" to mapOf(
+                "b" to mapOf(
+                    "c" to "d"
+                )
+            )
+        )
+        assertThat(propertySet.optional<String>("a", "b", "c")).isEqualTo("d")
+    }
+
+    @Test
+    fun `test missing optional with multiple keys`() {
+        val propertySet: PropertySet = mapOf(
+            "a" to mapOf(
+                "b" to mapOf(
+                    "c" to "d"
+                )
+            )
+        )
+        assertThat(propertySet.optional<String>("a", "b", "d")).isEqualTo(null)
+    }
+    @Test
+    fun `test missing optional with multiple keys, different hierarchy`() {
+        val propertySet: PropertySet = mapOf(
+            "a" to mapOf(
+                "b1" to mapOf(
+                    "d" to "e"
+                )
+            )
+        )
+        assertThat(propertySet.optional<String>("a", "b", "d")).isEqualTo(null)
+    }
 }

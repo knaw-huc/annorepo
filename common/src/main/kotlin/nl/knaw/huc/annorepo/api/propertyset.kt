@@ -18,3 +18,32 @@ inline fun <reified T : Any> PropertySet.required(keys: List<String>): T =
             .required(keys.last())
     }
 
+inline fun <reified T : Any> PropertySet.optional(key: String): T? {
+    val value: Any? = get(key)
+    return if (value == null) {
+        null
+    } else {
+        value as? T ?: error("Value for key <$key> is not a ${T::class}")
+    }
+}
+
+inline fun <reified T : Any> PropertySet.optional(key0: String, vararg otherKeys: String): T? =
+    optional(listOf(key0) + otherKeys.toList())
+
+inline fun <reified T : Any> PropertySet.optional(keys: List<String>): T? =
+    when {
+        keys.isEmpty() -> error("no keys supplied")
+        else -> {
+            var goOn = true
+            var keyIdx = 0
+            var propertySet: PropertySet = this
+            while (goOn) {
+                val value = propertySet[keys[keyIdx++]]
+                if (value != null) {
+                    propertySet = value as PropertySet
+                }
+                goOn = value != null && keyIdx < keys.size - 1
+            }
+            propertySet.optional<T>(keys.last())
+        }
+    }
