@@ -9,6 +9,7 @@ import jakarta.json.Json
 import jakarta.ws.rs.BadRequestException
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.ForbiddenException
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.NotFoundException
 import jakarta.ws.rs.POST
@@ -43,7 +44,6 @@ import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.IndexConfig
 import nl.knaw.huc.annorepo.api.IndexType
-import nl.knaw.huc.annorepo.api.PropertySet
 import nl.knaw.huc.annorepo.api.QueryAsMap
 import nl.knaw.huc.annorepo.api.ResourcePaths.ANNOTATIONS_BATCH
 import nl.knaw.huc.annorepo.api.ResourcePaths.CONTAINER_SERVICES
@@ -169,7 +169,7 @@ class ContainerServiceResource(
     ): Response {
         context.checkUserHasReadRightsInThisContainer(containerName)
         try {
-            val queryMap: PropertySet = Json.createReader(StringReader(queryJson)).readObject().toMap().simplify()
+            val queryMap: QueryAsMap = Json.createReader(StringReader(queryJson)).readObject().toMap().simplify()
             val aggregateStages = queryMap
                 .map { (k, v) -> aggregateStageGenerator.generateStage(k, v!!) }
                 .toList()
@@ -258,6 +258,10 @@ class ContainerServiceResource(
         context.checkUserHasReadRightsInThisContainer(containerName)
         val customQuery = customQueryDAO.getByName(queryName)
             ?: throw NotFoundException("No custom query '$queryName' found")
+        if (!customQuery.public && customQuery.createdBy != context.userPrincipal?.name) {
+            throw ForbiddenException("Custom query '$queryName' is not for public use")
+        }
+
         val total = 0
         val annotations: AnnotationList = emptyList()
         val annotationPage =

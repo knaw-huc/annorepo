@@ -137,7 +137,7 @@ class GlobalServiceResource(
         @Context context: SecurityContext,
     ): Response {
         context.checkUserHasAdminRights()
-        val userName = context.userPrincipal.name
+        val userName = context.userPrincipal?.name ?: ""
         val (name, query, public) = parseJson(customQueryJson)
         if (customQueryDAO.nameIsTaken(name)) {
             throw BadRequestException("A custom query with the name '$name' already exists")
