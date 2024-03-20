@@ -43,7 +43,7 @@
         <dropwizard-swagger.version>4.0.5-1</dropwizard-swagger.version>
         <dropwizard.version>4.0.6</dropwizard.version>
         <grpc.kotlin.version>1.4.1</grpc.kotlin.version>
-        <grpc.version>1.61.1</grpc.version>
+        <grpc.version>1.62.2</grpc.version>
         <jackson-annotations.version>2.16.1</jackson-annotations.version>
         <jackson-databind.version>2.13.4.1</jackson-databind.version>
         <jackson-module-kotlin.version>2.16.2</jackson-module-kotlin.version>
