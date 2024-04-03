@@ -33,6 +33,8 @@ class SearchManager(
 
     fun getSearchChore(id: String): SearchChore? = SearchChoreIndex[id]
 
+    fun ping(id: String) = SearchChoreIndex.ping(id)
+
     private fun startSearchChore(chore: SearchChore): SearchChore {
         SearchChoreIndex[chore.id] = chore
         Thread(chore).start()

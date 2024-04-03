@@ -23,8 +23,9 @@ import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.SecurityContext
 import jakarta.ws.rs.core.UriBuilder
 import com.codahale.metrics.annotation.Timed
-import com.github.benmanes.caffeine.cache.Cache
-import com.github.benmanes.caffeine.cache.Caffeine
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
+import com.google.common.cache.LoadingCache
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Aggregates.limit
@@ -83,8 +84,10 @@ class ContainerServiceResource(
     private val paginationStage = limit(configuration.pageSize)
     private val aggregateStageGenerator = AggregateStageGenerator(configuration)
 
-    private val queryCache: Cache<String, QueryCacheItem> =
-        Caffeine.newBuilder().expireAfterAccess(1, TimeUnit.HOURS).maximumSize(1000).build()
+    private val queryCache: LoadingCache<String, QueryCacheItem> = CacheBuilder.newBuilder()
+        .maximumSize(1000)
+        .expireAfterAccess(1, TimeUnit.HOURS)
+        .build(CacheLoader.from { _: String -> null })
 
     @Operation(description = "Turn read-only access to this container for anonymous users on or off")
     @Timed
@@ -443,8 +446,9 @@ class ContainerServiceResource(
         }
     }
 
-    private fun getQueryCacheItem(searchId: String): QueryCacheItem = queryCache.getIfPresent(searchId)
-        ?: throw NotFoundException("No search results found for this search id. The search might have expired.")
+    private fun getQueryCacheItem(searchId: String): QueryCacheItem =
+        queryCache.getIfPresent(searchId)
+            ?: throw NotFoundException("No search results found for this search id. The search might have expired.")
 
     private fun buildAnnotationPage(
         searchUri: URI, annotations: AnnotationList, page: Int, total: Int,

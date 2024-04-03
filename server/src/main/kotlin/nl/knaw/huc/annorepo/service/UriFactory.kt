@@ -35,7 +35,7 @@ class UriFactory(private val configuration: AnnoRepoConfiguration) {
             .path(containerName)
             .path(ResourcePaths.SEARCH)
             .path(id)
-            .path("info")
+            .path(ResourcePaths.INFO)
             .build()
 
     fun globalSearchURL(id: String): URI =

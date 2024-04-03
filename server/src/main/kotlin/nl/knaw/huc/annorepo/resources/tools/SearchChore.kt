@@ -16,6 +16,7 @@ abstract class SearchChore(queryMap: HashMap<*, *>) : Runnable {
         val annotationIds: MutableList<MongoDocumentId> = mutableListOf()
         var startTime: Instant = Instant.now()
         var endTime: Instant? = null
+        var lastAccessed: Instant? = null
         var totalContainersToSearch: Int = 0
         val containersSearched: AtomicInteger = AtomicInteger(0)
         val errors: MutableList<String> = mutableListOf()
@@ -24,6 +25,7 @@ abstract class SearchChore(queryMap: HashMap<*, *>) : Runnable {
             query = queryMap,
             startedAt = startTime.toDate(),
             finishedAt = endTime?.toDate(),
+            lastAccessedAt = lastAccessed?.toDate(),
             expiresAfter = expirationTime(),
             state = state.name,
             totalContainersToSearch = totalContainersToSearch,
@@ -35,7 +37,12 @@ abstract class SearchChore(queryMap: HashMap<*, *>) : Runnable {
 
         private val timeToLive = TimeUnit.HOURS.toMillis(1)
 
-        fun expirationTime(): Date? = endTime?.withDurationAdded(timeToLive, 1)?.toDate()
+        fun expirationTime(): Date? =
+            if (lastAccessed != null) {
+                lastAccessed?.withDurationAdded(timeToLive, 1)?.toDate()
+            } else {
+                endTime?.withDurationAdded(timeToLive, 1)?.toDate()
+            }
     }
 
     enum class State {
