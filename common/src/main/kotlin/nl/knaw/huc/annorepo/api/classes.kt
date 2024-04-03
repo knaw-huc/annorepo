@@ -67,6 +67,7 @@ data class SearchStatusSummary(
     val query: HashMap<*, *>,
     val startedAt: Date,
     val finishedAt: Date?,
+    val lastAccessedAt: Date?,
     val expiresAfter: Date?,
     val state: String,
     val containersSearched: Int,

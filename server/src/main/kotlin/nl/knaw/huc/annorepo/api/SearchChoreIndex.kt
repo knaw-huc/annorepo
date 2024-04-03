@@ -1,6 +1,7 @@
 package nl.knaw.huc.annorepo.api
 
 import java.util.Date
+import org.joda.time.Instant
 import nl.knaw.huc.annorepo.resources.tools.SearchChore
 
 object SearchChoreIndex {
@@ -10,6 +11,10 @@ object SearchChoreIndex {
     operator fun get(id: String): SearchChore? = index[id]
     operator fun set(id: String, value: SearchChore) {
         index[id] = value
+    }
+
+    fun ping(id: String) {
+        index[id]?.status?.let { it.lastAccessed = Instant.now() }
     }
 
     fun purgeExpiredChores() {
