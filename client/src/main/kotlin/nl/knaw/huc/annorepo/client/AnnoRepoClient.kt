@@ -12,8 +12,8 @@ import arrow.core.Either
 import arrow.core.flatMap
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import org.apache.logging.log4j.kotlin.logger
@@ -111,12 +111,12 @@ class AnnoRepoClient @JvmOverloads constructor(
             },
             { getAboutResult ->
                 val aboutInfo = getAboutResult.aboutInfo
-                serverVersion = aboutInfo["version"].toString()
+                serverVersion = aboutInfo["version"]?.toString() ?: "unknown"
                 serverNeedsAuthentication = aboutInfo["withAuthentication"].toString().toBoolean()
-                grpcPort = aboutInfo["grpcPort"].toString().toInt()
+                grpcPort = aboutInfo["grpcPort"]?.toString()?.toInt()
 //                grpcHost = URI(aboutInfo.baseURI).host
-                grpcHost = aboutInfo["grpcHostName"].toString()
-                logger.info { "$serverURI runs version $serverVersion ; authentication needed for write actions: $serverNeedsAuthentication; gRPC port: $grpcPort" }
+                grpcHost = aboutInfo["grpcHostName"]?.toString() ?: URI(aboutInfo["baseURI"].toString()).host
+                logger.info { "$serverURI runs version $serverVersion ; needs authentication: $serverNeedsAuthentication; gRPC port: ${grpcPort ?: "unknown"}" }
             })
     }
 
@@ -1021,7 +1021,7 @@ class AnnoRepoClient @JvmOverloads constructor(
     )
 
     companion object {
-        private val oMapper: ObjectMapper = ObjectMapper().registerKotlinModule()
+        private val oMapper: ObjectMapper = jacksonObjectMapper()
         private const val PROPERTY_FILE = "annorepo-client.properties"
         const val TWO_HUNDRED_MB = 200 * 1024 * 1024
 

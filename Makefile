@@ -93,6 +93,7 @@ version-update:
 	mvn clean install
 	mvn --projects client --also-make deploy -P release
 	open https://repo.maven.apache.org/maven2/io/github/knaw-huc/annorepo-client/
+	open https://central.sonatype.com/search?q=annorepo
 	@touch $@
 
 .PHONY: deploy
