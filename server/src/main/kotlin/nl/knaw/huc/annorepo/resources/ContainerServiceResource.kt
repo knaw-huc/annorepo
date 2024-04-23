@@ -38,6 +38,7 @@ import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
+import nl.knaw.huc.annorepo.api.AnnotationIdentifier
 import nl.knaw.huc.annorepo.api.AnnotationPage
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
@@ -310,6 +311,7 @@ class ContainerServiceResource(
         return Response.ok(body).build()
     }
 
+    @OptIn(ExperimentalStdlibApi::class)
     @Operation(description = "Add an index")
     @Timed
     @PUT
@@ -403,7 +405,7 @@ class ContainerServiceResource(
     ): Response {
         context.checkUserHasEditRightsInThisContainer(containerName)
 
-        val annotationIdentifiers = containerDAO.addAnnotationsInBatch(containerName, annotations)
+        val annotationIdentifiers: List<AnnotationIdentifier> = containerDAO.addAnnotationsInBatch(containerName, annotations)
         return Response.ok(annotationIdentifiers).build()
     }
 

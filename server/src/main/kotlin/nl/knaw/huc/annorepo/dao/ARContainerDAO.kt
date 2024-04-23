@@ -76,27 +76,39 @@ class ARContainerDAO(configuration: AnnoRepoConfiguration, client: MongoClient) 
     ): List<AnnotationIdentifier> {
         val annotationIdentifiers = mutableListOf<AnnotationIdentifier>()
         val container = getCollection(containerName)
-        for (i in annotations.indices) {
-            val annotationName = UUID.randomUUID().toString()
-            annotationIdentifiers.add(
-                AnnotationIdentifier(
-                    containerName = containerName,
-                    annotationName = annotationName,
-                    etag = makeAnnotationETag(containerName, annotationName).value
+        val annotationsWithViaField = annotations
+            .onEach {
+                val annotationName = UUID.randomUUID().toString()
+                annotationIdentifiers.add(
+                    AnnotationIdentifier(
+                        containerName = containerName,
+                        annotationName = annotationName,
+                        etag = makeAnnotationETag(containerName, annotationName).value
+                    )
                 )
-            )
-        }
-        val documents = annotations.mapIndexed { index, annotationMap ->
-            val name = annotationIdentifiers[index].annotationName
-            Document(ARConst.ANNOTATION_NAME_FIELD, name).append(ARConst.ANNOTATION_FIELD, Document(annotationMap))
-        }
+            }
+            .map { annotation ->
+                annotation.toMutableMap()
+                    .apply {
+                        val originalId = get("id")
+                        if (originalId != null) {
+                            put("via", originalId)
+                        }
+                    }
+            }
+        val documents = annotationsWithViaField
+            .mapIndexed { index, annotationMap ->
+                val name = annotationIdentifiers[index].annotationName
+                Document(ARConst.ANNOTATION_NAME_FIELD, name)
+                    .append(ARConst.ANNOTATION_FIELD, Document(annotationMap))
+            }
         container.insertMany(documents)
 
-        val fields = mutableListOf<String>()
-        for (annotation in annotations) {
-            val annotationJson = ObjectMapper().writeValueAsString(annotation)
-            fields.addAll(JsonLdUtils.extractFields(annotationJson).toSet())
-        }
+        val fields: List<String> = annotationsWithViaField
+            .map { annotation -> ObjectMapper().writeValueAsString(annotation) }
+            .flatMap { jsonString -> JsonLdUtils.extractFields(jsonString) }
+            .toSet()
+            .sorted()
         updateFieldCount(containerName, fields, emptySet())
         return annotationIdentifiers
     }
