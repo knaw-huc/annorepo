@@ -338,6 +338,7 @@ class ContainerServiceResource(
         return Response.ok(body).build()
     }
 
+    @OptIn(ExperimentalStdlibApi::class)
     @Operation(description = "Add an index")
     @Timed
     @PUT
