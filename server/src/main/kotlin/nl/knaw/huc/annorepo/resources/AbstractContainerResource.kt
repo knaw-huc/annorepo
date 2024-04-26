@@ -31,11 +31,10 @@ abstract class AbstractContainerResource(
     protected fun SecurityContext.checkUserHasReadRightsInThisContainer(containerName: String) {
         checkContainerExists(containerName)
         val anonymousHasAccess = checkContainerIsReadOnlyForAnonymous(containerName)
-        if (configuration.withAuthentication) {
+        if (!anonymousHasAccess && configuration.withAuthentication) {
             containerAccessChecker.checkUserHasReadRightsInThisContainer(
                 userPrincipal,
-                containerName,
-                anonymousHasAccess
+                containerName
             )
         }
     }

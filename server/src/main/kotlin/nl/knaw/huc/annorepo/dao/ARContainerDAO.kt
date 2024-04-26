@@ -3,8 +3,9 @@ package nl.knaw.huc.annorepo.dao
 import java.util.SortedMap
 import java.util.UUID
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.github.benmanes.caffeine.cache.Cache
-import com.github.benmanes.caffeine.cache.Caffeine
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
+import com.google.common.cache.LoadingCache
 import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
@@ -29,8 +30,10 @@ class ARContainerDAO(configuration: AnnoRepoConfiguration, client: MongoClient) 
     val log: Logger = LoggerFactory.getLogger(ARContainerDAO::class.java)
 
     private val mdb: MongoDatabase = client.getDatabase(configuration.databaseName)
-    private val distinctValuesCache: Cache<String, List<Any>> =
-        Caffeine.newBuilder().maximumSize(MAX_CACHE_SIZE).build()
+
+    private val distinctValuesCache: LoadingCache<String, List<Any>> = CacheBuilder.newBuilder()
+        .maximumSize(MAX_CACHE_SIZE)
+        .build(CacheLoader.from { _: String -> null })
 
     override fun getCollection(containerName: String): MongoCollection<Document> = mdb.getCollection(containerName)
 
@@ -73,27 +76,39 @@ class ARContainerDAO(configuration: AnnoRepoConfiguration, client: MongoClient) 
     ): List<AnnotationIdentifier> {
         val annotationIdentifiers = mutableListOf<AnnotationIdentifier>()
         val container = getCollection(containerName)
-        for (i in annotations.indices) {
-            val annotationName = UUID.randomUUID().toString()
-            annotationIdentifiers.add(
-                AnnotationIdentifier(
-                    containerName = containerName,
-                    annotationName = annotationName,
-                    etag = makeAnnotationETag(containerName, annotationName).value
+        val annotationsWithViaField = annotations
+            .onEach {
+                val annotationName = UUID.randomUUID().toString()
+                annotationIdentifiers.add(
+                    AnnotationIdentifier(
+                        containerName = containerName,
+                        annotationName = annotationName,
+                        etag = makeAnnotationETag(containerName, annotationName).value
+                    )
                 )
-            )
-        }
-        val documents = annotations.mapIndexed { index, annotationMap ->
-            val name = annotationIdentifiers[index].annotationName
-            Document(ARConst.ANNOTATION_NAME_FIELD, name).append(ARConst.ANNOTATION_FIELD, Document(annotationMap))
-        }
+            }
+            .map { annotation ->
+                annotation.toMutableMap()
+                    .apply {
+                        val originalId = get("id")
+                        if (originalId != null) {
+                            put("via", originalId)
+                        }
+                    }
+            }
+        val documents = annotationsWithViaField
+            .mapIndexed { index, annotationMap ->
+                val name = annotationIdentifiers[index].annotationName
+                Document(ARConst.ANNOTATION_NAME_FIELD, name)
+                    .append(ARConst.ANNOTATION_FIELD, Document(annotationMap))
+            }
         container.insertMany(documents)
 
-        val fields = mutableListOf<String>()
-        for (annotation in annotations) {
-            val annotationJson = ObjectMapper().writeValueAsString(annotation)
-            fields.addAll(JsonLdUtils.extractFields(annotationJson).toSet())
-        }
+        val fields: List<String> = annotationsWithViaField
+            .map { annotation -> ObjectMapper().writeValueAsString(annotation) }
+            .flatMap { jsonString -> JsonLdUtils.extractFields(jsonString) }
+            .toSet()
+            .sorted()
         updateFieldCount(containerName, fields, emptySet())
         return annotationIdentifiers
     }

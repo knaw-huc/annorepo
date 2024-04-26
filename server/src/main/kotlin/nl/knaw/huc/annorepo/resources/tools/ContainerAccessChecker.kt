@@ -13,29 +13,26 @@ class ContainerAccessChecker(private val containerUserDAO: ContainerUserDAO) {
     val log: Logger = LoggerFactory.getLogger(javaClass)
 
     fun checkUserHasAdminRightsInThisContainer(userPrincipal: Principal?, containerName: String) {
-        checkUserRightsInThisContainer(userPrincipal, containerName, setOf(Role.ADMIN), false)
+        checkUserRightsInThisContainer(userPrincipal, containerName, setOf(Role.ADMIN))
     }
 
     fun checkUserHasEditRightsInThisContainer(userPrincipal: Principal?, containerName: String) {
-        checkUserRightsInThisContainer(userPrincipal, containerName, setOf(Role.ADMIN, Role.EDITOR), false)
+        checkUserRightsInThisContainer(userPrincipal, containerName, setOf(Role.ADMIN, Role.EDITOR))
     }
 
     fun checkUserHasReadRightsInThisContainer(
         userPrincipal: Principal?,
-        containerName: String,
-        anonymousHasAccess: Boolean
+        containerName: String
     ) = checkUserRightsInThisContainer(
         userPrincipal,
         containerName,
-        setOf(Role.ADMIN, Role.EDITOR, Role.GUEST),
-        anonymousHasAccess
+        setOf(Role.ADMIN, Role.EDITOR, Role.GUEST)
     )
 
     private fun checkUserRightsInThisContainer(
         userPrincipal: Principal?,
         containerName: String,
-        rolesWithAccessRights: Set<Role>,
-        anonymousHasAccess: Boolean = false,
+        rolesWithAccessRights: Set<Role>
     ) {
 //        log.info("userPrincipal={}", userPrincipal)
 //        log.info("anonymousHasAccess={}", anonymousHasAccess)
@@ -52,9 +49,7 @@ class ContainerAccessChecker(private val containerUserDAO: ContainerUserDAO) {
             throw NotAuthorizedException("User $userName does not have access rights to this endpoint")
         }
 
-        if (!anonymousHasAccess) {
-            throw NotAuthorizedException("No authentication found")
-        }
+        throw NotAuthorizedException("No authentication found")
     }
 
 }

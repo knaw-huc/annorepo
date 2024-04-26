@@ -34,6 +34,8 @@ import nl.knaw.huc.annorepo.api.AnnotationPage
 import nl.knaw.huc.annorepo.api.PropertySet
 import nl.knaw.huc.annorepo.api.ResourcePaths.CUSTOM_QUERY
 import nl.knaw.huc.annorepo.api.ResourcePaths.GLOBAL_SERVICES
+import nl.knaw.huc.annorepo.api.ResourcePaths.SEARCH
+import nl.knaw.huc.annorepo.api.ResourcePaths.STATUS
 import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 import nl.knaw.huc.annorepo.api.optional
 import nl.knaw.huc.annorepo.api.required
@@ -108,6 +110,7 @@ class GlobalServiceResource(
         @QueryParam("page") page: Int = 0
     ): Response {
         val searchChoreStatus = searchManager.getSearchChore(searchId)?.status ?: throw NotFoundException()
+        searchManager.ping(searchId)
         return when (searchChoreStatus.state) {
             SearchChore.State.DONE -> annotationPageResponse(searchChoreStatus, page, searchId)
             SearchChore.State.FAILED -> serverErrorResponse(searchChoreStatus)
@@ -118,7 +121,7 @@ class GlobalServiceResource(
     @Operation(description = "Get information about the given global search")
     @Timed
     @GET
-    @Path("search/{searchId}/status")
+    @Path("$SEARCH/{searchId}/$STATUS")
     fun getSearchStatus(
         @PathParam("searchId") searchId: String,
         @Context context: SecurityContext,
