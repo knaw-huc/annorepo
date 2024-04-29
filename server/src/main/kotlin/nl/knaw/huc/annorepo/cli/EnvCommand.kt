@@ -6,6 +6,7 @@ import net.sourceforge.argparse4j.inf.Namespace
 import net.sourceforge.argparse4j.inf.Subparser
 import nl.knaw.huc.annorepo.api.ARConst
 
+@OptIn(ExperimentalStdlibApi::class)
 class EnvCommand : Command("env", "Shows the environment variables you can use") {
     override fun configure(subparser: Subparser?) {
 
