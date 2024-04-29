@@ -16,6 +16,7 @@ class AnnoRepoConfigurationTest {
         assertThat(c).isNotNull
     }
 
+    @OptIn(ExperimentalStdlibApi::class)
     @Test
     fun `all AR_ env variables in config yml are also in ARConst EnvironmentVariable`() {
         val text = Path.of("../config.yml").toFile().readText()
