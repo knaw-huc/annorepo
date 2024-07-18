@@ -281,12 +281,9 @@ class ContainerServiceResource(
     ): Response {
         context.checkUserHasReadRightsInThisContainer(containerName)
         val cacheKey = "$containerName:$queryName:${page}"
-        val optionalCursor = mongoCursorCache.getIfPresent(cacheKey)
-        var cursor: MongoCursor<Document>? = null
-        if (optionalCursor != null) {
+        val cursor = mongoCursorCache.getIfPresent(cacheKey)?.also {
             logger.info { "using cached cursor $cacheKey" }
-            cursor = optionalCursor
-        } else {
+        } ?: run {
             logger.info { "creating new cursor" }
             val customQuery = customQueryDAO.getByName(queryName)
                 ?: throw NotFoundException("No custom query '$queryName' found")
@@ -306,28 +303,24 @@ class ContainerServiceResource(
                     add(Aggregates.skip(page * configuration.pageSize))
                 }
 
-            cursor = containerDAO
+            containerDAO
                 .getCollection(containerName)
                 .aggregate(aggregateStages)
                 .cursor()
+
         }
-        var goOn = cursor != null
-        val annotations = mutableListOf<WebAnnotationAsMap>()
-        while (goOn) {
-            if (cursor!!.hasNext()) {
-                annotations.add(toAnnotationMap(cursor.next(), containerName))
-            } else {
-                goOn = false
-            }
-            goOn = goOn && annotations.size < configuration.pageSize
-        }
-        if (cursor?.hasNext() == true) {
+        val annotations = cursor.asSequence()
+            .take(configuration.pageSize)
+            .map { toAnnotationMap(it, containerName) }
+            .toList()
+
+        if (cursor.hasNext()) {
             val nextCacheKey = "$containerName:$queryName:${page + 1}"
             logger.info { "storing cursor $nextCacheKey" }
             mongoCursorCache.put(nextCacheKey, cursor)
             mongoCursorCache.invalidate(cacheKey)
         } else {
-            cursor?.close()
+            cursor.close()
         }
 
         val annotationPage =
@@ -335,7 +328,7 @@ class ContainerServiceResource(
                 uriFactory.customContainerQueryURL(containerName, queryName),
                 annotations,
                 page,
-                hasNext = cursor?.hasNext() ?: false
+                hasNext = cursor.hasNext()
             )
         return Response.ok(annotationPage)
             .link(uriFactory.customQueryURL(queryName), "using")
