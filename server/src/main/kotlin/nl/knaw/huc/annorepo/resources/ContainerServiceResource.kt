@@ -27,7 +27,9 @@ import com.codahale.metrics.annotation.Timed
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
+import com.google.common.cache.RemovalListener
 import com.mongodb.client.MongoCollection
+import com.mongodb.client.MongoCursor
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Aggregates.limit
 import com.mongodb.client.model.Filters
@@ -92,6 +94,19 @@ class ContainerServiceResource(
     private val queryCache: LoadingCache<String, QueryCacheItem> = CacheBuilder.newBuilder()
         .maximumSize(1000)
         .expireAfterAccess(1, TimeUnit.HOURS)
+        .build(CacheLoader.from { _: String -> null })
+
+    private val mongoCursorRemovalListener =
+        RemovalListener<String, MongoCursor<Document>> { removal ->
+            val cursor = removal.value
+            logger.info { "removing ${removal.key} from cache" }
+            logger.info { "closing cursor ${removal.key}" }
+            cursor?.close()
+        }
+    private val mongoCursorCache: LoadingCache<String, MongoCursor<Document>> = CacheBuilder.newBuilder()
+        .maximumSize(1000)
+        .expireAfterAccess(1, TimeUnit.HOURS)
+        .removalListener(mongoCursorRemovalListener)
         .build(CacheLoader.from { _: String -> null })
 
     @Operation(description = "Turn read-only access to this container for anonymous users on or off")
@@ -175,7 +190,7 @@ class ContainerServiceResource(
         try {
             val queryMap: QueryAsMap = Json.createReader(StringReader(queryJson)).readObject().toMap().simplify()
             val aggregateStages = queryMap
-                .map { (k, v) -> aggregateStageGenerator.generateStage(k, v!!) }
+                .map { (k, v) -> aggregateStageGenerator.generateStage(k, v) }
                 .toList()
 
             val id = UUID.randomUUID().toString()
@@ -205,10 +220,10 @@ class ContainerServiceResource(
 
         var queryCacheItem = getQueryCacheItem(searchId)
         if (queryCacheItem.count < 1) {
-            val count = containerDAO.getCollection(containerName)
-                .aggregate(queryCacheItem.aggregateStages)
-                .count()
-            val newQueryCacheItem = QueryCacheItem(queryCacheItem.queryMap, queryCacheItem.aggregateStages, count)
+//            val count = containerDAO.getCollection(containerName)
+//                .aggregate(queryCacheItem.aggregateStages)
+//                .count()
+            val newQueryCacheItem = QueryCacheItem(queryCacheItem.queryMap, queryCacheItem.aggregateStages, 1)
             queryCacheItem = newQueryCacheItem
             queryCache.put(searchId, newQueryCacheItem)
         }
@@ -224,7 +239,12 @@ class ContainerServiceResource(
                 .map { a -> toAnnotationMap(a, containerName) }
                 .toList()
         val annotationPage =
-            buildAnnotationPage(uriFactory.searchURL(containerName, searchId), annotations, page, queryCacheItem.count)
+            buildAnnotationPage(
+                uriFactory.searchURL(containerName, searchId),
+                annotations,
+                page,
+                hasNext = annotations.size == configuration.pageSize
+            )
         return Response.ok(annotationPage).build()
     }
 
@@ -260,19 +280,71 @@ class ContainerServiceResource(
         @Context context: SecurityContext,
     ): Response {
         context.checkUserHasReadRightsInThisContainer(containerName)
-        val customQuery = customQueryDAO.getByName(queryName)
-            ?: throw NotFoundException("No custom query '$queryName' found")
-        if (!customQuery.public && customQuery.createdBy != context.userPrincipal?.name) {
-            throw ForbiddenException("Custom query '$queryName' is not for public use")
+        val cacheKey = "$containerName:$queryName:${page}"
+        val optionalCursor = mongoCursorCache.getIfPresent(cacheKey)
+        var cursor: MongoCursor<Document>? = null
+        if (optionalCursor != null) {
+            logger.info { "using cached cursor $cacheKey" }
+            cursor = optionalCursor
+        } else {
+            logger.info { "creating new cursor" }
+            val customQuery = customQueryDAO.getByName(queryName)
+                ?: throw NotFoundException("No custom query '$queryName' found")
+            if (!customQuery.public && customQuery.createdBy != context.userPrincipal?.name) {
+                throw ForbiddenException("Custom query '$queryName' is not for public use")
+            }
+
+            logger.info { customQuery.queryTemplate }
+            val queryParams: Map<String, String> = mapOf()
+            val queryJson = expandQueryTemplate(customQuery.queryTemplate, queryParams)
+            val queryMap: QueryAsMap = Json.createReader(StringReader(queryJson)).readObject().toMap().simplify()
+            val aggregateStages = queryMap
+                .map { (k, v) -> aggregateStageGenerator.generateStage(k, v) }
+                .toList()
+                .toMutableList()
+                .apply {
+                    add(Aggregates.skip(page * configuration.pageSize))
+                }
+
+            cursor = containerDAO
+                .getCollection(containerName)
+                .aggregate(aggregateStages)
+                .cursor()
+        }
+        var goOn = cursor != null
+        val annotations = mutableListOf<WebAnnotationAsMap>()
+        while (goOn) {
+            if (cursor!!.hasNext()) {
+                annotations.add(toAnnotationMap(cursor.next(), containerName))
+            } else {
+                goOn = false
+            }
+            goOn = goOn && annotations.size < configuration.pageSize
+        }
+        if (cursor?.hasNext() == true) {
+            val nextCacheKey = "$containerName:$queryName:${page + 1}"
+            logger.info { "storing cursor $nextCacheKey" }
+            mongoCursorCache.put(nextCacheKey, cursor)
+            mongoCursorCache.invalidate(cacheKey)
+        } else {
+            cursor?.close()
         }
 
-        val total = 0
-        val annotations: AnnotationList = emptyList()
         val annotationPage =
-            buildAnnotationPage(uriFactory.customContainerQueryURL(containerName, queryName), annotations, page, total)
+            buildAnnotationPage(
+                uriFactory.customContainerQueryURL(containerName, queryName),
+                annotations,
+                page,
+                hasNext = cursor?.hasNext() ?: false
+            )
         return Response.ok(annotationPage)
             .link(uriFactory.customQueryURL(queryName), "using")
             .build()
+    }
+
+    private fun expandQueryTemplate(queryTemplate: String, queryParams: Map<String, String>): String {
+        // TODO: substitute variables in queryTemplate for corresponding queryParam values
+        return queryTemplate
     }
 
     @Operation(description = "Get a list of the fields used in the annotations in a container")
@@ -436,7 +508,8 @@ class ContainerServiceResource(
     ): Response {
         context.checkUserHasEditRightsInThisContainer(containerName)
 
-        val annotationIdentifiers: List<AnnotationIdentifier> = containerDAO.addAnnotationsInBatch(containerName, annotations)
+        val annotationIdentifiers: List<AnnotationIdentifier> =
+            containerDAO.addAnnotationsInBatch(containerName, annotations)
         return Response.ok(annotationIdentifiers).build()
     }
 
@@ -483,7 +556,7 @@ class ContainerServiceResource(
             ?: throw NotFoundException("No search results found for this search id. The search might have expired.")
 
     private fun buildAnnotationPage(
-        searchUri: URI, annotations: AnnotationList, page: Int, total: Int,
+        searchUri: URI, annotations: AnnotationList, page: Int, hasNext: Boolean = true,
     ): AnnotationPage {
         val prevPage = if (page > 0) {
             page - 1
@@ -491,7 +564,7 @@ class ContainerServiceResource(
             null
         }
         val startIndex = configuration.pageSize * page
-        val nextPage = if (startIndex + annotations.size < total) {
+        val nextPage = if (hasNext) {
             page + 1
         } else {
             null

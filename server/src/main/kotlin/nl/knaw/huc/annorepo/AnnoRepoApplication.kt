@@ -87,6 +87,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         return JobsBundle(expiredChoresCleanerJob)
     }
 
+    @OptIn(ExperimentalStdlibApi::class)
     override fun run(configuration: AnnoRepoConfiguration?, environment: Environment) {
         val maxEnvVarLen = max(EnvironmentVariable.entries.map { it.name.length })
         log.info(
