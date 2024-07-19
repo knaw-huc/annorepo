@@ -47,6 +47,7 @@ import nl.knaw.huc.annorepo.dao.CustomQueryDAO
 import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
 import nl.knaw.huc.annorepo.resources.tools.AnnotationList
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
+import nl.knaw.huc.annorepo.resources.tools.CustomQueryTools
 import nl.knaw.huc.annorepo.resources.tools.SearchChore
 import nl.knaw.huc.annorepo.resources.tools.SearchManager
 import nl.knaw.huc.annorepo.service.UriFactory
@@ -124,7 +125,6 @@ class GlobalServiceResource(
     @Path("$SEARCH/{searchId}/$STATUS")
     fun getSearchStatus(
         @PathParam("searchId") searchId: String,
-        @Context context: SecurityContext,
     ): Response {
         val searchChore = searchManager.getSearchChore(searchId) ?: throw NotFoundException()
         return Response.ok(searchChore.status.summary()).build()
@@ -165,8 +165,25 @@ class GlobalServiceResource(
         @Context context: SecurityContext,
     ): Response {
         context.checkUserHasAdminRights()
-        val customQuery = customQueryDAO.getByName(customQueryName)
+        val customQuery = customQueryDAO.getByName(customQueryName) ?: throw NotFoundException()
         return Response.ok(customQuery).build()
+    }
+
+    @Operation(description = "Show custom query with parameters filled in")
+    @Timed
+    @GET
+    @Path("$CUSTOM_QUERY/{customQueryCall}/expand")
+    @Consumes(APPLICATION_JSON)
+    fun getExpandedCustomQuery(
+        @PathParam("customQueryCall") customQueryCall: String,
+        @Context context: SecurityContext,
+    ): Response {
+        context.checkUserHasAdminRights()
+        val (customQueryName, parameters) = CustomQueryTools.decode(customQueryCall)
+            .getOrElse { throw BadRequestException(it.message) }
+        val customQuery = customQueryDAO.getByName(customQueryName) ?: throw NotFoundException()
+        val expanded = CustomQueryTools.expandQueryTemplate(customQuery.queryTemplate, parameters)
+        return Response.ok(expanded).build()
     }
 
     @Operation(description = "List all custom queries")

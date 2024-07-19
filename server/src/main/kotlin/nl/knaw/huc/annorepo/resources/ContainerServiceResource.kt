@@ -70,6 +70,7 @@ import nl.knaw.huc.annorepo.dao.CustomQueryDAO
 import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
 import nl.knaw.huc.annorepo.resources.tools.AnnotationList
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
+import nl.knaw.huc.annorepo.resources.tools.CustomQueryTools
 import nl.knaw.huc.annorepo.resources.tools.IndexManager
 import nl.knaw.huc.annorepo.resources.tools.QueryCacheItem
 import nl.knaw.huc.annorepo.resources.tools.simplify
@@ -261,7 +262,7 @@ class ContainerServiceResource(
 
         val queryCacheItem = getQueryCacheItem(searchId)
 //        val info = mapOf("query" to queryCacheItem.queryMap, "hits" to queryCacheItem.count)
-        val query = queryCacheItem.queryMap as QueryAsMap
+        val query = queryCacheItem.queryMap
         val searchInfo = SearchInfo(
             query = query,
             hits = queryCacheItem.count
@@ -272,50 +273,26 @@ class ContainerServiceResource(
     @Operation(description = "Get the results of the given custom query")
     @Timed
     @GET
-    @Path("{containerName}/${CUSTOM_QUERY}/{queryName}")
+    @Path("{containerName}/${CUSTOM_QUERY}/{queryCall}")
     fun getCustomQueryResultPage(
         @PathParam("containerName") containerName: String,
-        @PathParam("queryName") queryName: String,
+        @PathParam("queryCall") queryCall: String,
         @QueryParam("page") page: Int = 0,
         @Context context: SecurityContext,
     ): Response {
         context.checkUserHasReadRightsInThisContainer(containerName)
-        val cacheKey = "$containerName:$queryName:${page}"
+        val cacheKey = "$containerName:$queryCall:${page}"
         val cursor = mongoCursorCache.getIfPresent(cacheKey)?.also {
             logger.info { "using cached cursor $cacheKey" }
-        } ?: run {
-            logger.info { "creating new cursor" }
-            val customQuery = customQueryDAO.getByName(queryName)
-                ?: throw NotFoundException("No custom query '$queryName' found")
-            if (!customQuery.public && customQuery.createdBy != context.userPrincipal?.name) {
-                throw ForbiddenException("Custom query '$queryName' is not for public use")
-            }
+        } ?: createCursor(context, containerName, queryCall, page)
 
-            logger.info { customQuery.queryTemplate }
-            val queryParams: Map<String, String> = mapOf()
-            val queryJson = expandQueryTemplate(customQuery.queryTemplate, queryParams)
-            val queryMap: QueryAsMap = Json.createReader(StringReader(queryJson)).readObject().toMap().simplify()
-            val aggregateStages = queryMap
-                .map { (k, v) -> aggregateStageGenerator.generateStage(k, v) }
-                .toList()
-                .toMutableList()
-                .apply {
-                    add(Aggregates.skip(page * configuration.pageSize))
-                }
-
-            containerDAO
-                .getCollection(containerName)
-                .aggregate(aggregateStages)
-                .cursor()
-
-        }
         val annotations = cursor.asSequence()
             .take(configuration.pageSize)
             .map { toAnnotationMap(it, containerName) }
             .toList()
 
         if (cursor.hasNext()) {
-            val nextCacheKey = "$containerName:$queryName:${page + 1}"
+            val nextCacheKey = "$containerName:$queryCall:${page + 1}"
             logger.info { "storing cursor $nextCacheKey" }
             mongoCursorCache.put(nextCacheKey, cursor)
             mongoCursorCache.invalidate(cacheKey)
@@ -325,19 +302,46 @@ class ContainerServiceResource(
 
         val annotationPage =
             buildAnnotationPage(
-                uriFactory.customContainerQueryURL(containerName, queryName),
+                uriFactory.customContainerQueryURL(containerName, queryCall),
                 annotations,
                 page,
                 hasNext = cursor.hasNext()
             )
         return Response.ok(annotationPage)
-            .link(uriFactory.customQueryURL(queryName), "using")
+            .link(uriFactory.customQueryURL(queryCall), "using")
             .build()
     }
 
-    private fun expandQueryTemplate(queryTemplate: String, queryParams: Map<String, String>): String {
-        // TODO: substitute variables in queryTemplate for corresponding queryParam values
-        return queryTemplate
+    private fun createCursor(
+        context: SecurityContext,
+        containerName: String,
+        queryCall: String,
+        page: Int
+    ): MongoCursor<Document> {
+        logger.info { "creating new cursor" }
+        val (queryName, queryParameters) = CustomQueryTools.decode(queryCall)
+            .getOrElse { throw BadRequestException(it.message) }
+        val customQuery = customQueryDAO.getByName(queryName)
+            ?: throw NotFoundException("No custom query '$queryCall' found")
+        if (!customQuery.public && customQuery.createdBy != context.userPrincipal?.name) {
+            throw ForbiddenException("Custom query '$queryCall' is not for public use")
+        }
+
+        logger.info { customQuery.queryTemplate }
+        val queryJson = CustomQueryTools.expandQueryTemplate(customQuery.queryTemplate, queryParameters)
+        val queryMap: QueryAsMap = Json.createReader(StringReader(queryJson)).readObject().toMap().simplify()
+        val aggregateStages = queryMap
+            .map { (k, v) -> aggregateStageGenerator.generateStage(k, v) }
+            .toList()
+            .toMutableList()
+            .apply {
+                add(Aggregates.skip(page * configuration.pageSize))
+            }
+
+        return containerDAO
+            .getCollection(containerName)
+            .aggregate(aggregateStages)
+            .cursor()
     }
 
     @Operation(description = "Get a list of the fields used in the annotations in a container")
