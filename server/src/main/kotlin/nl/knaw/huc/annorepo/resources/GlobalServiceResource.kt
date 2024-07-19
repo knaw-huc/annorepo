@@ -48,6 +48,9 @@ import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
 import nl.knaw.huc.annorepo.resources.tools.AnnotationList
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.CustomQueryTools
+import nl.knaw.huc.annorepo.resources.tools.CustomQueryTools.extractParameterNames
+import nl.knaw.huc.annorepo.resources.tools.CustomQueryTools.interpolate
+import nl.knaw.huc.annorepo.resources.tools.CustomQueryTools.isValidQueryName
 import nl.knaw.huc.annorepo.resources.tools.SearchChore
 import nl.knaw.huc.annorepo.resources.tools.SearchManager
 import nl.knaw.huc.annorepo.service.UriFactory
@@ -145,9 +148,15 @@ class GlobalServiceResource(
         if (customQueryDAO.nameIsTaken(name)) {
             throw BadRequestException("A custom query with the name '$name' already exists")
         }
+        if (!name.isValidQueryName()) {
+            throw BadRequestException("'$name' is invalid; the query name should contain alphanumerics only")
+        }
+        val queryTemplate = objectMapper.writeValueAsString(query)
+        val parameters = queryTemplate.extractParameterNames()
         val customQuery = CustomQuery(
             name = name,
-            queryTemplate = objectMapper.writeValueAsString(query),
+            queryTemplate = queryTemplate,
+            parameters = parameters,
             createdBy = userName,
             public = public ?: true
         )
@@ -182,7 +191,11 @@ class GlobalServiceResource(
         val (customQueryName, parameters) = CustomQueryTools.decode(customQueryCall)
             .getOrElse { throw BadRequestException(it.message) }
         val customQuery = customQueryDAO.getByName(customQueryName) ?: throw NotFoundException()
-        val expanded = CustomQueryTools.expandQueryTemplate(customQuery.queryTemplate, parameters)
+        val missingParameters = customQuery.parameters.toSet() - parameters.keys
+        if (missingParameters.isNotEmpty()) {
+            throw BadRequestException("No values given for parameter(s): $missingParameters")
+        }
+        val expanded = customQuery.queryTemplate.interpolate(parameters)
         return Response.ok(expanded).build()
     }
 

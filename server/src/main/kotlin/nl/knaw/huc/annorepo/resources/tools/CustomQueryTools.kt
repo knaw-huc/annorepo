@@ -2,6 +2,7 @@ package nl.knaw.huc.annorepo.resources.tools
 
 import kotlin.Result.Companion.failure
 import kotlin.Result.Companion.success
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.commons.text.StringEscapeUtils
 import org.apache.jena.ext.xerces.impl.dv.util.Base64
 import nl.knaw.huc.annorepo.api.isValidContainerName
@@ -56,13 +57,26 @@ object CustomQueryTools {
     fun String.isValidQueryName(): Boolean = isValidContainerName()
     fun String.isValidParameterName(): Boolean = isValidContainerName()
 
-    fun expandQueryTemplate(queryTemplate: String, queryParameters: Map<String, String>): String {
-        var expanded = queryTemplate
-        queryParameters.forEach { (k, v) ->
-            expanded = expanded.replace("<$k>", StringEscapeUtils.escapeJson(v))
+    fun String.isValidQueryTemplate(): Boolean {
+        try {
+            ObjectMapper().readValue(this, HashMap::class.java)
+        } catch (e: Exception) {
+            return false
         }
-        return expanded
+        return true
     }
+
+    private const val PATTERN = "<([A-Za-z0-9_-]+)>"
+    fun String.extractParameterNames(): List<String> =
+        Regex(PATTERN)
+            .findAll(this)
+            .mapNotNull { it.groups[1]?.value }
+            .toList()
+
+    fun String.interpolate(queryParameters: Map<String, String>): String =
+        queryParameters.entries.fold(this) { expanded, (k, v) ->
+            expanded.replace("<$k>", StringEscapeUtils.escapeJson(v))
+        }
 
 }
 

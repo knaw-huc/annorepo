@@ -3,6 +3,8 @@ package nl.knaw.huc.annorepo.resources.tools
 import kotlin.test.assertEquals
 import org.junit.jupiter.api.Test
 import nl.knaw.huc.annorepo.resources.tools.CustomQueryTools.CustomQueryCall
+import nl.knaw.huc.annorepo.resources.tools.CustomQueryTools.extractParameterNames
+import nl.knaw.huc.annorepo.resources.tools.CustomQueryTools.interpolate
 
 class CustomQueryToolsTest {
 
@@ -45,21 +47,42 @@ class CustomQueryToolsTest {
     }
 
     @Test
-    fun `test query template expansion`() {
+    fun `test parameter interpolation in template query`() {
         val template = """{"body.type":"<type>"}"""
         val expected = """{"body.type":"rp:Resolution"}"""
         val parameters = mapOf("type" to "rp:Resolution")
-        val expanded = CustomQueryTools.expandQueryTemplate(template, parameters)
+        val expanded = template.interpolate(parameters)
         assertEquals(expected, expanded)
     }
 
     @Test
-    fun `test special json characters are escaped in query template expansion`() {
+    fun `test special json characters are escaped in parameter interpolation`() {
         val template = """{"body.type":"<type>"}"""
         val expected = """{"body.type":"bla\";drop database;"}"""
         val parameters = mapOf("type" to """bla";drop database;""")
-        val expanded = CustomQueryTools.expandQueryTemplate(template, parameters)
+        val expanded = template.interpolate(parameters)
         assertEquals(expected, expanded)
+    }
+
+    @Test
+    fun `test parameterName extraction from template with parameters`() {
+        val template = """{
+            |"body.type": "<type>",
+            |"target.source": "<target_source>"
+            |}""".trimMargin()
+        val parameterNames = template.extractParameterNames()
+        val expected = listOf("type", "target_source")
+        assertEquals(expected, parameterNames)
+    }
+
+    @Test
+    fun `test parameterName extraction from template without parameters`() {
+        val template = """{
+            |"body.type": "Page"
+            |}""".trimMargin()
+        val parameterNames = template.extractParameterNames()
+        val expected = emptyList<String>()
+        assertEquals(expected, parameterNames)
     }
 
 }

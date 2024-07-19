@@ -13,5 +13,6 @@ data class CustomQuery(
 
     val createdBy: String = "",
     val public: Boolean = true,
-    val queryTemplate: String
+    val queryTemplate: String,
+    val parameters: List<String> = emptyList()
 )

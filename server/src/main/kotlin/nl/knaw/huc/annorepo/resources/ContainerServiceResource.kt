@@ -71,6 +71,7 @@ import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
 import nl.knaw.huc.annorepo.resources.tools.AnnotationList
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.CustomQueryTools
+import nl.knaw.huc.annorepo.resources.tools.CustomQueryTools.interpolate
 import nl.knaw.huc.annorepo.resources.tools.IndexManager
 import nl.knaw.huc.annorepo.resources.tools.QueryCacheItem
 import nl.knaw.huc.annorepo.resources.tools.simplify
@@ -328,7 +329,7 @@ class ContainerServiceResource(
         }
 
         logger.info { customQuery.queryTemplate }
-        val queryJson = CustomQueryTools.expandQueryTemplate(customQuery.queryTemplate, queryParameters)
+        val queryJson = customQuery.queryTemplate.interpolate(queryParameters)
         val queryMap: QueryAsMap = Json.createReader(StringReader(queryJson)).readObject().toMap().simplify()
         val aggregateStages = queryMap
             .map { (k, v) -> aggregateStageGenerator.generateStage(k, v) }
