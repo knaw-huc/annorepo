@@ -37,6 +37,14 @@ class CustomQueryToolsTest {
     }
 
     @Test
+    fun `test decode`() {
+        val encoded = "queryName:type=UmVzb2x1dGlvbg=="
+        val decoded = CustomQueryTools.decode(encoded).getOrThrow()
+        val expected = CustomQueryCall("queryName", mapOf("type" to "Resolution"))
+        assertEquals(expected, decoded)
+    }
+
+    @Test
     fun `test query template expansion`() {
         val template = """{"body.type":"<type>"}"""
         val expected = """{"body.type":"rp:Resolution"}"""

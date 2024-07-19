@@ -18,11 +18,13 @@ object CustomQueryTools {
     fun decode(customQueryCallString: String): Result<CustomQueryCall> {
         val parts = customQueryCallString.split(":")
         val name = parts[0]
-        return if (parts.size > 1) {
+        return if (parts.size <= 1) {
+            success(CustomQueryCall(name, emptyMap()))
+        } else {
             val errors = mutableListOf<String>()
             val encodedParams = parts[1].split(',')
             val parameters: Map<String, String> = encodedParams.associate { ep ->
-                val (parName, encodedValue) = ep.split("=")
+                val (parName, encodedValue) = ep.split("=", limit = 2)
                 val decoded = Base64.decode(encodedValue)
                 if (decoded == null) {
                     errors.add("bad Base64 value '$encodedValue' for parameter $parName")
@@ -35,8 +37,6 @@ object CustomQueryTools {
             } else {
                 success(CustomQueryCall(name, parameters))
             }
-        } else {
-            success(CustomQueryCall(name, emptyMap()))
         }
     }
 
