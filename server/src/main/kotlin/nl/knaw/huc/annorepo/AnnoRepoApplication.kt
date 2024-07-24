@@ -40,6 +40,7 @@ import nl.knaw.huc.annorepo.dao.ARContainerDAO
 import nl.knaw.huc.annorepo.dao.ARContainerUserDAO
 import nl.knaw.huc.annorepo.dao.ARCustomQueryDAO
 import nl.knaw.huc.annorepo.dao.ARUserDAO
+import nl.knaw.huc.annorepo.filters.CorsFilter
 import nl.knaw.huc.annorepo.filters.JSONPrettyPrintFilter
 import nl.knaw.huc.annorepo.grpc.AnnotationUploadService
 import nl.knaw.huc.annorepo.grpc.GrpcServerInterceptor
@@ -123,6 +124,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             .build()
 
         environment.jersey().apply {
+            register(CorsFilter())
             register(AboutResource(configuration, name, appVersion, mongoVersion))
             register(HomePageResource())
             register(W3CResource(configuration, containerDAO, containerUserDAO, uriFactory, indexManager))
