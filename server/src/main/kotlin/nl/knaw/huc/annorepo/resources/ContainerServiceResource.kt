@@ -292,11 +292,13 @@ class ContainerServiceResource(
             .map { toAnnotationMap(it, containerName) }
             .toList()
 
+        var hasNext = false
         if (cursor.hasNext()) {
             val nextCacheKey = "$containerName:$queryCall:${page + 1}"
             logger.info { "storing cursor $nextCacheKey" }
             mongoCursorCache.put(nextCacheKey, cursor)
             mongoCursorCache.invalidate(cacheKey)
+            hasNext = true
         } else {
             cursor.close()
         }
@@ -306,7 +308,7 @@ class ContainerServiceResource(
                 uriFactory.customContainerQueryURL(containerName, queryCall),
                 annotations,
                 page,
-                hasNext = cursor.hasNext()
+                hasNext = hasNext
             )
         return Response.ok(annotationPage)
             .link(uriFactory.customQueryURL(queryCall), "using")

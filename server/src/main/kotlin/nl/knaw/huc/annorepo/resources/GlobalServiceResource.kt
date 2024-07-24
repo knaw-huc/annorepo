@@ -4,7 +4,9 @@ import java.net.URI
 import jakarta.annotation.security.PermitAll
 import jakarta.ws.rs.BadRequestException
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
+import jakarta.ws.rs.NotAuthorizedException
 import jakarta.ws.rs.NotFoundException
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
@@ -39,6 +41,7 @@ import nl.knaw.huc.annorepo.api.ResourcePaths.STATUS
 import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 import nl.knaw.huc.annorepo.api.optional
 import nl.knaw.huc.annorepo.api.required
+import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
@@ -176,6 +179,25 @@ class GlobalServiceResource(
         context.checkUserHasAdminRights()
         val customQuery = customQueryDAO.getByName(customQueryName) ?: throw NotFoundException()
         return Response.ok(customQuery).build()
+    }
+
+    @Operation(description = "Delete a custom query")
+    @Timed
+    @DELETE
+    @Path("$CUSTOM_QUERY/{customQueryName}")
+    fun deleteCustomQuery(
+        @PathParam("customQueryName") customQueryName: String,
+        @Context context: SecurityContext,
+    ): Response {
+        context.checkUserHasAdminRights()
+        val customQuery = customQueryDAO.getByName(customQueryName) ?: throw NotFoundException()
+        val creatorName = customQuery.createdBy
+        val userName = context.userPrincipal.name
+        if (creatorName == userName || context.userPrincipal is RootUser) {
+            customQueryDAO.deleteByName(customQueryName)
+            return Response.noContent().build()
+        }
+        throw NotAuthorizedException("This user is not authorized to delete this custom query")
     }
 
     @Operation(description = "Show custom query with parameters filled in")

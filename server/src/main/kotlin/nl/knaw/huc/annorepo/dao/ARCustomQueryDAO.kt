@@ -29,4 +29,8 @@ class ARCustomQueryDAO(
         }
         customQueryCollection.insertOne(query)
     }
+
+    override fun deleteByName(customQueryName: String): Boolean {
+        return customQueryCollection.deleteOne(Filters.eq("name", customQueryName)).wasAcknowledged()
+    }
 }
