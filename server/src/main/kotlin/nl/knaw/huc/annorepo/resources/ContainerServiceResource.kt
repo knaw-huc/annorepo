@@ -50,6 +50,7 @@ import nl.knaw.huc.annorepo.api.IndexConfig
 import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.QueryAsMap
 import nl.knaw.huc.annorepo.api.ResourcePaths.ANNOTATIONS_BATCH
+import nl.knaw.huc.annorepo.api.ResourcePaths.COLLECTION
 import nl.knaw.huc.annorepo.api.ResourcePaths.CONTAINER_SERVICES
 import nl.knaw.huc.annorepo.api.ResourcePaths.CUSTOM_QUERY
 import nl.knaw.huc.annorepo.api.ResourcePaths.DISTINCT_FIELD_VALUES
@@ -307,7 +308,7 @@ class ContainerServiceResource(
         val (queryName, queryParameters) = CustomQueryTools.decode(queryCall)
             .getOrElse { throw BadRequestException(it.message) }
         val customQuery = customQueryDAO.getByName(queryName)
-            ?: throw NotFoundException("No custom query '$queryCall' found")
+            ?: throw NotFoundException("No custom query '$queryName' found")
 
         val annotationPage =
             buildAnnotationPage(
@@ -315,7 +316,8 @@ class ContainerServiceResource(
                 annotations,
                 page,
                 hasNext = hasNext,
-                collectionLabel = customQuery.label?.interpolate(queryParameters = queryParameters)
+                collectionLabel = customQuery.label?.interpolate(queryParameters = queryParameters),
+                collectionUrl = uriFactory.customContainerQueryCollectionURL(containerName, queryCall)
             )
         return Response.ok(annotationPage)
             .link(uriFactory.customQueryURL(queryName), "using")
@@ -323,36 +325,36 @@ class ContainerServiceResource(
             .build()
     }
 
-    private fun createCursor(
-        context: SecurityContext,
-        containerName: String,
-        queryCall: String,
-        page: Int
-    ): MongoCursor<Document> {
-        logger.info { "creating new cursor" }
+    @Operation(description = "Get the AnnotationCollection of the given custom query")
+    @Timed
+    @GET
+    @Path("{containerName}/${CUSTOM_QUERY}/{queryCall}/$COLLECTION")
+    fun getCustomQueryAnnotationCollection(
+        @PathParam("containerName") containerName: String,
+        @PathParam("queryCall") queryCall: String,
+        @Context context: SecurityContext,
+    ): Response {
+        context.checkUserHasReadRightsInThisContainer(containerName)
         val (queryName, queryParameters) = CustomQueryTools.decode(queryCall)
             .getOrElse { throw BadRequestException(it.message) }
         val customQuery = customQueryDAO.getByName(queryName)
-            ?: throw NotFoundException("No custom query '$queryCall' found")
-        if (!customQuery.public && customQuery.createdBy != context.userPrincipal?.name) {
-            throw ForbiddenException("Custom query '$queryCall' is not for public use")
-        }
+            ?: throw NotFoundException("No custom query '$queryName' found")
 
-        logger.info { customQuery.queryTemplate }
-        val queryJson = customQuery.queryTemplate.interpolate(queryParameters)
-        val queryMap: QueryAsMap = Json.createReader(StringReader(queryJson)).readObject().toMap().simplify()
-        val aggregateStages = queryMap
-            .map { (k, v) -> aggregateStageGenerator.generateStage(k, v) }
-            .toList()
-            .toMutableList()
-            .apply {
-                add(Aggregates.skip(page * configuration.pageSize))
-            }
-
-        return containerDAO
-            .getCollection(containerName)
-            .aggregate(aggregateStages)
-            .cursor()
+        val collection = mapOf(
+            "@context" to ANNO_JSONLD_URL,
+            "id" to uriFactory.customContainerQueryCollectionURL(containerName, queryCall),
+            "type" to "AnnotationCollection",
+            "label" to customQuery.label?.interpolate(queryParameters),
+            "creator" to customQuery.createdBy,
+//            "total" to total,
+            "first" to mapOf(
+                "id" to uriFactory.customContainerQueryURL(containerName, queryCall, 0),
+                "type" to "AnnotationPage"
+            ),
+//            "last" to "http://example.org/page42"
+        )
+        return Response.ok(collection)
+            .build()
     }
 
     @Operation(description = "Get a list of the fields used in the annotations in a container")
@@ -564,7 +566,12 @@ class ContainerServiceResource(
             ?: throw NotFoundException("No search results found for this search id. The search might have expired.")
 
     private fun buildAnnotationPage(
-        searchUri: URI, annotations: AnnotationList, page: Int, hasNext: Boolean = true, collectionLabel: String? = null
+        searchUri: URI,
+        annotations: AnnotationList,
+        page: Int,
+        hasNext: Boolean = true,
+        collectionLabel: String? = null,
+        collectionUrl: URI? = null
     ): AnnotationPage {
         val prevPage = if (page > 0) {
             page - 1
@@ -577,11 +584,12 @@ class ContainerServiceResource(
         } else {
             null
         }
+        val collectionId = collectionUrl?.toString() ?: searchUri.toString()
 
         return AnnotationPage(
             context = listOf(ANNO_JSONLD_URL),
             id = searchPageUri(searchUri, page),
-            partOf = annotationCollectionLink(id = searchUri.toString(), collectionLabel = collectionLabel),
+            partOf = annotationCollectionLink(id = collectionId, collectionLabel = collectionLabel),
             startIndex = startIndex,
             items = annotations,
             prev = if (prevPage != null) searchPageUri(searchUri, prevPage) else null,
@@ -609,6 +617,38 @@ class ContainerServiceResource(
                 { explain: true }
             )
         """.trimIndent()
+    }
+
+    private fun createCursor(
+        context: SecurityContext,
+        containerName: String,
+        queryCall: String,
+        page: Int
+    ): MongoCursor<Document> {
+        logger.info { "creating new cursor" }
+        val (queryName, queryParameters) = CustomQueryTools.decode(queryCall)
+            .getOrElse { throw BadRequestException(it.message) }
+        val customQuery = customQueryDAO.getByName(queryName)
+            ?: throw NotFoundException("No custom query '$queryName' found")
+        if (!customQuery.public && customQuery.createdBy != context.userPrincipal?.name) {
+            throw ForbiddenException("Custom query '$queryCall' is not for public use")
+        }
+
+        logger.info { customQuery.queryTemplate }
+        val queryJson = customQuery.queryTemplate.interpolate(queryParameters)
+        val queryMap: QueryAsMap = Json.createReader(StringReader(queryJson)).readObject().toMap().simplify()
+        val aggregateStages = queryMap
+            .map { (k, v) -> aggregateStageGenerator.generateStage(k, v) }
+            .toList()
+            .toMutableList()
+            .apply {
+                add(Aggregates.skip(page * configuration.pageSize))
+            }
+
+        return containerDAO
+            .getCollection(containerName)
+            .aggregate(aggregateStages)
+            .cursor()
     }
 
 }

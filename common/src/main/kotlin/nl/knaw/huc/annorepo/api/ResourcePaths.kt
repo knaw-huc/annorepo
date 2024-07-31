@@ -27,4 +27,5 @@ object ResourcePaths {
     const val ANNOTATIONS_BATCH = "annotations-batch"
     const val CUSTOM_QUERY = "custom-query"
     const val EXPAND = "expand"
+    const val COLLECTION = "collection"
 }

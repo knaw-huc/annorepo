@@ -87,12 +87,25 @@ class UriFactory(private val configuration: AnnoRepoConfiguration) {
             .path(ResourcePaths.EXPAND)
             .build()
 
-    fun customContainerQueryURL(containerName: String, queryName: String): URI =
+    fun customContainerQueryURL(containerName: String, queryCall: String, page: Int? = null): URI {
+        val path = UriBuilder.fromUri(configuration.externalBaseUrl)
+            .path(ResourcePaths.CONTAINER_SERVICES)
+            .path(containerName)
+            .path(ResourcePaths.CUSTOM_QUERY)
+            .path(queryCall)
+        return if (page != null) {
+            path.queryParam("page", page).build()
+        } else {
+            path.build()
+        }
+    }
+
+    fun customContainerQueryCollectionURL(containerName: String, queryCall: String): URI =
         UriBuilder.fromUri(configuration.externalBaseUrl)
             .path(ResourcePaths.CONTAINER_SERVICES)
             .path(containerName)
             .path(ResourcePaths.CUSTOM_QUERY)
-            .path(queryName)
+            .path(queryCall)
+            .path(ResourcePaths.COLLECTION)
             .build()
-
 }
