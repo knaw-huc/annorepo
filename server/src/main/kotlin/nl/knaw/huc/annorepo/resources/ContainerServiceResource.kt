@@ -74,6 +74,7 @@ import nl.knaw.huc.annorepo.resources.tools.CustomQueryTools
 import nl.knaw.huc.annorepo.resources.tools.CustomQueryTools.interpolate
 import nl.knaw.huc.annorepo.resources.tools.IndexManager
 import nl.knaw.huc.annorepo.resources.tools.QueryCacheItem
+import nl.knaw.huc.annorepo.resources.tools.annotationCollectionLink
 import nl.knaw.huc.annorepo.resources.tools.simplify
 import nl.knaw.huc.annorepo.service.UriFactory
 
@@ -303,12 +304,18 @@ class ContainerServiceResource(
             cursor.close()
         }
 
+        val (queryName, _) = CustomQueryTools.decode(queryCall)
+            .getOrElse { throw BadRequestException(it.message) }
+        val customQuery = customQueryDAO.getByName(queryName)
+            ?: throw NotFoundException("No custom query '$queryCall' found")
+
         val annotationPage =
             buildAnnotationPage(
                 uriFactory.customContainerQueryURL(containerName, queryCall),
                 annotations,
                 page,
-                hasNext = hasNext
+                hasNext = hasNext,
+                collectionLabel = customQuery.label
             )
         return Response.ok(annotationPage)
             .link(uriFactory.customQueryURL(queryCall), "using")
@@ -556,7 +563,7 @@ class ContainerServiceResource(
             ?: throw NotFoundException("No search results found for this search id. The search might have expired.")
 
     private fun buildAnnotationPage(
-        searchUri: URI, annotations: AnnotationList, page: Int, hasNext: Boolean = true,
+        searchUri: URI, annotations: AnnotationList, page: Int, hasNext: Boolean = true, collectionLabel: String? = null
     ): AnnotationPage {
         val prevPage = if (page > 0) {
             page - 1
@@ -573,7 +580,7 @@ class ContainerServiceResource(
         return AnnotationPage(
             context = listOf(ANNO_JSONLD_URL),
             id = searchPageUri(searchUri, page),
-            partOf = searchUri.toString(),
+            partOf = annotationCollectionLink(id = searchUri.toString(), collectionLabel = collectionLabel),
             startIndex = startIndex,
             items = annotations,
             prev = if (prevPage != null) searchPageUri(searchUri, prevPage) else null,

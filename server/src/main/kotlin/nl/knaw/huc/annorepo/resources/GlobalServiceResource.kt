@@ -56,6 +56,7 @@ import nl.knaw.huc.annorepo.resources.tools.CustomQueryTools.interpolate
 import nl.knaw.huc.annorepo.resources.tools.CustomQueryTools.isValidQueryName
 import nl.knaw.huc.annorepo.resources.tools.SearchChore
 import nl.knaw.huc.annorepo.resources.tools.SearchManager
+import nl.knaw.huc.annorepo.resources.tools.annotationCollectionLink
 import nl.knaw.huc.annorepo.service.UriFactory
 
 @Path(GLOBAL_SERVICES)
@@ -147,24 +148,26 @@ class GlobalServiceResource(
     ): Response {
         context.checkUserHasAdminRights()
         val userName = context.userPrincipal?.name ?: ""
-        val (name, query, public) = parseJson(customQueryJson)
-        if (customQueryDAO.nameIsTaken(name)) {
-            throw BadRequestException("A custom query with the name '$name' already exists")
+        val settings = parseJson(customQueryJson)
+        if (customQueryDAO.nameIsTaken(settings.name)) {
+            throw BadRequestException("A custom query with the name '${settings.name}' already exists")
         }
-        if (!name.isValidQueryName()) {
-            throw BadRequestException("'$name' is invalid; the query name should contain alphanumerics only")
+        if (!settings.name.isValidQueryName()) {
+            throw BadRequestException("'${settings.name}' is invalid; the query name should contain alphanumerics only")
         }
-        val queryTemplate = objectMapper.writeValueAsString(query)
+        val queryTemplate = objectMapper.writeValueAsString(settings.query)
         val parameters = queryTemplate.extractParameterNames()
         val customQuery = CustomQuery(
-            name = name,
+            name = settings.name,
+            description = settings.description,
+            label = settings.label,
             queryTemplate = queryTemplate,
             parameters = parameters,
             createdBy = userName,
-            public = public ?: true
+            public = settings.public ?: true
         )
         customQueryDAO.store(customQuery)
-        return Response.created(uriFactory.customQueryURL(name)).build()
+        return Response.created(uriFactory.customQueryURL(settings.name)).build()
     }
 
     @Operation(description = "Read a custom query")
@@ -234,7 +237,15 @@ class GlobalServiceResource(
         return Response.ok(allQueries).build()
     }
 
-    private fun parseJson(jsonString: String): Triple<String, PropertySet, Boolean?> {
+    data class CustomQuerySettings(
+        val name: String,
+        val query: PropertySet,
+        val label: String?,
+        val description: String?,
+        val public: Boolean?
+    )
+
+    private fun parseJson(jsonString: String): CustomQuerySettings {
         try {
             val propertySet: PropertySet = objectMapper.readValue<PropertySet>(jsonString)
             val keys = propertySet.keys
@@ -242,7 +253,15 @@ class GlobalServiceResource(
                 val name = propertySet.required<String>("name")
                 val query = propertySet.required<PropertySet>("query")
                 val public: Boolean? = propertySet.optional<Boolean>("public")
-                return Triple(name, query, public)
+                val label: String? = propertySet.optional<String>("label")
+                val description: String? = propertySet.optional<String>("description")
+                return CustomQuerySettings(
+                    name = name,
+                    query = query,
+                    public = public,
+                    label = label,
+                    description = description
+                )
             } else {
                 throw BadRequestException("invalid customQueryJson: no 'name' and/or 'query' fields found")
             }
@@ -316,7 +335,7 @@ class GlobalServiceResource(
         return AnnotationPage(
             context = listOf(ANNO_JSONLD_URL),
             id = searchPageUri(searchUri, page),
-            partOf = searchUri.toString(),
+            partOf = annotationCollectionLink(searchUri.toString()),
             startIndex = startIndex,
             items = annotations,
             prev = if (prevPage != null) searchPageUri(searchUri, prevPage) else null,

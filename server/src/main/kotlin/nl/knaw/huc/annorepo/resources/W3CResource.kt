@@ -430,7 +430,6 @@ class W3CResource(
             annotations = annotations,
             page = page,
             total = count,
-            lastPage = lastPage,
             prevPage = prevPage,
             nextPage = nextPage
         )

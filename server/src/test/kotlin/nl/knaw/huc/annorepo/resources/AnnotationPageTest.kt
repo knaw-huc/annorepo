@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.AnnotationPage
+import nl.knaw.huc.annorepo.resources.tools.annotationCollectionLink
 
 internal class AnnotationPageTest {
     private val objectMapper = jacksonObjectMapper()
@@ -16,7 +17,7 @@ internal class AnnotationPageTest {
         val startIndex = 0
         val ap = AnnotationPage(
             id = id,
-            partOf = partOf,
+            partOf = annotationCollectionLink(partOf),
             startIndex = startIndex,
             items = listOf(mapOf("key" to "value"))
         )
@@ -24,7 +25,7 @@ internal class AnnotationPageTest {
           {
             "id": "$id",
             "type": "AnnotationPage",
-            "partOf": "$partOf",
+            "partOf": {"id":"$partOf","type":"AnnotationCollection"},
             "startIndex": $startIndex,
             "items": [{"key":"value"}]
           }
@@ -42,7 +43,7 @@ internal class AnnotationPageTest {
         val next = "http://example.org/container/?page=2"
         val ap = AnnotationPage(
             id = id,
-            partOf = partOf,
+            partOf = annotationCollectionLink(partOf),
             startIndex = startIndex,
             items = listOf(mapOf("key" to "value")),
             context = listOf(ANNO_JSONLD_URL),
@@ -54,7 +55,7 @@ internal class AnnotationPageTest {
             "@context": ["$ANNO_JSONLD_URL"],
             "id": "$id",
             "type": "AnnotationPage",
-            "partOf": "$partOf",
+            "partOf": {"id":"$partOf","type":"AnnotationCollection"},
             "startIndex": $startIndex,
             "prev": "$prev",
             "next": "$next",

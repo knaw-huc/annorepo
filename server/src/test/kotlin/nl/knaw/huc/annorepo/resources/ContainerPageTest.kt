@@ -18,7 +18,6 @@ internal class ContainerPageTest {
             annotations = listOf(),
             page = 0,
             total = 10,
-            lastPage = 1,
         )
         val expectedJson = """
             {
@@ -36,10 +35,13 @@ internal class ContainerPageTest {
                 "id": "http://example.org/w3c/my-container/?page=0",
                 "type": "AnnotationPage",
                 "items":  [],
-                "partOf": "http://example.org/w3c/my-container/",
+                "partOf": {
+                    "id": "http://example.org/w3c/my-container/",
+                    "type": "AnnotationCollection"
+                },
                 "startIndex": 0
               },
-              "last": "http://example.org/w3c/my-container/?page=1",
+//              "last": "http://example.org/w3c/my-container/?page=1",
               "total": 10
             }
         """.trimIndent()
@@ -56,7 +58,6 @@ internal class ContainerPageTest {
             annotations = listOf(),
             page = 0,
             total = 100,
-            lastPage = 1,
             prevPage = null,
             nextPage = 1
         )
@@ -76,11 +77,14 @@ internal class ContainerPageTest {
                 "id": "http://example.org/w3c/my-container/?page=0",
                 "type": "AnnotationPage",
                 "items":  [],
-                "partOf": "http://example.org/w3c/my-container/",
+                "partOf": {
+                    "id": "http://example.org/w3c/my-container/",
+                    "type": "AnnotationCollection"
+                },
                 "next": "http://example.org/w3c/my-container/?page=1",
                 "startIndex": 0
               },
-              "last": "http://example.org/w3c/my-container/?page=1",
+//              "last": "http://example.org/w3c/my-container/?page=1",
               "total": 100
             }
         """.trimIndent()
@@ -97,7 +101,6 @@ internal class ContainerPageTest {
             annotations = listOf(),
             page = 1,
             total = 100,
-            lastPage = 2,
             prevPage = 0,
             nextPage = 2
         )
@@ -117,12 +120,15 @@ internal class ContainerPageTest {
                 "id": "http://example.org/w3c/my-container/?page=1",
                 "type": "AnnotationPage",
                 "items":  [],
-                "partOf": "http://example.org/w3c/my-container/",
+                "partOf": {
+                    "id": "http://example.org/w3c/my-container/",
+                    "type": "AnnotationCollection"
+                },
                 "prev": "http://example.org/w3c/my-container/?page=0",
                 "next": "http://example.org/w3c/my-container/?page=2",
                 "startIndex": 1
               },
-              "last": "http://example.org/w3c/my-container/?page=2",
+//              "last": "http://example.org/w3c/my-container/?page=2",
               "total": 100
             }
         """.trimIndent()

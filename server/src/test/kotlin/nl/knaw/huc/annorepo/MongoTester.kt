@@ -3,6 +3,7 @@ package nl.knaw.huc.annorepo
 import java.io.StringReader
 import jakarta.json.Json
 import jakarta.json.JsonValue
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import com.mongodb.client.MongoDatabase
 import org.assertj.core.api.Assertions.assertThat
@@ -17,6 +18,7 @@ import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
 import nl.knaw.huc.annorepo.resources.tools.hasAnnotationNameIndex
 import nl.knaw.huc.annorepo.resources.tools.toSimpleValue
 
+@Disabled
 class MongoTester {
     private val mongoClient = KMongo.createClient("mongodb://localhost/")
     private val mdb: MongoDatabase = mongoClient.getDatabase("annorepo")

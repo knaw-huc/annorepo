@@ -46,3 +46,14 @@ fun MongoCollection<Document>.hasAnnotationNameIndex(): Boolean =
         .filterNotNull()
         .map { it["name"] }
         .contains(ANNOTATION_NAME_INDEX_NAME)
+
+fun annotationCollectionLink(id: String, collectionLabel: String? = null): Map<String, String> {
+    val collectionMap = mutableMapOf(
+        "id" to id,
+        "type" to "AnnotationCollection"
+    )
+    if (collectionLabel != null) {
+        collectionMap["label"] = collectionLabel
+    }
+    return collectionMap
+}

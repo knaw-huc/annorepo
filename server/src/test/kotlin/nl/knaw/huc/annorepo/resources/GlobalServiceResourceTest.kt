@@ -34,6 +34,7 @@ class GlobalServiceResourceTest {
         val customQueryString = """
             {
               "name": "$CUSTOM_QUERY_NAME",
+              "label": "All the resolutions",
               "query": {
                 "body.type":"Resolution"
               }
@@ -90,7 +91,6 @@ class GlobalServiceResourceTest {
         val expected = """
             {
                 "name": "all-resolutions",
-                "description": "",
                 "created": "2024-02-27T12:30:00+0000",
                 "createdBy": "",
                 "public": true,
