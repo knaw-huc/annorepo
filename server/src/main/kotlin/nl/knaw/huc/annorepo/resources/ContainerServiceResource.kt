@@ -304,7 +304,7 @@ class ContainerServiceResource(
             cursor.close()
         }
 
-        val (queryName, _) = CustomQueryTools.decode(queryCall)
+        val (queryName, queryParameters) = CustomQueryTools.decode(queryCall)
             .getOrElse { throw BadRequestException(it.message) }
         val customQuery = customQueryDAO.getByName(queryName)
             ?: throw NotFoundException("No custom query '$queryCall' found")
@@ -315,10 +315,11 @@ class ContainerServiceResource(
                 annotations,
                 page,
                 hasNext = hasNext,
-                collectionLabel = customQuery.label
+                collectionLabel = customQuery.label?.interpolate(queryParameters = queryParameters)
             )
         return Response.ok(annotationPage)
-            .link(uriFactory.customQueryURL(queryCall), "using")
+            .link(uriFactory.customQueryURL(queryName), "using")
+            .link(uriFactory.expandedCustomQueryURL(queryCall), "query")
             .build()
     }
 

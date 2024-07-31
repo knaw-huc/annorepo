@@ -26,4 +26,5 @@ object ResourcePaths {
     const val DISTINCT_FIELD_VALUES = "distinct-values"
     const val ANNOTATIONS_BATCH = "annotations-batch"
     const val CUSTOM_QUERY = "custom-query"
+    const val EXPAND = "expand"
 }

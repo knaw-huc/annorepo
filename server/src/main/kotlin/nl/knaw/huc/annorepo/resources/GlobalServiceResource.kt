@@ -35,6 +35,7 @@ import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.AnnotationPage
 import nl.knaw.huc.annorepo.api.PropertySet
 import nl.knaw.huc.annorepo.api.ResourcePaths.CUSTOM_QUERY
+import nl.knaw.huc.annorepo.api.ResourcePaths.EXPAND
 import nl.knaw.huc.annorepo.api.ResourcePaths.GLOBAL_SERVICES
 import nl.knaw.huc.annorepo.api.ResourcePaths.SEARCH
 import nl.knaw.huc.annorepo.api.ResourcePaths.STATUS
@@ -206,7 +207,7 @@ class GlobalServiceResource(
     @Operation(description = "Show custom query with parameters filled in")
     @Timed
     @GET
-    @Path("$CUSTOM_QUERY/{customQueryCall}/expand")
+    @Path("$CUSTOM_QUERY/{customQueryCall}/$EXPAND")
     @Consumes(APPLICATION_JSON)
     fun getExpandedCustomQuery(
         @PathParam("customQueryCall") customQueryCall: String,
