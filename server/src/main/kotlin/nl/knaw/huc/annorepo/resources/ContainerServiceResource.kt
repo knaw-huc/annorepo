@@ -344,7 +344,7 @@ class ContainerServiceResource(
             "@context" to ANNO_JSONLD_URL,
             "id" to uriFactory.customContainerQueryCollectionURL(containerName, queryCall),
             "type" to "AnnotationCollection",
-            "label" to customQuery.label?.interpolate(queryParameters),
+            "label" to (customQuery.label?.interpolate(queryParameters) ?: ""),
             "creator" to customQuery.createdBy,
 //            "total" to total,
             "first" to mapOf(
