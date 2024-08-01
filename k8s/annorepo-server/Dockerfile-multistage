@@ -9,7 +9,7 @@ COPY ./pom.xml /build/
 COPY ./config.yml config.yml
 RUN mvn --projects server --no-transfer-progress --batch-mode --update-snapshots --also-make package
 
-FROM openjdk:23-ea-8-jdk-oraclelinux8
+FROM openjdk:24-ea-8-jdk-oraclelinux8
 
 WORKDIR /apps/annorepo
 COPY --from=builder /build/server/target/annorepo-server-*.jar /apps/annorepo/annorepo-server.jar
