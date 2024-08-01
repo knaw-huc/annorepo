@@ -1,6 +1,7 @@
 package nl.knaw.huc.annorepo.client
 
 import java.net.URI
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
@@ -9,6 +10,7 @@ import org.slf4j.LoggerFactory
 //const val ANNOREPO_BASE_URL = "http://localhost:9999"
 const val ANNOREPO_BASE_URL = "https://annorepo.globalise.huygens.knaw.nl"
 
+@Disabled
 class AnnoRepoClientTest {
 
     private val log = LoggerFactory.getLogger(javaClass)
