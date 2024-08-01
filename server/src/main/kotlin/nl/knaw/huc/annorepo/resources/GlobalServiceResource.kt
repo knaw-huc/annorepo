@@ -180,8 +180,10 @@ class GlobalServiceResource(
         @PathParam("customQueryName") customQueryName: String,
         @Context context: SecurityContext,
     ): Response {
-        context.checkUserHasAdminRights()
         val customQuery = customQueryDAO.getByName(customQueryName) ?: throw NotFoundException()
+        if (!customQuery.public){
+            context.checkUserHasAdminRights()
+        }
         return Response.ok(customQuery).build()
     }
 
@@ -213,10 +215,12 @@ class GlobalServiceResource(
         @PathParam("customQueryCall") customQueryCall: String,
         @Context context: SecurityContext,
     ): Response {
-        context.checkUserHasAdminRights()
         val (customQueryName, parameters) = CustomQueryTools.decode(customQueryCall)
             .getOrElse { throw BadRequestException(it.message) }
         val customQuery = customQueryDAO.getByName(customQueryName) ?: throw NotFoundException()
+        if (!customQuery.public){
+            context.checkUserHasAdminRights()
+        }
         val missingParameters = customQuery.parameters.toSet() - parameters.keys
         if (missingParameters.isNotEmpty()) {
             throw BadRequestException("No values given for parameter(s): $missingParameters")
