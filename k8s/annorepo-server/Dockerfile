@@ -1,4 +1,4 @@
-FROM openjdk:23-ea-24-jdk-oraclelinux8
+FROM openjdk:23-ea-33-jdk-oraclelinux8
 
 RUN microdnf update && \
     microdnf install -y curl && \
