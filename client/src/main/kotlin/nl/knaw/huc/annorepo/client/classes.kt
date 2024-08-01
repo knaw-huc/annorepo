@@ -55,7 +55,7 @@ sealed class ARResult {
         override val response: Response
     ) : ARResult()
 
-    data class DeleteContainerResult(
+    data class DeleteResult(
         override val response: Response,
     ) : ARResult()
 
@@ -71,10 +71,6 @@ sealed class ARResult {
         override val response: Response,
         val eTag: String,
         val annotation: WebAnnotationAsMap,
-    ) : ARResult()
-
-    data class DeleteAnnotationResult(
-        override val response: Response,
     ) : ARResult()
 
     data class AnnotationFieldInfoResult(
@@ -133,10 +129,6 @@ sealed class ARResult {
         val indexes: List<IndexConfig>,
     ) : ARResult()
 
-    data class DeleteIndexResult(
-        override val response: Response,
-    ) : ARResult()
-
     data class AddUsersResult(
         override val response: Response,
         val accepted: List<String>,
@@ -148,23 +140,27 @@ sealed class ARResult {
         val userEntries: List<UserEntry>,
     ) : ARResult()
 
-    data class DeleteUserResult(
-        override val response: Response,
-    ) : ARResult()
-
     data class ContainerUsersResult(
         override val response: Response,
         val containerUserEntries: List<ContainerUserEntry>,
-    ) : ARResult()
-
-    data class DeleteContainerUserResult(
-        override val response: Response,
     ) : ARResult()
 
     data class MyContainersResult(
         override val response: Response,
         val containers: Map<String, List<String>>
     ) : ARResult()
+
+    data class FilterContainerAnnotationsResult(
+        override val response: Response,
+        val queryId: String,
+        val annotations: Stream<Either<RequestError, String>>,
+    ) : ARResult()
+
+    data class CreateCustomQueryResult(
+        override val response: Response,
+        val location: URI?
+    ) : ARResult()
+
 }
 
 sealed class RequestError {
@@ -189,7 +185,10 @@ sealed class RequestError {
 
 typealias ResponseHandlerMap<T> = Map<Response.Status, (Response) -> Either<RequestError, T>>
 
-data class FilterContainerAnnotationsResult(
-    val queryId: String,
-    val annotations: Stream<Either<RequestError, String>>,
+data class CustomQuery(
+    val name: String,
+    val queryTemplate: Map<String, Any>,
+    val label: String = "",
+    val description: String = "",
+    val public: Boolean = true
 )

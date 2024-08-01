@@ -17,7 +17,6 @@ import nl.knaw.huc.annorepo.api.UserEntry
 import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 import nl.knaw.huc.annorepo.client.ARResult
 import nl.knaw.huc.annorepo.client.AnnoRepoClient
-import nl.knaw.huc.annorepo.client.FilterContainerAnnotationsResult
 import nl.knaw.huc.annorepo.client.RequestError
 
 class IntegrationTest {
@@ -155,7 +154,7 @@ class IntegrationTest {
 
                 t.printStep("using filterContainerAnnotations")
                 val query2 = mapOf("body.type" to "Page")
-                val filterContainerAnnotationsResult: FilterContainerAnnotationsResult? =
+                val filterContainerAnnotationsResult: ARResult.FilterContainerAnnotationsResult? =
                     this.filterContainerAnnotations(containerName, query2).getOrNull()
                 filterContainerAnnotationsResult?.let {
                     it.annotations.forEach { item ->

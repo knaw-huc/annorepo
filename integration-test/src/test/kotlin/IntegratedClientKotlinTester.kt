@@ -23,9 +23,10 @@ import nl.knaw.huc.annorepo.client.ARResult.BatchUploadResult
 import nl.knaw.huc.annorepo.client.ARResult.ContainerUsersResult
 import nl.knaw.huc.annorepo.client.ARResult.CreateAnnotationResult
 import nl.knaw.huc.annorepo.client.ARResult.CreateContainerResult
+import nl.knaw.huc.annorepo.client.ARResult.CreateCustomQueryResult
 import nl.knaw.huc.annorepo.client.ARResult.CreateSearchResult
-import nl.knaw.huc.annorepo.client.ARResult.DeleteAnnotationResult
-import nl.knaw.huc.annorepo.client.ARResult.DeleteIndexResult
+import nl.knaw.huc.annorepo.client.ARResult.DeleteResult
+import nl.knaw.huc.annorepo.client.ARResult.FilterContainerAnnotationsResult
 import nl.knaw.huc.annorepo.client.ARResult.GetAnnotationResult
 import nl.knaw.huc.annorepo.client.ARResult.GetGlobalSearchStatusResult
 import nl.knaw.huc.annorepo.client.ARResult.GetIndexCreationStatusResult
@@ -36,7 +37,6 @@ import nl.knaw.huc.annorepo.client.ARResult.MyContainersResult
 import nl.knaw.huc.annorepo.client.ARResult.UsersResult
 import nl.knaw.huc.annorepo.client.AnnoRepoClient
 import nl.knaw.huc.annorepo.client.AnnoRepoClient.Companion.create
-import nl.knaw.huc.annorepo.client.FilterContainerAnnotationsResult
 import nl.knaw.huc.annorepo.client.RequestError
 import nl.knaw.huc.annorepo.client.untangled
 
@@ -53,14 +53,14 @@ class IntegratedClientKotlinTester {
 
         @Test
         fun testClientConstructor2() {
-            val client = AnnoRepoClient(BASE_URI, apiKey)
+            val client = AnnoRepoClient(BASE_URI, API_KEY)
             assertThat(client.serverVersion).isNotBlank
         }
 
         @Test
         fun testClientConstructor3() {
             val client = AnnoRepoClient(
-                BASE_URI, apiKey, "custom-user-agent"
+                BASE_URI, API_KEY, "custom-user-agent"
             )
             assertThat(client.serverVersion).isNotBlank
         }
@@ -247,7 +247,7 @@ class IntegratedClientKotlinTester {
                         handleError(error)
                         false
                     },
-                    { _: DeleteAnnotationResult -> true })
+                    { _: DeleteResult -> true })
             assertThat(success).isTrue
             return true
         }
@@ -279,7 +279,7 @@ class IntegratedClientKotlinTester {
             val containerName = "republic"
             val query = mapOf("body.type" to "Page")
             client.filterContainerAnnotations(containerName, query).fold({ error: RequestError -> handleError(error) },
-                { (searchId, annotations): FilterContainerAnnotationsResult ->
+                { (_, searchId, annotations): FilterContainerAnnotationsResult ->
                     annotations.forEach { a: Either<RequestError, String> ->
                         a.fold({ e: RequestError -> handleError(e) },
                             { jsonString: String -> doSomethingWith(searchId, jsonString) })
@@ -383,7 +383,7 @@ class IntegratedClientKotlinTester {
             assertThat(create_success).isTrue
 
             // read status
-            val read_status_success =
+            val readStatusSuccess =
                 client.getIndexCreationStatus(containerName, fieldName, indexType).fold(
                     { error: RequestError ->
                         handleError(error)
@@ -394,10 +394,10 @@ class IntegratedClientKotlinTester {
                         true
                     }
                 )
-            assertThat(read_status_success).isTrue
+            assertThat(readStatusSuccess).isTrue
 
             // read
-            val read_success = client.getIndex(containerName, fieldName, indexType).fold(
+            val readSuccess = client.getIndex(containerName, fieldName, indexType).fold(
                 { error: RequestError ->
                     handleError(error)
                     false
@@ -407,17 +407,17 @@ class IntegratedClientKotlinTester {
                     true
                 }
             )
-            assertThat(read_success).isTrue
+            assertThat(readSuccess).isTrue
 
             // delete
-            val delete_success = client.deleteIndex(containerName, fieldName, indexType).fold(
+            val deleteSuccess = client.deleteIndex(containerName, fieldName, indexType).fold(
                 { error: RequestError ->
                     handleError(error)
                     false
                 },
-                { _: DeleteIndexResult -> true }
+                { _: DeleteResult -> true }
             )
-            assertThat(delete_success).isTrue
+            assertThat(deleteSuccess).isTrue
         }
 
         @Test
@@ -533,7 +533,7 @@ class IntegratedClientKotlinTester {
             client.deleteContainerUser(containerName, newUserName).fold({ error: RequestError ->
                 handleError(error)
                 false
-            }, { result: ARResult.DeleteContainerUserResult ->
+            }, { result: DeleteResult ->
                 doSomethingWith(result.response.status)
                 true
             })
@@ -553,15 +553,19 @@ class IntegratedClientKotlinTester {
             val userName = "userName"
             val containerUserEntries = listOf(ContainerUserEntry(userName, Role.EDITOR))
             client.addContainerUsers(containerName, containerUserEntries)
-                .fold({ error: RequestError -> handleError(error) },
-                    { (_, newContainerUsersList): ContainerUsersResult -> doSomethingWith(newContainerUsersList) })
+                .fold(
+                    { error: RequestError -> handleError(error) },
+                    { (_, newContainerUsersList): ContainerUsersResult -> doSomethingWith(newContainerUsersList) }
+                )
         }
 
         @Test
         fun testGetContainerUsers() {
             val containerName = "my-container"
-            client.getContainerUsers(containerName).fold({ error: RequestError -> handleError(error) },
-                { (_, containerUserEntries): ContainerUsersResult -> doSomethingWith(containerUserEntries) })
+            client.getContainerUsers(containerName).fold(
+                { error: RequestError -> handleError(error) },
+                { (_, containerUserEntries): ContainerUsersResult -> doSomethingWith(containerUserEntries) }
+            )
         }
 
         @Test
@@ -577,8 +581,10 @@ class IntegratedClientKotlinTester {
     inner class MyTests {
         @Test
         fun testMyContainers() {
-            client.getMyContainers().fold({ error: RequestError -> handleError(error) },
-                { (_, containers): MyContainersResult -> doSomethingWith(containers) })
+            client.getMyContainers().fold(
+                { error: RequestError -> handleError(error) },
+                { (_, containers): MyContainersResult -> doSomethingWith(containers) }
+            )
         }
     }
 
@@ -639,11 +645,32 @@ class IntegratedClientKotlinTester {
 
     }
 
+    @Nested
+    inner class CustomQueryTests {
+        @Test
+        fun `creating and deleting a custom query`() {
+            val customQueryName = "body-type-test"
+            client.createCustomQuery(
+                name = customQueryName,
+                queryTemplate = mapOf("body.type" to "<type>"),
+                label = "Annotations of body type <type>",
+                public = true
+            ).fold(
+                { error: RequestError -> handleError(error) },
+                { (_, location): CreateCustomQueryResult -> doSomethingWith(location!!) }
+            )
+            client.deleteCustomQuery(name = customQueryName).fold(
+                { error: RequestError -> handleError(error) },
+                { (response): DeleteResult -> doSomethingWith(response.status) }
+            )
+        }
+    }
+
     companion object {
         const val BASE_URL = "http://localhost:2023"
         val BASE_URI: URI = URI.create(BASE_URL)
-        private const val apiKey = "root"
-        val client = AnnoRepoClient(BASE_URI, apiKey, "integrated-client-tester")
+        private const val API_KEY = "root"
+        val client = AnnoRepoClient(BASE_URI, API_KEY, "integrated-client-tester")
         private val log = LoggerFactory.getLogger(IntegratedClientKotlinTester::class.java)
 
         private fun handleError(error: RequestError) {

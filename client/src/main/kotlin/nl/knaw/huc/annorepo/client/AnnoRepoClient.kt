@@ -31,7 +31,9 @@ import nl.knaw.huc.annorepo.api.QueryAsMap
 import nl.knaw.huc.annorepo.api.ResourcePaths.ABOUT
 import nl.knaw.huc.annorepo.api.ResourcePaths.ADMIN
 import nl.knaw.huc.annorepo.api.ResourcePaths.ANNOTATIONS_BATCH
+import nl.knaw.huc.annorepo.api.ResourcePaths.CONTAINERS
 import nl.knaw.huc.annorepo.api.ResourcePaths.CONTAINER_SERVICES
+import nl.knaw.huc.annorepo.api.ResourcePaths.CUSTOM_QUERY
 import nl.knaw.huc.annorepo.api.ResourcePaths.DISTINCT_FIELD_VALUES
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
 import nl.knaw.huc.annorepo.api.ResourcePaths.GLOBAL_SERVICES
@@ -57,12 +59,9 @@ import nl.knaw.huc.annorepo.client.ARResult.BatchUploadResult
 import nl.knaw.huc.annorepo.client.ARResult.ContainerUsersResult
 import nl.knaw.huc.annorepo.client.ARResult.CreateAnnotationResult
 import nl.knaw.huc.annorepo.client.ARResult.CreateContainerResult
+import nl.knaw.huc.annorepo.client.ARResult.CreateCustomQueryResult
 import nl.knaw.huc.annorepo.client.ARResult.CreateSearchResult
-import nl.knaw.huc.annorepo.client.ARResult.DeleteAnnotationResult
-import nl.knaw.huc.annorepo.client.ARResult.DeleteContainerResult
-import nl.knaw.huc.annorepo.client.ARResult.DeleteContainerUserResult
-import nl.knaw.huc.annorepo.client.ARResult.DeleteIndexResult
-import nl.knaw.huc.annorepo.client.ARResult.DeleteUserResult
+import nl.knaw.huc.annorepo.client.ARResult.DeleteResult
 import nl.knaw.huc.annorepo.client.ARResult.DistinctAnnotationFieldValuesResult
 import nl.knaw.huc.annorepo.client.ARResult.GetAboutResult
 import nl.knaw.huc.annorepo.client.ARResult.GetAnnotationResult
@@ -243,14 +242,14 @@ class AnnoRepoClient @JvmOverloads constructor(
         containerName: String,
         eTag: String,
         force: Boolean = false
-    ): Either<RequestError, DeleteContainerResult> {
+    ): Either<RequestError, DeleteResult> {
         val initialPath = webTarget.path(W3C).path(containerName)
         val path = if (force) initialPath.queryParam("force", true) else initialPath
         return doDelete(
             request = path.request().header(IF_MATCH, eTag),
             responseHandlers = mapOf(Response.Status.NO_CONTENT to { response ->
                 Either.Right(
-                    DeleteContainerResult(
+                    DeleteResult(
                         response = response
                     )
                 )
@@ -363,11 +362,11 @@ class AnnoRepoClient @JvmOverloads constructor(
      */
     fun deleteAnnotation(
         containerName: String, annotationName: String, eTag: String,
-    ): Either<RequestError, DeleteAnnotationResult> = doDelete(
+    ): Either<RequestError, DeleteResult> = doDelete(
         request = webTarget.path(W3C).path(containerName).path(annotationName).request().header(IF_MATCH, eTag),
         responseHandlers = mapOf(Response.Status.NO_CONTENT to { response ->
             Either.Right(
-                DeleteAnnotationResult(response)
+                DeleteResult(response)
             )
         })
     )
@@ -509,13 +508,14 @@ class AnnoRepoClient @JvmOverloads constructor(
      */
     fun filterContainerAnnotations(
         containerName: String, query: QueryAsMap,
-    ): Either<RequestError, FilterContainerAnnotationsResult> =
+    ): Either<RequestError, ARResult.FilterContainerAnnotationsResult> =
         createSearch(containerName, query)
             .flatMap { createSearchResult ->
                 val queryId = createSearchResult.queryId
                 val annotationSequence = annotationSequence(containerName, queryId)
                 Either.Right(
-                    FilterContainerAnnotationsResult(
+                    ARResult.FilterContainerAnnotationsResult(
+                        response = createSearchResult.response,
                         queryId = queryId,
                         annotations = annotationSequence.asStream()
                     )
@@ -721,11 +721,11 @@ class AnnoRepoClient @JvmOverloads constructor(
      */
     fun deleteIndex(
         containerName: String, fieldName: String, indexType: IndexType,
-    ): Either<RequestError, DeleteIndexResult> = doDelete(
+    ): Either<RequestError, DeleteResult> = doDelete(
         request = webTarget.path(CONTAINER_SERVICES).path(containerName).path(INDEXES).path(fieldName)
             .path(indexType.name)
             .request(), responseHandlers = mapOf(Response.Status.NO_CONTENT to { response ->
-            Either.Right(DeleteIndexResult(response))
+            Either.Right(DeleteResult(response))
         })
     )
 
@@ -776,11 +776,11 @@ class AnnoRepoClient @JvmOverloads constructor(
      * @param userName
      * @return
      */
-    fun deleteUser(userName: String): Either<RequestError, DeleteUserResult> = doDelete(
+    fun deleteUser(userName: String): Either<RequestError, DeleteResult> = doDelete(
         request = webTarget.path(ADMIN).path(USERS).path(userName).request(),
         responseHandlers = mapOf(Response.Status.NO_CONTENT to { response ->
             Either.Right(
-                DeleteUserResult(response)
+                DeleteResult(response)
             )
         })
     )
@@ -841,20 +841,23 @@ class AnnoRepoClient @JvmOverloads constructor(
     fun deleteContainerUser(
         containerName: String,
         userName: String,
-    ): Either<RequestError, DeleteContainerUserResult> = doDelete(
+    ): Either<RequestError, DeleteResult> = doDelete(
         request = webTarget.path(CONTAINER_SERVICES).path(containerName).path(USERS).path(userName).request(),
         responseHandlers = mapOf(
             Response.Status.OK to { response ->
                 Either.Right(
-                    DeleteContainerUserResult(
-                        response = response
-                    )
+                    DeleteResult(response = response)
                 )
             })
     )
 
+    /**
+     * Get a list of containers the user has access to, grouped by access level
+     *
+     * @return Either<RequestError, MyContainersResult>
+     */
     fun getMyContainers(): Either<RequestError, MyContainersResult> = doGet(
-        request = webTarget.path(MY).path("containers").request(),
+        request = webTarget.path(MY).path(CONTAINERS).request(),
         responseHandlers = mapOf(
             Response.Status.OK to { response ->
                 val json = response.readEntityAsJsonString()
@@ -867,6 +870,51 @@ class AnnoRepoClient @JvmOverloads constructor(
                     )
                 )
             })
+    )
+
+    /**
+     * Create a custom query
+     *
+     * @param name
+     * @param queryTemplate
+     * @param label
+     * @param description
+     * @param public
+     * @return Either<RequestError, CreateCustomQueryResult>
+     */
+    fun createCustomQuery(
+        name: String,
+        queryTemplate: Map<String, Any>,
+        label: String = "",
+        description: String = "",
+        public: Boolean = true
+    ): Either<RequestError, CreateCustomQueryResult> = doPost(
+        request = webTarget.path(GLOBAL_SERVICES).path(CUSTOM_QUERY).request(),
+        entity = Entity.json(
+            mapOf(
+                "name" to name,
+                "query" to queryTemplate,
+                "label" to label,
+                "description" to description,
+                "public" to public
+            )
+        ),
+        responseHandlers = mapOf(Response.Status.CREATED to { response ->
+            Either.Right(CreateCustomQueryResult(response = response, location = response.location()))
+        })
+
+    )
+
+    fun deleteCustomQuery(name: String): Either<RequestError, DeleteResult> = doDelete(
+        request = webTarget.path(GLOBAL_SERVICES).path(CUSTOM_QUERY).path(name).request(),
+        responseHandlers = mapOf(
+            Response.Status.NO_CONTENT to { response ->
+                log.info("$response")
+                Either.Right(
+                    DeleteResult(response = response)
+                )
+            })
+
     )
 
     suspend fun <R> usingGrpc(block: suspend (AnnoRepoGrpcClient) -> R): R {
