@@ -1,4 +1,5 @@
 import java.net.URI
+import java.util.UUID
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import arrow.core.Either
@@ -11,6 +12,7 @@ import org.assertj.core.api.Assertions.fail
 import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.IndexType
+import nl.knaw.huc.annorepo.api.QueryAsMap
 import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.api.UserEntry
 import nl.knaw.huc.annorepo.api.WebAnnotation
@@ -137,7 +139,7 @@ class IntegratedClientKotlinTester {
                 val entityTag = response.entityTag
                 doSomethingWith(eTag1, entity, entityTag)
             }.mapLeft<Void> { requestError ->
-                log.error("error=$requestError")
+                logError(requestError)
                 fail(requestError.message)
             }
         }
@@ -149,7 +151,7 @@ class IntegratedClientKotlinTester {
                 doSomethingWith(response.status, location)
                 client.deleteContainer(containerName, eTag)
             }.mapLeft<Void> { requestError ->
-                log.error("error=$requestError")
+                logError(requestError)
                 fail(requestError.message)
             }
         }
@@ -162,7 +164,7 @@ class IntegratedClientKotlinTester {
                 doSomethingWith(response2.status)
                 client.deleteContainer(containerName, eTag)
             }.mapLeft<Void> { requestError ->
-                log.error("error=$requestError")
+                logError(requestError)
                 fail(requestError.message)
             }
         }
@@ -602,7 +604,7 @@ class IntegratedClientKotlinTester {
                 val myContainersAfterDelete = client.getMyContainers().bind().containers
                 assertThat(myContainersAfterDelete["ROOT"]).doesNotContain(containerName)
             }.mapLeft<Void> {
-                log.error("error=$it")
+                logError(it)
                 fail(it.message)
             }
         }
@@ -637,7 +639,7 @@ class IntegratedClientKotlinTester {
 
                 client.deleteContainer(containerName, containerETag, force = true).bind()
             }.mapLeft<Void> {
-                log.error("error=$it")
+                logError(it)
                 fail(it.message)
             }
 
@@ -649,7 +651,47 @@ class IntegratedClientKotlinTester {
     inner class CustomQueryTests {
         @Test
         fun `creating and deleting a custom query`() {
-            val customQueryName = "body-type-test"
+            val customQueryName = "body-type-test-${UUID.randomUUID()}"
+            client.createCustomQuery(
+                name = customQueryName,
+                queryTemplate = mapOf("body.type" to "<type>"),
+                label = "Annotations of body type <type>",
+                public = true
+            ).fold(
+                { error: RequestError -> handleError(error) },
+                { (_, location): CreateCustomQueryResult -> doSomethingWith(location!!) }
+            )
+            client.deleteCustomQuery(name = customQueryName).fold(
+                { error: RequestError -> handleError(error) },
+                { (response): DeleteResult -> doSomethingWith(response.status) }
+            )
+        }
+
+        @Test
+        fun `custom query life cycle`() {
+            val customQueryName = "body-type-test-${UUID.randomUUID()}"
+            either {
+                val createCustomQueryResult = client.createCustomQuery(
+                    name = customQueryName,
+                    queryTemplate = mapOf("body.type" to "<type>"),
+                    label = "Annotations of body type <type>",
+                    public = true
+                ).bind()
+                assertThat(createCustomQueryResult.location).isNotNull()
+
+                val expandedQuery: QueryAsMap =
+                    client.readExpandedCustomQuery(customQueryName, mapOf("type" to "Entity")).bind()
+                val expectedQuery = mapOf(
+                    "body.type" to "Entity"
+                )
+                assertThat(expandedQuery).isEqualTo(expectedQuery)
+
+                val deleteCustomQueryResult = client.deleteCustomQuery(name = customQueryName).bind()
+                assertThat(deleteCustomQueryResult.response).isNotNull()
+            }.mapLeft<Void> {
+                logError(it)
+                fail(it.message)
+            }
             client.createCustomQuery(
                 name = customQueryName,
                 queryTemplate = mapOf("body.type" to "<type>"),
@@ -687,6 +729,10 @@ class IntegratedClientKotlinTester {
                 }
             }
         }
+    }
+
+    private fun logError(requestError: RequestError) {
+        log.error("error=$requestError")
     }
 
 }

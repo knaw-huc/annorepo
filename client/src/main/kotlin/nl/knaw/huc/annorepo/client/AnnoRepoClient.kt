@@ -7,6 +7,8 @@ import jakarta.ws.rs.client.Entity
 import jakarta.ws.rs.client.Invocation
 import jakarta.ws.rs.client.WebTarget
 import jakarta.ws.rs.core.Response
+import kotlin.io.encoding.Base64.Default.encode
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.streams.asStream
 import arrow.core.Either
 import arrow.core.flatMap
@@ -35,6 +37,7 @@ import nl.knaw.huc.annorepo.api.ResourcePaths.CONTAINERS
 import nl.knaw.huc.annorepo.api.ResourcePaths.CONTAINER_SERVICES
 import nl.knaw.huc.annorepo.api.ResourcePaths.CUSTOM_QUERY
 import nl.knaw.huc.annorepo.api.ResourcePaths.DISTINCT_FIELD_VALUES
+import nl.knaw.huc.annorepo.api.ResourcePaths.EXPAND
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
 import nl.knaw.huc.annorepo.api.ResourcePaths.GLOBAL_SERVICES
 import nl.knaw.huc.annorepo.api.ResourcePaths.INDEXES
@@ -899,12 +902,46 @@ class AnnoRepoClient @JvmOverloads constructor(
                 "public" to public
             )
         ),
-        responseHandlers = mapOf(Response.Status.CREATED to { response ->
-            Either.Right(CreateCustomQueryResult(response = response, location = response.location()))
-        })
-
+        responseHandlers = mapOf(
+            Response.Status.CREATED to { response ->
+                Either.Right(CreateCustomQueryResult(response = response, location = response.location()))
+            })
     )
 
+    /**
+     * Read a custom query with the variables ezpanded
+     *
+     * @param name
+     * @param parameters
+     * @return Either<RequestError, CreateCustomQueryResult>
+     */
+    fun readExpandedCustomQuery(name: String, parameters: Map<String, String>): Either<RequestError, QueryAsMap> {
+        val queryCall = queryCall(name, parameters)
+        return doGet(
+            request = webTarget.path(GLOBAL_SERVICES).path(CUSTOM_QUERY).path(queryCall).path(EXPAND).request(),
+            responseHandlers = mapOf(
+                Response.Status.OK to { response ->
+                    val json = response.readEntityAsJsonString()
+                    val expandedQuery = oMapper.readValue(json, object : TypeReference<QueryAsMap>() {})
+                    Either.Right(expandedQuery)
+                })
+        )
+    }
+
+    @OptIn(ExperimentalEncodingApi::class)
+    private fun queryCall(name: String, parameters: Map<String, String>? = null): String =
+        if (parameters == null) {
+            name
+        } else {
+            val encodedParameters = parameters.map { (k, v) -> "$k=${encode(v.encodeToByteArray())}" }.joinToString(",")
+            "$name:$encodedParameters"
+        }
+
+    /**
+     * Delete a custom query
+     *
+     * @param name
+     */
     fun deleteCustomQuery(name: String): Either<RequestError, DeleteResult> = doDelete(
         request = webTarget.path(GLOBAL_SERVICES).path(CUSTOM_QUERY).path(name).request(),
         responseHandlers = mapOf(
@@ -914,7 +951,6 @@ class AnnoRepoClient @JvmOverloads constructor(
                     DeleteResult(response = response)
                 )
             })
-
     )
 
     suspend fun <R> usingGrpc(block: suspend (AnnoRepoGrpcClient) -> R): R {
