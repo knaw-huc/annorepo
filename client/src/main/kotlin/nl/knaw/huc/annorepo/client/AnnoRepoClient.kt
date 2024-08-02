@@ -928,15 +928,6 @@ class AnnoRepoClient @JvmOverloads constructor(
         )
     }
 
-    @OptIn(ExperimentalEncodingApi::class)
-    private fun queryCall(name: String, parameters: Map<String, String>? = null): String =
-        if (parameters == null) {
-            name
-        } else {
-            val encodedParameters = parameters.map { (k, v) -> "$k=${encode(v.encodeToByteArray())}" }.joinToString(",")
-            "$name:$encodedParameters"
-        }
-
     /**
      * Delete a custom query
      *
@@ -952,6 +943,96 @@ class AnnoRepoClient @JvmOverloads constructor(
                 )
             })
     )
+
+    fun getCustomQueryResultPage(
+        containerName: String,
+        name: String,
+        parameters: Map<String, String>
+    ): Either<RequestError, GetSearchResultPageResult> = doGet(
+        request = webTarget.path(CONTAINER_SERVICES).path(containerName).path(CUSTOM_QUERY)
+            .path(queryCall(name, parameters)).request(),
+        responseHandlers = mapOf(
+            Response.Status.OK to { response ->
+                val json = response.readEntityAsJsonString()
+                val annotationPage: AnnotationPage = oMapper.readValue(json)
+                Either.Right(
+                    GetSearchResultPageResult(
+                        response = response, annotationPage = annotationPage
+                    )
+                )
+            })
+    )
+
+    fun containerAdapter(containerName: String): ContainerAdapter = ContainerAdapter(this, containerName)
+
+    data class ContainerAdapter(val client: AnnoRepoClient, val containerName: String) {
+        fun create(
+            label: String = "",
+            readOnlyForAnonymousUsers: Boolean = false
+        ): Either<RequestError, CreateContainerResult> =
+            client.createContainer(containerName, label = label, readOnlyForAnonymousUsers = readOnlyForAnonymousUsers)
+
+        fun get(): Either<RequestError, GetContainerResult> =
+            client.getContainer(containerName)
+
+        fun delete(eTag: String, force: Boolean = false): Either<RequestError, DeleteResult> =
+            client.deleteContainer(containerName, eTag = eTag, force = force)
+
+        fun getMetadata(): Either<RequestError, GetContainerMetadataResult> =
+            client.getContainerMetadata(containerName)
+
+        fun addAnnotation(
+            annotation: WebAnnotationAsMap,
+            name: String? = null
+        ): Either<RequestError, CreateAnnotationResult> =
+            client.createAnnotation(containerName, annotation = annotation, preferredAnnotationName = name)
+
+        fun addAnnotations(annotationList: List<WebAnnotationAsMap>): Either<RequestError, BatchUploadResult> =
+            client.batchUpload(containerName, annotations = annotationList)
+
+        fun getAnnotation(name: String): Either<RequestError, GetAnnotationResult> =
+            client.getAnnotation(containerName, annotationName = name)
+
+        fun updateAnnotation(
+            name: String,
+            eTag: String,
+            content: WebAnnotationAsMap
+        ): Either<RequestError, CreateAnnotationResult> =
+            client.updateAnnotation(containerName, annotationName = name, eTag = eTag, annotation = content)
+
+        fun deleteAnnotation(name: String, eTag: String): Either<RequestError, DeleteResult> =
+            client.deleteAnnotation(containerName, annotationName = name, eTag = eTag)
+
+        fun createSearch(query: QueryAsMap): Either<RequestError, CreateSearchResult> =
+            client.createSearch(containerName, query = query)
+
+        fun getSearchResultPage(queryId: String, page: Int = 0): Either<RequestError, GetSearchResultPageResult> =
+            client.getSearchResultPage(containerName, queryId = queryId, page = page)
+
+        fun getSearchInfo(queryId: String): Either<RequestError, GetSearchInfoResult> =
+            client.getSearchInfo(containerName, queryId = queryId)
+
+        fun addIndex(fieldName: String, indexType: IndexType): Either<RequestError, AddIndexResult> =
+            client.addIndex(containerName, fieldName = fieldName, indexType = indexType)
+
+        fun getIndexes(): Either<RequestError, ListIndexesResult> =
+            client.listIndexes(containerName)
+
+        fun getIndexCreationStatus(
+            field: String,
+            indexType: IndexType
+        ): Either<RequestError, GetIndexCreationStatusResult> =
+            client.getIndexCreationStatus(containerName, fieldName = field, indexType = indexType)
+
+        fun getDistinctFieldValues(field: String): Either<RequestError, DistinctAnnotationFieldValuesResult> =
+            client.getDistinctFieldValues(containerName, fieldName = field)
+
+        fun setAnonymousUserReadAccess(hasReadAccess: Boolean = true): Either<RequestError, SetAnonymousUserReadAccessResult> =
+            client.setAnonymousUserReadAccess(containerName, readOnlyAccess = hasReadAccess)
+
+        fun getCustomQueryResultPage(name: String, parameters: Map<String, String>) =
+            client.getCustomQueryResultPage(containerName, name = name, parameters = parameters)
+    }
 
     suspend fun <R> usingGrpc(block: suspend (AnnoRepoGrpcClient) -> R): R {
         if (apiKey == null) {
@@ -1104,6 +1185,15 @@ class AnnoRepoClient @JvmOverloads constructor(
         "readOnlyForAnonymousUsers" to readOnlyForAnonymousUsers
 
     )
+
+    @OptIn(ExperimentalEncodingApi::class)
+    private fun queryCall(name: String, parameters: Map<String, String>? = null): String =
+        if (parameters == null) {
+            name
+        } else {
+            val encodedParameters = parameters.map { (k, v) -> "$k=${encode(v.encodeToByteArray())}" }.joinToString(",")
+            "$name:$encodedParameters"
+        }
 
     companion object {
         private val log: Logger = LoggerFactory.getLogger(AnnoRepoClient::class.java)

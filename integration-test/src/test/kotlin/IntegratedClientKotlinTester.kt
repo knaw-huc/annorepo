@@ -686,25 +686,20 @@ class IntegratedClientKotlinTester {
                 )
                 assertThat(expandedQuery).isEqualTo(expectedQuery)
 
+                val containerAdapter = client.containerAdapter("republic-2024.05.17")
+                val resultPage = containerAdapter.getCustomQueryResultPage(
+                    name = customQueryName,
+                    parameters = mapOf("type" to "File")
+                ).bind()
+                log.info("$resultPage")
+                assertThat(resultPage).isNotNull()
+
                 val deleteCustomQueryResult = client.deleteCustomQuery(name = customQueryName).bind()
                 assertThat(deleteCustomQueryResult.response).isNotNull()
             }.mapLeft<Void> {
                 logError(it)
                 fail(it.message)
             }
-            client.createCustomQuery(
-                name = customQueryName,
-                queryTemplate = mapOf("body.type" to "<type>"),
-                label = "Annotations of body type <type>",
-                public = true
-            ).fold(
-                { error: RequestError -> handleError(error) },
-                { (_, location): CreateCustomQueryResult -> doSomethingWith(location!!) }
-            )
-            client.deleteCustomQuery(name = customQueryName).fold(
-                { error: RequestError -> handleError(error) },
-                { (response): DeleteResult -> doSomethingWith(response.status) }
-            )
         }
     }
 
