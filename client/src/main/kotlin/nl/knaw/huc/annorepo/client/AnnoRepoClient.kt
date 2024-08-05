@@ -66,6 +66,7 @@ import nl.knaw.huc.annorepo.client.ARResult.CreateCustomQueryResult
 import nl.knaw.huc.annorepo.client.ARResult.CreateSearchResult
 import nl.knaw.huc.annorepo.client.ARResult.DeleteResult
 import nl.knaw.huc.annorepo.client.ARResult.DistinctAnnotationFieldValuesResult
+import nl.knaw.huc.annorepo.client.ARResult.FilterContainerAnnotationsResult
 import nl.knaw.huc.annorepo.client.ARResult.GetAboutResult
 import nl.knaw.huc.annorepo.client.ARResult.GetAnnotationResult
 import nl.knaw.huc.annorepo.client.ARResult.GetContainerMetadataResult
@@ -511,13 +512,13 @@ class AnnoRepoClient @JvmOverloads constructor(
      */
     fun filterContainerAnnotations(
         containerName: String, query: QueryAsMap,
-    ): Either<RequestError, ARResult.FilterContainerAnnotationsResult> =
+    ): Either<RequestError, FilterContainerAnnotationsResult> =
         createSearch(containerName, query)
             .flatMap { createSearchResult ->
                 val queryId = createSearchResult.queryId
                 val annotationSequence = annotationSequence(containerName, queryId)
                 Either.Right(
-                    ARResult.FilterContainerAnnotationsResult(
+                    FilterContainerAnnotationsResult(
                         response = createSearchResult.response,
                         queryId = queryId,
                         annotations = annotationSequence.asStream()
@@ -588,24 +589,21 @@ class AnnoRepoClient @JvmOverloads constructor(
     private fun tryGetGlobalSearchResultPage(
         queryId: String,
         page: Int
-    ): Either<RequestError, GetSearchResultPageResult> {
-        val result = doGet(
-            request = webTarget.path(GLOBAL_SERVICES).path(SEARCH).path(queryId)
-                .queryParam("page", page)
-                .request(),
-            responseHandlers = mapOf(
-                Response.Status.OK to { response ->
-                    val json = response.readEntityAsJsonString()
-                    val annotationPage: AnnotationPage = oMapper.readValue(json)
-                    Either.Right(
-                        GetSearchResultPageResult(
-                            response = response, annotationPage = annotationPage
-                        )
+    ): Either<RequestError, GetSearchResultPageResult> = doGet(
+        request = webTarget.path(GLOBAL_SERVICES).path(SEARCH).path(queryId)
+            .queryParam("page", page)
+            .request(),
+        responseHandlers = mapOf(
+            Response.Status.OK to { response ->
+                val json = response.readEntityAsJsonString()
+                val annotationPage: AnnotationPage = oMapper.readValue<AnnotationPage>(json)
+                Either.Right(
+                    GetSearchResultPageResult(
+                        response = response, annotationPage = annotationPage
                     )
-                })
-        )
-        return result
-    }
+                )
+            })
+    )
 
     /**
      * Get search status
@@ -947,10 +945,11 @@ class AnnoRepoClient @JvmOverloads constructor(
     fun getCustomQueryResultPage(
         containerName: String,
         name: String,
-        parameters: Map<String, String>
+        parameters: Map<String, String>,
+        page: Int = 0
     ): Either<RequestError, GetSearchResultPageResult> = doGet(
         request = webTarget.path(CONTAINER_SERVICES).path(containerName).path(CUSTOM_QUERY)
-            .path(queryCall(name, parameters)).request(),
+            .path(queryCall(name, parameters)).queryParam("page", page).request(),
         responseHandlers = mapOf(
             Response.Status.OK to { response ->
                 val json = response.readEntityAsJsonString()
@@ -962,6 +961,31 @@ class AnnoRepoClient @JvmOverloads constructor(
                 )
             })
     )
+
+    fun getCustomQueryResultSequence(
+        containerName: String,
+        name: String,
+        parameters: Map<String, String>
+    ): Sequence<Either<RequestError, WebAnnotationAsMap>> = sequence {
+        var page = 0
+        var goOn = true
+        while (goOn) {
+            goOn = getCustomQueryResultPage(containerName, name, parameters, page)
+                .fold(
+                    { error ->
+                        yield(Either.Left(error))
+                        false
+                    },
+                    { result ->
+                        yieldAll(result.annotationPage.items.map {
+                            Either.Right(it)
+                        })
+                        result.annotationPage.next != null
+                    }
+                )
+            page += 1
+        }
+    }
 
     fun containerAdapter(containerName: String): ContainerAdapter = ContainerAdapter(this, containerName)
 
@@ -1009,6 +1033,9 @@ class AnnoRepoClient @JvmOverloads constructor(
         fun getSearchResultPage(queryId: String, page: Int = 0): Either<RequestError, GetSearchResultPageResult> =
             client.getSearchResultPage(containerName, queryId = queryId, page = page)
 
+        fun filterContainerAnnotations(query: QueryAsMap): Either<RequestError, FilterContainerAnnotationsResult> =
+            client.filterContainerAnnotations(containerName, query = query)
+
         fun getSearchInfo(queryId: String): Either<RequestError, GetSearchInfoResult> =
             client.getSearchInfo(containerName, queryId = queryId)
 
@@ -1030,8 +1057,18 @@ class AnnoRepoClient @JvmOverloads constructor(
         fun setAnonymousUserReadAccess(hasReadAccess: Boolean = true): Either<RequestError, SetAnonymousUserReadAccessResult> =
             client.setAnonymousUserReadAccess(containerName, readOnlyAccess = hasReadAccess)
 
-        fun getCustomQueryResultPage(name: String, parameters: Map<String, String>) =
+        fun getCustomQueryResultPage(
+            name: String,
+            parameters: Map<String, String>
+        ): Either<RequestError, GetSearchResultPageResult> =
             client.getCustomQueryResultPage(containerName, name = name, parameters = parameters)
+
+        fun getCustomQueryResultSequence(
+            name: String,
+            parameters: Map<String, String>
+        ): Sequence<Either<RequestError, WebAnnotationAsMap>> =
+            client.getCustomQueryResultSequence(containerName, name = name, parameters = parameters)
+
     }
 
     suspend fun <R> usingGrpc(block: suspend (AnnoRepoGrpcClient) -> R): R {

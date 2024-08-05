@@ -76,6 +76,7 @@ import nl.knaw.huc.annorepo.resources.tools.CustomQueryTools.interpolate
 import nl.knaw.huc.annorepo.resources.tools.IndexManager
 import nl.knaw.huc.annorepo.resources.tools.QueryCacheItem
 import nl.knaw.huc.annorepo.resources.tools.annotationCollectionLink
+import nl.knaw.huc.annorepo.resources.tools.isOpenAndHasNext
 import nl.knaw.huc.annorepo.resources.tools.simplify
 import nl.knaw.huc.annorepo.service.UriFactory
 
@@ -240,7 +241,7 @@ class ContainerServiceResource(
         val annotations =
             containerDAO.getCollection(containerName)
                 .aggregate(aggregateStages)
-                .map { a -> toAnnotationMap(a, containerName) }
+                .map { a -> a.toAnnotationMap(containerName) }
                 .toList()
         val annotationPage =
             buildAnnotationPage(
@@ -289,17 +290,16 @@ class ContainerServiceResource(
             logger.info { "using cached cursor $cacheKey" }
         } ?: createCursor(context, containerName, queryCall, page)
 
-        val annotations = cursor.asSequence()
-            .take(configuration.pageSize)
-            .map { toAnnotationMap(it, containerName) }
-            .toList()
+        val annotations = mutableListOf<WebAnnotationAsMap>()
+        while (annotations.size < configuration.pageSize && cursor.isOpenAndHasNext()) {
+            annotations.add(cursor.next().toAnnotationMap(containerName))
+        }
 
-        var hasNext = false
-        if (cursor.hasNext()) {
+        val hasNext = cursor.isOpenAndHasNext()
+        if (hasNext) {
             val nextCacheKey = "$containerName:$queryCall:${page + 1}"
             logger.info { "storing cursor $nextCacheKey" }
             mongoCursorCache.put(nextCacheKey, cursor)
-            hasNext = true
         } else {
             cursor.close()
         }
@@ -600,12 +600,12 @@ class ContainerServiceResource(
     private fun searchPageUri(searchUri: URI, page: Int) =
         UriBuilder.fromUri(searchUri).queryParam("page", page).build().toString()
 
-    private fun toAnnotationMap(document: Document, containerName: String): WebAnnotationAsMap =
-        document[ANNOTATION_FIELD, Document::class.java]
+    private fun Document.toAnnotationMap(containerName: String): WebAnnotationAsMap =
+        this[ANNOTATION_FIELD, Document::class.java]
             .toMutableMap()
             .apply<MutableMap<String, Any>> {
                 put(
-                    "id", uriFactory.annotationURL(containerName, document.getString(ANNOTATION_NAME_FIELD))
+                    "id", uriFactory.annotationURL(containerName, getString(ANNOTATION_NAME_FIELD))
                 )
             }
 
@@ -652,6 +652,7 @@ class ContainerServiceResource(
     }
 
 }
+
 
 
 

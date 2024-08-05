@@ -670,6 +670,7 @@ class IntegratedClientKotlinTester {
         @Test
         fun `custom query life cycle`() {
             val customQueryName = "body-type-test-${UUID.randomUUID()}"
+            val bodyType = "Page"
             either {
                 val createCustomQueryResult = client.createCustomQuery(
                     name = customQueryName,
@@ -687,12 +688,33 @@ class IntegratedClientKotlinTester {
                 assertThat(expandedQuery).isEqualTo(expectedQuery)
 
                 val containerAdapter = client.containerAdapter("republic-2024.05.17")
+
                 val resultPage = containerAdapter.getCustomQueryResultPage(
                     name = customQueryName,
-                    parameters = mapOf("type" to "File")
+                    parameters = mapOf("type" to "Line")
                 ).bind()
-                log.info("$resultPage")
                 assertThat(resultPage).isNotNull()
+
+                val regularQueryResults =
+                    containerAdapter.filterContainerAnnotations(mapOf("body.type" to bodyType)).bind()
+                val regularQueryResultList = regularQueryResults.annotations.toList()
+//                log.info(regularQueryResultList.first().bind())
+                val textRegionCount = regularQueryResultList.size
+
+                val results: Sequence<Either<RequestError, WebAnnotationAsMap>> =
+                    containerAdapter.getCustomQueryResultSequence(
+                        name = customQueryName,
+                        parameters = mapOf("type" to bodyType)
+                    )
+                val collectedResults = results.let { s ->
+                    either {
+                        s.map { it.bind() }.toList()
+                    }
+                }.bind()
+//                collectedResults.forEachIndexed { i, r ->
+//                    println("$i: ${r.getNestedValue("body.id")}")
+//                }
+                assertThat(collectedResults).hasSize(textRegionCount)
 
                 val deleteCustomQueryResult = client.deleteCustomQuery(name = customQueryName).bind()
                 assertThat(deleteCustomQueryResult.response).isNotNull()
@@ -730,4 +752,17 @@ class IntegratedClientKotlinTester {
         log.error("error=$requestError")
     }
 
+    private fun WebAnnotationAsMap.getNestedValue(key: String): Any? {
+        val keyParts = key.split(".")
+        var valueMap = this.getOrDefault(keyParts[0], null)
+        keyParts.stream().skip(1).forEach { k ->
+            valueMap = if (valueMap is Map<*, *>) {
+                (valueMap as Map<*, *>).getOrDefault(k, null)
+            } else {
+                null
+            }
+        }
+        return valueMap
+    }
 }
+
