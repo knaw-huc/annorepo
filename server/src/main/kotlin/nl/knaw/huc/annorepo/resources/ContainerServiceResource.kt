@@ -299,11 +299,11 @@ class ContainerServiceResource(
             val nextCacheKey = "$containerName:$queryCall:${page + 1}"
             logger.info { "storing cursor $nextCacheKey" }
             mongoCursorCache.put(nextCacheKey, cursor)
-            mongoCursorCache.invalidate(cacheKey)
             hasNext = true
         } else {
             cursor.close()
         }
+        mongoCursorCache.invalidate(cacheKey)
 
         val (queryName, queryParameters) = CustomQueryTools.decode(queryCall)
             .getOrElse { throw BadRequestException(it.message) }
