@@ -6,17 +6,18 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
-import com.mongodb.client.MongoClient
-import com.mongodb.client.MongoCollection
-import com.mongodb.client.MongoDatabase
-import com.mongodb.client.model.Filters
+import com.mongodb.client.model.Filters.eq
+import com.mongodb.kotlin.client.MongoClient
+import com.mongodb.kotlin.client.MongoCollection
+import com.mongodb.kotlin.client.MongoDatabase
 import org.bson.BsonValue
 import org.bson.Document
-import org.litote.kmongo.findOne
-import org.litote.kmongo.getCollection
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ARConst
+import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
+import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
+import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_NAME_FIELD
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
@@ -35,7 +36,8 @@ class ARContainerDAO(configuration: AnnoRepoConfiguration, client: MongoClient) 
         .maximumSize(MAX_CACHE_SIZE)
         .build(CacheLoader.from { _: String -> null })
 
-    override fun getCollection(containerName: String): MongoCollection<Document> = mdb.getCollection(containerName)
+    override fun getCollection(containerName: String): MongoCollection<Document> =
+        mdb.getCollection(containerName, Document::class.java)
 
     override fun getCollectionStats(containerName: String): Document {
         val command = Document("collStats", containerName)
@@ -46,7 +48,7 @@ class ARContainerDAO(configuration: AnnoRepoConfiguration, client: MongoClient) 
         getContainerMetadata(containerName)!!.fieldCounts.toSortedMap()
 
     override fun getContainerMetadataCollection(): MongoCollection<ContainerMetadata> =
-        mdb.getCollection<ContainerMetadata>(ARConst.CONTAINER_METADATA_COLLECTION)
+        mdb.getCollection(CONTAINER_METADATA_COLLECTION, ContainerMetadata::class.java)
 
     override fun createCollection(containerName: String) {
         mdb.createCollection(containerName)
@@ -57,14 +59,15 @@ class ARContainerDAO(configuration: AnnoRepoConfiguration, client: MongoClient) 
 
     override fun getContainerMetadata(containerName: String): ContainerMetadata? =
         getContainerMetadataCollection()
-            .findOne(Filters.eq(ARConst.CONTAINER_NAME_FIELD, containerName))
+            .find(eq(CONTAINER_NAME_FIELD, containerName))
+            .firstOrNull()
 
     override fun getDistinctValues(containerName: String, field: String): List<Any> {
         val size = getCollectionStats(containerName)["size"]
         val cacheKey = "$containerName:$size:$field"
         return distinctValuesCache.get(cacheKey) {
             getCollection(containerName)
-                .distinct("${ARConst.ANNOTATION_FIELD}.$field", BsonValue::class.java)
+                .distinct("$ANNOTATION_FIELD.$field", Document(), BsonValue::class.java)
                 .map { it.toPrimitive()!! }
                 .toList()
         }
@@ -100,7 +103,7 @@ class ARContainerDAO(configuration: AnnoRepoConfiguration, client: MongoClient) 
             .mapIndexed { index, annotationMap ->
                 val name = annotationIdentifiers[index].annotationName
                 Document(ARConst.ANNOTATION_NAME_FIELD, name)
-                    .append(ARConst.ANNOTATION_FIELD, Document(annotationMap))
+                    .append(ANNOTATION_FIELD, Document(annotationMap))
             }
         container.insertMany(documents)
 
@@ -113,7 +116,10 @@ class ARContainerDAO(configuration: AnnoRepoConfiguration, client: MongoClient) 
         return annotationIdentifiers
     }
 
-    override fun containerExists(containerName: String): Boolean = mdb.listCollectionNames().contains(containerName)
+    override fun containerExists(containerName: String): Boolean =
+        mdb.listCollectionNames()
+            .filter(eq(containerName))
+            .firstOrNull() != null
 
     private fun updateFieldCount(containerName: String, fieldsAdded: List<String>, fieldsDeleted: Set<String>) {
         val containerMetadataCollection = getContainerMetadataCollection()
@@ -130,7 +136,7 @@ class ARContainerDAO(configuration: AnnoRepoConfiguration, client: MongoClient) 
             }
         }
         val newContainerMetadata = containerMetadata.copy(fieldCounts = fieldCounts)
-        containerMetadataCollection.replaceOne(Filters.eq("name", containerName), newContainerMetadata)
+        containerMetadataCollection.replaceOne(eq("name", containerName), newContainerMetadata)
     }
 
 }

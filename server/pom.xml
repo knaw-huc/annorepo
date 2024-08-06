@@ -138,10 +138,11 @@
             <version>${mongodb.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.litote.kmongo</groupId>
-            <artifactId>kmongo-native</artifactId>
-            <version>${kmongo.version}</version>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver-kotlin-sync</artifactId>
+            <version>${mongodb-driver-kotlin-sync.version}</version>
         </dependency>
+
         <dependency>
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>

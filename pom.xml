@@ -52,12 +52,12 @@
         <jaxb-api.version>2.3.1</jaxb-api.version>
         <jena.version>4.10.0</jena.version>
         <json.version>20231013</json.version>
-        <kmongo.version>4.11.0</kmongo.version>
         <kotlinx-cli-jvm.version>0.3.6</kotlinx-cli-jvm.version>
         <kotlinx-coroutines-core.version>1.8.0</kotlinx-coroutines-core.version>
         <log4j.version>1.2.17</log4j.version>
         <log4j-api-kotlin.version>1.4.0</log4j-api-kotlin.version>
         <mongodb.version>4.11.2</mongodb.version>
+        <mongodb-driver-kotlin-sync.version>5.1.1</mongodb-driver-kotlin-sync.version>
         <mordant.version>2.4.0</mordant.version>
         <problem.version>0.27.1</problem.version>
         <protobuf.version>3.25.3</protobuf.version>

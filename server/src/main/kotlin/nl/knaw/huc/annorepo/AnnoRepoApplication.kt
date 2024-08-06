@@ -8,8 +8,13 @@ import java.util.concurrent.atomic.AtomicBoolean
 import com.codahale.metrics.health.HealthCheck
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import com.mongodb.client.MongoClient
+import com.mongodb.ConnectionString
+import com.mongodb.MongoClientSettings
+import com.mongodb.ServerApi
+import com.mongodb.ServerApiVersion
+import com.mongodb.client.model.Filters.eq
 import com.mongodb.client.model.Indexes
+import com.mongodb.kotlin.client.MongoClient
 import io.dropwizard.auth.AuthDynamicFeature
 import io.dropwizard.auth.chained.ChainedAuthFilter
 import io.dropwizard.auth.oauth.OAuthCredentialAuthFilter
@@ -24,8 +29,6 @@ import io.dropwizard.jobs.JobsBundle
 import io.federecio.dropwizard.swagger.SwaggerBundle
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
 import org.apache.commons.lang3.StringUtils
-import org.litote.kmongo.KMongo
-import org.litote.kmongo.getCollection
 import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ARConst.APP_NAME
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
@@ -102,7 +105,8 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
 
         log.info("connecting to mongodb at ${configuration!!.mongodbURL} ...")
         val mongoClient = createMongoClient(configuration)
-        val mongoVersion = mongoClient.getMongoVersion()
+//        val mongoVersion = mongoClient.getMongoVersion()
+        val mongoVersion = ""
         log.info("connected! version = $mongoVersion")
 
         val appVersion = javaClass.getPackage().implementationVersion
@@ -205,10 +209,18 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
     }
 
     private fun createMongoClient(configuration: AnnoRepoConfiguration): MongoClient {
-        val mongoClient = KMongo.createClient(configuration.mongodbURL)
+        val serverApi = ServerApi.builder()
+            .version(ServerApiVersion.V1)
+            .build()
+        val settings = MongoClientSettings.builder()
+            .applyConnectionString(ConnectionString(configuration.mongodbURL))
+            .serverApi(serverApi)
+            .build()
+        val mongoClient = MongoClient.create(settings)
         val mdb = mongoClient.getDatabase(configuration.databaseName)
         val metadataCollectionExists = mdb.listCollectionNames()
-            .firstOrNull { it == CONTAINER_METADATA_COLLECTION } == CONTAINER_METADATA_COLLECTION
+            .filter(eq(CONTAINER_METADATA_COLLECTION))
+            .firstOrNull() == CONTAINER_METADATA_COLLECTION
         if (!metadataCollectionExists) {
             log.debug("creating container metadata collection + index")
             mdb.createCollection(CONTAINER_METADATA_COLLECTION)
