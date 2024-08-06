@@ -140,9 +140,18 @@
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongodb-driver-kotlin-sync</artifactId>
-            <version>${mongodb-driver-kotlin-sync.version}</version>
+            <version>${mongodb-driver.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver-core</artifactId>
+            <version>${mongodb-driver.version}</version>
+        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>org.mongodb</groupId>-->
+        <!--            <artifactId>mongodb-driver-legacy</artifactId>-->
+        <!--            <version>${mongodb-driver.version}</version>-->
+        <!--        </dependency>-->
         <dependency>
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>

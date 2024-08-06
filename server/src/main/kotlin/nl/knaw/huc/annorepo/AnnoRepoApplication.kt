@@ -12,7 +12,6 @@ import com.mongodb.ConnectionString
 import com.mongodb.MongoClientSettings
 import com.mongodb.ServerApi
 import com.mongodb.ServerApiVersion
-import com.mongodb.client.model.Filters.eq
 import com.mongodb.client.model.Indexes
 import com.mongodb.kotlin.client.MongoClient
 import io.dropwizard.auth.AuthDynamicFeature
@@ -219,8 +218,8 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         val mongoClient = MongoClient.create(settings)
         val mdb = mongoClient.getDatabase(configuration.databaseName)
         val metadataCollectionExists = mdb.listCollectionNames()
-            .filter(eq(CONTAINER_METADATA_COLLECTION))
-            .firstOrNull() == CONTAINER_METADATA_COLLECTION
+            .toList()
+            .firstOrNull { it == CONTAINER_METADATA_COLLECTION } != null
         if (!metadataCollectionExists) {
             log.debug("creating container metadata collection + index")
             mdb.createCollection(CONTAINER_METADATA_COLLECTION)

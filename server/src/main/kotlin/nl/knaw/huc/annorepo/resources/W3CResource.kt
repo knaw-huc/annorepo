@@ -124,6 +124,7 @@ class W3CResource(
             .entity(containerData).build()
     }
 
+    @Suppress("IMPLICIT_CAST_TO_ANY")
     @Operation(description = "Get an Annotation Container")
     @Timed
     @GET

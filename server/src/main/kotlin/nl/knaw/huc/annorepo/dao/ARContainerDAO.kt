@@ -118,8 +118,8 @@ class ARContainerDAO(configuration: AnnoRepoConfiguration, client: MongoClient) 
 
     override fun containerExists(containerName: String): Boolean =
         mdb.listCollectionNames()
-            .filter(eq(containerName))
-            .firstOrNull() != null
+            .toList()
+            .firstOrNull { it == containerName } != null
 
     private fun updateFieldCount(containerName: String, fieldsAdded: List<String>, fieldsDeleted: Set<String>) {
         val containerMetadataCollection = getContainerMetadataCollection()
