@@ -2,7 +2,7 @@ package nl.knaw.huc.annorepo.health
 
 import com.codahale.metrics.health.HealthCheck
 import com.mongodb.ReadPreference
-import com.mongodb.client.MongoClient
+import com.mongodb.kotlin.client.MongoClient
 
 class MongoDbHealthCheck(private val mongoClient: MongoClient) : HealthCheck() {
 

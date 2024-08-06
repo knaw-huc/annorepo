@@ -8,8 +8,6 @@ import com.google.common.collect.TreeMultiset
 import com.mongodb.client.model.Filters.eq
 import com.mongodb.client.model.Filters.exists
 import io.dropwizard.servlets.tasks.Task
-import org.litote.kmongo.findOne
-import org.litote.kmongo.json
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.service.JsonLdUtils
@@ -42,7 +40,7 @@ class RecalculateFieldCountTask(
         output.println("Recalculating the field count for container $containerName")
         output.flush()
         val container = containerDAO.getCollection(containerName)
-        val fields = container.find(exists("annotation"))
+        val fields = container.find(exists("annotation")).
             .flatMap { d -> JsonLdUtils.extractFields(d["annotation"]!!.json) }
             .filter { f -> !f.contains("@") }
             .toList()
@@ -57,7 +55,9 @@ class RecalculateFieldCountTask(
 
         val containerMetadataCollection = containerDAO.getContainerMetadataCollection()
         val containerMetadata: ContainerMetadata =
-            containerMetadataCollection.findOne(eq("name", containerName)) ?: return
+            containerMetadataCollection
+                .find(eq("name", containerName))
+                .firstOrNull() ?: return
         val newContainerMetadata = containerMetadata.copy(fieldCounts = fieldCounts)
         containerMetadataCollection.replaceOne(eq("name", containerName), newContainerMetadata)
     }

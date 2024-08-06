@@ -105,8 +105,8 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
 
         log.info("connecting to mongodb at ${configuration!!.mongodbURL} ...")
         val mongoClient = createMongoClient(configuration)
-//        val mongoVersion = mongoClient.getMongoVersion()
-        val mongoVersion = ""
+        val mongoVersion = mongoClient.getMongoVersion()
+//        val mongoVersion = ""
         log.info("connected! version = $mongoVersion")
 
         val appVersion = javaClass.getPackage().implementationVersion
