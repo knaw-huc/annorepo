@@ -2,9 +2,9 @@ package nl.knaw.huc.annorepo.resources.tools
 
 import java.util.Date
 import java.util.concurrent.TimeUnit
-import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.IndexOptions
+import com.mongodb.kotlin.client.MongoCollection
 import org.bson.Document
 import org.bson.conversions.Bson
 import org.joda.time.Instant

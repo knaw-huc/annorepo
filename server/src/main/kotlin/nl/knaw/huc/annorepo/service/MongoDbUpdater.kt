@@ -46,10 +46,10 @@ class MongoDbUpdater(
     }
 
     private fun allAnnotationContainers(): List<String> = mdb.listCollectionNames()
+        .toList()
         .filter { it != ARConst.CONTAINER_METADATA_COLLECTION }
         .filter { !it.startsWith('_') }
-        .sorted<String>()
-        .toList()
+        .sorted()
 
     private fun updateAnnotationNameIndex() {
         for (containerName in allAnnotationContainers()) {

@@ -10,11 +10,11 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import com.mongodb.client.MongoClient
-import com.mongodb.client.MongoCollection
-import com.mongodb.client.MongoCursor
-import com.mongodb.client.MongoDatabase
-import com.mongodb.client.MongoIterable
+import com.mongodb.kotlin.client.ListCollectionNamesIterable
+import com.mongodb.kotlin.client.MongoClient
+import com.mongodb.kotlin.client.MongoCollection
+import com.mongodb.kotlin.client.MongoCursor
+import com.mongodb.kotlin.client.MongoDatabase
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
@@ -304,7 +304,7 @@ class ContainerServiceResourceTest {
         lateinit var mongoCollection: MongoCollection<Document>
 
         @MockK
-        lateinit var collectionNames: MongoIterable<String>
+        lateinit var collectionNames: ListCollectionNamesIterable
 
         @RelaxedMockK
         lateinit var mongoCursor: MongoCursor<String>
@@ -332,9 +332,9 @@ class ContainerServiceResourceTest {
             every { config.rangeSelectorType } returns "something"
             every { config.withAuthentication } returns true
             every { client.getDatabase(databaseName) } returns mongoDatabase
-            every { mongoDatabase.getCollection(containerName) } returns mongoCollection
+            every { mongoDatabase.getCollection<Document>(containerName) } returns mongoCollection
             every { mongoDatabase.listCollectionNames() } returns collectionNames
-            every { collectionNames.iterator() } returns mongoCursor
+            every { collectionNames.toList() } returns listOf()
             every { mongoCursor.hasNext() } returns true
             every { mongoCursor.next() } returns containerName
             every { containerDAO.getContainerMetadata(ARConst.CONTAINER_METADATA_COLLECTION) } returns ContainerMetadata(

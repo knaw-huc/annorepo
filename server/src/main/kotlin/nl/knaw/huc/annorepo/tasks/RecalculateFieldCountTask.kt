@@ -8,6 +8,7 @@ import com.google.common.collect.TreeMultiset
 import com.mongodb.client.model.Filters.eq
 import com.mongodb.client.model.Filters.exists
 import io.dropwizard.servlets.tasks.Task
+import org.bson.Document
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.service.JsonLdUtils
@@ -40,10 +41,10 @@ class RecalculateFieldCountTask(
         output.println("Recalculating the field count for container $containerName")
         output.flush()
         val container = containerDAO.getCollection(containerName)
-        val fields = container.find(exists("annotation")).
-            .flatMap { d -> JsonLdUtils.extractFields(d["annotation"]!!.json) }
-            .filter { f -> !f.contains("@") }
+        val fields = container.find(exists("annotation"))
             .toList()
+            .flatMap { d -> JsonLdUtils.extractFields((d["annotation"]!! as Document).toJson()) }
+            .filter { f -> !f.contains("@") }
         val bag: SortedMultiset<String> = TreeMultiset.create()
         for (f in fields) {
             bag.add(f)

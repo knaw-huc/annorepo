@@ -13,7 +13,7 @@ class ARCustomQueryDAO(
     private val customQueryCollection = mdb.getCollection<CustomQuery>(ARConst.CUSTOM_QUERY_COLLECTION)
 
     override fun getAllCustomQueries(): List<CustomQuery> =
-        customQueryCollection.find().sort() { cq -> cq.name.lowercase() }
+        customQueryCollection.find().toList().sortedBy { cq -> cq.name.lowercase() }
 
     override fun nameIsTaken(name: String): Boolean = getByName(name) != null
 

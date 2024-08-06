@@ -1,7 +1,6 @@
 import nl.knaw.huc.annorepo.health.MongoDbHealthCheck
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.litote.kmongo.KMongo
 
 internal class MongoDbHealthCheckTest {
 

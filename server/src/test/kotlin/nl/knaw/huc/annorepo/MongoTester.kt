@@ -5,9 +5,9 @@ import jakarta.json.Json
 import jakarta.json.JsonValue
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import com.mongodb.client.MongoDatabase
+import com.mongodb.kotlin.client.MongoClient
 import org.assertj.core.api.Assertions.assertThat
-import org.litote.kmongo.KMongo
+import org.bson.Document
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ARConst
@@ -20,8 +20,8 @@ import nl.knaw.huc.annorepo.resources.tools.toSimpleValue
 
 @Disabled
 class MongoTester {
-    private val mongoClient = KMongo.createClient("mongodb://localhost/")
-    private val mdb: MongoDatabase = mongoClient.getDatabase("annorepo")
+    private val mongoClient = MongoClient.create("mongodb://localhost/")
+    private val mdb = mongoClient.getDatabase("annorepo")
     private val configuration = AnnoRepoConfiguration()
     private val aggregateStageGenerator = AggregateStageGenerator(configuration)
     private val log: Logger = LoggerFactory.getLogger(javaClass)
@@ -34,14 +34,14 @@ class MongoTester {
 //        val queryMap: Map<String, Any?> = mapOf("body.id" to "urn:republic:NL-HaNA_1.01.02_3783_0051-page-101")
         println(queryMap)
 
-        val container = mdb.getCollection(containerName)
+        val container = mdb.getCollection<Document>(containerName)
         val aggregateStages = queryMap
             .map { (k, v) -> aggregateStageGenerator.generateStage(k, v!!) }
             .toList()
-        val count = container.aggregate(aggregateStages).count()
+        val count = container.aggregate(aggregateStages).toList().count()
         println("!!count:$count")
         val annotations =
-            mdb.getCollection(containerName)
+            mdb.getCollection<Document>(containerName)
                 .aggregate(aggregateStages)
                 .toList()
         println("!!annotations=${annotations}")
@@ -68,10 +68,10 @@ class MongoTester {
     }
 
     private fun allAnnotationContainers(): List<String> = mdb.listCollectionNames()
+        .toList()
         .filter { it != ARConst.CONTAINER_METADATA_COLLECTION }
         .filter { !it.startsWith('_') }
         .sorted<String>()
-        .toList()
 
     @Test
     fun testIndexes() {
@@ -86,7 +86,7 @@ class MongoTester {
                 log.info("  - {}", i["name"])
             }
             val names =
-                collection.listIndexes().filterNotNull().map { it["name"] }
+                collection.listIndexes().toList().map { it["name"] }
             val hasAnnotationNameIndex = collection.hasAnnotationNameIndex()
             log.info("names={}", names)
             log.info("{}", hasAnnotationNameIndex)

@@ -10,7 +10,7 @@ import io.mockk.junit5.MockKExtension
 import net.javacrumbs.jsonunit.assertj.assertThatJson
 import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
 import org.assertj.core.api.AssertionsForInterfaceTypes.assertThatExceptionOfType
-import org.litote.kmongo.json
+import org.bson.conversions.Bson
 import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 
@@ -128,7 +128,7 @@ class AggregateStageGeneratorTest {
         val asg = AggregateStageGenerator(config)
         val key = "year"
         val value = mapOf(IS_NOT_IN to arrayOf(2020, 2021, 2022, 2023))
-        val stage = asg.generateStage(key, value)
+        val stage: Bson = asg.generateStage(key, value)
         log.info("{}", stage)
         log.info("{}", stage.json)
         val expected = """
@@ -306,4 +306,10 @@ class AggregateStageGeneratorTest {
         log.info("{}", stage.json)
 
     }
+
+    val Bson.json: String
+        get() {
+            return this.toBsonDocument().toJson()
+        }
+
 }
