@@ -61,6 +61,7 @@ import nl.knaw.huc.annorepo.tasks.JVMInfoTask
 import nl.knaw.huc.annorepo.tasks.RecalculateFieldCountTask
 import nl.knaw.huc.annorepo.tasks.UpdateTask
 
+@OptIn(ExperimentalStdlibApi::class)
 class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -154,7 +155,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             }
             if (configuration.withAuthentication) {
                 register(AdminResource(userDAO))
-                register(MyResource(containerUserDAO))
+                register(MyResource(containerDAO, containerUserDAO))
                 val oauthFilter = OAuthCredentialAuthFilter.Builder<User>()
                     .setAuthenticator(AROAuthAuthenticator(userDAO))
                     .setPrefix("Bearer")
