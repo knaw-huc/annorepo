@@ -8,7 +8,7 @@
 
     <groupId>io.github.knaw-huc</groupId>
     <artifactId>annorepo</artifactId>
-    <version>0.7.0d</version>
+    <version>0.7.0e</version>
     <packaging>pom</packaging>
 
     <name>AnnoRepo</name>
