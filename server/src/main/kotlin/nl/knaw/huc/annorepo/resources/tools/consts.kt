@@ -2,6 +2,7 @@ package nl.knaw.huc.annorepo.resources.tools
 
 const val WITHIN_RANGE = ":isWithinTextAnchorRange"
 const val OVERLAPPING_WITH_RANGE = ":overlapsWithTextAnchorRange"
+const val OR = ":or"
 
 const val IS_EQUAL_TO = ":="
 const val IS_NOT = ":!="

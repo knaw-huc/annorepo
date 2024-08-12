@@ -309,4 +309,26 @@ class AggregateStageGeneratorTest {
         log.info("{}", stage.json)
 
     }
+
+    @Test
+    fun `special field matching - or`() {
+        val asg = AggregateStageGenerator(config)
+        val key = OR
+        val value = arrayOf(mapOf("body.type" to "Page"), mapOf("body.type" to "Line"))
+        val stage = asg.generateStage(key, value)
+        log.info("{}", stage)
+        log.info("{}", stage.json)
+        val expected = """
+            {
+                "@match": {
+                    "@or": [
+                        { "annotation.body.type": "Page"}, 
+                        { "annotation.body.type": "Line"} 
+                    ]
+                }
+            }
+            """.trimIndent()
+            .replace('@', '$')
+        assertThatJson(stage.json).isEqualTo(expected)
+    }
 }

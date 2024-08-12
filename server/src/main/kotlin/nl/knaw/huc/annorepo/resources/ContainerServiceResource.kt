@@ -34,6 +34,8 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.bson.Document
 import org.bson.conversions.Bson
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
@@ -80,6 +82,7 @@ class ContainerServiceResource(
     private val uriFactory: UriFactory,
     private val indexManager: IndexManager
 ) : AbstractContainerResource(configuration, containerDAO, ContainerAccessChecker(containerUserDAO)) {
+    val log: Logger = LoggerFactory.getLogger(this::class.java)
 
     private val paginationStage = limit(configuration.pageSize)
     private val aggregateStageGenerator = AggregateStageGenerator(configuration)
