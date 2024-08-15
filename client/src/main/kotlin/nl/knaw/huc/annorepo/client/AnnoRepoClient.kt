@@ -26,6 +26,7 @@ import nl.knaw.huc.annorepo.api.AnnotationIdentifier
 import nl.knaw.huc.annorepo.api.AnnotationPage
 import nl.knaw.huc.annorepo.api.ChoreStatusSummary
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
+import nl.knaw.huc.annorepo.api.CustomQuerySpecs
 import nl.knaw.huc.annorepo.api.IndexConfig
 import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.MetadataMap
@@ -892,13 +893,20 @@ class AnnoRepoClient @JvmOverloads constructor(
     ): Either<RequestError, CreateCustomQueryResult> = doPost(
         request = webTarget.path(GLOBAL_SERVICES).path(CUSTOM_QUERY).request(),
         entity = Entity.json(
-            mapOf(
-                "name" to name,
-                "query" to queryTemplate,
-                "label" to label,
-                "description" to description,
-                "public" to public
+            CustomQuerySpecs(
+                name = name,
+                query = queryTemplate,
+                label = label,
+                description = description,
+                public = public
             )
+//            mapOf(
+//                "name" to name,
+//                "query" to queryTemplate,
+//                "label" to label,
+//                "description" to description,
+//                "public" to public
+//            )
         ),
         responseHandlers = mapOf(
             Response.Status.CREATED to { response ->
@@ -907,7 +915,7 @@ class AnnoRepoClient @JvmOverloads constructor(
     )
 
     /**
-     * Read a custom query with the variables ezpanded
+     * Read a custom query with the variables expanded
      *
      * @param name
      * @param parameters
