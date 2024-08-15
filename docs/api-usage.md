@@ -21,6 +21,14 @@
     - [Create a global query](#create-a-global-query--experimental)
     - [Get the search status](#get-a-global-search-status--experimental)
     - [Get a global search result page](#get-a-global-search-result-page--experimental)
+- [Custom Queries]():
+    - [Create a custom query]()
+    - [Read a custom query]()
+    - [Delete a custom query]()
+    - [Show the custom query with given parameters]()
+    - [List all custom queries]()
+    - [Get a custom query search result page]()
+    - [Get a custom query search collection]()
 - [Indexes](#indexes)
     - [Add an index](#add-index-)
     - [Read an index creation status](#read-index-creation-status-)
@@ -945,6 +953,187 @@ Vary: Accept-Encoding
 ```
 
 The Location header contains the link to the first search result page.
+
+---
+
+## Custom Queries
+
+The way the queries you can do via the `Querying a container` endpoint work means that you can't have a permanent URL that points to the query results. The custom query endpoints will give you this permanent URL.
+
+### Create a custom query (🔒)
+
+#### Request
+
+The json sent to the endpoint is the CustomQuerySpecs, with the fields:
+
+- `name`: the name of the custom query, use only letters, digits, underscores `_` and dashes `-`
+- `query`: the query; see the request body in [Create a query](#create-a-query--experimental) for details on the query format.
+  Additionally, for custom queries you can replace values in the query with named parameters, by using `<paramname>`
+- `label`: (optional, default="") a short description of the query, will be shown in the query result page. The label can also contain parameters.
+- `description`: (optional, default="") a longer description of the query, will not be shown in the query result page.
+- `public`: (optional, default=true) a boolean indicating whether the query can be used in any container (true), or just in the containers the creator of the custom query has access to (false).
+
+```
+POST http://localhost:8080/global/custom-query HTTP/1.1
+
+{
+    "name": "with-motivation",
+    "query": {
+        "motivation": "<motivation>"
+    },
+    "label": "motivation=<motivation>",
+    "description": "This custom query returns those annotations where the motivation is the given value",
+    "public": true
+}
+```
+
+In `query` and `label` the parameter `motivation` is used.
+
+#### Response
+
+The `Location` header contains the url to the custom query:
+
+```
+HTTP/1.1 201
+
+Location: http://localhost:8080/global/custom-query/with-motivation
+```
+
+---
+
+### Read a custom query (🔒)
+
+This endpoint can be used by anonymous users if the custom query was made public.
+
+#### Request
+
+```
+GET http://localhost:8080/global/custom-query/{customQueryName} HTTP/1.1
+```
+
+#### Response
+
+The information from the CustomQuerySpecs is returned, with additionally the fields:
+- `created`: the time the query was created
+- `createdBy`: the username of the user that created the query
+- `paramters`: the parameters found in the `query` field of the CustomQuerySpecs
+
+```
+HTTP/1.1 200
+
+Content-Type: application/json
+
+{
+    "name": "with-motivation",
+    "description": "This custom query returns those annotations where the motivation is the given value",
+    "label": "motivation=<motivation>",
+    "created": "2024-08-15T15:02:59+0000",
+    "createdBy": "userName",
+    "public": true,
+    "queryTemplate": "{\"motivation\":\"<motivation>\"}",
+    "parameters": [
+        "motivation"
+    ]
+}
+```
+
+---
+
+### Delete a custom query (🔒)
+
+#### Request
+
+```
+DELETE http://localhost:8080/global/custom-query/{customQueryName} HTTP/1.1
+```
+
+#### Response
+
+```
+HTTP/1.1 204
+```
+
+---
+
+### Show the custom query with given parameters (🔒)
+
+This endpoint can be used by anonymous users if the custom query was made public.
+
+#### Request
+
+The customQueryCall is a combination of the custom query name and the parameter values, Base64 encoded.
+
+For example, calling the `with-motivation` custom query with the value `identifying` for the `motivation` parameter requires the following customQueryCall:
+
+`with-motivation:motivation=aWRlbnRpZnlpbmc=`
+
+where `aWRlbnRpZnlpbmc=` is the Base64-encoded form of `identifying`
+
+parameter assignments in the customQueryCall are separated with `,` so adding a second parameter `par` with value `par` would give this customQueryCall:
+
+`with-motivation:motivation=aWRlbnRpZnlpbmc=,par=cGFy`
+
+
+```
+GET http://localhost:8080/global/custom-query/{customQueryCall}/expand HTTP/1.1
+```
+
+#### Response
+
+```
+HTTP/1.1 200
+
+Content-Type: application/json
+
+{
+    "motivation": "identifying"
+}
+```
+
+---
+
+### List all custom queries
+
+#### Request
+
+```
+GET http://localhost:8080/global/custom-query HTTP/1.1
+```
+
+#### Response
+
+```
+```
+
+---
+
+  ### Get a custom query search result page for a container
+
+#### Request
+
+```
+GET http://localhost:8080/services/{containerName}/custom-query/{queryCall} HTTP/1.1
+```
+
+#### Response
+
+```
+```
+
+---
+
+### Get a custom query search collection for a container
+
+#### Request
+
+```
+GET http://localhost:8080/services/{containerName}/custom-query/{queryCall}/collection HTTP/1.1
+```
+
+#### Response
+
+```
+```
 
 ---
 
