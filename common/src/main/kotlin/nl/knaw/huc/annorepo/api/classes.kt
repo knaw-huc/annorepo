@@ -85,3 +85,11 @@ data class ChoreStatusSummary(
     val errors: List<String>,
     val processingTimeInMillis: Long
 )
+
+data class CustomQuerySpecs(
+    val name: String,
+    val query: PropertySet,
+    val label: String? = "",
+    val description: String? = "",
+    val public: Boolean? = true
+)

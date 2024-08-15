@@ -17,6 +17,7 @@ import io.mockk.runs
 import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.skyscreamer.jsonassert.JSONAssert
 import org.skyscreamer.jsonassert.JSONCompareMode
+import nl.knaw.huc.annorepo.api.CustomQuerySpecs
 import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ContainerDAO
@@ -31,52 +32,64 @@ class GlobalServiceResourceTest {
 
     @Test
     fun `test createCustomQuery with valid json`() {
-        val customQueryString = """
-            {
-              "name": "$CUSTOM_QUERY_NAME",
-              "label": "All the resolutions",
-              "query": {
-                "body.type":"Resolution"
-              }
-            }
-        """.trimIndent()
-        val response = resource.createCustomQuery(customQueryString, securityContext)
+//        val customQueryString = """
+//            {
+//              "name": "$CUSTOM_QUERY_NAME",
+//              "label": "All the resolutions",
+//              "query": {
+//                "body.type":"Resolution"
+//              }
+//            }
+//        """.trimIndent()
+        val setting = CustomQuerySpecs(
+            name = CUSTOM_QUERY_NAME,
+            label = "All the resolutions",
+            query = mapOf("body,type" to "Resolution"),
+            description = "",
+            public = true
+        )
+        val response = resource.createCustomQuery(setting, securityContext)
         println(response)
         println(response.location)
     }
 
     @Test
     fun `createCustomQuery with existing name throws exception`() {
-        val customQueryString = """
-            {
-              "name": "$CUSTOM_QUERY_NAME",
-              "query": {
-                "body.type":"Resolution"
-              }
-            }
-        """.trimIndent()
+//        val customQueryString = """
+//            {
+//              "name": "$CUSTOM_QUERY_NAME",
+//              "query": {
+//                "body.type":"Resolution"
+//              }
+//            }
+//        """.trimIndent()
+        val setting = CustomQuerySpecs(
+            name = CUSTOM_QUERY_NAME,
+            label = "All the lines",
+            query = mapOf("body,type" to "Line"),
+        )
         every { customQueryDAO.nameIsTaken(CUSTOM_QUERY_NAME) } returns true
         assertThatExceptionOfType(BadRequestException::class.java)
             .isThrownBy {
-                val response = resource.createCustomQuery(customQueryString, securityContext)
+                val response = resource.createCustomQuery(setting, securityContext)
                 println(response)
             }.withMessage(
                 """A custom query with the name '$CUSTOM_QUERY_NAME' already exists"""
             )
     }
 
-    @Test
-    fun `test createCustomQuery with invalid json`() {
-        val customQueryString = "Hello World"
-        assertThatExceptionOfType(BadRequestException::class.java)
-            .isThrownBy {
-                val response = resource.createCustomQuery(customQueryString, securityContext)
-                println(response)
-            }.withMessage(
-                """invalid json: Unrecognized token 'Hello': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')
- at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 6]"""
-            )
-    }
+//    @Test
+//    fun `test createCustomQuery with invalid json`() {
+//        val customQueryString = "Hello World"
+//        assertThatExceptionOfType(BadRequestException::class.java)
+//            .isThrownBy {
+//                val response = resource.createCustomQuery(customQueryString, securityContext)
+//                println(response)
+//            }.withMessage(
+//                """invalid json: Unrecognized token 'Hello': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')
+// at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 6]"""
+//            )
+//    }
 
     @Test
     fun `test getCustomQuery with valid name`() {

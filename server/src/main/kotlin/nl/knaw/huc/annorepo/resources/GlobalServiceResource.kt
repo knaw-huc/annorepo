@@ -33,6 +33,7 @@ import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.AnnotationPage
+import nl.knaw.huc.annorepo.api.CustomQuerySpecs
 import nl.knaw.huc.annorepo.api.PropertySet
 import nl.knaw.huc.annorepo.api.ResourcePaths.CUSTOM_QUERY
 import nl.knaw.huc.annorepo.api.ResourcePaths.EXPAND
@@ -144,12 +145,13 @@ class GlobalServiceResource(
     @Path(CUSTOM_QUERY)
     @Consumes(APPLICATION_JSON)
     fun createCustomQuery(
-        customQueryJson: String,
+        customQuerySettings: CustomQuerySpecs,
         @Context context: SecurityContext,
     ): Response {
         context.checkUserHasAdminRights()
         val userName = context.userPrincipal?.name ?: ""
-        val settings = parseJson(customQueryJson)
+//        val settings = parseJson(customQueryJson)
+        val settings = customQuerySettings
         if (customQueryDAO.nameIsTaken(settings.name)) {
             throw BadRequestException("A custom query with the name '${settings.name}' already exists")
         }
@@ -181,7 +183,7 @@ class GlobalServiceResource(
         @Context context: SecurityContext,
     ): Response {
         val customQuery = customQueryDAO.getByName(customQueryName) ?: throw NotFoundException()
-        if (!customQuery.public){
+        if (!customQuery.public) {
             context.checkUserHasAdminRights()
         }
         return Response.ok(customQuery).build()
@@ -218,7 +220,7 @@ class GlobalServiceResource(
         val (customQueryName, parameters) = CustomQueryTools.decode(customQueryCall)
             .getOrElse { throw BadRequestException(it.message) }
         val customQuery = customQueryDAO.getByName(customQueryName) ?: throw NotFoundException()
-        if (!customQuery.public){
+        if (!customQuery.public) {
             context.checkUserHasAdminRights()
         }
         val missingParameters = customQuery.parameters.toSet() - parameters.keys
@@ -242,15 +244,7 @@ class GlobalServiceResource(
         return Response.ok(allQueries).build()
     }
 
-    data class CustomQuerySettings(
-        val name: String,
-        val query: PropertySet,
-        val label: String?,
-        val description: String?,
-        val public: Boolean?
-    )
-
-    private fun parseJson(jsonString: String): CustomQuerySettings {
+    private fun parseJson(jsonString: String): CustomQuerySpecs {
         try {
             val propertySet: PropertySet = objectMapper.readValue<PropertySet>(jsonString)
             val keys = propertySet.keys
@@ -260,7 +254,7 @@ class GlobalServiceResource(
                 val public: Boolean? = propertySet.optional<Boolean>("public")
                 val label: String? = propertySet.optional<String>("label")
                 val description: String? = propertySet.optional<String>("description")
-                return CustomQuerySettings(
+                return CustomQuerySpecs(
                     name = name,
                     query = query,
                     public = public,
@@ -351,6 +345,6 @@ class GlobalServiceResource(
     private fun searchPageUri(searchUri: URI, page: Int) =
         UriBuilder.fromUri(searchUri).queryParam("page", page).build().toString()
 
-//    sorting the results?
+    //    sorting the results?
 }
 
