@@ -62,7 +62,7 @@
         <protobuf.version>3.25.4</protobuf.version>
         <slf4j.version>2.0.9</slf4j.version>
         <swagger-annotations.version>1.6.6</swagger-annotations.version>
-        <titanium-json-ld.version>1.4.0</titanium-json-ld.version>
+        <titanium-json-ld.version>1.4.1</titanium-json-ld.version>
 
         <!-- test dependencies -->
         <assertj-core.version>3.24.2</assertj-core.version>
