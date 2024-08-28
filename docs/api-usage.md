@@ -782,6 +782,22 @@ Currently, the following query functions are available:
   This function will return those annotations that overlap with the _TextAnchorRange_ defined by the `source` uri and
   the `start` and `end` _TextAnchor_ numbers.
 
+##### `or` query
+
+Using the `:or` query construction, you can match annotations with at least one of a given list of _field query_ s
+
+example:
+
+```
+{
+  ":or": [
+    { "motivation": "classifying" },
+    { "body.type": "Entity" }
+  ]
+}
+```
+
+
 #### Response
 
 ```
