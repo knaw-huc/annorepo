@@ -1103,11 +1103,34 @@ GET http://localhost:8080/global/custom-query HTTP/1.1
 #### Response
 
 ```
+HTTP/1.1 200
+
+Content-Type: application/json
+
+[
+    {
+        "name": "with-motivation",
+        "description": "This custom query returns those annotations where the motivation is the given value",
+        "label": "motivation=<motivation>",
+        "created": "2024-08-15T15:02:59+0000",
+        "createdBy": ":root:",
+        "public": true,
+        "queryTemplate": "{\"motivation\":\"<motivation>\"}",
+        "parameters": [
+            "motivation"
+        ]
+    }
+]
 ```
 
 ---
 
-  ### Get a custom query search result page for a container
+### Get a custom query search result page for a container
+
+You can use the custom query in a container you have read access to, provided
+
+- the custom query is public, or
+- you are the creator of the custom query
 
 #### Request
 
@@ -1117,7 +1140,33 @@ GET http://localhost:8080/services/{containerName}/custom-query/{queryCall} HTTP
 
 #### Response
 
+The matching annotations are returned in an AnnotationPage
+
+The `Link` header gives the url for the custom query definition (`using`) and the expanded query (`query`)
+
 ```
+HTTP/1.1 200
+
+Link: <http://localhost:8080/global/custom-query/with-motivation>; rel="using", <http://localhost:8080/global/custom-query/with-motivation:motivation=aWRlbnRpZnlpbmc=/expand>; rel="query"
+Content-Type: application/json
+
+{
+    "@context": [
+        "http://www.w3.org/ns/anno.jsonld"
+    ],
+    "id": "http://localhost:8080/services/{containerName}/custom-query/{queryCall}?page=0",
+    "type": "AnnotationPage",
+    "partOf": {
+        "id": "http://localhost:8080/services/{containerName}/custom-query/{queryCall}/collection",
+        "type": "AnnotationCollection",
+        "label": "{queryCallLabel}"
+    },
+    "startIndex": 0,
+    "items": [
+      ...
+    ]
+}
+
 ```
 
 ---
@@ -1133,6 +1182,21 @@ GET http://localhost:8080/services/{containerName}/custom-query/{queryCall}/coll
 #### Response
 
 ```
+HTTP/1.1 200
+
+Content-Type: application/json
+
+{
+    "@context": "http://www.w3.org/ns/anno.jsonld",
+    "id": "http://localhost:8080/services/{containerName}/custom-query/{queryCall}/collection",
+    "type": "AnnotationCollection",
+    "label": "{queryCallLabel}",
+    "creator": ":root:",
+    "first": {
+        "id": "http://localhost:8080/services/{containerName}/custom-query/{queryCall}?page=0",
+        "type": "AnnotationPage"
+    }
+}
 ```
 
 ---
