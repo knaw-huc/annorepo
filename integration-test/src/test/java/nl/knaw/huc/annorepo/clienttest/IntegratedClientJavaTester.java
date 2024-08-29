@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.core.EntityTag;
 import nl.knaw.huc.annorepo.api.*;
 import nl.knaw.huc.annorepo.client.ARResult;
+import nl.knaw.huc.annorepo.client.ARResult.DeleteResult;
 import nl.knaw.huc.annorepo.client.ARResult.GetSearchResultPageResult;
 import nl.knaw.huc.annorepo.client.AnnoRepoClient;
 import nl.knaw.huc.annorepo.client.RequestError;
@@ -156,7 +157,7 @@ public class IntegratedClientJavaTester {
                                 String containerName = result.getContainerName();
                                 String eTag = result.getETag();
                                 client.deleteContainer(containerName, eTag, false).map(
-                                        (ARResult.DeleteContainerResult result2) -> true
+                                        (DeleteResult result2) -> true
                                 );
                                 return true;
                             }
@@ -244,7 +245,7 @@ public class IntegratedClientJavaTester {
                         handleError(error);
                         return false;
                     },
-                    (ARResult.DeleteAnnotationResult result) -> true
+                    (DeleteResult result) -> true
             );
             assertThat(success).isTrue();
 
@@ -519,7 +520,7 @@ public class IntegratedClientJavaTester {
                         handleError(error);
                         return false;
                     },
-                    (ARResult.DeleteIndexResult result) -> true
+                    (DeleteResult result) -> true
             );
             assertThat(success).isTrue();
         }
@@ -581,7 +582,14 @@ public class IntegratedClientJavaTester {
                         return true;
                     }
             );
-            boolean deletionSuccess = client.deleteUser(userName).isRight();
+//            boolean deletionSuccess = client.deleteUser(userName).isRight();
+            boolean deletionSuccess = client.deleteUser(userName).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    (DeleteResult result) -> true
+            );
             assertThat(deletionSuccess).isTrue();
         }
 
@@ -645,7 +653,15 @@ public class IntegratedClientJavaTester {
         void testDeleteContainerUser() {
             String containerName = "my-container";
             String userName = "userName";
-            boolean deletionSuccess = client.deleteContainerUser(containerName, userName).isRight();
+//            boolean deletionSuccess = client.deleteContainerUser(containerName, userName).isRight();
+            boolean deletionSuccess = client.deleteContainerUser(containerName, userName).fold(
+                    (RequestError error) -> {
+                        handleError(error);
+                        return false;
+                    },
+                    (DeleteResult result) -> true
+
+            );
             assertThat(deletionSuccess).isTrue();
         }
     }

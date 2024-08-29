@@ -9,6 +9,12 @@ import io.dropwizard.auth.AuthFilter
 
 class UnauthenticatedAuthFilter<P> : AuthFilter<P, Principal>() {
 
+//    override fun filter(crc: ContainerRequestContext?) {
+//        log.info("ContainerRequestContext={}", crc)
+//        log.info("userPrincipal={}", crc!!.securityContext.userPrincipal)
+//        log.info("access without credentials")
+//    }
+
     @Throws(WebApplicationException::class)
     override fun filter(requestContext: ContainerRequestContext) {
         // Check if credentials are provided

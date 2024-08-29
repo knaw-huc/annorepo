@@ -39,7 +39,7 @@ abstract class AbstractContainerResource(
         }
     }
 
-    protected fun SecurityContext.checkUserHasContainerCreationRights() {
+    protected fun SecurityContext.checkUserHasAdminRights() {
         if (configuration.withAuthentication && userPrincipal == null) {
             throw NotAuthorizedException("Anonymous user does not have access rights to this endpoint")
         }

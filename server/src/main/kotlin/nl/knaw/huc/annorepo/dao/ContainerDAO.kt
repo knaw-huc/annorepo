@@ -9,7 +9,6 @@ import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 
 interface ContainerDAO {
     fun containerExists(containerName: String): Boolean
-
     fun listCollectionNames(): List<String>
     fun getCollectionStats(containerName: String): Document
     fun getAnnotationFields(containerName: String): SortedMap<String, Int>

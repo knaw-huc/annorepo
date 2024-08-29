@@ -1,9 +1,8 @@
 package nl.knaw.huc.annorepo.grpc
 
 import jakarta.ws.rs.NotFoundException
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
@@ -16,7 +15,7 @@ import nl.knaw.huc.annorepo.dao.ContainerDAO
 class AnnotationUploadService(
     private val containerDAO: ContainerDAO,
 ) : AnnotationUploadServiceGrpcKt.AnnotationUploadServiceCoroutineImplBase() {
-    private val objectMapper = ObjectMapper().registerKotlinModule()
+    private val objectMapper = jacksonObjectMapper()
 
     override fun addAnnotations(requests: Flow<AddAnnotationsRequest>): Flow<AddAnnotationsResponse> {
         val headers = GrpcServerInterceptor.HEADERS_VALUE.get()

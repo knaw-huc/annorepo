@@ -38,7 +38,9 @@ import nl.knaw.huc.annorepo.cli.EnvCommand
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ARContainerDAO
 import nl.knaw.huc.annorepo.dao.ARContainerUserDAO
+import nl.knaw.huc.annorepo.dao.ARCustomQueryDAO
 import nl.knaw.huc.annorepo.dao.ARUserDAO
+import nl.knaw.huc.annorepo.filters.CorsFilter
 import nl.knaw.huc.annorepo.filters.JSONPrettyPrintFilter
 import nl.knaw.huc.annorepo.grpc.AnnotationUploadService
 import nl.knaw.huc.annorepo.grpc.GrpcServerInterceptor
@@ -86,6 +88,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         return JobsBundle(expiredChoresCleanerJob)
     }
 
+    @OptIn(ExperimentalStdlibApi::class)
     override fun run(configuration: AnnoRepoConfiguration?, environment: Environment) {
         val maxEnvVarLen = max(EnvironmentVariable.entries.map { it.name.length })
         logger.info {
@@ -106,6 +109,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         val userDAO = ARUserDAO(configuration, mongoClient)
         val containerDAO = ARContainerDAO(configuration, mongoClient)
         val containerUserDAO = ARContainerUserDAO(configuration, mongoClient)
+        val customQueryDAO = ARCustomQueryDAO(configuration, mongoClient)
 
         val containerAccessChecker = ContainerAccessChecker(containerUserDAO)
         val searchManager = SearchManager(containerDAO = containerDAO, configuration = configuration)
@@ -120,25 +124,28 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             .build()
 
         environment.jersey().apply {
+            register(CorsFilter())
             register(AboutResource(configuration, name, appVersion, mongoVersion))
             register(HomePageResource())
             register(W3CResource(configuration, containerDAO, containerUserDAO, uriFactory, indexManager))
             register(
                 ContainerServiceResource(
-                    configuration,
-                    containerUserDAO,
-                    containerDAO,
-                    uriFactory,
-                    indexManager
+                    configuration = configuration,
+                    containerUserDAO = containerUserDAO,
+                    containerDAO = containerDAO,
+                    customQueryDAO = customQueryDAO,
+                    uriFactory = uriFactory,
+                    indexManager = indexManager,
                 )
             )
             register(
                 GlobalServiceResource(
-                    configuration,
-                    containerDAO,
-                    containerUserDAO,
-                    searchManager,
-                    uriFactory
+                    configuration = configuration,
+                    containerDAO = containerDAO,
+                    containerUserDAO = containerUserDAO,
+                    customQueryDAO = customQueryDAO,
+                    searchManager = searchManager,
+                    uriFactory = uriFactory
                 )
             )
             register(BatchResource(configuration, containerDAO, containerAccessChecker))
@@ -182,7 +189,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             "\n\n  Starting $name (v$appVersion)\n" +
                     "    locally accessible at    " +
                     "http://localhost:${System.getenv(EnvironmentVariable.AR_SERVER_PORT.name) ?: 8080}\n" +
-                    "    externally accessible at ${configuration?.externalBaseUrl}\n"
+                    "    externally accessible at ${configuration.externalBaseUrl}\n"
         }
         val heapSpace = Runtime.getRuntime().totalMemory().formatAsSize
         logger.info { "Heap space = $heapSpace" }

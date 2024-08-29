@@ -1,4 +1,5 @@
 import java.net.URI
+import java.util.UUID
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import arrow.core.Either
@@ -11,6 +12,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.IndexType
+import nl.knaw.huc.annorepo.api.QueryAsMap
 import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.api.UserEntry
 import nl.knaw.huc.annorepo.api.WebAnnotation
@@ -23,9 +25,10 @@ import nl.knaw.huc.annorepo.client.ARResult.BatchUploadResult
 import nl.knaw.huc.annorepo.client.ARResult.ContainerUsersResult
 import nl.knaw.huc.annorepo.client.ARResult.CreateAnnotationResult
 import nl.knaw.huc.annorepo.client.ARResult.CreateContainerResult
+import nl.knaw.huc.annorepo.client.ARResult.CreateCustomQueryResult
 import nl.knaw.huc.annorepo.client.ARResult.CreateSearchResult
-import nl.knaw.huc.annorepo.client.ARResult.DeleteAnnotationResult
-import nl.knaw.huc.annorepo.client.ARResult.DeleteIndexResult
+import nl.knaw.huc.annorepo.client.ARResult.DeleteResult
+import nl.knaw.huc.annorepo.client.ARResult.FilterContainerAnnotationsResult
 import nl.knaw.huc.annorepo.client.ARResult.GetAnnotationResult
 import nl.knaw.huc.annorepo.client.ARResult.GetGlobalSearchStatusResult
 import nl.knaw.huc.annorepo.client.ARResult.GetIndexCreationStatusResult
@@ -36,7 +39,6 @@ import nl.knaw.huc.annorepo.client.ARResult.MyContainersResult
 import nl.knaw.huc.annorepo.client.ARResult.UsersResult
 import nl.knaw.huc.annorepo.client.AnnoRepoClient
 import nl.knaw.huc.annorepo.client.AnnoRepoClient.Companion.create
-import nl.knaw.huc.annorepo.client.FilterContainerAnnotationsResult
 import nl.knaw.huc.annorepo.client.RequestError
 import nl.knaw.huc.annorepo.client.untangled
 
@@ -137,7 +139,7 @@ class IntegratedClientKotlinTester {
                 val entityTag = response.entityTag
                 doSomethingWith(eTag1, entity, entityTag)
             }.mapLeft<Void> { requestError ->
-                logger.error { "error=$requestError" }
+                logError(requestError)
                 fail(requestError.message)
             }
         }
@@ -149,7 +151,7 @@ class IntegratedClientKotlinTester {
                 doSomethingWith(response.status, location)
                 client.deleteContainer(containerName, eTag)
             }.mapLeft<Void> { requestError ->
-                logger.error { "error=$requestError" }
+                logError(requestError)
                 fail(requestError.message)
             }
         }
@@ -162,7 +164,7 @@ class IntegratedClientKotlinTester {
                 doSomethingWith(response2.status)
                 client.deleteContainer(containerName, eTag)
             }.mapLeft<Void> { requestError ->
-                logger.error { "error=$requestError" }
+                logError(requestError)
                 fail(requestError.message)
             }
         }
@@ -247,7 +249,7 @@ class IntegratedClientKotlinTester {
                         handleError(error)
                         false
                     },
-                    { _: DeleteAnnotationResult -> true })
+                    { _: DeleteResult -> true })
             assertThat(success).isTrue
             return true
         }
@@ -278,15 +280,17 @@ class IntegratedClientKotlinTester {
         fun testFilterContainerAnnotations() {
             val containerName = "republic"
             val query = mapOf("body.type" to "Page")
-            client.filterContainerAnnotations(containerName, query)
-                .fold(
-                    { error: RequestError -> handleError(error) },
-                    { (searchId, annotations): FilterContainerAnnotationsResult ->
-                        annotations.forEach { a: Either<RequestError, String> ->
-                            a.fold({ e: RequestError -> handleError(e) },
-                                { jsonString: String -> doSomethingWith(searchId, jsonString) })
-                        }
-                    })
+            client.filterContainerAnnotations(containerName, query).fold(
+                { error: RequestError -> handleError(error) },
+                { (_, searchId, annotations): FilterContainerAnnotationsResult ->
+                    annotations.forEach { a: Either<RequestError, String> ->
+                        a.fold(
+                            { e: RequestError -> handleError(e) },
+                            { jsonString: String -> doSomethingWith(searchId, jsonString) }
+                        )
+                    }
+                }
+            )
         }
 
         @Test
@@ -388,7 +392,7 @@ class IntegratedClientKotlinTester {
             assertThat(create_success).isTrue
 
             // read status
-            val read_status_success =
+            val readStatusSuccess =
                 client.getIndexCreationStatus(containerName, fieldName, indexType).fold(
                     { error: RequestError ->
                         handleError(error)
@@ -399,10 +403,10 @@ class IntegratedClientKotlinTester {
                         true
                     }
                 )
-            assertThat(read_status_success).isTrue
+            assertThat(readStatusSuccess).isTrue
 
             // read
-            val read_success = client.getIndex(containerName, fieldName, indexType).fold(
+            val readSuccess = client.getIndex(containerName, fieldName, indexType).fold(
                 { error: RequestError ->
                     handleError(error)
                     false
@@ -412,17 +416,17 @@ class IntegratedClientKotlinTester {
                     true
                 }
             )
-            assertThat(read_success).isTrue
+            assertThat(readSuccess).isTrue
 
             // delete
-            val delete_success = client.deleteIndex(containerName, fieldName, indexType).fold(
+            val deleteSuccess = client.deleteIndex(containerName, fieldName, indexType).fold(
                 { error: RequestError ->
                     handleError(error)
                     false
                 },
-                { _: DeleteIndexResult -> true }
+                { _: DeleteResult -> true }
             )
-            assertThat(delete_success).isTrue
+            assertThat(deleteSuccess).isTrue
         }
 
         @Test
@@ -538,7 +542,7 @@ class IntegratedClientKotlinTester {
             client.deleteContainerUser(containerName, newUserName).fold({ error: RequestError ->
                 handleError(error)
                 false
-            }, { result: ARResult.DeleteContainerUserResult ->
+            }, { result: DeleteResult ->
                 doSomethingWith(result.response.status)
                 true
             })
@@ -558,19 +562,19 @@ class IntegratedClientKotlinTester {
             val userName = "userName"
             val containerUserEntries = listOf(ContainerUserEntry(userName, Role.EDITOR))
             client.addContainerUsers(containerName, containerUserEntries)
-                .fold({ error: RequestError -> handleError(error) },
-                    { (_, newContainerUsersList): ContainerUsersResult ->
-                        doSomethingWith(
-                            newContainerUsersList
-                        )
-                    })
+                .fold(
+                    { error: RequestError -> handleError(error) },
+                    { (_, newContainerUsersList): ContainerUsersResult -> doSomethingWith(newContainerUsersList) }
+                )
         }
 
         @Test
         fun testGetContainerUsers() {
             val containerName = "my-container"
-            client.getContainerUsers(containerName).fold({ error: RequestError -> handleError(error) },
-                { (_, containerUserEntries): ContainerUsersResult -> doSomethingWith(containerUserEntries) })
+            client.getContainerUsers(containerName).fold(
+                { error: RequestError -> handleError(error) },
+                { (_, containerUserEntries): ContainerUsersResult -> doSomethingWith(containerUserEntries) }
+            )
         }
 
         @Test
@@ -586,8 +590,10 @@ class IntegratedClientKotlinTester {
     inner class MyTests {
         @Test
         fun testMyContainers() {
-            client.getMyContainers().fold({ error: RequestError -> handleError(error) },
-                { (_, containers): MyContainersResult -> doSomethingWith(containers) })
+            client.getMyContainers().fold(
+                { error: RequestError -> handleError(error) },
+                { (_, containers): MyContainersResult -> doSomethingWith(containers) }
+            )
         }
     }
 
@@ -605,7 +611,7 @@ class IntegratedClientKotlinTester {
                 val myContainersAfterDelete = client.getMyContainers().bind().containers
                 assertThat(myContainersAfterDelete["ROOT"]).doesNotContain(containerName)
             }.mapLeft<Void> {
-                logger.error { "error=$it" }
+                logError(it)
                 fail(it.message)
             }
         }
@@ -640,12 +646,90 @@ class IntegratedClientKotlinTester {
 
                 client.deleteContainer(containerName, containerETag, force = true).bind()
             }.mapLeft<Void> {
-                logger.error { "error=$it" }
+                logError(it)
                 fail(it.message)
             }
 
         }
 
+    }
+
+    @Nested
+    inner class CustomQueryTests {
+        @Test
+        fun `creating and deleting a custom query`() {
+            val customQueryName = "body-type-test-${UUID.randomUUID()}"
+            client.createCustomQuery(
+                name = customQueryName,
+                queryTemplate = mapOf("body.type" to "<type>"),
+                label = "Annotations of body type <type>",
+                public = true
+            ).fold(
+                { error: RequestError -> handleError(error) },
+                { (_, location): CreateCustomQueryResult -> doSomethingWith(location!!) }
+            )
+            client.deleteCustomQuery(name = customQueryName).fold(
+                { error: RequestError -> handleError(error) },
+                { (response): DeleteResult -> doSomethingWith(response.status) }
+            )
+        }
+
+        @Test
+        fun `custom query life cycle`() {
+            val customQueryName = "body-type-test-${UUID.randomUUID()}"
+            val bodyType = "Page"
+            either {
+                val createCustomQueryResult = client.createCustomQuery(
+                    name = customQueryName,
+                    queryTemplate = mapOf("body.type" to "<type>"),
+                    label = "Annotations of body type <type>",
+                    public = true
+                ).bind()
+                assertThat(createCustomQueryResult.location).isNotNull()
+
+                val expandedQuery: QueryAsMap =
+                    client.readExpandedCustomQuery(customQueryName, mapOf("type" to "Entity")).bind()
+                val expectedQuery = mapOf(
+                    "body.type" to "Entity"
+                )
+                assertThat(expandedQuery).isEqualTo(expectedQuery)
+
+                val containerAdapter = client.containerAdapter("republic-2024.05.17")
+
+                val resultPage = containerAdapter.getCustomQueryResultPage(
+                    name = customQueryName,
+                    parameters = mapOf("type" to "Line")
+                ).bind()
+                assertThat(resultPage).isNotNull()
+
+                val regularQueryResults =
+                    containerAdapter.filterContainerAnnotations(mapOf("body.type" to bodyType)).bind()
+                val regularQueryResultList = regularQueryResults.annotations.toList()
+//                log.info(regularQueryResultList.first().bind())
+                val textRegionCount = regularQueryResultList.size
+
+                val results: Sequence<Either<RequestError, WebAnnotationAsMap>> =
+                    containerAdapter.getCustomQueryResultSequence(
+                        name = customQueryName,
+                        parameters = mapOf("type" to bodyType)
+                    )
+                val collectedResults = results.let { s ->
+                    either {
+                        s.map { it.bind() }.toList()
+                    }
+                }.bind()
+//                collectedResults.forEachIndexed { i, r ->
+//                    println("$i: ${r.getNestedValue("body.id")}")
+//                }
+                assertThat(collectedResults).hasSize(textRegionCount)
+
+                val deleteCustomQueryResult = client.deleteCustomQuery(name = customQueryName).bind()
+                assertThat(deleteCustomQueryResult.response).isNotNull()
+            }.mapLeft<Void> {
+                logError(it)
+                fail(it.message)
+            }
+        }
     }
 
     companion object {
@@ -670,4 +754,21 @@ class IntegratedClientKotlinTester {
         }
     }
 
+    private fun logError(requestError: RequestError) {
+        logger.error { "error=$requestError" }
+    }
+
+    private fun WebAnnotationAsMap.getNestedValue(key: String): Any? {
+        val keyParts = key.split(".")
+        var valueMap = this.getOrDefault(keyParts[0], null)
+        keyParts.stream().skip(1).forEach { k ->
+            valueMap = if (valueMap is Map<*, *>) {
+                (valueMap as Map<*, *>).getOrDefault(k, null)
+            } else {
+                null
+            }
+        }
+        return valueMap
+    }
 }
+

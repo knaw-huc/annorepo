@@ -11,6 +11,7 @@ import nl.knaw.huc.annorepo.api.IndexType.TEXT
 import nl.knaw.huc.annorepo.dao.ContainerDAO
 
 class IndexManager(val containerDAO: ContainerDAO) {
+
     fun startIndexCreation(
         containerName: String,
         fieldName: String,

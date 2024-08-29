@@ -7,6 +7,7 @@ import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
 
 class ContainerAccessChecker(private val containerUserDAO: ContainerUserDAO) {
+
     fun checkUserHasAdminRightsInThisContainer(userPrincipal: Principal?, containerName: String) {
         checkUserRightsInThisContainer(userPrincipal, containerName, setOf(Role.ADMIN))
     }

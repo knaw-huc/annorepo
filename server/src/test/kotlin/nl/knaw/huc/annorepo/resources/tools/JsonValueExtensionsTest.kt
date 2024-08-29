@@ -8,6 +8,7 @@ import org.apache.logging.log4j.kotlin.logger
 import org.assertj.core.api.Assertions.assertThat
 
 class JsonValueExtensionsTest {
+
     @Test
     fun `simplifying a complex JsonValue works as expected`() {
         val json = """

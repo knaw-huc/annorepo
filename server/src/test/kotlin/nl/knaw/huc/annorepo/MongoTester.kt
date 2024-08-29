@@ -3,18 +3,21 @@ package nl.knaw.huc.annorepo
 import java.io.StringReader
 import jakarta.json.Json
 import jakarta.json.JsonValue
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import com.mongodb.client.MongoDatabase
 import org.apache.logging.log4j.kotlin.logger
 import org.assertj.core.api.Assertions.assertThat
 import org.litote.kmongo.KMongo
 import nl.knaw.huc.annorepo.api.ARConst
+import nl.knaw.huc.annorepo.api.PropertySet
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ARContainerDAO
 import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
 import nl.knaw.huc.annorepo.resources.tools.hasAnnotationNameIndex
 import nl.knaw.huc.annorepo.resources.tools.toSimpleValue
 
+@Disabled
 class MongoTester {
     private val mongoClient = KMongo.createClient("mongodb://localhost/")
     private val mdb: MongoDatabase = mongoClient.getDatabase("annorepo")
@@ -25,7 +28,7 @@ class MongoTester {
     fun test() {
         val containerName = "republic"
         val queryJson = """{"body.id":"urn:republic:NL-HaNA_1.01.02_3783_0051-page-101"}"""
-        val queryMap: Map<String, Any?> = Json.createReader(StringReader(queryJson)).readObject().toMap().simplify()
+        val queryMap: PropertySet = Json.createReader(StringReader(queryJson)).readObject().toMap().simplify()
 //        val queryMap: Map<String, Any?> = mapOf("body.id" to "urn:republic:NL-HaNA_1.01.02_3783_0051-page-101")
         println(queryMap)
 
@@ -88,7 +91,7 @@ class MongoTester {
         }
     }
 
-    private fun Map<String, JsonValue>.simplify(): Map<String, Any?> {
+    private fun Map<String, JsonValue>.simplify(): PropertySet {
         val newMap = mutableMapOf<String, Any?>()
         for (e in entries) {
             logger.info { "e=$e" }

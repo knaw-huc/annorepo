@@ -10,11 +10,13 @@ import io.mockk.junit5.MockKExtension
 import net.javacrumbs.jsonunit.assertj.assertThatJson
 import org.apache.logging.log4j.kotlin.logger
 import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
+import org.assertj.core.api.AssertionsForInterfaceTypes.assertThatExceptionOfType
 import org.litote.kmongo.json
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 
 @ExtendWith(MockKExtension::class)
 class AggregateStageGeneratorTest {
+
     @RelaxedMockK
     lateinit var config: AnnoRepoConfiguration
 
@@ -49,13 +51,9 @@ class AggregateStageGeneratorTest {
     @Test
     fun `query key starting with colon should be a defined query function`() {
         val asg = AggregateStageGenerator(config)
-        try {
-            asg.generateStage(":myQueryFunction", mapOf("parameter1" to "value1"))
-            fail("expected BadRequestException")
-        } catch (bre: BadRequestException) {
-            logger.info { bre.toString() }
-            assertThat(bre.message).isEqualTo("Unknown query function: ':myQueryFunction'")
-        }
+        assertThatExceptionOfType(BadRequestException::class.java)
+            .isThrownBy { asg.generateStage(":myQueryFunction", mapOf("parameter1" to "value1")) }
+            .withMessage("Unknown query function: ':myQueryFunction'")
     }
 
     @Test
@@ -308,6 +306,27 @@ class AggregateStageGeneratorTest {
             }""".trimIndent().replace('@', '$')
         assertThatJson(stage.json).isEqualTo(expected)
         logger.info { stage.json }
+    }
 
+    @Test
+    fun `special field matching - or`() {
+        val asg = AggregateStageGenerator(config)
+        val key = OR
+        val value = arrayOf(mapOf("body.type" to "Page"), mapOf("body.type" to "Line"))
+        val stage = asg.generateStage(key, value)
+        logger.info(stage)
+        logger.info(stage.json)
+        val expected = """
+            {
+                "@match": {
+                    "@or": [
+                        { "annotation.body.type": "Page"}, 
+                        { "annotation.body.type": "Line"} 
+                    ]
+                }
+            }
+            """.trimIndent()
+            .replace('@', '$')
+        assertThatJson(stage.json).isEqualTo(expected)
     }
 }

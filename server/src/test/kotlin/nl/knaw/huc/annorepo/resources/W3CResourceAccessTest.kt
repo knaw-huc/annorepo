@@ -258,4 +258,3 @@ class W3CResourceAccessTest {
         }
     }
 }
-

@@ -12,6 +12,7 @@ class EnvCommand : Command("env", "Shows the environment variables you can use")
 
     }
 
+    @OptIn(ExperimentalStdlibApi::class)
     override fun run(bootstrap: Bootstrap<*>?, namespace: Namespace?) {
         ARConst.EnvironmentVariable.entries.toTypedArray().sorted().forEach { v ->
             println(v.name)

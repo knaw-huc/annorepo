@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class AnnotationPage(
     val id: String,
-    val partOf: String,
+    val partOf: Map<String, String>,
     val startIndex: Int,
     val items: List<WebAnnotationAsMap>,
     @JsonProperty("@context") val context: List<String>? = null,

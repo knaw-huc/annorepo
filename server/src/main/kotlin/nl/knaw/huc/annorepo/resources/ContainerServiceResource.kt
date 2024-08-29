@@ -9,6 +9,7 @@ import jakarta.json.Json
 import jakarta.ws.rs.BadRequestException
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.ForbiddenException
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.NotFoundException
 import jakarta.ws.rs.POST
@@ -26,7 +27,9 @@ import com.codahale.metrics.annotation.Timed
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
+import com.google.common.cache.RemovalListener
 import com.mongodb.client.MongoCollection
+import com.mongodb.client.MongoCursor
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Aggregates.limit
 import com.mongodb.client.model.Filters
@@ -47,7 +50,9 @@ import nl.knaw.huc.annorepo.api.IndexConfig
 import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.QueryAsMap
 import nl.knaw.huc.annorepo.api.ResourcePaths.ANNOTATIONS_BATCH
+import nl.knaw.huc.annorepo.api.ResourcePaths.COLLECTION
 import nl.knaw.huc.annorepo.api.ResourcePaths.CONTAINER_SERVICES
+import nl.knaw.huc.annorepo.api.ResourcePaths.CUSTOM_QUERY
 import nl.knaw.huc.annorepo.api.ResourcePaths.DISTINCT_FIELD_VALUES
 import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
 import nl.knaw.huc.annorepo.api.ResourcePaths.INDEXES
@@ -62,11 +67,16 @@ import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
+import nl.knaw.huc.annorepo.dao.CustomQueryDAO
 import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
 import nl.knaw.huc.annorepo.resources.tools.AnnotationList
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
+import nl.knaw.huc.annorepo.resources.tools.CustomQueryTools
+import nl.knaw.huc.annorepo.resources.tools.CustomQueryTools.interpolate
 import nl.knaw.huc.annorepo.resources.tools.IndexManager
 import nl.knaw.huc.annorepo.resources.tools.QueryCacheItem
+import nl.knaw.huc.annorepo.resources.tools.annotationCollectionLink
+import nl.knaw.huc.annorepo.resources.tools.isOpenAndHasNext
 import nl.knaw.huc.annorepo.resources.tools.simplify
 import nl.knaw.huc.annorepo.service.UriFactory
 
@@ -78,6 +88,7 @@ class ContainerServiceResource(
     private val configuration: AnnoRepoConfiguration,
     private val containerUserDAO: ContainerUserDAO,
     private val containerDAO: ContainerDAO,
+    private val customQueryDAO: CustomQueryDAO,
     private val uriFactory: UriFactory,
     private val indexManager: IndexManager
 ) : AbstractContainerResource(configuration, containerDAO, ContainerAccessChecker(containerUserDAO)) {
@@ -88,6 +99,19 @@ class ContainerServiceResource(
     private val queryCache: LoadingCache<String, QueryCacheItem> = CacheBuilder.newBuilder()
         .maximumSize(1000)
         .expireAfterAccess(1, TimeUnit.HOURS)
+        .build(CacheLoader.from { _: String -> null })
+
+    private val mongoCursorRemovalListener =
+        RemovalListener<String, MongoCursor<Document>> { removal ->
+            val cursor = removal.value
+            logger.info { "removing ${removal.key} from cache" }
+            logger.info { "closing cursor ${removal.key}" }
+            cursor?.close()
+        }
+    private val mongoCursorCache: LoadingCache<String, MongoCursor<Document>> = CacheBuilder.newBuilder()
+        .maximumSize(1000)
+        .expireAfterAccess(1, TimeUnit.HOURS)
+        .removalListener(mongoCursorRemovalListener)
         .build(CacheLoader.from { _: String -> null })
 
     @Operation(description = "Turn read-only access to this container for anonymous users on or off")
@@ -169,9 +193,9 @@ class ContainerServiceResource(
     ): Response {
         context.checkUserHasReadRightsInThisContainer(containerName)
         try {
-            val queryMap: Map<String, Any?> = Json.createReader(StringReader(queryJson)).readObject().toMap().simplify()
+            val queryMap: QueryAsMap = Json.createReader(StringReader(queryJson)).readObject().toMap().simplify()
             val aggregateStages = queryMap
-                .map { (k, v) -> aggregateStageGenerator.generateStage(k, v!!) }
+                .map { (k, v) -> aggregateStageGenerator.generateStage(k, v) }
                 .toList()
 
             val id = UUID.randomUUID().toString()
@@ -201,10 +225,10 @@ class ContainerServiceResource(
 
         var queryCacheItem = getQueryCacheItem(searchId)
         if (queryCacheItem.count < 1) {
-            val count = containerDAO.getCollection(containerName)
-                .aggregate(queryCacheItem.aggregateStages)
-                .count()
-            val newQueryCacheItem = QueryCacheItem(queryCacheItem.queryMap, queryCacheItem.aggregateStages, count)
+//            val count = containerDAO.getCollection(containerName)
+//                .aggregate(queryCacheItem.aggregateStages)
+//                .count()
+            val newQueryCacheItem = QueryCacheItem(queryCacheItem.queryMap, queryCacheItem.aggregateStages, 1)
             queryCacheItem = newQueryCacheItem
             queryCache.put(searchId, newQueryCacheItem)
         }
@@ -217,10 +241,15 @@ class ContainerServiceResource(
         val annotations =
             containerDAO.getCollection(containerName)
                 .aggregate(aggregateStages)
-                .map { a -> toAnnotationMap(a, containerName) }
+                .map { a -> a.toAnnotationMap(containerName) }
                 .toList()
         val annotationPage =
-            buildAnnotationPage(uriFactory.searchURL(containerName, searchId), annotations, page, queryCacheItem.count)
+            buildAnnotationPage(
+                uriFactory.searchURL(containerName, searchId),
+                annotations,
+                page,
+                hasNext = annotations.size == configuration.pageSize
+            )
         return Response.ok(annotationPage).build()
     }
 
@@ -237,12 +266,95 @@ class ContainerServiceResource(
 
         val queryCacheItem = getQueryCacheItem(searchId)
 //        val info = mapOf("query" to queryCacheItem.queryMap, "hits" to queryCacheItem.count)
-        val query = queryCacheItem.queryMap as QueryAsMap
+        val query = queryCacheItem.queryMap
         val searchInfo = SearchInfo(
             query = query,
             hits = queryCacheItem.count
         )
         return Response.ok(searchInfo).build()
+    }
+
+    @Operation(description = "Get the results of the given custom query")
+    @Timed
+    @GET
+    @Path("{containerName}/${CUSTOM_QUERY}/{queryCall}")
+    fun getCustomQueryResultPage(
+        @PathParam("containerName") containerName: String,
+        @PathParam("queryCall") queryCall: String,
+        @QueryParam("page") page: Int = 0,
+        @Context context: SecurityContext,
+    ): Response {
+        context.checkUserHasReadRightsInThisContainer(containerName)
+        val cacheKey = "$containerName:$queryCall:${page}"
+        val cursor = mongoCursorCache.getIfPresent(cacheKey)?.also {
+            logger.info { "using cached cursor $cacheKey" }
+        } ?: createCursor(context, containerName, queryCall, page)
+
+        val annotations = mutableListOf<WebAnnotationAsMap>()
+        while (annotations.size < configuration.pageSize && cursor.isOpenAndHasNext()) {
+            annotations.add(cursor.next().toAnnotationMap(containerName))
+        }
+
+        val hasNext = cursor.isOpenAndHasNext()
+        if (hasNext) {
+            val nextCacheKey = "$containerName:$queryCall:${page + 1}"
+            logger.info { "storing cursor $nextCacheKey" }
+            mongoCursorCache.put(nextCacheKey, cursor)
+        } else {
+            cursor.close()
+        }
+        mongoCursorCache.invalidate(cacheKey)
+
+        val (queryName, queryParameters) = CustomQueryTools.decode(queryCall)
+            .getOrElse { throw BadRequestException(it.message) }
+        val customQuery = customQueryDAO.getByName(queryName)
+            ?: throw NotFoundException("No custom query '$queryName' found")
+
+        val annotationPage =
+            buildAnnotationPage(
+                uriFactory.customContainerQueryURL(containerName, queryCall),
+                annotations,
+                page,
+                hasNext = hasNext,
+                collectionLabel = customQuery.label?.interpolate(queryParameters = queryParameters),
+                collectionUrl = uriFactory.customContainerQueryCollectionURL(containerName, queryCall)
+            )
+        return Response.ok(annotationPage)
+            .link(uriFactory.customQueryURL(queryName), "using")
+            .link(uriFactory.expandedCustomQueryURL(queryCall), "query")
+            .build()
+    }
+
+    @Operation(description = "Get the AnnotationCollection of the given custom query")
+    @Timed
+    @GET
+    @Path("{containerName}/${CUSTOM_QUERY}/{queryCall}/$COLLECTION")
+    fun getCustomQueryAnnotationCollection(
+        @PathParam("containerName") containerName: String,
+        @PathParam("queryCall") queryCall: String,
+        @Context context: SecurityContext,
+    ): Response {
+        context.checkUserHasReadRightsInThisContainer(containerName)
+        val (queryName, queryParameters) = CustomQueryTools.decode(queryCall)
+            .getOrElse { throw BadRequestException(it.message) }
+        val customQuery = customQueryDAO.getByName(queryName)
+            ?: throw NotFoundException("No custom query '$queryName' found")
+
+        val collection = mapOf(
+            "@context" to ANNO_JSONLD_URL,
+            "id" to uriFactory.customContainerQueryCollectionURL(containerName, queryCall),
+            "type" to "AnnotationCollection",
+            "label" to (customQuery.label?.interpolate(queryParameters) ?: ""),
+            "creator" to customQuery.createdBy,
+//            "total" to total,
+            "first" to mapOf(
+                "id" to uriFactory.customContainerQueryURL(containerName, queryCall, 0),
+                "type" to "AnnotationPage"
+            ),
+//            "last" to "http://example.org/page42"
+        )
+        return Response.ok(collection)
+            .build()
     }
 
     @Operation(description = "Get a list of the fields used in the annotations in a container")
@@ -406,7 +518,8 @@ class ContainerServiceResource(
     ): Response {
         context.checkUserHasEditRightsInThisContainer(containerName)
 
-        val annotationIdentifiers: List<AnnotationIdentifier> = containerDAO.addAnnotationsInBatch(containerName, annotations)
+        val annotationIdentifiers: List<AnnotationIdentifier> =
+            containerDAO.addAnnotationsInBatch(containerName, annotations)
         return Response.ok(annotationIdentifiers).build()
     }
 
@@ -453,7 +566,12 @@ class ContainerServiceResource(
             ?: throw NotFoundException("No search results found for this search id. The search might have expired.")
 
     private fun buildAnnotationPage(
-        searchUri: URI, annotations: AnnotationList, page: Int, total: Int,
+        searchUri: URI,
+        annotations: AnnotationList,
+        page: Int,
+        hasNext: Boolean = true,
+        collectionLabel: String? = null,
+        collectionUrl: URI? = null
     ): AnnotationPage {
         val prevPage = if (page > 0) {
             page - 1
@@ -461,16 +579,17 @@ class ContainerServiceResource(
             null
         }
         val startIndex = configuration.pageSize * page
-        val nextPage = if (startIndex + annotations.size < total) {
+        val nextPage = if (hasNext) {
             page + 1
         } else {
             null
         }
+        val collectionId = collectionUrl?.toString() ?: searchUri.toString()
 
         return AnnotationPage(
             context = listOf(ANNO_JSONLD_URL),
             id = searchPageUri(searchUri, page),
-            partOf = searchUri.toString(),
+            partOf = annotationCollectionLink(id = collectionId, collectionLabel = collectionLabel),
             startIndex = startIndex,
             items = annotations,
             prev = if (prevPage != null) searchPageUri(searchUri, prevPage) else null,
@@ -481,12 +600,12 @@ class ContainerServiceResource(
     private fun searchPageUri(searchUri: URI, page: Int) =
         UriBuilder.fromUri(searchUri).queryParam("page", page).build().toString()
 
-    private fun toAnnotationMap(document: Document, containerName: String): WebAnnotationAsMap =
-        document[ANNOTATION_FIELD, Document::class.java]
+    private fun Document.toAnnotationMap(containerName: String): WebAnnotationAsMap =
+        this[ANNOTATION_FIELD, Document::class.java]
             .toMutableMap()
             .apply<MutableMap<String, Any>> {
                 put(
-                    "id", uriFactory.annotationURL(containerName, document.getString(ANNOTATION_NAME_FIELD))
+                    "id", uriFactory.annotationURL(containerName, getString(ANNOTATION_NAME_FIELD))
                 )
             }
 
@@ -500,7 +619,40 @@ class ContainerServiceResource(
         """.trimIndent()
     }
 
+    private fun createCursor(
+        context: SecurityContext,
+        containerName: String,
+        queryCall: String,
+        page: Int
+    ): MongoCursor<Document> {
+        logger.info { "creating new cursor" }
+        val (queryName, queryParameters) = CustomQueryTools.decode(queryCall)
+            .getOrElse { throw BadRequestException(it.message) }
+        val customQuery = customQueryDAO.getByName(queryName)
+            ?: throw NotFoundException("No custom query '$queryName' found")
+        if (!customQuery.public && customQuery.createdBy != context.userPrincipal?.name) {
+            throw ForbiddenException("Custom query '$queryCall' is not for public use")
+        }
+
+        logger.info { customQuery.queryTemplate }
+        val queryJson = customQuery.queryTemplate.interpolate(queryParameters)
+        val queryMap: QueryAsMap = Json.createReader(StringReader(queryJson)).readObject().toMap().simplify()
+        val aggregateStages = queryMap
+            .map { (k, v) -> aggregateStageGenerator.generateStage(k, v) }
+            .toList()
+            .toMutableList()
+            .apply {
+                add(Aggregates.skip(page * configuration.pageSize))
+            }
+
+        return containerDAO
+            .getCollection(containerName)
+            .aggregate(aggregateStages)
+            .cursor()
+    }
+
 }
+
 
 
 

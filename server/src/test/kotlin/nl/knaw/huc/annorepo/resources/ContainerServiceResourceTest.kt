@@ -22,6 +22,7 @@ import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.junit5.MockKExtension
 import org.apache.logging.log4j.kotlin.logger
 import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
+import org.assertj.core.api.AssertionsForInterfaceTypes.assertThatExceptionOfType
 import org.bson.Document
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ContainerMetadata
@@ -31,6 +32,7 @@ import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
+import nl.knaw.huc.annorepo.dao.CustomQueryDAO
 import nl.knaw.huc.annorepo.resources.tools.IndexManager
 import nl.knaw.huc.annorepo.service.UriFactory
 
@@ -115,7 +117,7 @@ class ContainerServiceResourceTest {
         """.trimIndent()
                 useEditorUser()
                 val response = resource.createSearch(containerName, queryJson, context = securityContext)
-                logger.info { "result=$response" }
+                logger.info { "result=$response"}
                 val locations = response.headers["location"] as List<*>
                 val location: URI = locations[0] as URI
 
@@ -311,6 +313,9 @@ class ContainerServiceResourceTest {
         lateinit var containerUserDAO: ContainerUserDAO
 
         @RelaxedMockK
+        lateinit var customQueryDAO: CustomQueryDAO
+
+        @RelaxedMockK
         lateinit var containerDAO: ContainerDAO
 
         private lateinit var resource: ContainerServiceResource
@@ -340,8 +345,9 @@ class ContainerServiceResourceTest {
                 config,
                 containerUserDAO,
                 containerDAO,
+                customQueryDAO,
                 UriFactory(config),
-                indexManager
+                indexManager,
             )
         }
 
@@ -398,12 +404,10 @@ class ContainerServiceResourceTest {
                 } else {
                     useUserWithRole("unauthorized_user", role)
                 }
-                try {
-                    block()
-                    fail("User with role $role is unexpectedly authorized!")
-                } catch (e: NotAuthorizedException) {
-                    assertThat(e.message).isEqualTo("HTTP 401 Unauthorized")
-                }
+                assertThatExceptionOfType(NotAuthorizedException::class.java)
+                    .isThrownBy { block() }
+                    .withMessage("HTTP 401 Unauthorized")
+
             }
         }
     }

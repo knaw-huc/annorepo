@@ -51,6 +51,7 @@ import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.ContainerPage
 import nl.knaw.huc.annorepo.api.ContainerSpecs
 import nl.knaw.huc.annorepo.api.IndexType
+import nl.knaw.huc.annorepo.api.PropertySet
 import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
@@ -90,7 +91,7 @@ class W3CResource(
         @Context context: SecurityContext,
     ): Response {
 //        log.debug("containerSpecs={}", containerSpecs)
-        context.checkUserHasContainerCreationRights()
+        context.checkUserHasAdminRights()
         var containerName = slug ?: UUID.randomUUID().toString()
         if (containerDAO.containerExists(containerName)) {
             logger.debug { "A container with the suggested name $containerName already exists, generating a new name." }
@@ -375,7 +376,7 @@ class W3CResource(
 
     private fun AnnotationData.contentWithAssignedId(
         containerName: String, annotationName: String,
-    ): Map<String, Any?> {
+    ): PropertySet {
         val assignedId = uriFactory.annotationURL(containerName, annotationName).toString()
         val jo: MutableMap<String, Any?> =
             Json.createReader(StringReader(content!!)).readObject().toMap().simplify().toMutableMap()
@@ -427,7 +428,6 @@ class W3CResource(
             annotations = annotations,
             page = page,
             total = count,
-            lastPage = lastPage,
             prevPage = prevPage,
             nextPage = nextPage
         )

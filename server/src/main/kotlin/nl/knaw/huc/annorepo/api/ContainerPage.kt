@@ -3,6 +3,7 @@ package nl.knaw.huc.annorepo.api
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonPropertyOrder
+import nl.knaw.huc.annorepo.resources.tools.annotationCollectionLink
 
 @JsonPropertyOrder("@context", "id", "type", "total", "label", "modified", "first", "last")
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -12,7 +13,6 @@ class ContainerPage(
     annotations: List<WebAnnotationAsMap>,
     page: Int = 0,
     val total: Long = 0,
-    lastPage: Int,
     prevPage: Int? = null,
     nextPage: Int? = null
 ) {
@@ -25,10 +25,11 @@ class ContainerPage(
         "BasicContainer",
         "AnnotationCollection"
     )
-    val last = "$id?page=$lastPage"
+
+    //    val last = "$id?page=$lastPage"
     val first = AnnotationPage(
         id = "$id?page=$page",
-        partOf = id,
+        partOf = annotationCollectionLink(id),
         startIndex = page,
         items = annotations,
         prev = if (prevPage != null) "$id?page=$prevPage" else null,

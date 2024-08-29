@@ -14,6 +14,7 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
     fun generateStage(key: Any, value: Any): Bson =
         when (key) {
             !is String -> throw BadRequestException("Unexpected field: '$key' ; query root fields should be strings")
+            OR -> either(value)
             WITHIN_RANGE -> withinRangeStage(value)
             OVERLAPPING_WITH_RANGE -> overlappingWithRangeStage(value)
             else -> {
@@ -21,16 +22,30 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
                     throw BadRequestException("Unknown query function: '$key'")
                 } else {
                     logger.debug { "key=$key, value=$value (${value.javaClass})" }
-                    fieldMatchStage(key, value)
+                    Aggregates.match(fieldMatchStage(key, value))
                 }
             }
+        }
+
+    private fun either(value: Any): Bson =
+        try {
+            val valueAsList = (value as Array<*>).toList()
+            Aggregates.match(Filters.or(valueAsList.flatMap { it.asAggregate() }))
+        } catch (e: ClassCastException) {
+            throw BadRequestException("The value for $OR must be a list")
+        }
+
+    private fun Any?.asAggregate(): List<Bson> =
+        when (this) {
+            is Map<*, *> -> map { (k, v) -> fieldMatchStage(k!! as String, v!!) }
+            else -> throw BadRequestException("Unexpected value: expected $this to be a field: value subquery")
         }
 
     @Suppress("UNCHECKED_CAST")
     private fun fieldMatchStage(key: String, value: Any): Bson =
         when (value) {
             is Map<*, *> -> specialFieldMatchStage(key, value as Map<String, Any>)
-            else -> Aggregates.match(Filters.eq("$ANNOTATION_FIELD_PREFIX$key", value))
+            else -> Filters.eq("$ANNOTATION_FIELD_PREFIX$key", value)
         }
 
     private fun specialFieldMatchStage(field: String, value: Map<String, Any>): Bson =
@@ -39,9 +54,7 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
                 IS_NOT_IN ->
                     try {
                         val valueAsList = (v as Array<*>).toList()
-                        Aggregates.match(
-                            Filters.nin("$ANNOTATION_FIELD_PREFIX$field", valueAsList)
-                        )
+                        Filters.nin("$ANNOTATION_FIELD_PREFIX$field", valueAsList)
                     } catch (e: ClassCastException) {
                         throw BadRequestException("$IS_NOT_IN parameter must be a list")
                     }
@@ -49,36 +62,28 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
                 IS_IN ->
                     try {
                         val valueAsList = (v as Array<*>).toList()
-                        Aggregates.match(
-                            Filters.`in`("$ANNOTATION_FIELD_PREFIX$field", valueAsList)
-                        )
+                        Filters.`in`("$ANNOTATION_FIELD_PREFIX$field", valueAsList)
                     } catch (e: ClassCastException) {
                         throw BadRequestException("$IS_IN parameter must be a list")
                     }
 
-                IS_GREATER -> Aggregates.match(
+                IS_GREATER ->
                     Filters.gt("$ANNOTATION_FIELD_PREFIX$field", v)
-                )
 
-                IS_GREATER_OR_EQUAL -> Aggregates.match(
+                IS_GREATER_OR_EQUAL ->
                     Filters.gte("$ANNOTATION_FIELD_PREFIX$field", v)
-                )
 
-                IS_LESS -> Aggregates.match(
+                IS_LESS ->
                     Filters.lt("$ANNOTATION_FIELD_PREFIX$field", v)
-                )
 
-                IS_LESS_OR_EQUAL -> Aggregates.match(
+                IS_LESS_OR_EQUAL ->
                     Filters.lte("$ANNOTATION_FIELD_PREFIX$field", v)
-                )
 
-                IS_EQUAL_TO -> Aggregates.match(
+                IS_EQUAL_TO ->
                     Filters.eq("$ANNOTATION_FIELD_PREFIX$field", v)
-                )
 
-                IS_NOT -> Aggregates.match(
+                IS_NOT ->
                     Filters.ne("$ANNOTATION_FIELD_PREFIX$field", v)
-                )
 
                 else -> throw BadRequestException("unknown selector '$k'")
             }

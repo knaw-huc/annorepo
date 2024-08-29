@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test
 import org.litote.kmongo.aggregate
 
 class MongodbTest {
+
     @Test
     fun testMongodb1() {
         logger.info("a")

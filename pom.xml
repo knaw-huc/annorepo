@@ -8,7 +8,7 @@
 
     <groupId>io.github.knaw-huc</groupId>
     <artifactId>annorepo</artifactId>
-    <version>0.6.4</version>
+    <version>0.7.0</version>
     <packaging>pom</packaging>
 
     <name>AnnoRepo</name>
@@ -43,7 +43,7 @@
         <dropwizard-swagger.version>4.0.5-1</dropwizard-swagger.version>
         <dropwizard.version>4.0.7</dropwizard.version>
         <grpc.kotlin.version>1.4.1</grpc.kotlin.version>
-        <grpc.version>1.65.1</grpc.version>
+        <grpc.version>1.66.0</grpc.version>
         <jackson-annotations.version>2.17.2</jackson-annotations.version>
         <jackson-databind.version>2.13.4.1</jackson-databind.version>
         <jackson-module-kotlin.version>2.17.2</jackson-module-kotlin.version>
@@ -56,8 +56,8 @@
         <kotlinx-cli-jvm.version>0.3.6</kotlinx-cli-jvm.version>
         <kotlinx-coroutines-core.version>1.8.1</kotlinx-coroutines-core.version>
         <log4j.version>1.2.17</log4j.version>
+        <log4j-api-kotlin.version>1.5.0</log4j-api-kotlin.version>
         <log4j-core.version>2.22.1</log4j-core.version>
-        <log4j-api-kotlin.version>1.4.0</log4j-api-kotlin.version>
         <mongodb.version>4.11.2</mongodb.version>
         <mordant.version>2.7.2</mordant.version>
         <problem.version>0.27.1</problem.version>
@@ -69,6 +69,7 @@
         <!-- test dependencies -->
         <assertj-core.version>3.24.2</assertj-core.version>
         <h2.version>2.2.224</h2.version>
+        <jsonassert.version>1.5.0</jsonassert.version>
         <json-path.version>2.8.0</json-path.version>
         <json-unit-assertj.version>3.2.2</json-unit-assertj.version>
         <junit-jupiter.version>5.10.0</junit-jupiter.version>

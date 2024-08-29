@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package nl.knaw.huc.annorepo.grpc.v1;
+
+option java_multiple_files = true;
+option java_outer_classname = "AnnotationSearchServiceProto";
+option java_package = "nl.knaw.huc.annorepo.grpc";
+
+service AnnotationSearchService {
+  rpc SearchAnnotations(SearchAnnotationsRequest) returns (stream SearchAnnotationsResponse);
+}
+
+message SearchAnnotationsRequest {
+  string query_json = 1;
+}
+
+message SearchAnnotationsResponse {
+  SearchResult search_result = 1;
+}
+
+message SearchResult {
+  string id = 1;
+  string annotation_json = 2;
+  string etag = 3;
+}

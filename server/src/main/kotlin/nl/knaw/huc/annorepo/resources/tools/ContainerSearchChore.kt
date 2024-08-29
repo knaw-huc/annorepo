@@ -11,7 +11,7 @@ class ContainerSearchChore(
     SearchChore(queryMap) {
 
     override fun runSearch(status: Status) {
-        logger.debug { "containerName=$containerName, query=$queryMap" }
+        logger.debug { "containerName=$containerName,query=$queryMap" }
         Thread.sleep(1000L)
     }
 }
