@@ -8,8 +8,6 @@ import io.grpc.ServerCall
 import io.grpc.ServerCallHandler
 import io.grpc.ServerInterceptor
 import io.grpc.Status
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.GRPC_METADATA_KEY_API_KEY
 import nl.knaw.huc.annorepo.api.GRPC_METADATA_KEY_CONTAINER_NAME
 import nl.knaw.huc.annorepo.api.Role
@@ -21,7 +19,6 @@ class GrpcServerInterceptor(
     private val userDAO: UserDAO,
     private val containerUserDAO: ContainerUserDAO
 ) : ServerInterceptor {
-    val log: Logger = LoggerFactory.getLogger(javaClass)
 
     companion object {
         private const val HEADERS_KEY = "headers"

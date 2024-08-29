@@ -4,8 +4,8 @@ import java.util.Date
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import org.apache.logging.log4j.kotlin.logger
 import org.joda.time.Instant
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.SearchStatusSummary
 
 abstract class SearchChore(queryMap: HashMap<*, *>) : Runnable {
@@ -49,8 +49,6 @@ abstract class SearchChore(queryMap: HashMap<*, *>) : Runnable {
         CREATED, RUNNING, DONE, FAILED
     }
 
-    private val log = LoggerFactory.getLogger(javaClass)
-
     val id: String = UUID.randomUUID().toString()
     val status = Status(queryMap)
 
@@ -66,7 +64,7 @@ abstract class SearchChore(queryMap: HashMap<*, *>) : Runnable {
             status.errors += "${t.javaClass}: ${t.message ?: ""}"
         }
         status.endTime = Instant.now()
-        log.debug("query done")
+        logger.debug("query done")
     }
 
     abstract fun runSearch(status: Status)

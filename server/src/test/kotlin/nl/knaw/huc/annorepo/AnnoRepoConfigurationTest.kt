@@ -2,19 +2,17 @@ package nl.knaw.huc.annorepo
 
 import java.nio.file.Path
 import org.junit.jupiter.api.Test
+import org.apache.logging.log4j.kotlin.logger
 import org.assertj.core.api.Assertions.assertThat
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 
 class AnnoRepoConfigurationTest {
-    private val log: Logger = LoggerFactory.getLogger(javaClass)
 
     @Test
     fun `get base uri`() {
         val c = AnnoRepoConfiguration()
-        log.info(c.externalBaseUrl)
+        logger.info { c.externalBaseUrl }
         assertThat(c).isNotNull
     }
 

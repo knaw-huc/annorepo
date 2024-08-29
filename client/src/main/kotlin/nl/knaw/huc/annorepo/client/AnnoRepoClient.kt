@@ -18,10 +18,9 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
+import org.apache.logging.log4j.kotlin.logger
 import org.glassfish.jersey.client.filter.EncodingFilter
 import org.glassfish.jersey.message.GZipEncoder
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
 import nl.knaw.huc.annorepo.api.AnnotationPage
 import nl.knaw.huc.annorepo.api.ChoreStatusSummary
@@ -108,10 +107,10 @@ class AnnoRepoClient @JvmOverloads constructor(
     private lateinit var grpcHost: String
 
     init {
-        log.info("checking annorepo server at $serverURI ...")
+        logger.info("checking annorepo server at $serverURI ...")
         getAbout().fold(
             { e ->
-                log.error("error: {}", e)
+                logger.error { "error: $e" }
                 throw RuntimeException("Unable to connect to annorepo server at $serverURI")
             },
             { getAboutResult ->
@@ -121,7 +120,7 @@ class AnnoRepoClient @JvmOverloads constructor(
                 grpcPort = aboutInfo["grpcPort"]?.toString()?.toInt()
 //                grpcHost = URI(aboutInfo.baseURI).host
                 grpcHost = aboutInfo["grpcHostName"]?.toString() ?: URI(aboutInfo["baseURI"].toString()).host
-                log.info("$serverURI runs version $serverVersion ; needs authentication: $serverNeedsAuthentication; gRPC port: ${grpcPort ?: "unknown"}")
+                logger.info("$serverURI runs version $serverVersion ; needs authentication: $serverNeedsAuthentication; gRPC port: ${grpcPort ?: "unknown"}")
             })
     }
 
@@ -943,7 +942,7 @@ class AnnoRepoClient @JvmOverloads constructor(
         request = webTarget.path(GLOBAL_SERVICES).path(CUSTOM_QUERY).path(name).request(),
         responseHandlers = mapOf(
             Response.Status.NO_CONTENT to { response ->
-                log.info("$response")
+                logger.info("$response")
                 Either.Right(
                     DeleteResult(response = response)
                 )
@@ -1241,7 +1240,6 @@ class AnnoRepoClient @JvmOverloads constructor(
         }
 
     companion object {
-        private val log: Logger = LoggerFactory.getLogger(AnnoRepoClient::class.java)
         private val oMapper: ObjectMapper = jacksonObjectMapper()
         private const val PROPERTY_FILE = "annorepo-client.properties"
         const val TWO_HUNDRED_MB = 200 * 1024 * 1024
@@ -1263,11 +1261,11 @@ class AnnoRepoClient @JvmOverloads constructor(
                 val annoRepoClient =
                     AnnoRepoClient(serverURI = serverURI, apiKey = apiKey, userAgent = userAgent)
                 if (annoRepoClient.serverNeedsAuthentication!! && apiKey == null) {
-                    log.warn(
+                    logger.warn {
                         "The server at $serverURI has authentication enabled," +
                                 " and you did not provide an apiKey." +
                                 " You'll only be able to access the endpoints that don't require authentication."
-                    )
+                    }
                 }
                 annoRepoClient
             } catch (e: RuntimeException) {

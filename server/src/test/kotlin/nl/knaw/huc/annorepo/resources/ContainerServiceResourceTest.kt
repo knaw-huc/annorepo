@@ -20,10 +20,10 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.junit5.MockKExtension
+import org.apache.logging.log4j.kotlin.logger
 import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
 import org.assertj.core.api.AssertionsForInterfaceTypes.assertThatExceptionOfType
 import org.bson.Document
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
@@ -93,7 +93,7 @@ class ContainerServiceResourceTest {
                 ) {
                     val queryJson = """{ "body.id" : "something" }"""
                     val response = resource.createSearch(containerName, queryJson, context = securityContext)
-                    log.info("response={}", response)
+                    logger.info { "response=$response" }
                 }
             }
 
@@ -117,20 +117,20 @@ class ContainerServiceResourceTest {
         """.trimIndent()
                 useEditorUser()
                 val response = resource.createSearch(containerName, queryJson, context = securityContext)
-                log.info("result={}", response)
+                logger.info { "result=$response"}
                 val locations = response.headers["location"] as List<*>
                 val location: URI = locations[0] as URI
 
-                log.info("location={}", location)
+                logger.info { "location=$location" }
                 assertThat(location).hasHost("annorepo.net")
                 assertThat(location.toString())
                     .startsWith("https://annorepo.net/services/containername/search/")
                 val searchId = location.path.split('/').last()
-                log.info("searchId={}", searchId)
+                logger.info { "searchId=$searchId" }
 
                 val searchResponse = resource.getSearchResultPage(containerName, searchId, context = securityContext)
-                log.info("searchResponse={}", searchResponse)
-                log.info("searchResponse.entity={}", searchResponse.entity)
+                logger.info { "searchResponse=$searchResponse" }
+                logger.info { "searchResponse.entity=${searchResponse.entity}" }
             }
         }
 
@@ -319,7 +319,6 @@ class ContainerServiceResourceTest {
         lateinit var containerDAO: ContainerDAO
 
         private lateinit var resource: ContainerServiceResource
-        private val log = LoggerFactory.getLogger(ContainerServiceResourceTest::class.java)
 
         @BeforeAll
         @JvmStatic
@@ -396,7 +395,7 @@ class ContainerServiceResourceTest {
                 } catch (e: NotAuthorizedException) {
                     fail("User with role $role should have been authorized!")
                 } catch (e: RuntimeException) {
-                    log.info(e.stackTraceToString())
+                    logger.info { e.stackTraceToString() }
                 }
             }
             for (role in unauthorizedRoles) {

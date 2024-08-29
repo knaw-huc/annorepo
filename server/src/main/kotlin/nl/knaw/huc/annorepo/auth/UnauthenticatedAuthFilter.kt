@@ -6,11 +6,8 @@ import jakarta.ws.rs.container.ContainerRequestContext
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.SecurityContext
 import io.dropwizard.auth.AuthFilter
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 class UnauthenticatedAuthFilter<P> : AuthFilter<P, Principal>() {
-    val log: Logger = LoggerFactory.getLogger(javaClass)
 
 //    override fun filter(crc: ContainerRequestContext?) {
 //        log.info("ContainerRequestContext={}", crc)

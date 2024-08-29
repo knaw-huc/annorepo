@@ -8,15 +8,14 @@ import io.mockk.every
 import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.junit5.MockKExtension
 import net.javacrumbs.jsonunit.assertj.assertThatJson
+import org.apache.logging.log4j.kotlin.logger
 import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
 import org.assertj.core.api.AssertionsForInterfaceTypes.assertThatExceptionOfType
 import org.litote.kmongo.json
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 
 @ExtendWith(MockKExtension::class)
 class AggregateStageGeneratorTest {
-    private val log = LoggerFactory.getLogger(javaClass)
 
     @RelaxedMockK
     lateinit var config: AnnoRepoConfiguration
@@ -29,7 +28,7 @@ class AggregateStageGeneratorTest {
             asg.generateStage(1, 2)
             fail("expected BadRequestException")
         } catch (bre: BadRequestException) {
-            log.info(bre.toString())
+            logger.info { (bre.toString()) }
             assertThat(bre.message).isEqualTo("Unexpected field: '1' ; query root fields should be strings")
 
         }
@@ -43,7 +42,7 @@ class AggregateStageGeneratorTest {
             asg.generateStage(listOf("field1", "field2"), "yes")
             fail("expected BadRequestException")
         } catch (bre: BadRequestException) {
-            log.info(bre.toString())
+            logger.info(bre.toString())
             assertThat(bre.message)
                 .isEqualTo("Unexpected field: '[field1, field2]' ; query root fields should be strings")
         }
@@ -72,7 +71,7 @@ class AggregateStageGeneratorTest {
             "end" to end
         )
         val stage = asg.generateStage(WITHIN_RANGE, parameters)
-        log.info("{}", stage)
+        logger.info(stage)
         val expected = """
             { 
                 "@match": { 
@@ -90,7 +89,7 @@ class AggregateStageGeneratorTest {
                 }
             }""".trimIndent().replace('@', '$')
         assertThatJson(stage.json).isEqualTo(expected)
-        log.info("{}", stage.json)
+        logger.info { stage.json }
     }
 
     @Test
@@ -99,13 +98,13 @@ class AggregateStageGeneratorTest {
         val key = "body.type"
         val value = "Match"
         val stage = asg.generateStage(key, value)
-        log.info("{}", stage)
+        logger.info(stage)
         val expected = """
             { "@match": { "annotation.$key": "$value" } }
             """.trimIndent()
             .replace('@', '$')
         assertThatJson(stage.json).isEqualTo(expected)
-        log.info("{}", stage.json)
+        logger.info(stage.json)
     }
 
     @Test
@@ -114,13 +113,13 @@ class AggregateStageGeneratorTest {
         val key = "body.count"
         val value = 42
         val stage = asg.generateStage(key, value)
-        log.info("{}", stage)
+        logger.info(stage)
         val expected = """
             { "@match": { "annotation.$key": $value } }
             """.trimIndent()
             .replace('@', '$')
         assertThatJson(stage.json).isEqualTo(expected)
-        log.info("{}", stage.json)
+        logger.info(stage.json)
     }
 
     @Test
@@ -129,8 +128,8 @@ class AggregateStageGeneratorTest {
         val key = "year"
         val value = mapOf(IS_NOT_IN to arrayOf(2020, 2021, 2022, 2023))
         val stage = asg.generateStage(key, value)
-        log.info("{}", stage)
-        log.info("{}", stage.json)
+        logger.info(stage)
+        logger.info(stage.json)
         val expected = """
             { "@match": { "annotation.$key": { "@nin": [2020,2021,2022,2023] } } }
             """.trimIndent()
@@ -145,7 +144,7 @@ class AggregateStageGeneratorTest {
         val value = mapOf(IS_NOT_IN to 1999)
         try {
             val stage = asg.generateStage(key, value)
-            log.info("{}", stage)
+            logger.info(stage)
             fail("expected call to fail")
         } catch (e: BadRequestException) {
             assertThat(e.message).isEqualTo(":isNotIn parameter must be a list")
@@ -158,8 +157,8 @@ class AggregateStageGeneratorTest {
         val key = "year"
         val value = mapOf(IS_IN to arrayOf(2020, 2021, 2022, 2023))
         val stage = asg.generateStage(key, value)
-        log.info("{}", stage)
-        log.info("{}", stage.json)
+        logger.info(stage)
+        logger.info(stage.json)
         val expected = """
             { "@match": { "annotation.$key": { "@in": [2020,2021,2022,2023] } } }
             """.trimIndent()
@@ -174,7 +173,7 @@ class AggregateStageGeneratorTest {
         val value = mapOf(IS_IN to 2000)
         try {
             val stage = asg.generateStage(key, value)
-            log.info("{}", stage)
+            logger.info(stage)
             fail("expected call to fail")
         } catch (e: BadRequestException) {
             assertThat(e.message).isEqualTo(":isIn parameter must be a list")
@@ -187,8 +186,8 @@ class AggregateStageGeneratorTest {
         val key = "year"
         val value = mapOf(IS_GREATER to 2000)
         val stage = asg.generateStage(key, value)
-        log.info("{}", stage)
-        log.info("{}", stage.json)
+        logger.info(stage)
+        logger.info(stage.json)
         val expected = """
             { "@match": { "annotation.$key": { "@gt": 2000 } } }
             """.trimIndent()
@@ -202,8 +201,8 @@ class AggregateStageGeneratorTest {
         val key = "year"
         val value = mapOf(IS_GREATER_OR_EQUAL to 2000)
         val stage = asg.generateStage(key, value)
-        log.info("{}", stage)
-        log.info("{}", stage.json)
+        logger.info(stage)
+        logger.info(stage.json)
         val expected = """
             { "@match": { "annotation.$key": { "@gte": 2000 } } }
             """.trimIndent()
@@ -217,8 +216,8 @@ class AggregateStageGeneratorTest {
         val key = "year"
         val value = mapOf(IS_LESS to 2000)
         val stage = asg.generateStage(key, value)
-        log.info("{}", stage)
-        log.info("{}", stage.json)
+        logger.info(stage)
+        logger.info(stage.json)
         val expected = """
             { "@match": { "annotation.$key": { "@lt": 2000 } } }
             """.trimIndent()
@@ -232,8 +231,8 @@ class AggregateStageGeneratorTest {
         val key = "year"
         val value = mapOf(IS_LESS_OR_EQUAL to 2000)
         val stage = asg.generateStage(key, value)
-        log.info("{}", stage)
-        log.info("{}", stage.json)
+        logger.info(stage)
+        logger.info(stage.json)
         val expected = """
             { "@match": { "annotation.$key": { "@lte": 2000 } } }
             """.trimIndent()
@@ -247,8 +246,8 @@ class AggregateStageGeneratorTest {
         val key = "year"
         val value = mapOf(IS_EQUAL_TO to 2000)
         val stage = asg.generateStage(key, value)
-        log.info("{}", stage)
-        log.info("{}", stage.json)
+        logger.info(stage)
+        logger.info(stage.json)
         val expected = """
             { "@match": { "annotation.$key": 2000 } }
             """.trimIndent()
@@ -262,8 +261,8 @@ class AggregateStageGeneratorTest {
         val key = "year"
         val value = mapOf(IS_NOT to 2000)
         val stage = asg.generateStage(key, value)
-        log.info("{}", stage)
-        log.info("{}", stage.json)
+        logger.info(stage)
+        logger.info(stage.json)
         val expected = """
             { "@match": { "annotation.$key": { "@ne": 2000 } } }
             """.trimIndent()
@@ -285,7 +284,7 @@ class AggregateStageGeneratorTest {
             "end" to end
         )
         val stage = asg.generateStage(OVERLAPPING_WITH_RANGE, parameters)
-        log.info("{}", stage)
+        logger.info(stage)
         val expected = """
             { 
                 "@match": {
@@ -303,7 +302,7 @@ class AggregateStageGeneratorTest {
                 }
             }""".trimIndent().replace('@', '$')
         assertThatJson(stage.json).isEqualTo(expected)
-        log.info("{}", stage.json)
+        logger.info(stage.json)
 
     }
 
@@ -313,8 +312,8 @@ class AggregateStageGeneratorTest {
         val key = OR
         val value = arrayOf(mapOf("body.type" to "Page"), mapOf("body.type" to "Line"))
         val stage = asg.generateStage(key, value)
-        log.info("{}", stage)
-        log.info("{}", stage.json)
+        logger.info(stage)
+        logger.info(stage.json)
         val expected = """
             {
                 "@match": {

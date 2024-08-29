@@ -3,9 +3,9 @@ package nl.knaw.huc.annorepo.client
 import java.net.URI
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import org.apache.logging.log4j.kotlin.logger
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
-import org.slf4j.LoggerFactory
 
 const val ANNOREPO_BASE_URL = "http://localhost:2023"
 //const val ANNOREPO_BASE_URL = "https://annorepo.globalise.huygens.knaw.nl"
@@ -13,7 +13,6 @@ const val ANNOREPO_BASE_URL = "http://localhost:2023"
 @Disabled
 class AnnoRepoClientTest {
 
-    private val log = LoggerFactory.getLogger(javaClass)
     private val client = AnnoRepoClient(URI.create(ANNOREPO_BASE_URL), javaClass.canonicalName)
 
     @Test
@@ -23,7 +22,7 @@ class AnnoRepoClientTest {
             { error -> fail<String>("Unexpected error: $error") },
             { result: ARResult.GetAboutResult ->
                 assertThat(result.aboutInfo["version"]).isNotNull
-                log.info("{}", result.aboutInfo)
+                logger.info { result.aboutInfo }
             }
         )
         assertThat(client.serverNeedsAuthentication).isNotNull()

@@ -15,8 +15,6 @@ import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 @Produces(MediaType.APPLICATION_JSON)
 class AboutResource(configuration: AnnoRepoConfiguration, appName: String, version: String, mongoVersion: String) {
 
-//    private val log = LoggerFactory.getLogger(javaClass)
-
     private val about = AboutInfo(
         appName = appName,
         version = version,

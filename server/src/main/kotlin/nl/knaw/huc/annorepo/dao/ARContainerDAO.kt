@@ -14,8 +14,6 @@ import org.bson.BsonValue
 import org.bson.Document
 import org.litote.kmongo.findOne
 import org.litote.kmongo.getCollection
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
 import nl.knaw.huc.annorepo.api.ContainerMetadata
@@ -27,7 +25,6 @@ import nl.knaw.huc.annorepo.service.JsonLdUtils
 
 class ARContainerDAO(configuration: AnnoRepoConfiguration, client: MongoClient) : ContainerDAO {
     private val MAX_CACHE_SIZE: Long = 100
-    val log: Logger = LoggerFactory.getLogger(ARContainerDAO::class.java)
 
     private val mdb: MongoDatabase = client.getDatabase(configuration.databaseName)
 

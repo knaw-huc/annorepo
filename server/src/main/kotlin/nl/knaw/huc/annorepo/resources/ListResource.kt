@@ -17,7 +17,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.bson.Document
 import org.litote.kmongo.aggregate
 import org.litote.kmongo.match
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
@@ -36,9 +35,6 @@ class ListResource(
     client: MongoClient,
     private val uriFactory: UriFactory
 ) {
-
-    private val log = LoggerFactory.getLogger(javaClass)
-
     private val mdb = client.getDatabase(configuration.databaseName)
 
     @Operation(description = "Get a list of all the container URLs")

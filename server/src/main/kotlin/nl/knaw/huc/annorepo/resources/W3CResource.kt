@@ -32,6 +32,7 @@ import com.mongodb.client.model.Filters.eq
 import com.mongodb.client.model.ReplaceOptions
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import org.apache.logging.log4j.kotlin.logger
 import org.bson.BSONException
 import org.bson.Document
 import org.bson.json.JsonParseException
@@ -39,7 +40,6 @@ import org.litote.kmongo.aggregate
 import org.litote.kmongo.findOne
 import org.litote.kmongo.json
 import org.litote.kmongo.replaceOneWithFilter
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
@@ -81,8 +81,6 @@ class W3CResource(
     private val indexManager: IndexManager
 ) : AbstractContainerResource(configuration, containerDAO, ContainerAccessChecker(containerUserDAO)) {
 
-    private val log = LoggerFactory.getLogger(javaClass)
-
     @Operation(description = "Create an Annotation Container")
     @Timed
     @POST
@@ -96,7 +94,7 @@ class W3CResource(
         context.checkUserHasAdminRights()
         var containerName = slug ?: UUID.randomUUID().toString()
         if (containerDAO.containerExists(containerName)) {
-            log.debug("A container with the suggested name $containerName already exists, generating a new name.")
+            logger.debug { "A container with the suggested name $containerName already exists, generating a new name." }
             containerName = UUID.randomUUID().toString()
         }
         containerDAO.createCollection(containerName)
@@ -135,7 +133,7 @@ class W3CResource(
         @QueryParam("page") page: Int? = null,
         @Context context: SecurityContext,
     ): Response {
-        log.debug("read Container $containerName, page $page")
+        logger.debug { "read Container $containerName, page $page" }
         context.checkUserHasReadRightsInThisContainer(containerName)
 
         val containerPage = getContainerPage(containerName, page ?: 0, configuration.pageSize)
@@ -219,10 +217,10 @@ class W3CResource(
         val container = containerDAO.getCollection(containerName)
         val existingAnnotationDocument = container.find(Document(ANNOTATION_NAME_FIELD, name)).first()
         if (existingAnnotationDocument != null) {
-            log.warn(
+            logger.warn {
                 "An annotation with the suggested name $name already exists in container $containerName," +
                         " generating a new name."
-            )
+            }
             name = UUID.randomUUID().toString()
         }
         try {
@@ -268,7 +266,7 @@ class W3CResource(
         @PathParam("annotationName") annotationName: String,
         @Context context: SecurityContext,
     ): Response {
-        log.debug("read annotation $annotationName in container $containerName")
+        logger.debug { "read annotation $annotationName in container $containerName" }
         context.checkUserHasReadRightsInThisContainer(containerName)
 
         val container = containerDAO.getCollection(containerName)
@@ -298,7 +296,7 @@ class W3CResource(
         @Context context: SecurityContext,
         annotationJson: String,
     ): Response {
-        log.debug("annotation=\n$annotationJson")
+        logger.debug { "annotation=\n$annotationJson" }
         context.checkUserHasEditRightsInThisContainer(containerName)
 
         val eTag = makeAnnotationETag(containerName, annotationName)
@@ -344,7 +342,7 @@ class W3CResource(
         @Context req: Request,
         @Context context: SecurityContext,
     ): Response {
-        log.debug("delete annotation $annotationName in container $containerName")
+        logger.debug { "delete annotation $annotationName in container $containerName" }
         context.checkUserHasEditRightsInThisContainer(containerName)
 
         val eTag = makeAnnotationETag(containerName, annotationName)
@@ -361,8 +359,8 @@ class W3CResource(
     }
 
     private fun jsonParseExceptionMessage(annotationJson: String, e: RuntimeException): String {
-        log.error("json parsing error for input:\n{}\n", annotationJson)
-        log.error("error:\n{}", e.message)
+        logger.error { "json parsing error for input:\n$annotationJson\n" }
+        logger.error { "error:\n${e.message}" }
         return "The given json does not parse: '$annotationJson'"
     }
 
@@ -373,7 +371,7 @@ class W3CResource(
             replacement = ContainerMetadata(name, label, isReadOnlyForAnonymous = readOnlyForAnonymousUsers),
             replaceOptions = ReplaceOptions().upsert(true)
         )
-        log.debug("replace result={}", result)
+        logger.debug { "replace result=$result" }
     }
 
     private fun AnnotationData.contentWithAssignedId(

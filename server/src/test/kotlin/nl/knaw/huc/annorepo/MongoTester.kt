@@ -6,10 +6,9 @@ import jakarta.json.JsonValue
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import com.mongodb.client.MongoDatabase
+import org.apache.logging.log4j.kotlin.logger
 import org.assertj.core.api.Assertions.assertThat
 import org.litote.kmongo.KMongo
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.PropertySet
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
@@ -24,7 +23,6 @@ class MongoTester {
     private val mdb: MongoDatabase = mongoClient.getDatabase("annorepo")
     private val configuration = AnnoRepoConfiguration()
     private val aggregateStageGenerator = AggregateStageGenerator(configuration)
-    private val log: Logger = LoggerFactory.getLogger(javaClass)
 
     @Test
     fun test() {
@@ -52,18 +50,18 @@ class MongoTester {
     fun test2() {
         val string = """{"string":"v"}"""
         val o = Json.createReader(StringReader(string)).readObject().toMap()
-        log.info("o={}", o)
+        logger.info { "o=$o" }
         val s = o.simplify()
-        log.info("s={}", s)
+        logger.info { "s=$s" }
     }
 
     @Test
     fun testGetDistinctValues() {
         val containerDAO = ARContainerDAO(configuration, mongoClient)
         val distinctValues = containerDAO.getDistinctValues("large-container", "body.type")
-        log.info("{}", distinctValues)
+        logger.info { distinctValues }
         val cachedDistinctValues = containerDAO.getDistinctValues("large-container", "body.type")
-        log.info("{}", cachedDistinctValues)
+        logger.info { cachedDistinctValues }
         assertThat(cachedDistinctValues).isEqualTo(distinctValues)
     }
 
@@ -78,27 +76,27 @@ class MongoTester {
         val containerDAO = ARContainerDAO(configuration, mongoClient)
         val allContainers = allAnnotationContainers()
         for (cn in allContainers) {
-            log.info("container {}", cn)
+            logger.info { "container $cn" }
             val collection = containerDAO.getCollection(cn)
             val indexes = collection.listIndexes().toList()
-            log.info("  indexes:")
+            logger.info("  indexes:")
             for (i in indexes) {
-                log.info("  - {}", i["name"])
+                logger.info { "  - ${i["name"]}" }
             }
             val names =
                 collection.listIndexes().filterNotNull().map { it["name"] }
             val hasAnnotationNameIndex = collection.hasAnnotationNameIndex()
-            log.info("names={}", names)
-            log.info("{}", hasAnnotationNameIndex)
+            logger.info { "names=$names" }
+            logger.info { hasAnnotationNameIndex }
         }
     }
 
     private fun Map<String, JsonValue>.simplify(): PropertySet {
         val newMap = mutableMapOf<String, Any?>()
         for (e in entries) {
-            log.info("e={}", e)
+            logger.info { "e=$e" }
             val v = e.value
-            log.info("v={}", v)
+            logger.info { "v=$v" }
             newMap[e.key] = v.toSimpleValue()
         }
 

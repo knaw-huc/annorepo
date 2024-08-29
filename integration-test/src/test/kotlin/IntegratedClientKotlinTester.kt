@@ -7,9 +7,9 @@ import arrow.core.Either.Right
 import arrow.core.raise.either
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.apache.logging.log4j.kotlin.logger
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.QueryAsMap
@@ -633,7 +633,7 @@ class IntegratedClientKotlinTester {
                     client.createAnnotation(containerName, annotation2, preferredAnnotationName).bind()
                 val annotationName2 = createAnnotationResult2.annotationName
                 assertThat(annotationName2).isEqualTo(preferredAnnotationName)
-                log.info("this link will be valid for 10 seconds:")
+                logger.info("this link will be valid for 10 seconds:")
                 println(createAnnotationResult2.location)
                 Thread.sleep(10_000)
 
@@ -730,7 +730,6 @@ class IntegratedClientKotlinTester {
         val BASE_URI: URI = URI.create(BASE_URL)
         private const val API_KEY = "root"
         val client = AnnoRepoClient(BASE_URI, API_KEY, "integrated-client-tester")
-        private val log = LoggerFactory.getLogger(IntegratedClientKotlinTester::class.java)
 
         private fun handleError(error: RequestError) {
             println(error)
@@ -740,7 +739,7 @@ class IntegratedClientKotlinTester {
         private fun doSomethingWith(vararg objects: Any) {
             for (o in objects) {
                 try {
-                    log.info("{}", ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(o))
+                    logger.info { ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(o) }
                 } catch (e: JsonProcessingException) {
                     e.printStackTrace()
                 }
@@ -749,7 +748,7 @@ class IntegratedClientKotlinTester {
     }
 
     private fun logError(requestError: RequestError) {
-        log.error("error=$requestError")
+        logger.error { "error=$requestError" }
     }
 
     private fun WebAnnotationAsMap.getNestedValue(key: String): Any? {

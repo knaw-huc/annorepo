@@ -1,7 +1,6 @@
 package nl.knaw.huc.annorepo.resources.tools
 
 import com.mongodb.client.model.Indexes
-import org.slf4j.LoggerFactory
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.IndexChoreIndex
 import nl.knaw.huc.annorepo.api.IndexType
@@ -12,8 +11,6 @@ import nl.knaw.huc.annorepo.api.IndexType.TEXT
 import nl.knaw.huc.annorepo.dao.ContainerDAO
 
 class IndexManager(val containerDAO: ContainerDAO) {
-
-    private val log = LoggerFactory.getLogger(javaClass)
 
     fun startIndexCreation(
         containerName: String,

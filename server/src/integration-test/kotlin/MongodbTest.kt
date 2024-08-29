@@ -12,11 +12,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.bson.Document
 import org.junit.jupiter.api.Test
 import org.litote.kmongo.aggregate
-import org.slf4j.LoggerFactory
 
 class MongodbTest {
-
-    private val logger = LoggerFactory.getLogger(javaClass)
 
     @Test
     fun testMongodb1() {
