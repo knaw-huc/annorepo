@@ -47,7 +47,7 @@ class ContainerServiceResourceTest {
                 assertRoleAuthorizationForBlock(
                     authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
                 ) {
-                    val response = resource.readContainerUsers(containerName, securityContext)
+                    val response = resource.readContainerUsers(CONTAINER_NAME, securityContext)
                     assertNotNull(response)
                 }
             }
@@ -61,7 +61,7 @@ class ContainerServiceResourceTest {
                     authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
                 ) {
                     val containerUsers = listOf(ContainerUserEntry("guestUser", Role.GUEST))
-                    val response = resource.addContainerUsers(containerName, securityContext, containerUsers)
+                    val response = resource.addContainerUsers(CONTAINER_NAME, securityContext, containerUsers)
                     assertNotNull(response)
                 }
             }
@@ -74,7 +74,7 @@ class ContainerServiceResourceTest {
                 assertRoleAuthorizationForBlock(
                     authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
                 ) {
-                    val response = resource.deleteContainerUser(containerName, "username", securityContext)
+                    val response = resource.deleteContainerUser(CONTAINER_NAME, "username", securityContext)
                     assertNotNull(response)
                 }
             }
@@ -92,7 +92,7 @@ class ContainerServiceResourceTest {
                     authorizedRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR, Role.GUEST)
                 ) {
                     val queryJson = """{ "body.id" : "something" }"""
-                    val response = resource.createSearch(containerName, queryJson, context = securityContext)
+                    val response = resource.createSearch(CONTAINER_NAME, queryJson, context = securityContext)
                     logger.info { "response=$response" }
                 }
             }
@@ -116,7 +116,7 @@ class ContainerServiceResourceTest {
                 }
         """.trimIndent()
                 useEditorUser()
-                val response = resource.createSearch(containerName, queryJson, context = securityContext)
+                val response = resource.createSearch(CONTAINER_NAME, queryJson, context = securityContext)
                 logger.info { "result=$response"}
                 val locations = response.headers["location"] as List<*>
                 val location: URI = locations[0] as URI
@@ -128,7 +128,7 @@ class ContainerServiceResourceTest {
                 val searchId = location.path.split('/').last()
                 logger.info { "searchId=$searchId" }
 
-                val searchResponse = resource.getSearchResultPage(containerName, searchId, context = securityContext)
+                val searchResponse = resource.getSearchResultPage(CONTAINER_NAME, searchId, context = securityContext)
                 logger.info { "searchResponse=$searchResponse" }
                 logger.info { "searchResponse.entity=${searchResponse.entity}" }
             }
@@ -141,7 +141,7 @@ class ContainerServiceResourceTest {
                 assertRoleAuthorizationForBlock(
                     authorizedRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR, Role.GUEST)
                 ) {
-                    val response = resource.getSearchResultPage(containerName, "some-search-id", 0, securityContext)
+                    val response = resource.getSearchResultPage(CONTAINER_NAME, "some-search-id", 0, securityContext)
                     assertNotNull(response)
                 }
             }
@@ -154,7 +154,7 @@ class ContainerServiceResourceTest {
                 assertRoleAuthorizationForBlock(
                     authorizedRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR, Role.GUEST)
                 ) {
-                    val response = resource.getSearchInfo(containerName, searchId, securityContext)
+                    val response = resource.getSearchInfo(CONTAINER_NAME, SEARCH_ID, securityContext)
                     assertNotNull(response)
                 }
             }
@@ -171,7 +171,7 @@ class ContainerServiceResourceTest {
                 assertRoleAuthorizationForBlock(
                     authorizedRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR, Role.GUEST)
                 ) {
-                    val response = resource.getAnnotationFieldsForContainer(containerName, securityContext)
+                    val response = resource.getAnnotationFieldsForContainer(CONTAINER_NAME, securityContext)
                     assertNotNull(response)
                 }
             }
@@ -185,7 +185,7 @@ class ContainerServiceResourceTest {
                     authorizedRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR, Role.GUEST)
                 ) {
                     val response =
-                        resource.getDistinctAnnotationFieldsValuesForContainer(containerName, "type", securityContext)
+                        resource.getDistinctAnnotationFieldsValuesForContainer(CONTAINER_NAME, "type", securityContext)
                     assertNotNull(response)
                 }
             }
@@ -198,7 +198,7 @@ class ContainerServiceResourceTest {
                 assertRoleAuthorizationForBlock(
                     authorizedRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR, Role.GUEST)
                 ) {
-                    val response = resource.getMetadataForContainer(containerName, securityContext)
+                    val response = resource.getMetadataForContainer(CONTAINER_NAME, securityContext)
                     assertNotNull(response)
                 }
             }
@@ -211,7 +211,7 @@ class ContainerServiceResourceTest {
                 assertRoleAuthorizationForBlock(
                     authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
                 ) {
-                    val response = resource.setAnonymousUserReadAccess(containerName, true, securityContext)
+                    val response = resource.setAnonymousUserReadAccess(CONTAINER_NAME, true, securityContext)
                     assertNotNull(response)
                 }
             }
@@ -228,7 +228,7 @@ class ContainerServiceResourceTest {
                 assertRoleAuthorizationForBlock(
                     authorizedRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR, Role.GUEST)
                 ) {
-                    val response = resource.getContainerIndexes(containerName, securityContext)
+                    val response = resource.getContainerIndexes(CONTAINER_NAME, securityContext)
                     assertNotNull(response)
                 }
             }
@@ -241,7 +241,7 @@ class ContainerServiceResourceTest {
                 assertRoleAuthorizationForBlock(
                     authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
                 ) {
-                    val response = resource.addContainerIndex(containerName, "fieldName", "indexType", securityContext)
+                    val response = resource.addContainerIndex(CONTAINER_NAME, "fieldName", "indexType", securityContext)
                     assertNotNull(response)
                 }
             }
@@ -255,7 +255,7 @@ class ContainerServiceResourceTest {
                     authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
                 ) {
                     val response =
-                        resource.getContainerIndexDefinition(containerName, "fieldName", "indexType", securityContext)
+                        resource.getContainerIndexDefinition(CONTAINER_NAME, "fieldName", "indexType", securityContext)
                     assertNotNull(response)
                 }
             }
@@ -269,7 +269,7 @@ class ContainerServiceResourceTest {
                     authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
                 ) {
                     val response =
-                        resource.deleteContainerIndex(containerName, "fieldName", "indexType", securityContext)
+                        resource.deleteContainerIndex(CONTAINER_NAME, "fieldName", "indexType", securityContext)
                     assertNotNull(response)
                 }
             }
@@ -277,10 +277,10 @@ class ContainerServiceResourceTest {
     }
 
     companion object {
-        const val containerName = "containername"
-        const val searchId = "some-search-id"
-        private const val baseURL = "https://annorepo.net"
-        private const val databaseName = "mock"
+        const val CONTAINER_NAME = "containername"
+        const val SEARCH_ID = "some-search-id"
+        private const val BASE_URL = "https://annorepo.net"
+        private const val DATABASE_NAME = "mock"
 
         @MockK
         lateinit var config: AnnoRepoConfiguration
@@ -324,18 +324,18 @@ class ContainerServiceResourceTest {
         @JvmStatic
         internal fun beforeAll() {
             MockKAnnotations.init(this)
-            every { containerDAO.containerExists(containerName) } returns true
-            every { config.externalBaseUrl } returns baseURL
-            every { config.databaseName } returns databaseName
+            every { containerDAO.containerExists(CONTAINER_NAME) } returns true
+            every { config.externalBaseUrl } returns BASE_URL
+            every { config.databaseName } returns DATABASE_NAME
             every { config.pageSize } returns 10
             every { config.rangeSelectorType } returns "something"
             every { config.withAuthentication } returns true
-            every { client.getDatabase(databaseName) } returns mongoDatabase
-            every { mongoDatabase.getCollection(containerName) } returns mongoCollection
+            every { client.getDatabase(DATABASE_NAME) } returns mongoDatabase
+            every { mongoDatabase.getCollection(CONTAINER_NAME) } returns mongoCollection
             every { mongoDatabase.listCollectionNames() } returns collectionNames
             every { collectionNames.iterator() } returns mongoCursor
             every { mongoCursor.hasNext() } returns true
-            every { mongoCursor.next() } returns containerName
+            every { mongoCursor.next() } returns CONTAINER_NAME
             every { containerDAO.getContainerMetadata(ARConst.CONTAINER_METADATA_COLLECTION) } returns ContainerMetadata(
                 name = "name",
                 label = "label",
@@ -372,7 +372,7 @@ class ContainerServiceResourceTest {
         }
 
         private fun useUserWithRole(userName: String, role: Role?) {
-            every { containerUserDAO.getUserRole(containerName, userName) } returns role
+            every { containerUserDAO.getUserRole(CONTAINER_NAME, userName) } returns role
             every { userPrincipal.name } returns userName
             every { securityContext.userPrincipal } returns userPrincipal
         }

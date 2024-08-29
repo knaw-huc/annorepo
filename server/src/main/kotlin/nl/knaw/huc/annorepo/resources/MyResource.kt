@@ -50,7 +50,7 @@ class MyResource(
                 val containerNamesGroupedByRole: TreeMap<String, MutableList<String>> = TreeMap()
                 for (role in containerUsersGroupedByRole.keys.sorted()) {
                     val containerNames = containerUsersGroupedByRole[role]?.map { it.containerName } ?: listOf()
-                    containersReadOnlyForAnonymous.removeAll(containerNames)
+                    containersReadOnlyForAnonymous.removeAll(containerNames.toSet())
                     containerNamesGroupedByRole[role.name] = containerNames.toMutableList()
                 }
                 if (containersReadOnlyForAnonymous.isNotEmpty()) {
