@@ -24,7 +24,6 @@ import nl.knaw.huc.annorepo.resources.tools.toPrimitive
 import nl.knaw.huc.annorepo.service.JsonLdUtils
 
 class ARContainerDAO(configuration: AnnoRepoConfiguration, client: MongoClient) : ContainerDAO {
-    private val MAX_CACHE_SIZE: Long = 100
 
     private val mdb: MongoDatabase = client.getDatabase(configuration.databaseName)
 
@@ -128,6 +127,10 @@ class ARContainerDAO(configuration: AnnoRepoConfiguration, client: MongoClient) 
         }
         val newContainerMetadata = containerMetadata.copy(fieldCounts = fieldCounts)
         containerMetadataCollection.replaceOne(Filters.eq("name", containerName), newContainerMetadata)
+    }
+
+    companion object {
+        private const val MAX_CACHE_SIZE: Long = 100
     }
 
 }

@@ -379,7 +379,7 @@ class IntegratedClientKotlinTester {
             val indexType = IndexType.HASHED
 
             // create
-            val create_success = client.addIndex(containerName, fieldName, indexType).fold(
+            val createSuccess = client.addIndex(containerName, fieldName, indexType).fold(
                 { error: RequestError ->
                     handleError(error)
                     false
@@ -389,7 +389,7 @@ class IntegratedClientKotlinTester {
                     true
                 }
             )
-            assertThat(create_success).isTrue
+            assertThat(createSuccess).isTrue
 
             // read status
             val readStatusSuccess =

@@ -38,7 +38,7 @@ class MyResourceTest {
         every { context.userPrincipal } returns null
         val result = resource.getAccessibleContainers(context)
         val expected = TreeMap<String, List<String>>().apply {
-            put("GUEST", listOf(publicContainerName))
+            put("GUEST", listOf(PUBLIC_CONTAINER_NAME))
         }
         assertThat(result.entity).isEqualTo(expected)
     }
@@ -48,17 +48,18 @@ class MyResourceTest {
         every { context.userPrincipal.name } returns "user"
         val result = resource.getAccessibleContainers(context)
         val expected = TreeMap<String, List<String>>().apply {
-            put("ADMIN", listOf(byInvitationContainerName))
-            put("GUEST", listOf(publicContainerName))
+            put("ADMIN", listOf(BY_INVITATION_CONTAINER_NAME))
+            put("GUEST", listOf(PUBLIC_CONTAINER_NAME))
         }
         assertThat(result.entity).isEqualTo(expected)
     }
 
     companion object {
-        const val secretContainerName = "secret"
-        const val publicContainerName = "public"
-        const val byInvitationContainerName = "by-invitation-only"
-        private val allContainerNames = listOf(secretContainerName, publicContainerName, byInvitationContainerName)
+        const val SECRET_CONTAINER_NAME = "secret"
+        const val PUBLIC_CONTAINER_NAME = "public"
+        const val BY_INVITATION_CONTAINER_NAME = "by-invitation-only"
+        private val allContainerNames =
+            listOf(SECRET_CONTAINER_NAME, PUBLIC_CONTAINER_NAME, BY_INVITATION_CONTAINER_NAME)
     }
 
     class TestContainerDAO : ContainerDAO {
@@ -76,8 +77,8 @@ class MyResourceTest {
 
         override fun getContainerMetadata(containerName: String): ContainerMetadata =
             when (containerName) {
-                secretContainerName -> secretMetadata
-                publicContainerName -> publicMetadata
+                SECRET_CONTAINER_NAME -> secretMetadata
+                PUBLIC_CONTAINER_NAME -> publicMetadata
                 else -> byInvitationMetadata
             }
 
@@ -125,7 +126,7 @@ class MyResourceTest {
                     UserAccessEntry("root", it, Role.ROOT)
                 }
 
-                else -> listOf(UserAccessEntry(userName, byInvitationContainerName, Role.ADMIN))
+                else -> listOf(UserAccessEntry(userName, BY_INVITATION_CONTAINER_NAME, Role.ADMIN))
             }
 
         override fun addContainerUser(containerName: String, userName: String, role: Role) {
