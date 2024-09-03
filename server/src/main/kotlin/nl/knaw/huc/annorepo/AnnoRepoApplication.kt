@@ -85,7 +85,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
 
     private fun getJobsBundle(): ConfiguredBundle<in AnnoRepoConfiguration?> {
         val expiredChoresCleanerJob = ExpiredChoresCleanerJob()
-        return JobsBundle(expiredChoresCleanerJob)
+        return JobsBundle(listOf(expiredChoresCleanerJob))
     }
 
     @OptIn(ExperimentalStdlibApi::class)
