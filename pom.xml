@@ -38,17 +38,17 @@
 
         <annotations-api.version>6.0.53</annotations-api.version>
         <arrow-core.version>1.2.4</arrow-core.version>
-        <dropwizard-jobs.version>5.1.4</dropwizard-jobs.version>
+        <dropwizard-jobs.version>6.0.1</dropwizard-jobs.version>
         <dropwizard-swagger-ui.version>4.6.2</dropwizard-swagger-ui.version>
         <dropwizard-swagger.version>4.0.5-1</dropwizard-swagger.version>
         <dropwizard.version>4.0.7</dropwizard.version>
         <grpc.kotlin.version>1.4.1</grpc.kotlin.version>
         <grpc.version>1.66.0</grpc.version>
         <jackson-annotations.version>2.17.2</jackson-annotations.version>
-        <jackson-databind.version>2.13.4.1</jackson-databind.version>
+        <jackson-databind.version>2.17.2</jackson-databind.version>
         <jackson-module-kotlin.version>2.17.2</jackson-module-kotlin.version>
         <jakarta.json.version>2.0.1</jakarta.json.version>
-        <jakarta.ws.rs-api.version>3.1.0</jakarta.ws.rs-api.version>
+        <jakarta.ws.rs-api.version>4.0.0</jakarta.ws.rs-api.version>
         <jaxb-api.version>2.3.1</jaxb-api.version>
         <jena.version>4.10.0</jena.version>
         <json.version>20231013</json.version>
@@ -57,28 +57,29 @@
         <kotlinx-coroutines-core.version>1.8.1</kotlinx-coroutines-core.version>
         <log4j.version>1.2.17</log4j.version>
         <log4j-api-kotlin.version>1.5.0</log4j-api-kotlin.version>
-        <mongodb.version>4.11.3</mongodb.version>
+        <log4j-core.version>2.22.1</log4j-core.version>
+        <mongodb.version>4.11.0</mongodb.version>
         <mordant.version>2.7.2</mordant.version>
         <problem.version>0.27.1</problem.version>
-        <protobuf.version>3.25.4</protobuf.version>
-        <slf4j.version>2.0.9</slf4j.version>
+        <protobuf.version>4.28.0</protobuf.version>
+        <slf4j.version>2.0.13</slf4j.version>
         <swagger-annotations.version>1.6.6</swagger-annotations.version>
         <titanium-json-ld.version>1.4.1</titanium-json-ld.version>
 
         <!-- test dependencies -->
-        <assertj-core.version>3.24.2</assertj-core.version>
+        <assertj-core.version>3.26.3</assertj-core.version>
         <h2.version>2.2.224</h2.version>
-        <jsonassert.version>1.5.0</jsonassert.version>
-        <json-path.version>2.8.0</json-path.version>
-        <json-unit-assertj.version>3.2.2</json-unit-assertj.version>
-        <junit-jupiter.version>5.10.0</junit-jupiter.version>
-        <mockito-kotlin.version>5.1.0</mockito-kotlin.version>
-        <mockito.version>5.6.0</mockito.version>
+        <jsonassert.version>1.5.3</jsonassert.version>
+        <json-path.version>2.9.0</json-path.version>
+        <json-unit-assertj.version>3.2.7</json-unit-assertj.version>
+        <junit-jupiter.version>5.11.0</junit-jupiter.version>
+        <mockito-kotlin.version>5.4.0</mockito-kotlin.version>
+        <mockito.version>5.13.0</mockito.version>
         <mockk.version>1.12.5</mockk.version>
 
         <!-- maven plugin dependencies -->
         <another-protobuf-maven-plugin.version>2.1.0</another-protobuf-maven-plugin.version>
-        <dokka.version>1.7.20</dokka.version>
+        <dokka.version>1.9.20</dokka.version>
         <grpc-bridge.version>1.0.0.Alpha2</grpc-bridge.version>
         <joda-time.version>2.12.7</joda-time.version>
         <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>

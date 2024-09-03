@@ -39,7 +39,7 @@ class ARContainerDAO(configuration: AnnoRepoConfiguration, client: MongoClient) 
     }
 
     override fun getAnnotationFields(containerName: String): SortedMap<String, Int> =
-        getContainerMetadata(containerName)!!.fieldCounts.toSortedMap()
+        getContainerMetadata(containerName)?.fieldCounts?.toSortedMap() ?: emptyMap<String, Int>().toSortedMap()
 
     override fun getContainerMetadataCollection(): MongoCollection<ContainerMetadata> =
         mdb.getCollection<ContainerMetadata>(ARConst.CONTAINER_METADATA_COLLECTION)
