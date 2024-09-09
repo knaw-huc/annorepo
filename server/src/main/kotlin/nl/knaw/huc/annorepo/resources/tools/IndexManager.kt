@@ -12,6 +12,29 @@ import nl.knaw.huc.annorepo.dao.ContainerDAO
 
 class IndexManager(val containerDAO: ContainerDAO) {
 
+    //    fun startIndexCreation(
+//        containerName: String,
+//        indexParts: List<ContainerServiceResource.IndexPart>
+//    ): IndexChore {
+//        val container = containerDAO.getCollection(containerName)
+//        val fullFieldName = if (isJsonField) "${ARConst.ANNOTATION_FIELD}.${fieldName}" else fieldName
+//        Indexes.
+//        val index = when (indexType) {
+//            HASHED -> Indexes.hashed(fullFieldName)
+//            ASCENDING -> Indexes.ascending(fullFieldName)
+//            DESCENDING -> Indexes.descending(fullFieldName)
+//            TEXT -> Indexes.text(fieldName)
+//            else -> throw RuntimeException("Cannot make an index with type $indexType")
+//        }
+//        return startIndexChore(
+//            IndexChore(
+//                id = choreId(containerName, fieldName, indexTypeName),
+//                container = container,
+//                fieldName = fullFieldName,
+//                index = index
+//            )
+//        )
+//    }
     fun startIndexCreation(
         containerName: String,
         fieldName: String,

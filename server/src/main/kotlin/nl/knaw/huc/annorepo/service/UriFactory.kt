@@ -53,13 +53,21 @@ class UriFactory(private val configuration: AnnoRepoConfiguration) {
             .path(ResourcePaths.STATUS)
             .build()
 
-    fun indexURL(containerName: String, fieldName: String, type: String): URI =
+    fun singleFieldIndexURL(containerName: String, fieldName: String, type: String): URI =
         UriBuilder.fromUri(configuration.externalBaseUrl)
             .path(ResourcePaths.CONTAINER_SERVICES)
             .path(containerName)
             .path(ResourcePaths.INDEXES)
             .path(fieldName)
             .path(type.lowercase())
+            .build()
+
+    fun multiFieldIndexURL(containerName: String, indexName: String): URI =
+        UriBuilder.fromUri(configuration.externalBaseUrl)
+            .path(ResourcePaths.CONTAINER_SERVICES)
+            .path(containerName)
+            .path(ResourcePaths.INDEXES)
+            .path(indexName)
             .build()
 
     fun indexStatusURL(containerName: String, fieldName: String, type: String): URI =
@@ -108,4 +116,5 @@ class UriFactory(private val configuration: AnnoRepoConfiguration) {
             .path(queryCall)
             .path(ResourcePaths.COLLECTION)
             .build()
+
 }

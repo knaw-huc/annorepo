@@ -425,11 +425,11 @@ class ContainerServiceResource(
     }
 
     @OptIn(ExperimentalStdlibApi::class)
-    @Operation(description = "Add an index")
+    @Operation(description = "Add an index on a single field")
     @Timed
     @PUT
     @Path("{containerName}/$INDEXES/{fieldName}/{indexType}")
-    fun addContainerIndex(
+    fun addSingleFieldContainerIndex(
         @PathParam("containerName") containerName: String,
         @PathParam("fieldName") fieldNameParam: String,
         @PathParam("indexType") indexTypeParam: String,
@@ -446,18 +446,57 @@ class ContainerServiceResource(
         val indexChore =
             indexManager.startIndexCreation(containerName, fieldNameParam, indexTypeParam, indexType)
         indexManager.getIndexChore(containerName, fieldNameParam, indexTypeParam)
-        val location = uriFactory.indexURL(containerName, fieldNameParam, indexTypeParam)
+        val location = uriFactory.singleFieldIndexURL(containerName, fieldNameParam, indexTypeParam)
         return Response.created(location)
             .link(uriFactory.indexStatusURL(containerName, fieldNameParam, indexTypeParam), "status")
             .entity(indexChore.status.summary())
             .build()
     }
 
+//    @OptIn(ExperimentalStdlibApi::class)
+//    @Operation(description = "Add a multi-field index")
+//    @Timed
+//    @POST
+//    @Path("{containerName}/$INDEXES")
+//    fun addMultiFieldContainerIndex(
+//        @PathParam("containerName") containerName: String,
+//        multiFieldIndexSettings: Map<String, String>,
+//        @Context context: SecurityContext,
+//    ): Response {
+//        context.checkUserHasAdminRightsInThisContainer(containerName)
+//        val indexParts = multiFieldIndexSettings.map { (fieldName, indexTypeParam) ->
+//            val indexType =
+//                IndexType.fromString(indexTypeParam) ?: throw BadRequestException(
+//                    "Unknown indexType $indexTypeParam; expected indexTypes: ${
+//                        IndexType.entries.joinToString(", ") { it.name.lowercase() }
+//                    }"
+//                )
+//            IndexPart(fieldName, indexTypeParam, indexType)
+//        }
+//        val indexChore =
+//            indexManager.startIndexCreation(containerName, indexParts)
+////        indexManager.getIndexChore(containerName, fieldNameParam, indexTypeParam)
+//        val indexName = indexName(multiFieldIndexSettings)
+//        val location = uriFactory.multiFieldIndexURL(containerName, indexName)
+//        return Response.created(location)
+//            .link(uriFactory.indexStatusURL(containerName, fieldNameParam, indexTypeParam), "status")
+//            .entity(indexChore.status.summary())
+//            .build()
+//    }
+
+    private fun indexName(multiFieldIndexSettings: Map<String, String>): String {
+        return multiFieldIndexSettings.entries.map { (fieldName, indexType) ->
+            "${fieldName}_${indexType.lowercase()}"
+        }.joinToString("-")
+    }
+
+    data class IndexPart(val fieldName: String, val indexTypeParam: String, val indexType: IndexType)
+
     @Operation(description = "Get an index definition")
     @Timed
     @GET
     @Path("{containerName}/$INDEXES/{fieldName}/{indexType}")
-    fun getContainerIndexDefinition(
+    fun getSingleFieldContainerIndexDefinition(
         @PathParam("containerName") containerName: String,
         @PathParam("fieldName") fieldName: String,
         @PathParam("indexType") indexType: String,
@@ -475,7 +514,7 @@ class ContainerServiceResource(
     @Timed
     @GET
     @Path("{containerName}/$INDEXES/{fieldName}/{indexType}/status")
-    fun getContainerIndexStatus(
+    fun getSingleFieldContainerIndexStatus(
         @PathParam("containerName") containerName: String,
         @PathParam("fieldName") fieldName: String,
         @PathParam("indexType") indexType: String,
@@ -491,7 +530,7 @@ class ContainerServiceResource(
     @Timed
     @DELETE
     @Path("{containerName}/$INDEXES/{fieldName}/{indexType}")
-    fun deleteContainerIndex(
+    fun deleteSingleFieldContainerIndex(
         @PathParam("containerName") containerName: String,
         @PathParam("fieldName") fieldName: String,
         @PathParam("indexType") indexType: String,
@@ -554,7 +593,7 @@ class ContainerServiceResource(
                     else -> throw Exception("unexpected index type: $typeCode in $name")
                 }
                 val fieldName = field.replace(prefix, "")
-                IndexConfig(fieldName, type, uriFactory.indexURL(containerName, fieldName, type.name))
+                IndexConfig(fieldName, type, uriFactory.singleFieldIndexURL(containerName, fieldName, type.name))
             }
 
             else -> null

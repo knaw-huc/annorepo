@@ -241,7 +241,7 @@ class ContainerServiceResourceTest {
                 assertRoleAuthorizationForBlock(
                     authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
                 ) {
-                    val response = resource.addContainerIndex(CONTAINER_NAME, "fieldName", "indexType", securityContext)
+                    val response = resource.addSingleFieldContainerIndex(CONTAINER_NAME, "fieldName", "indexType", securityContext)
                     assertNotNull(response)
                 }
             }
@@ -255,7 +255,7 @@ class ContainerServiceResourceTest {
                     authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
                 ) {
                     val response =
-                        resource.getContainerIndexDefinition(CONTAINER_NAME, "fieldName", "indexType", securityContext)
+                        resource.getSingleFieldContainerIndexDefinition(CONTAINER_NAME, "fieldName", "indexType", securityContext)
                     assertNotNull(response)
                 }
             }
@@ -269,7 +269,7 @@ class ContainerServiceResourceTest {
                     authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
                 ) {
                     val response =
-                        resource.deleteContainerIndex(CONTAINER_NAME, "fieldName", "indexType", securityContext)
+                        resource.deleteSingleFieldContainerIndex(CONTAINER_NAME, "fieldName", "indexType", securityContext)
                     assertNotNull(response)
                 }
             }

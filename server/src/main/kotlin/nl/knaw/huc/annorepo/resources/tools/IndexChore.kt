@@ -50,8 +50,9 @@ class IndexChore(
         status.startTime = Instant.now()
         try {
             val partialFilter = Filters.exists(fieldName)
-            val createIndex = container.createIndex(index, IndexOptions().partialFilterExpression(partialFilter))
-            logger.info { "created index: $createIndex" }
+            val indexName = container.createIndex(index, IndexOptions().partialFilterExpression(partialFilter))
+//            val indexName = container.createIndex(index, IndexOptions().partialFilterExpression(partialFilter))
+            logger.info { "created index: $indexName" }
             status.state = State.DONE
         } catch (t: Throwable) {
             t.printStackTrace()
