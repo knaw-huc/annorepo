@@ -760,15 +760,15 @@ class IntegratedClientKotlinTester {
 
     private fun WebAnnotationAsMap.getNestedValue(key: String): Any? {
         val keyParts = key.split(".")
-        var valueMap = this.getOrDefault(keyParts[0], null)
+        var value = this.getOrDefault(keyParts[0], null)
         keyParts.stream().skip(1).forEach { k ->
-            valueMap = if (valueMap is Map<*, *>) {
-                (valueMap as Map<*, *>).getOrDefault(k, null)
+            value = if (value is Map<*, *>) {
+                (value as Map<*, *>).getOrDefault(k, null)
             } else {
                 null
             }
         }
-        return valueMap
+        return value
     }
 }
 
