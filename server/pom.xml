@@ -132,9 +132,20 @@
             <version>${jena.version}</version>
             <type>pom</type>
         </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>org.mongodb</groupId>-->
+<!--            <artifactId>mongodb-driver-reactivestreams</artifactId>-->
+<!--            <version>${mongodb.version}</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.mongodb</groupId>
-            <artifactId>mongodb-driver-reactivestreams</artifactId>
+            <artifactId>mongodb-driver-kotlin-coroutine</artifactId>
+            <version>${mongodb.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>bson-kotlinx</artifactId>
             <version>${mongodb.version}</version>
         </dependency>
         <dependency>
@@ -142,6 +153,7 @@
             <artifactId>kmongo-native</artifactId>
             <version>${kmongo.version}</version>
         </dependency>
+
         <dependency>
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
