@@ -443,9 +443,17 @@ class ContainerServiceResource(
                     IndexType.entries.joinToString(", ") { it.name.lowercase() }
                 }"
             )
+        val indexParts =
+            listOf(
+                IndexManager.IndexPart(
+                    fieldName = fieldNameParam,
+                    indexType = indexType,
+                    indexTypeName = indexTypeParam
+                )
+            )
         val indexChore =
-            indexManager.startIndexCreation(containerName, fieldNameParam, indexTypeParam, indexType)
-        indexManager.getIndexChore(containerName, fieldNameParam, indexTypeParam)
+            indexManager.startIndexCreation(containerName, indexParts)
+//        indexManager.getIndexChore(containerName, indexParts)
         val location = uriFactory.singleFieldIndexURL(containerName, fieldNameParam, indexTypeParam)
         return Response.created(location)
             .link(uriFactory.indexStatusURL(containerName, fieldNameParam, indexTypeParam), "status")
@@ -453,44 +461,42 @@ class ContainerServiceResource(
             .build()
     }
 
-//    @OptIn(ExperimentalStdlibApi::class)
-//    @Operation(description = "Add a multi-field index")
-//    @Timed
-//    @POST
-//    @Path("{containerName}/$INDEXES")
-//    fun addMultiFieldContainerIndex(
-//        @PathParam("containerName") containerName: String,
-//        multiFieldIndexSettings: Map<String, String>,
-//        @Context context: SecurityContext,
-//    ): Response {
-//        context.checkUserHasAdminRightsInThisContainer(containerName)
-//        val indexParts = multiFieldIndexSettings.map { (fieldName, indexTypeParam) ->
-//            val indexType =
-//                IndexType.fromString(indexTypeParam) ?: throw BadRequestException(
-//                    "Unknown indexType $indexTypeParam; expected indexTypes: ${
-//                        IndexType.entries.joinToString(", ") { it.name.lowercase() }
-//                    }"
-//                )
-//            IndexPart(fieldName, indexTypeParam, indexType)
-//        }
-//        val indexChore =
-//            indexManager.startIndexCreation(containerName, indexParts)
-////        indexManager.getIndexChore(containerName, fieldNameParam, indexTypeParam)
-//        val indexName = indexName(multiFieldIndexSettings)
-//        val location = uriFactory.multiFieldIndexURL(containerName, indexName)
-//        return Response.created(location)
+    @OptIn(ExperimentalStdlibApi::class)
+    @Operation(description = "Add a multi-field index")
+    @Timed
+    @POST
+    @Path("{containerName}/$INDEXES")
+    fun addMultiFieldContainerIndex(
+        @PathParam("containerName") containerName: String,
+        multiFieldIndexSettings: Map<String, String>,
+        @Context context: SecurityContext,
+    ): Response {
+        context.checkUserHasAdminRightsInThisContainer(containerName)
+        val indexParts = multiFieldIndexSettings.map { (fieldName, indexTypeParam) ->
+            val indexType =
+                IndexType.fromString(indexTypeParam) ?: throw BadRequestException(
+                    "Unknown indexType $indexTypeParam; expected indexTypes: ${
+                        IndexType.entries.joinToString(", ") { it.name.lowercase() }
+                    }"
+                )
+            IndexManager.IndexPart(fieldName, indexTypeParam, indexType)
+        }
+        val indexChore =
+            indexManager.startIndexCreation(containerName, indexParts)
+//        indexManager.getIndexChore(containerName, fieldNameParam, indexTypeParam)
+        val indexName = indexName(multiFieldIndexSettings)
+        val location = uriFactory.multiFieldIndexURL(containerName, indexName)
+        return Response.created(location)
 //            .link(uriFactory.indexStatusURL(containerName, fieldNameParam, indexTypeParam), "status")
-//            .entity(indexChore.status.summary())
-//            .build()
-//    }
-
-    private fun indexName(multiFieldIndexSettings: Map<String, String>): String {
-        return multiFieldIndexSettings.entries.map { (fieldName, indexType) ->
-            "${fieldName}_${indexType.lowercase()}"
-        }.joinToString("-")
+            .entity(indexChore.status.summary())
+            .build()
     }
 
-    data class IndexPart(val fieldName: String, val indexTypeParam: String, val indexType: IndexType)
+    private fun indexName(multiFieldIndexSettings: Map<String, String>): String {
+        return multiFieldIndexSettings.entries.joinToString("-") { (fieldName, indexType) ->
+            "${fieldName}_${indexType.lowercase()}"
+        }
+    }
 
     @Operation(description = "Get an index definition")
     @Timed
@@ -522,7 +528,16 @@ class ContainerServiceResource(
     ): Response {
         context.checkUserHasAdminRightsInThisContainer(containerName)
 
-        val indexChore = indexManager.getIndexChore(containerName, fieldName, indexType) ?: throw NotFoundException()
+        val indexChore = indexManager.getIndexChore(
+            containerName,
+            listOf(
+                IndexManager.IndexPart(
+                    fieldName = fieldName,
+                    indexTypeName = indexType,
+                    indexType = IndexType.valueOf(indexType)
+                )
+            )
+        ) ?: throw NotFoundException()
         return Response.ok(indexChore.status.summary()).build()
     }
 

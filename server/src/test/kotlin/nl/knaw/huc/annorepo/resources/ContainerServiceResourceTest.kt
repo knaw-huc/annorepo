@@ -117,7 +117,7 @@ class ContainerServiceResourceTest {
         """.trimIndent()
                 useEditorUser()
                 val response = resource.createSearch(CONTAINER_NAME, queryJson, context = securityContext)
-                logger.info { "result=$response"}
+                logger.info { "result=$response" }
                 val locations = response.headers["location"] as List<*>
                 val location: URI = locations[0] as URI
 
@@ -241,7 +241,8 @@ class ContainerServiceResourceTest {
                 assertRoleAuthorizationForBlock(
                     authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
                 ) {
-                    val response = resource.addSingleFieldContainerIndex(CONTAINER_NAME, "fieldName", "indexType", securityContext)
+                    val response =
+                        resource.addSingleFieldContainerIndex(CONTAINER_NAME, "fieldName", "indexType", securityContext)
                     assertNotNull(response)
                 }
             }
@@ -255,7 +256,12 @@ class ContainerServiceResourceTest {
                     authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
                 ) {
                     val response =
-                        resource.getSingleFieldContainerIndexDefinition(CONTAINER_NAME, "fieldName", "indexType", securityContext)
+                        resource.getSingleFieldContainerIndexDefinition(
+                            CONTAINER_NAME,
+                            "fieldName",
+                            "indexType",
+                            securityContext
+                        )
                     assertNotNull(response)
                 }
             }
@@ -269,7 +275,26 @@ class ContainerServiceResourceTest {
                     authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
                 ) {
                     val response =
-                        resource.deleteSingleFieldContainerIndex(CONTAINER_NAME, "fieldName", "indexType", securityContext)
+                        resource.deleteSingleFieldContainerIndex(
+                            CONTAINER_NAME,
+                            "fieldName",
+                            "indexType",
+                            securityContext
+                        )
+                    assertNotNull(response)
+                }
+            }
+        }
+
+        @Nested
+        inner class AddMultiFieldContainerIndexTest {
+            @Test
+            fun `addMultiFieldContainerIndex endpoint can be used by root or admin, but not by others`() {
+                assertRoleAuthorizationForBlock(
+                    authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
+                ) {
+                    val response =
+                        resource.addMultiFieldContainerIndex(CONTAINER_NAME, mapOf(), securityContext)
                     assertNotNull(response)
                 }
             }

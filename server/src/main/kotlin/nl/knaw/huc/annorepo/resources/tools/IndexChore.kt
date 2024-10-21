@@ -14,7 +14,7 @@ import nl.knaw.huc.annorepo.api.ChoreStatusSummary
 class IndexChore(
     val id: String,
     private val container: MongoCollection<Document>,
-    private val fieldName: String,
+    private val fieldNames: List<String>,
     private val index: Bson
 ) :
     Runnable {
@@ -49,7 +49,7 @@ class IndexChore(
         status.state = State.RUNNING
         status.startTime = Instant.now()
         try {
-            val partialFilter = Filters.exists(fieldName)
+            val partialFilter = Filters.or(fieldNames.map{Filters.exists(it)})
             val indexName = container.createIndex(index, IndexOptions().partialFilterExpression(partialFilter))
 //            val indexName = container.createIndex(index, IndexOptions().partialFilterExpression(partialFilter))
             logger.info { "created index: $indexName" }

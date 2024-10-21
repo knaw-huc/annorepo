@@ -81,6 +81,8 @@ class W3CResource(
     private val indexManager: IndexManager
 ) : AbstractContainerResource(configuration, containerDAO, ContainerAccessChecker(containerUserDAO)) {
 
+    private val paginationStage = Aggregates.limit(configuration.pageSize)
+
     @Operation(description = "Create an Annotation Container")
     @Timed
     @POST
@@ -105,10 +107,13 @@ class W3CResource(
         }
         indexManager.startIndexCreation(
             containerName = containerName,
-            fieldName = ANNOTATION_NAME_FIELD,
-            isJsonField = false,
-            indexTypeName = "annotation_name",
-            indexType = IndexType.HASHED
+            indexParts = listOf(
+                IndexManager.IndexPart(
+                    fieldName = ANNOTATION_NAME_FIELD,
+                    indexTypeName = "annotation_name",
+                    indexType = IndexType.HASHED
+                )
+            )
         )
 
         val containerData = getContainerPage(containerName, 0, configuration.pageSize)
@@ -388,7 +393,6 @@ class W3CResource(
         return jo.toMap()
     }
 
-    private val paginationStage = Aggregates.limit(configuration.pageSize)
     private fun validateETag(req: Request, eTag: EntityTag) {
         try {
             req.evaluatePreconditions(eTag) ?: throw PreconditionFailedException()
@@ -434,7 +438,6 @@ class W3CResource(
     }
 
     private fun lastPage(count: Long, pageSize: Int) = (count - 1).div(pageSize).toInt()
-
     private fun toAnnotationMap(a: Document, containerName: String): WebAnnotationAsMap {
         return a.get(ANNOTATION_FIELD, Document::class.java)
             .toMutableMap()

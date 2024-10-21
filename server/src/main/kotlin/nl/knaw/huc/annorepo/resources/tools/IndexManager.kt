@@ -11,63 +11,48 @@ import nl.knaw.huc.annorepo.api.IndexType.TEXT
 import nl.knaw.huc.annorepo.dao.ContainerDAO
 
 class IndexManager(val containerDAO: ContainerDAO) {
+    data class IndexPart(
+        val fieldName: String,
+        val indexTypeName: String,
+        val indexType: IndexType,
+        val isJsonField: Boolean = false
+    )
 
-    //    fun startIndexCreation(
-//        containerName: String,
-//        indexParts: List<ContainerServiceResource.IndexPart>
-//    ): IndexChore {
-//        val container = containerDAO.getCollection(containerName)
-//        val fullFieldName = if (isJsonField) "${ARConst.ANNOTATION_FIELD}.${fieldName}" else fieldName
-//        Indexes.
-//        val index = when (indexType) {
-//            HASHED -> Indexes.hashed(fullFieldName)
-//            ASCENDING -> Indexes.ascending(fullFieldName)
-//            DESCENDING -> Indexes.descending(fullFieldName)
-//            TEXT -> Indexes.text(fieldName)
-//            else -> throw RuntimeException("Cannot make an index with type $indexType")
-//        }
-//        return startIndexChore(
-//            IndexChore(
-//                id = choreId(containerName, fieldName, indexTypeName),
-//                container = container,
-//                fieldName = fullFieldName,
-//                index = index
-//            )
-//        )
-//    }
     fun startIndexCreation(
         containerName: String,
-        fieldName: String,
-        indexTypeName: String,
-        indexType: IndexType,
-        isJsonField: Boolean = true
+        indexParts: List<IndexPart>
     ): IndexChore {
         val container = containerDAO.getCollection(containerName)
-        val fullFieldName = if (isJsonField) "${ARConst.ANNOTATION_FIELD}.${fieldName}" else fieldName
-        val index = when (indexType) {
-            HASHED -> Indexes.hashed(fullFieldName)
-            ASCENDING -> Indexes.ascending(fullFieldName)
-            DESCENDING -> Indexes.descending(fullFieldName)
-            TEXT -> Indexes.text(fieldName)
-            else -> throw RuntimeException("Cannot make an index with type $indexType")
+        val fullFieldNames = mutableListOf<String>()
+        val indexes = indexParts.map {
+            val fullFieldName = if (it.isJsonField) "${ARConst.ANNOTATION_FIELD}.${it.fieldName}" else it.fieldName
+            fullFieldNames.add(fullFieldName)
+            when (it.indexType) {
+                HASHED -> Indexes.hashed(fullFieldName)
+                ASCENDING -> Indexes.ascending(fullFieldName)
+                DESCENDING -> Indexes.descending(fullFieldName)
+                TEXT -> Indexes.text(fullFieldName)
+                else -> throw RuntimeException("Cannot make an index with type $it.indexType on field $fullFieldName")
+            }
         }
+        val index = Indexes.compoundIndex(indexes)
         return startIndexChore(
             IndexChore(
-                id = choreId(containerName, fieldName, indexTypeName),
+                id = choreId(containerName, indexParts),
                 container = container,
-                fieldName = fullFieldName,
+                fieldNames = fullFieldNames,
                 index = index
             )
         )
     }
 
-    fun getIndexChore(containerName: String, fieldName: String, indexTypeName: String): IndexChore? {
-        val id = choreId(containerName, fieldName, indexTypeName)
+    fun getIndexChore(containerName: String, indexParts: List<IndexPart>): IndexChore? {
+        val id = choreId(containerName, indexParts)
         return IndexChoreIndex[id]
     }
 
-    private fun choreId(containerName: String, fieldName: String, indexTypeName: String) =
-        "$containerName/$fieldName/$indexTypeName".lowercase()
+    private fun choreId(containerName: String, indexParts: List<IndexPart>) =
+        ("$containerName/" + indexParts.joinToString("/") { "${it.fieldName}/${it.indexType}" }).lowercase()
 
     private fun startIndexChore(chore: IndexChore): IndexChore {
         IndexChoreIndex[chore.id] = chore

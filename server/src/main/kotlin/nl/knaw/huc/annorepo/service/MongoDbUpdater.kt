@@ -57,10 +57,13 @@ class MongoDbUpdater(
                 logger.info { "> creating annotation_name index" }
                 indexManager.startIndexCreation(
                     containerName = containerName,
-                    fieldName = ANNOTATION_NAME_FIELD,
-                    isJsonField = false,
-                    indexTypeName = "annotation_name",
-                    indexType = IndexType.HASHED
+                    indexParts = listOf(
+                        IndexManager.IndexPart(
+                            fieldName = ANNOTATION_NAME_FIELD,
+                            indexType = IndexType.HASHED,
+                            indexTypeName = "annotation_name)"
+                        )
+                    )
                 )
             }
         }
