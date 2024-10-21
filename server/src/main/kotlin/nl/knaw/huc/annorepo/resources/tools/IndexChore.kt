@@ -49,7 +49,7 @@ class IndexChore(
         status.state = State.RUNNING
         status.startTime = Instant.now()
         try {
-            val partialFilter = Filters.or(fieldNames.map{Filters.exists(it)})
+            val partialFilter = Filters.and(fieldNames.map{Filters.exists(it)})
             val indexName = container.createIndex(index, IndexOptions().partialFilterExpression(partialFilter))
 //            val indexName = container.createIndex(index, IndexOptions().partialFilterExpression(partialFilter))
             logger.info { "created index: $indexName" }
