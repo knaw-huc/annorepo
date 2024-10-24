@@ -8,5 +8,6 @@ data class ContainerMetadata(
     val createdAt: Instant = Instant.now(),
     val modifiedAt: Instant = Instant.now(),
     val fieldCounts: Map<String, Int> = mapOf(),
-    val isReadOnlyForAnonymous: Boolean = false
+    val isReadOnlyForAnonymous: Boolean = false,
+    val indexMap: MutableMap<String,String> = mutableMapOf()
 )

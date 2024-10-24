@@ -15,7 +15,7 @@ class IndexManager(val containerDAO: ContainerDAO) {
         val fieldName: String,
         val indexTypeName: String,
         val indexType: IndexType,
-        val isJsonField: Boolean = false
+        val isJsonField: Boolean = true
     )
 
     fun startIndexCreation(
@@ -38,7 +38,7 @@ class IndexManager(val containerDAO: ContainerDAO) {
         val index = Indexes.compoundIndex(indexes)
         return startIndexChore(
             IndexChore(
-                id = choreId(containerName, indexParts),
+                id = choreId(containerName, indexParts.toIndexName()),
                 container = container,
                 fieldNames = fullFieldNames,
                 index = index
@@ -46,18 +46,23 @@ class IndexManager(val containerDAO: ContainerDAO) {
         )
     }
 
-    fun getIndexChore(containerName: String, indexParts: List<IndexPart>): IndexChore? {
-        val id = choreId(containerName, indexParts)
+    fun getIndexChore(containerName: String, indexName: String): IndexChore? {
+        val id = choreId(containerName, indexName)
         return IndexChoreIndex[id]
     }
 
-    private fun choreId(containerName: String, indexParts: List<IndexPart>) =
-        ("$containerName/" + indexParts.joinToString("/") { "${it.fieldName}/${it.indexType}" }).lowercase()
+    private fun choreId(containerName: String, indexName: String) =
+        ("$containerName/$indexName").lowercase()
 
     private fun startIndexChore(chore: IndexChore): IndexChore {
         IndexChoreIndex[chore.id] = chore
         Thread(chore).start()
         return chore
+    }
+
+    companion object {
+        fun List<IndexPart>.toIndexName(): String =
+            joinToString("/") { "${it.fieldName}/${it.indexType}" }
     }
 
 }

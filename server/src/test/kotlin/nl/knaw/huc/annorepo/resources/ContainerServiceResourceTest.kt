@@ -364,7 +364,8 @@ class ContainerServiceResourceTest {
             every { containerDAO.getContainerMetadata(ARConst.CONTAINER_METADATA_COLLECTION) } returns ContainerMetadata(
                 name = "name",
                 label = "label",
-                isReadOnlyForAnonymous = false
+                isReadOnlyForAnonymous = false,
+                indexMap = mutableMapOf("index-0" to "annotation.body.id_1")
             )
             resource = ContainerServiceResource(
                 config,

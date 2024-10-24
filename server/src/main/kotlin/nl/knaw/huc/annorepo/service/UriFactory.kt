@@ -80,6 +80,15 @@ class UriFactory(private val configuration: AnnoRepoConfiguration) {
             .path(ResourcePaths.STATUS)
             .build()
 
+    fun indexStatusURL(containerName: String, indexName: String): URI =
+        UriBuilder.fromUri(configuration.externalBaseUrl)
+            .path(ResourcePaths.CONTAINER_SERVICES)
+            .path(containerName)
+            .path(ResourcePaths.INDEXES)
+            .path(indexName.lowercase())
+            .path(ResourcePaths.STATUS)
+            .build()
+
     fun customQueryURL(queryName: String): URI =
         UriBuilder.fromUri(configuration.externalBaseUrl)
             .path(ResourcePaths.GLOBAL_SERVICES)

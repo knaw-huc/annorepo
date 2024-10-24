@@ -10,6 +10,7 @@ import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
 import com.mongodb.client.model.Filters
+import com.mongodb.client.result.UpdateResult
 import org.bson.BsonValue
 import org.bson.Document
 import org.litote.kmongo.findOne
@@ -54,6 +55,12 @@ class ARContainerDAO(configuration: AnnoRepoConfiguration, client: MongoClient) 
     override fun getContainerMetadata(containerName: String): ContainerMetadata? =
         getContainerMetadataCollection()
             .findOne(Filters.eq(ARConst.CONTAINER_NAME_FIELD, containerName))
+
+    override fun updateContainerMetadata(
+        containerName: String,
+        containerMetadata: ContainerMetadata
+    ): UpdateResult =
+        getContainerMetadataCollection().replaceOne(Filters.eq("name", containerName), containerMetadata)
 
     override fun getDistinctValues(containerName: String, field: String): List<Any> {
         val size = getCollectionStats(containerName)["size"]

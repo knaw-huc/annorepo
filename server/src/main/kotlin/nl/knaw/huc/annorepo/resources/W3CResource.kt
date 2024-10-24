@@ -111,7 +111,8 @@ class W3CResource(
                 IndexManager.IndexPart(
                     fieldName = ANNOTATION_NAME_FIELD,
                     indexTypeName = "annotation_name",
-                    indexType = IndexType.HASHED
+                    indexType = IndexType.HASHED,
+                    isJsonField = false
                 )
             )
         )

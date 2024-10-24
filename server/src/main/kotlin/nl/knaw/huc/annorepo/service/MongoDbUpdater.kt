@@ -1,5 +1,6 @@
 package nl.knaw.huc.annorepo.service
 
+import java.util.UUID
 import com.mongodb.client.MongoClient
 import org.apache.logging.log4j.kotlin.logger
 import nl.knaw.huc.annorepo.api.ARConst
@@ -25,7 +26,7 @@ class MongoDbUpdater(
 
     fun run() {
         updateContainerUsers()
-        updateAnnotationNameIndex()
+        updateContainers()
     }
 
     private fun updateContainerUsers() {
@@ -49,7 +50,7 @@ class MongoDbUpdater(
         .sorted<String>()
         .toList()
 
-    private fun updateAnnotationNameIndex() {
+    private fun updateContainers() {
         for (containerName in allAnnotationContainers()) {
             logger.info { "Container $containerName" }
             val container = containerDAO.getCollection(containerName)
@@ -65,6 +66,19 @@ class MongoDbUpdater(
                         )
                     )
                 )
+            }
+            // fill indexMap when empty
+            containerDAO.getContainerMetadata(containerName)?.let { containerMetadata ->
+                if (containerMetadata.indexMap.isEmpty()) {
+                    containerDAO.getCollection(containerName)
+                        .listIndexes()
+                        .forEach {
+                            val mongoName = it.getString("name")
+                            val annoName = UUID.randomUUID().toString()
+                            containerMetadata.indexMap[annoName] = mongoName
+                        }
+                    containerDAO.updateContainerMetadata(containerName, containerMetadata)
+                }
             }
         }
     }

@@ -32,7 +32,6 @@ import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoCursor
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Aggregates.limit
-import com.mongodb.client.model.Filters
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.apache.logging.log4j.kotlin.logger
@@ -74,6 +73,7 @@ import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.CustomQueryTools
 import nl.knaw.huc.annorepo.resources.tools.CustomQueryTools.interpolate
 import nl.knaw.huc.annorepo.resources.tools.IndexManager
+import nl.knaw.huc.annorepo.resources.tools.IndexManager.Companion.toIndexName
 import nl.knaw.huc.annorepo.resources.tools.QueryCacheItem
 import nl.knaw.huc.annorepo.resources.tools.annotationCollectionLink
 import nl.knaw.huc.annorepo.resources.tools.isOpenAndHasNext
@@ -124,11 +124,10 @@ class ContainerServiceResource(
         @Context context: SecurityContext,
     ): Response {
         context.checkUserHasAdminRightsInThisContainer(containerName)
-        val containerMetadataCollection = containerDAO.getContainerMetadataCollection()
         val containerMetadata: ContainerMetadata =
             containerDAO.getContainerMetadata(containerName)!!
         val newContainerMetadata = containerMetadata.copy(isReadOnlyForAnonymous = setting)
-        containerMetadataCollection.replaceOne(Filters.eq("name", containerName), newContainerMetadata)
+        containerDAO.updateContainerMetadata(containerName, newContainerMetadata)
         return Response.ok().build()
     }
 
@@ -484,21 +483,15 @@ class ContainerServiceResource(
         val indexChore =
             indexManager.startIndexCreation(containerName, indexParts)
 //        indexManager.getIndexChore(containerName, fieldNameParam, indexTypeParam)
-        val indexName = indexName(multiFieldIndexSettings)
+        val indexName = multiFieldIndexSettings.indexName()
         val location = uriFactory.multiFieldIndexURL(containerName, indexName)
         return Response.created(location)
-//            .link(uriFactory.indexStatusURL(containerName, fieldNameParam, indexTypeParam), "status")
+            .link(uriFactory.indexStatusURL(containerName, indexName), "status")
             .entity(indexChore.status.summary())
             .build()
     }
 
-    private fun indexName(multiFieldIndexSettings: Map<String, String>): String {
-        return multiFieldIndexSettings.entries.joinToString("-") { (fieldName, indexType) ->
-            "${fieldName}_${indexType.lowercase()}"
-        }
-    }
-
-    @Operation(description = "Get an index definition")
+    @Operation(description = "Get a single field index definition")
     @Timed
     @GET
     @Path("{containerName}/$INDEXES/{fieldName}/{indexType}")
@@ -516,7 +509,7 @@ class ContainerServiceResource(
         return Response.ok(indexConfig).build()
     }
 
-    @Operation(description = "Get an index status")
+    @Operation(description = "Get a single field index status")
     @Timed
     @GET
     @Path("{containerName}/$INDEXES/{fieldName}/{indexType}/status")
@@ -527,16 +520,34 @@ class ContainerServiceResource(
         @Context context: SecurityContext,
     ): Response {
         context.checkUserHasAdminRightsInThisContainer(containerName)
+        val indexParts = listOf(
+            IndexManager.IndexPart(
+                fieldName = fieldName,
+                indexTypeName = indexType,
+                indexType = IndexType.valueOf(indexType)
+            )
+        )
+        val indexChore = indexManager.getIndexChore(
+            containerName,
+            indexParts.toIndexName()
+        ) ?: throw NotFoundException()
+        return Response.ok(indexChore.status.summary()).build()
+    }
+
+    @Operation(description = "Get a multiple field index status")
+    @Timed
+    @GET
+    @Path("{containerName}/$INDEXES/{indexName}/status")
+    fun getMultipleFieldContainerIndexStatus(
+        @PathParam("containerName") containerName: String,
+        @PathParam("indexName") indexName: String,
+        @Context context: SecurityContext,
+    ): Response {
+        context.checkUserHasAdminRightsInThisContainer(containerName)
 
         val indexChore = indexManager.getIndexChore(
             containerName,
-            listOf(
-                IndexManager.IndexPart(
-                    fieldName = fieldName,
-                    indexTypeName = indexType,
-                    indexType = IndexType.valueOf(indexType)
-                )
-            )
+            indexName
         ) ?: throw NotFoundException()
         return Response.ok(indexChore.status.summary()).build()
     }
@@ -704,6 +715,11 @@ class ContainerServiceResource(
             .aggregate(aggregateStages)
             .cursor()
     }
+
+    private fun Map<String, String>.indexName(): String =
+        entries.joinToString("-") { (fieldName, indexType) ->
+            "${fieldName}_${indexType.lowercase()}"
+        }
 
 }
 
