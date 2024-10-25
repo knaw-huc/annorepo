@@ -1,5 +1,6 @@
 package nl.knaw.huc.annorepo.resources.tools
 
+import java.util.UUID
 import com.mongodb.client.model.Indexes
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.IndexChoreIndex
@@ -36,23 +37,20 @@ class IndexManager(val containerDAO: ContainerDAO) {
             }
         }
         val index = Indexes.compoundIndex(indexes)
+        val id = UUID.randomUUID().toString()
         return startIndexChore(
             IndexChore(
-                id = choreId(containerName, indexParts.toIndexName()),
+                id = id,
                 container = container,
+                containerName = containerName,
                 fieldNames = fullFieldNames,
-                index = index
+                index = index,
+                containerDAO = containerDAO
             )
         )
     }
 
-    fun getIndexChore(containerName: String, indexName: String): IndexChore? {
-        val id = choreId(containerName, indexName)
-        return IndexChoreIndex[id]
-    }
-
-    private fun choreId(containerName: String, indexName: String) =
-        ("$containerName/$indexName").lowercase()
+    fun getIndexChore(indexName: String): IndexChore? = IndexChoreIndex[indexName]
 
     private fun startIndexChore(chore: IndexChore): IndexChore {
         IndexChoreIndex[chore.id] = chore

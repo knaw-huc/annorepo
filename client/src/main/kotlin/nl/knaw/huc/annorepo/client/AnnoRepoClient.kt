@@ -12,12 +12,14 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.streams.asStream
 import arrow.core.Either
 import arrow.core.flatMap
+import arrow.core.raise.either
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
+import kotlinx.coroutines.delay
 import org.apache.logging.log4j.kotlin.logger
 import org.glassfish.jersey.client.filter.EncodingFilter
 import org.glassfish.jersey.message.GZipEncoder
@@ -86,11 +88,11 @@ private const val IF_MATCH = "if-match"
 /**
  * Client to access annorepo servers.
  *
- * @constructor
  * @param serverURI the server *URI*
  * @param apiKey the api-key for authentication (optional)
- * @param userAgent the string to identify this client in the User-Agent header (optional)
- *
+ * @param userAgent the string to identify this client in the User-Agent
+ *    header (optional)
+ * @constructor
  */
 class AnnoRepoClient @JvmOverloads constructor(
     serverURI: URI, val apiKey: String? = null, private val userAgent: String? = null,
@@ -140,7 +142,8 @@ class AnnoRepoClient @JvmOverloads constructor(
     /**
      * Create an annotation container
      *
-     * @param preferredName the preferred name of the container. May be overridden by the server
+     * @param preferredName the preferred name of the container. May be
+     *    overridden by the server
      * @param label a short, human-readable description of this container
      * @return
      */
@@ -589,21 +592,22 @@ class AnnoRepoClient @JvmOverloads constructor(
     private fun tryGetGlobalSearchResultPage(
         queryId: String,
         page: Int
-    ): Either<RequestError, GetSearchResultPageResult> = doGet(
-        request = webTarget.path(GLOBAL_SERVICES).path(SEARCH).path(queryId)
-            .queryParam("page", page)
-            .request(),
-        responseHandlers = mapOf(
-            Response.Status.OK to { response ->
-                val json = response.readEntityAsJsonString()
-                val annotationPage: AnnotationPage = oMapper.readValue<AnnotationPage>(json)
-                Either.Right(
-                    GetSearchResultPageResult(
-                        response = response, annotationPage = annotationPage
+    ): Either<RequestError, GetSearchResultPageResult> =
+        doGet(
+            request = webTarget.path(GLOBAL_SERVICES).path(SEARCH).path(queryId)
+                .queryParam("page", page)
+                .request(),
+            responseHandlers = mapOf(
+                Response.Status.OK to { response ->
+                    val json = response.readEntityAsJsonString()
+                    val annotationPage: AnnotationPage = oMapper.readValue<AnnotationPage>(json)
+                    Either.Right(
+                        GetSearchResultPageResult(
+                            response = response, annotationPage = annotationPage
+                        )
                     )
-                )
-            })
-    )
+                })
+        )
 
     /**
      * Get search status
@@ -641,9 +645,54 @@ class AnnoRepoClient @JvmOverloads constructor(
             responseHandlers = mapOf(Response.Status.CREATED to { response ->
                 val json = response.readEntityAsJsonString()
                 val statusSummary: ChoreStatusSummary = oMapper.readValue(json)
-                Either.Right(AddIndexResult(response = response, status = statusSummary))
+                Either.Right(AddIndexResult(response = response, status = statusSummary, indexId = response.indexId()))
             })
         )
+
+    /**
+     * Add multi field index
+     *
+     * @param containerName
+     * @param indexDefinition
+     * @return
+     */
+    fun addIndex(
+        containerName: String,
+        indexDefinition: Map<String, IndexType>
+    ): Either<RequestError, AddIndexResult> =
+        doPost(
+            request = webTarget.path(CONTAINER_SERVICES).path(containerName).path(INDEXES)
+                .request(),
+            entity = Entity.json(indexDefinition),
+            responseHandlers = mapOf(Response.Status.CREATED to { response ->
+                val json = response.readEntityAsJsonString()
+                val statusSummary: ChoreStatusSummary = oMapper.readValue(json)
+                Either.Right(AddIndexResult(response = response, status = statusSummary, indexId = response.indexId()))
+            })
+        )
+
+    /**
+     * add index and (asynchronously) wait for the indexing to be done
+     *
+     * @param containerName String
+     * @param indexDefinition Map<String, IndexType>
+     * @return String The index id
+     */
+    suspend fun asyncAddIndex(
+        containerName: String,
+        indexDefinition: Map<String, IndexType>
+    ): Either<RequestError, String> {
+        return either {
+            val addingResult = addIndex(containerName, indexDefinition).bind()
+            var done = false
+            while (!done) {
+                val statusResult = getIndexCreationStatus(containerName, addingResult.indexId).bind()
+                done = statusResult.status.state != "RUNNING"
+                delay(1000)
+            }
+            addingResult.indexId
+        }
+    }
 
     /**
      * Get index
@@ -683,6 +732,29 @@ class AnnoRepoClient @JvmOverloads constructor(
         doGet(
             request = webTarget.path(CONTAINER_SERVICES).path(containerName).path(INDEXES).path(fieldName)
                 .path(indexType.name).path(STATUS)
+                .request(),
+            responseHandlers = mapOf(Response.Status.OK to { response ->
+                val json = response.readEntityAsJsonString()
+                val statusSummary: ChoreStatusSummary = oMapper.readValue(json)
+                Either.Right(
+                    GetIndexCreationStatusResult(response, statusSummary)
+                )
+            })
+        )
+
+    /**
+     * Get index Creation Status
+     *
+     * @param containerName
+     * @param indexId
+     * @return
+     */
+    fun getIndexCreationStatus(
+        containerName: String,
+        indexId: String
+    ): Either<RequestError, GetIndexCreationStatusResult> =
+        doGet(
+            request = webTarget.path(CONTAINER_SERVICES).path(containerName).path(INDEXES).path(indexId).path(STATUS)
                 .request(),
             responseHandlers = mapOf(Response.Status.OK to { response ->
                 val json = response.readEntityAsJsonString()
@@ -754,22 +826,23 @@ class AnnoRepoClient @JvmOverloads constructor(
      * @param users
      * @return
      */
-    fun addUsers(users: List<UserEntry>): Either<RequestError, AddUsersResult> = doPost(
-        request = webTarget.path(ADMIN).path(USERS).request(),
-        entity = Entity.json(users),
-        responseHandlers = mapOf(
-            Response.Status.OK to { response ->
-                val json = response.readEntityAsJsonString()
-                val userAddResults: UserAddResults = oMapper.readValue(json)
-                Either.Right(
-                    AddUsersResult(
-                        response = response,
-                        accepted = userAddResults.added,
-                        rejected = userAddResults.rejected
+    fun addUsers(users: List<UserEntry>): Either<RequestError, AddUsersResult> =
+        doPost(
+            request = webTarget.path(ADMIN).path(USERS).request(),
+            entity = Entity.json(users),
+            responseHandlers = mapOf(
+                Response.Status.OK to { response ->
+                    val json = response.readEntityAsJsonString()
+                    val userAddResults: UserAddResults = oMapper.readValue(json)
+                    Either.Right(
+                        AddUsersResult(
+                            response = response,
+                            accepted = userAddResults.added,
+                            rejected = userAddResults.rejected
+                        )
                     )
-                )
-            })
-    )
+                })
+        )
 
     /**
      * Delete user
@@ -1049,14 +1122,25 @@ class AnnoRepoClient @JvmOverloads constructor(
         fun addIndex(fieldName: String, indexType: IndexType): Either<RequestError, AddIndexResult> =
             client.addIndex(containerName, fieldName = fieldName, indexType = indexType)
 
+        fun addIndex(indexDefinition: Map<String, IndexType>): Either<RequestError, AddIndexResult> =
+            client.addIndex(containerName, indexDefinition)
+
         fun getIndexes(): Either<RequestError, ListIndexesResult> =
             client.listIndexes(containerName)
+
+        suspend fun asyncAddIndex(indexDefinition: Map<String, IndexType>): Either<RequestError, String> =
+            client.asyncAddIndex(containerName, indexDefinition)
 
         fun getIndexCreationStatus(
             field: String,
             indexType: IndexType
         ): Either<RequestError, GetIndexCreationStatusResult> =
             client.getIndexCreationStatus(containerName, fieldName = field, indexType = indexType)
+
+        fun getIndexCreationStatus(
+            indexId: String
+        ): Either<RequestError, GetIndexCreationStatusResult> =
+            client.getIndexCreationStatus(containerName, indexId = indexId)
 
         fun getDistinctFieldValues(field: String): Either<RequestError, DistinctAnnotationFieldValuesResult> =
             client.getDistinctFieldValues(containerName, fieldName = field)
@@ -1238,6 +1322,9 @@ class AnnoRepoClient @JvmOverloads constructor(
             val encodedParameters = parameters.map { (k, v) -> "$k=${encode(v.encodeToByteArray())}" }.joinToString(",")
             "$name:$encodedParameters"
         }
+
+    private fun Response.indexId(): String =
+        links.first { it.rel == "status" }.uri.path.replace("/status", "").split("/").last()
 
     companion object {
         private val oMapper: ObjectMapper = jacksonObjectMapper()

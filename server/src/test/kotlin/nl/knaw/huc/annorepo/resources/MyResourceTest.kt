@@ -5,6 +5,7 @@ import java.util.TreeMap
 import jakarta.ws.rs.core.SecurityContext
 import org.junit.jupiter.api.Test
 import com.mongodb.client.MongoCollection
+import com.mongodb.client.result.UpdateResult
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
@@ -81,6 +82,13 @@ class MyResourceTest {
                 PUBLIC_CONTAINER_NAME -> publicMetadata
                 else -> byInvitationMetadata
             }
+
+        override fun updateContainerMetadata(
+            containerName: String,
+            containerMetadata: ContainerMetadata
+        ): UpdateResult {
+            TODO("Not yet implemented")
+        }
 
         override fun containerExists(containerName: String): Boolean {
             TODO("Not yet implemented")

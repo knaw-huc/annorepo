@@ -7,6 +7,10 @@ import arrow.core.Either.Right
 import arrow.core.raise.either
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.kotlin.logger
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
@@ -442,6 +446,48 @@ class IntegratedClientKotlinTester {
                     true
                 })
             assertThat(success).isTrue
+        }
+
+        @Test
+        fun textMultiFieldIndex() {
+            val surianoContainer = client.containerAdapter("suriano-0.5.1e-024")
+            val indexDefinition = mapOf("body.type" to IndexType.DESCENDING, "body.id" to IndexType.ASCENDING)
+            either {
+                val result = surianoContainer.addIndex(indexDefinition).bind()
+                logger.info { result }
+                logger.info { result.indexId }
+
+                var done = false
+                while (!done) {
+                    val statusResult = surianoContainer.getIndexCreationStatus(result.indexId).bind()
+                    logger.info { statusResult }
+                    done = statusResult.status.state != "RUNNING"
+                }
+                val indexesResult = surianoContainer.getIndexes().bind()
+                indexesResult.indexes.forEach { logger.info { it } }
+            }.mapLeft<Void> { requestError ->
+                logError(requestError)
+                fail(requestError.message)
+            }
+        }
+
+        @OptIn(DelicateCoroutinesApi::class)
+        @Test
+        fun textMultiFieldIndexASync() {
+            val surianoContainer = client.containerAdapter("suriano-0.5.1e-024")
+            val indexDefinition = mapOf("body.type" to IndexType.HASHED, "body.id" to IndexType.ASCENDING)
+            either {
+                runBlocking {
+                    val deferredIndexId = GlobalScope.async { surianoContainer.asyncAddIndex(indexDefinition) }
+                    val indexId = deferredIndexId.await().bind()
+                    logger.info { indexId }
+                    val indexesResult = surianoContainer.getIndexes().bind()
+                    indexesResult.indexes.forEach { logger.info { it } }
+                }
+            }.mapLeft<Void> { requestError ->
+                logError(requestError)
+                fail(requestError.message)
+            }
         }
 
     }

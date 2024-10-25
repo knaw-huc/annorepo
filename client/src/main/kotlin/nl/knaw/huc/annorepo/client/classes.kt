@@ -25,13 +25,15 @@ sealed class ARResult {
     ) : ARResult()
 
     /**
-     * Result of a successful call to [AnnoRepoClient#createContainer(String,String)]
+     * Result of a successful call to
+     * [AnnoRepoClient#createContainer(String,String)]
      *
+     * @constructor Create empty Create container result
      * @property response
      * @property location The URI of the created container.
      * @property containerName The name given to this container.
-     * @property eTag The eTag of the container; required when calling [AnnoRepoClient#deleteContainer(String,String)]
-     * @constructor Create empty Create container result
+     * @property eTag The eTag of the container; required when calling
+     *    [AnnoRepoClient#deleteContainer(String,String)]
      */
     data class CreateContainerResult(
         override val response: Response,
@@ -112,6 +114,7 @@ sealed class ARResult {
     data class AddIndexResult(
         override val response: Response,
         val status: ChoreStatusSummary,
+        val indexId: String
     ) : ARResult()
 
     data class GetIndexResult(

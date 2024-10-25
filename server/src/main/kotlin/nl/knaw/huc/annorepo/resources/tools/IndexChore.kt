@@ -10,12 +10,15 @@ import org.bson.Document
 import org.bson.conversions.Bson
 import org.joda.time.Instant
 import nl.knaw.huc.annorepo.api.ChoreStatusSummary
+import nl.knaw.huc.annorepo.dao.ContainerDAO
 
 class IndexChore(
     val id: String,
     private val container: MongoCollection<Document>,
+    private val containerName: String,
     private val fieldNames: List<String>,
-    private val index: Bson
+    private val index: Bson,
+    private val containerDAO: ContainerDAO
 ) :
     Runnable {
 
@@ -49,10 +52,14 @@ class IndexChore(
         status.state = State.RUNNING
         status.startTime = Instant.now()
         try {
-            val partialFilter = Filters.and(fieldNames.map{Filters.exists(it)})
+            val partialFilter = Filters.and(fieldNames.map { Filters.exists(it) })
             val indexName = container.createIndex(index, IndexOptions().partialFilterExpression(partialFilter))
 //            val indexName = container.createIndex(index, IndexOptions().partialFilterExpression(partialFilter))
             logger.info { "created index: $indexName" }
+            val metadata = containerDAO.getContainerMetadata(containerName)
+                ?: throw RuntimeException("no metatadata found for $containerName")
+            metadata.indexMap[id] = indexName
+            containerDAO.updateContainerMetadata(containerName, metadata)
             status.state = State.DONE
         } catch (t: Throwable) {
             t.printStackTrace()

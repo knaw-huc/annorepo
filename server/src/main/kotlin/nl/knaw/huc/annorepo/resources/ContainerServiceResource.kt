@@ -482,8 +482,8 @@ class ContainerServiceResource(
         }
         val indexChore =
             indexManager.startIndexCreation(containerName, indexParts)
-//        indexManager.getIndexChore(containerName, fieldNameParam, indexTypeParam)
-        val indexName = multiFieldIndexSettings.indexName()
+//        val indexName = multiFieldIndexSettings.indexName()
+        val indexName = indexChore.id
         val location = uriFactory.multiFieldIndexURL(containerName, indexName)
         return Response.created(location)
             .link(uriFactory.indexStatusURL(containerName, indexName), "status")
@@ -528,7 +528,6 @@ class ContainerServiceResource(
             )
         )
         val indexChore = indexManager.getIndexChore(
-            containerName,
             indexParts.toIndexName()
         ) ?: throw NotFoundException()
         return Response.ok(indexChore.status.summary()).build()
@@ -546,7 +545,6 @@ class ContainerServiceResource(
         context.checkUserHasAdminRightsInThisContainer(containerName)
 
         val indexChore = indexManager.getIndexChore(
-            containerName,
             indexName
         ) ?: throw NotFoundException()
         return Response.ok(indexChore.status.summary()).build()
