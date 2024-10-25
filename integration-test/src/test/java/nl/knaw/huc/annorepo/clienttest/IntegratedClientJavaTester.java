@@ -513,9 +513,8 @@ public class IntegratedClientJavaTester {
         @Test
         void testDeleteIndex() {
             String containerName = "volume-1728";
-            String fieldName = "body.type";
-            IndexType indexType = IndexType.HASHED;
-            Boolean success = client.deleteIndex(containerName, fieldName, indexType).fold(
+            String indexId = "index-id";
+            Boolean success = client.deleteIndex(containerName, indexId).fold(
                     (RequestError error) -> {
                         handleError(error);
                         return false;

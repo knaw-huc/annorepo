@@ -294,7 +294,7 @@ class ContainerServiceResourceTest {
                     authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
                 ) {
                     val response =
-                        resource.addMultiFieldContainerIndex(CONTAINER_NAME, mapOf(), securityContext)
+                        resource.addContainerIndex(CONTAINER_NAME, mapOf(), securityContext)
                     assertNotNull(response)
                 }
             }

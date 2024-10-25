@@ -716,31 +716,31 @@ class AnnoRepoClient @JvmOverloads constructor(
             })
         )
 
-    /**
-     * Get index Creation Status
-     *
-     * @param containerName
-     * @param fieldName
-     * @param indexType
-     * @return
-     */
-    fun getIndexCreationStatus(
-        containerName: String,
-        fieldName: String,
-        indexType: IndexType
-    ): Either<RequestError, GetIndexCreationStatusResult> =
-        doGet(
-            request = webTarget.path(CONTAINER_SERVICES).path(containerName).path(INDEXES).path(fieldName)
-                .path(indexType.name).path(STATUS)
-                .request(),
-            responseHandlers = mapOf(Response.Status.OK to { response ->
-                val json = response.readEntityAsJsonString()
-                val statusSummary: ChoreStatusSummary = oMapper.readValue(json)
-                Either.Right(
-                    GetIndexCreationStatusResult(response, statusSummary)
-                )
-            })
-        )
+//    /**
+//     * Get index Creation Status
+//     *
+//     * @param containerName
+//     * @param fieldName
+//     * @param indexType
+//     * @return
+//     */
+//    fun getIndexCreationStatus(
+//        containerName: String,
+//        fieldName: String,
+//        indexType: IndexType
+//    ): Either<RequestError, GetIndexCreationStatusResult> =
+//        doGet(
+//            request = webTarget.path(CONTAINER_SERVICES).path(containerName).path(INDEXES).path(fieldName)
+//                .path(indexType.name).path(STATUS)
+//                .request(),
+//            responseHandlers = mapOf(Response.Status.OK to { response ->
+//                val json = response.readEntityAsJsonString()
+//                val statusSummary: ChoreStatusSummary = oMapper.readValue(json)
+//                Either.Right(
+//                    GetIndexCreationStatusResult(response, statusSummary)
+//                )
+//            })
+//        )
 
     /**
      * Get index Creation Status
@@ -788,18 +788,17 @@ class AnnoRepoClient @JvmOverloads constructor(
      * Delete index
      *
      * @param containerName the name of the container
-     * @param fieldName the name of the indexed field
-     * @param indexType the type of index
+     * @param indexId the index id
      * @return
      */
     fun deleteIndex(
-        containerName: String, fieldName: String, indexType: IndexType,
+        containerName: String, indexId: String,
     ): Either<RequestError, DeleteResult> = doDelete(
-        request = webTarget.path(CONTAINER_SERVICES).path(containerName).path(INDEXES).path(fieldName)
-            .path(indexType.name)
-            .request(), responseHandlers = mapOf(Response.Status.NO_CONTENT to { response ->
-            Either.Right(DeleteResult(response))
-        })
+        request = webTarget.path(CONTAINER_SERVICES).path(containerName).path(INDEXES).path(indexId).request(),
+        responseHandlers = mapOf(
+            Response.Status.NO_CONTENT to { response ->
+                Either.Right(DeleteResult(response))
+            })
     )
 
     /**
@@ -1119,28 +1118,25 @@ class AnnoRepoClient @JvmOverloads constructor(
         fun getSearchInfo(queryId: String): Either<RequestError, GetSearchInfoResult> =
             client.getSearchInfo(containerName, queryId = queryId)
 
-        fun addIndex(fieldName: String, indexType: IndexType): Either<RequestError, AddIndexResult> =
-            client.addIndex(containerName, fieldName = fieldName, indexType = indexType)
-
         fun addIndex(indexDefinition: Map<String, IndexType>): Either<RequestError, AddIndexResult> =
             client.addIndex(containerName, indexDefinition)
-
-        fun getIndexes(): Either<RequestError, ListIndexesResult> =
-            client.listIndexes(containerName)
 
         suspend fun asyncAddIndex(indexDefinition: Map<String, IndexType>): Either<RequestError, String> =
             client.asyncAddIndex(containerName, indexDefinition)
 
-        fun getIndexCreationStatus(
-            field: String,
-            indexType: IndexType
-        ): Either<RequestError, GetIndexCreationStatusResult> =
-            client.getIndexCreationStatus(containerName, fieldName = field, indexType = indexType)
+        fun addIndex(fieldName: String, indexType: IndexType): Either<RequestError, AddIndexResult> =
+            client.addIndex(containerName, fieldName = fieldName, indexType = indexType)
+
+        fun getIndexes(): Either<RequestError, ListIndexesResult> =
+            client.listIndexes(containerName)
 
         fun getIndexCreationStatus(
             indexId: String
         ): Either<RequestError, GetIndexCreationStatusResult> =
             client.getIndexCreationStatus(containerName, indexId = indexId)
+
+        fun deleteIndex(indexId: String): Either<RequestError, DeleteResult> =
+            client.deleteIndex(containerName, indexId)
 
         fun getDistinctFieldValues(field: String): Either<RequestError, DistinctAnnotationFieldValuesResult> =
             client.getDistinctFieldValues(containerName, fieldName = field)

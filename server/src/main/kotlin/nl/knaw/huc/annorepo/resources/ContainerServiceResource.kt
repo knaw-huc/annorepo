@@ -46,6 +46,7 @@ import nl.knaw.huc.annorepo.api.AnnotationPage
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.IndexConfig
+import nl.knaw.huc.annorepo.api.IndexPart
 import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.QueryAsMap
 import nl.knaw.huc.annorepo.api.ResourcePaths.ANNOTATIONS_BATCH
@@ -73,7 +74,6 @@ import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.CustomQueryTools
 import nl.knaw.huc.annorepo.resources.tools.CustomQueryTools.interpolate
 import nl.knaw.huc.annorepo.resources.tools.IndexManager
-import nl.knaw.huc.annorepo.resources.tools.IndexManager.Companion.toIndexName
 import nl.knaw.huc.annorepo.resources.tools.QueryCacheItem
 import nl.knaw.huc.annorepo.resources.tools.annotationCollectionLink
 import nl.knaw.huc.annorepo.resources.tools.isOpenAndHasNext
@@ -465,7 +465,7 @@ class ContainerServiceResource(
     @Timed
     @POST
     @Path("{containerName}/$INDEXES")
-    fun addMultiFieldContainerIndex(
+    fun addContainerIndex(
         @PathParam("containerName") containerName: String,
         multiFieldIndexSettings: Map<String, String>,
         @Context context: SecurityContext,
@@ -509,45 +509,58 @@ class ContainerServiceResource(
         return Response.ok(indexConfig).build()
     }
 
-    @Operation(description = "Get a single field index status")
+//    @Operation(description = "Get a single field index status")
+//    @Timed
+//    @GET
+//    @Path("{containerName}/$INDEXES/{fieldName}/{indexType}/status")
+//    fun getSingleFieldContainerIndexStatus(
+//        @PathParam("containerName") containerName: String,
+//        @PathParam("fieldName") fieldName: String,
+//        @PathParam("indexType") indexType: String,
+//        @Context context: SecurityContext,
+//    ): Response {
+//        context.checkUserHasAdminRightsInThisContainer(containerName)
+//        val indexParts = listOf(
+//            IndexManager.IndexPart(
+//                fieldName = fieldName,
+//                indexTypeName = indexType,
+//                indexType = IndexType.valueOf(indexType)
+//            )
+//        )
+//        val indexChore = indexManager.getIndexChore(
+//            indexParts.toIndexName()
+//        ) ?: throw NotFoundException()
+//        return Response.ok(indexChore.status.summary()).build()
+//    }
+
+    @Operation(description = "Get an index status")
     @Timed
     @GET
-    @Path("{containerName}/$INDEXES/{fieldName}/{indexType}/status")
-    fun getSingleFieldContainerIndexStatus(
+    @Path("{containerName}/$INDEXES/{indexId}/status")
+    fun getContainerIndexStatus(
         @PathParam("containerName") containerName: String,
-        @PathParam("fieldName") fieldName: String,
-        @PathParam("indexType") indexType: String,
+        @PathParam("indexId") indexId: String,
         @Context context: SecurityContext,
     ): Response {
         context.checkUserHasAdminRightsInThisContainer(containerName)
-        val indexParts = listOf(
-            IndexManager.IndexPart(
-                fieldName = fieldName,
-                indexTypeName = indexType,
-                indexType = IndexType.valueOf(indexType)
-            )
-        )
-        val indexChore = indexManager.getIndexChore(
-            indexParts.toIndexName()
-        ) ?: throw NotFoundException()
+
+        val indexChore = indexManager.getIndexChore(indexId) ?: throw NotFoundException()
         return Response.ok(indexChore.status.summary()).build()
     }
 
-    @Operation(description = "Get a multiple field index status")
+    @Operation(description = "Delete a container index")
     @Timed
-    @GET
-    @Path("{containerName}/$INDEXES/{indexName}/status")
-    fun getMultipleFieldContainerIndexStatus(
+    @DELETE
+    @Path("{containerName}/$INDEXES/{indexId}")
+    fun deleteContainerIndex(
         @PathParam("containerName") containerName: String,
-        @PathParam("indexName") indexName: String,
+        @PathParam("indexId") indexId: String,
         @Context context: SecurityContext,
     ): Response {
         context.checkUserHasAdminRightsInThisContainer(containerName)
 
-        val indexChore = indexManager.getIndexChore(
-            indexName
-        ) ?: throw NotFoundException()
-        return Response.ok(indexChore.status.summary()).build()
+        containerDAO.dropContainerIndex(containerName, indexId)
+        return Response.noContent().build()
     }
 
     @Operation(description = "Delete a container index")
@@ -565,7 +578,8 @@ class ContainerServiceResource(
         val container = containerDAO.getCollection(containerName)
         val indexConfig =
             getIndexConfig(container, containerName, fieldName, indexType)
-        val indexName = "$ANNOTATION_FIELD.${indexConfig.field}_${indexConfig.type.mongoSuffix}"
+        val indexName =
+            "$ANNOTATION_FIELD.${indexConfig.indexParts.first().field}_${indexConfig.indexParts.first().type.mongoSuffix}"
         container.dropIndex(indexName)
         return Response.noContent().build()
     }
@@ -592,8 +606,13 @@ class ContainerServiceResource(
         fieldName: String,
         indexType: String,
     ): IndexConfig =
+        // TODO: use indexId
         indexData(container, containerName)
-            .firstOrNull { it.field == fieldName && it.type == IndexType.fromString(indexType) }
+            .firstOrNull {
+                it.indexParts.first().field == fieldName && it.indexParts.first().type == IndexType.fromString(
+                    indexType
+                )
+            }
             ?: throw NotFoundException()
 
     private fun indexData(container: MongoCollection<Document>, containerName: String): List<IndexConfig> =
@@ -617,7 +636,8 @@ class ContainerServiceResource(
                     else -> throw Exception("unexpected index type: $typeCode in $name")
                 }
                 val fieldName = field.replace(prefix, "")
-                IndexConfig(fieldName, type, uriFactory.singleFieldIndexURL(containerName, fieldName, type.name))
+                val indexParts = listOf(IndexPart(fieldName, type))
+                IndexConfig(indexParts, uriFactory.singleFieldIndexURL(containerName, fieldName, type.name))
             }
 
             else -> null

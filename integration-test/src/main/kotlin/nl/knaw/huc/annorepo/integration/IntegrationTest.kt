@@ -139,6 +139,7 @@ class IntegrationTest {
                 t.printStep("add index")
                 val addIndexResult = this.addIndex(containerName, "body", IndexType.HASHED)
                 t.println(addIndexResult)
+                val indexId = addIndexResult.getOrNull()?.indexId!!
 
                 t.printStep("get index")
                 val getIndexResult = this.getIndex(containerName, "body", IndexType.HASHED)
@@ -149,7 +150,7 @@ class IntegrationTest {
                 t.println(listIndexResult)
 
                 t.printStep("delete index")
-                val deleteIndexResult = this.deleteIndex(containerName, "body", IndexType.HASHED)
+                val deleteIndexResult = this.deleteIndex(containerName, indexId)
                 t.println(deleteIndexResult)
 
                 t.printStep("using filterContainerAnnotations")

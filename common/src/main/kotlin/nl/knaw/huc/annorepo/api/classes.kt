@@ -36,9 +36,13 @@ data class AnnotationIdentifier(
 )
 
 data class IndexConfig(
-    val field: String,
-    val type: IndexType,
+    val indexParts: List<IndexPart>,
     val url: URI
+)
+
+data class IndexPart(
+    val field: String,
+    val type: IndexType
 )
 
 data class SearchInfo(

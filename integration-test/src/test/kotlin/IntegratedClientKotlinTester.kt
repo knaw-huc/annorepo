@@ -22,7 +22,6 @@ import nl.knaw.huc.annorepo.api.UserEntry
 import nl.knaw.huc.annorepo.api.WebAnnotation
 import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 import nl.knaw.huc.annorepo.client.ARResult
-import nl.knaw.huc.annorepo.client.ARResult.AddIndexResult
 import nl.knaw.huc.annorepo.client.ARResult.AddUsersResult
 import nl.knaw.huc.annorepo.client.ARResult.AnnotationFieldInfoResult
 import nl.knaw.huc.annorepo.client.ARResult.BatchUploadResult
@@ -35,8 +34,6 @@ import nl.knaw.huc.annorepo.client.ARResult.DeleteResult
 import nl.knaw.huc.annorepo.client.ARResult.FilterContainerAnnotationsResult
 import nl.knaw.huc.annorepo.client.ARResult.GetAnnotationResult
 import nl.knaw.huc.annorepo.client.ARResult.GetGlobalSearchStatusResult
-import nl.knaw.huc.annorepo.client.ARResult.GetIndexCreationStatusResult
-import nl.knaw.huc.annorepo.client.ARResult.GetIndexResult
 import nl.knaw.huc.annorepo.client.ARResult.GetSearchResultPageResult
 import nl.knaw.huc.annorepo.client.ARResult.ListIndexesResult
 import nl.knaw.huc.annorepo.client.ARResult.MyContainersResult
@@ -382,55 +379,25 @@ class IntegratedClientKotlinTester {
             val fieldName = "body.type"
             val indexType = IndexType.HASHED
 
-            // create
-            val createSuccess = client.addIndex(containerName, fieldName, indexType).fold(
-                { error: RequestError ->
-                    handleError(error)
-                    false
-                },
-                { (_, statusSummary): AddIndexResult ->
-                    doSomethingWith(statusSummary)
-                    true
-                }
-            )
-            assertThat(createSuccess).isTrue
+            either {
+                // create
+                val (_, statusSummary1, indexId) = client.addIndex(containerName, fieldName, indexType).bind()
+                doSomethingWith(statusSummary1)
 
-            // read status
-            val readStatusSuccess =
-                client.getIndexCreationStatus(containerName, fieldName, indexType).fold(
-                    { error: RequestError ->
-                        handleError(error)
-                        false
-                    },
-                    { (_, statusSummary): GetIndexCreationStatusResult ->
-                        doSomethingWith(statusSummary)
-                        true
-                    }
-                )
-            assertThat(readStatusSuccess).isTrue
+                // read status
+                val (_, statusSummary2) =
+                    client.getIndexCreationStatus(containerName, indexId).bind()
+                doSomethingWith(statusSummary2)
 
-            // read
-            val readSuccess = client.getIndex(containerName, fieldName, indexType).fold(
-                { error: RequestError ->
-                    handleError(error)
-                    false
-                },
-                { (_, indexConfig): GetIndexResult ->
-                    doSomethingWith(indexConfig)
-                    true
-                }
-            )
-            assertThat(readSuccess).isTrue
+                // read
+                val (_, indexConfig) = client.getIndex(containerName, fieldName, indexType).bind()
+                doSomethingWith(indexConfig)
 
-            // delete
-            val deleteSuccess = client.deleteIndex(containerName, fieldName, indexType).fold(
-                { error: RequestError ->
-                    handleError(error)
-                    false
-                },
-                { _: DeleteResult -> true }
-            )
-            assertThat(deleteSuccess).isTrue
+                // delete
+                client.deleteIndex(containerName, indexId).bind()
+            }.mapLeft { error: RequestError ->
+                handleError(error)
+            }
         }
 
         @Test
@@ -481,8 +448,11 @@ class IntegratedClientKotlinTester {
                     val deferredIndexId = GlobalScope.async { surianoContainer.asyncAddIndex(indexDefinition) }
                     val indexId = deferredIndexId.await().bind()
                     logger.info { indexId }
-                    val indexesResult = surianoContainer.getIndexes().bind()
-                    indexesResult.indexes.forEach { logger.info { it } }
+                    val indexesResult1 = surianoContainer.getIndexes().bind()
+                    indexesResult1.indexes.forEach { logger.info { it } }
+                    surianoContainer.deleteIndex(indexId)
+                    val indexesResult2 = surianoContainer.getIndexes().bind()
+                    assertThat(indexesResult1.indexes.size).isEqualTo(indexesResult2.indexes.size + 1)
                 }
             }.mapLeft<Void> { requestError ->
                 logError(requestError)

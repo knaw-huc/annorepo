@@ -125,6 +125,10 @@ class MyResourceTest {
             TODO("Not yet implemented")
         }
 
+        override fun dropContainerIndex(containerName: String, indexId: String) {
+            TODO("Not yet implemented")
+        }
+
     }
 
     class TestContainerUserDAO : ContainerUserDAO {

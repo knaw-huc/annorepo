@@ -116,6 +116,14 @@ class ARContainerDAO(configuration: AnnoRepoConfiguration, client: MongoClient) 
         return annotationIdentifiers
     }
 
+    override fun dropContainerIndex(containerName: String, indexId: String) {
+        val containerMetadata = getContainerMetadata(containerName)
+            ?: throw RuntimeException("No metadata found for container $containerName")
+        val mongoIndexName = containerMetadata.indexMap[indexId]
+            ?: throw RuntimeException("indexId $indexId not found in container metadata for container $containerName")
+        getCollection(containerName).dropIndex(mongoIndexName)
+    }
+
     override fun containerExists(containerName: String): Boolean = mdb.listCollectionNames().contains(containerName)
 
     private fun updateFieldCount(containerName: String, fieldsAdded: List<String>, fieldsDeleted: Set<String>) {
