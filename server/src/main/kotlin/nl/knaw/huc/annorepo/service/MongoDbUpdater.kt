@@ -5,6 +5,7 @@ import com.mongodb.client.MongoClient
 import org.apache.logging.log4j.kotlin.logger
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
+import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
@@ -67,9 +68,18 @@ class MongoDbUpdater(
                     )
                 )
             }
-            // fill indexMap when empty
-            containerDAO.getContainerMetadata(containerName)?.let { containerMetadata ->
+
+            val containerMetadata = containerDAO.getContainerMetadata(containerName)
+            if (containerMetadata == null) {
+                // add default container metadata when missing
+                logger.info { "adding default container metadata" }
+                val defaultContainerMetadata = ContainerMetadata(name = containerName, label = "")
+                containerDAO.updateContainerMetadata(containerName, defaultContainerMetadata)
+
+            } else {
+                // fill indexMap when empty
                 if (containerMetadata.indexMap.isEmpty()) {
+                    logger.info { "filling indexMap" }
                     containerDAO.getCollection(containerName)
                         .listIndexes()
                         .forEach {
