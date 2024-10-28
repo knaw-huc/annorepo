@@ -375,13 +375,13 @@ class IntegratedClientKotlinTester {
     inner class IndexTests {
         @Test
         fun testIndexCRUD() {
-            val containerName = "republic"
+            val containerName = "suriano-0.5.1e-024"
             val fieldName = "body.type"
             val indexType = IndexType.HASHED
 
             either {
                 // create
-                val (_, statusSummary1, indexId) = client.addIndex(containerName, fieldName, indexType).bind()
+                val (_, statusSummary1, indexId) = client.addIndex(containerName, mapOf(fieldName to indexType)).bind()
                 doSomethingWith(statusSummary1)
 
                 // read status
@@ -390,7 +390,7 @@ class IntegratedClientKotlinTester {
                 doSomethingWith(statusSummary2)
 
                 // read
-                val (_, indexConfig) = client.getIndex(containerName, fieldName, indexType).bind()
+                val (_, indexConfig) = client.getIndex(containerName, indexId).bind()
                 doSomethingWith(indexConfig)
 
                 // delete
@@ -402,7 +402,7 @@ class IntegratedClientKotlinTester {
 
         @Test
         fun testListIndexes() {
-            val containerName = "republic"
+            val containerName = "suriano-0.5.1e-024"
             val success = client.listIndexes(containerName).fold(
                 { error: RequestError ->
                     handleError(error)

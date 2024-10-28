@@ -6,6 +6,7 @@ import com.mongodb.client.result.UpdateResult
 import org.bson.Document
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
 import nl.knaw.huc.annorepo.api.ContainerMetadata
+import nl.knaw.huc.annorepo.api.IndexConfig
 import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 
 interface ContainerDAO {
@@ -25,6 +26,13 @@ interface ContainerDAO {
         containerName: String,
         annotations: List<WebAnnotationAsMap>
     ): List<AnnotationIdentifier>
+
     fun dropContainerIndex(containerName: String, indexId: String)
+    fun getContainerIndexDefinition(containerName: String, indexId: String): Any
+    fun indexConfig(
+        containerName: String,
+        mongoIndexName: String,
+        indexId: String
+    ): IndexConfig
 
 }

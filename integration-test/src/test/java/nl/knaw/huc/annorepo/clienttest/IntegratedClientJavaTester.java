@@ -477,9 +477,8 @@ public class IntegratedClientJavaTester {
         @Test
         void testGetIndex() {
             String containerName = "volume-1728";
-            String fieldName = "body.type";
-            IndexType indexType = IndexType.HASHED;
-            Boolean success = client.getIndex(containerName, fieldName, indexType).fold(
+            String indexId = "";
+            Boolean success = client.getIndex(containerName, indexId).fold(
                     (RequestError error) -> {
                         handleError(error);
                         return false;

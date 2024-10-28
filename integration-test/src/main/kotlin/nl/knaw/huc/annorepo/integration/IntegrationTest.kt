@@ -142,7 +142,7 @@ class IntegrationTest {
                 val indexId = addIndexResult.getOrNull()?.indexId!!
 
                 t.printStep("get index")
-                val getIndexResult = this.getIndex(containerName, "body", IndexType.HASHED)
+                val getIndexResult = this.getIndex(containerName, indexId)
                 t.println(getIndexResult)
 
                 t.printStep("list indexes")

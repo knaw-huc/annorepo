@@ -18,6 +18,7 @@ import nl.knaw.huc.annorepo.dao.ARContainerDAO
 import nl.knaw.huc.annorepo.resources.tools.AggregateStageGenerator
 import nl.knaw.huc.annorepo.resources.tools.hasAnnotationNameIndex
 import nl.knaw.huc.annorepo.resources.tools.toSimpleValue
+import nl.knaw.huc.annorepo.service.UriFactory
 
 @Disabled
 class MongoIntegrationTester {
@@ -25,6 +26,7 @@ class MongoIntegrationTester {
     private val mdb: MongoDatabase = mongoClient.getDatabase("annorepo")
     private val configuration = AnnoRepoConfiguration()
     private val aggregateStageGenerator = AggregateStageGenerator(configuration)
+    private val uriFactory = UriFactory(configuration)
 
     @Test
     fun test() {
@@ -59,7 +61,7 @@ class MongoIntegrationTester {
 
     @Test
     fun testGetDistinctValues() {
-        val containerDAO = ARContainerDAO(configuration, mongoClient)
+        val containerDAO = ARContainerDAO(configuration, mongoClient, uriFactory)
         val distinctValues = containerDAO.getDistinctValues("large-container", "body.type")
         logger.info { distinctValues }
         val cachedDistinctValues = containerDAO.getDistinctValues("large-container", "body.type")
@@ -69,7 +71,7 @@ class MongoIntegrationTester {
 
     @Test
     fun testIndexes() {
-        val containerDAO = ARContainerDAO(configuration, mongoClient)
+        val containerDAO = ARContainerDAO(configuration, mongoClient, uriFactory)
         val allContainers = allAnnotationContainers()
         for (cn in allContainers) {
             logger.info { "container $cn" }
@@ -89,7 +91,7 @@ class MongoIntegrationTester {
 
     @Test
     fun `compound index`() {
-        val containerDAO = ARContainerDAO(configuration, mongoClient)
+        val containerDAO = ARContainerDAO(configuration, mongoClient, uriFactory)
         val containerName = "republic-2024.02.23"
         val collection = containerDAO.getCollection(containerName)
         val indexes = collection.listIndexes().toList()

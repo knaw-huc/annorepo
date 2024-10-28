@@ -46,7 +46,6 @@ import nl.knaw.huc.annorepo.api.AnnotationPage
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.IndexConfig
-import nl.knaw.huc.annorepo.api.IndexPart
 import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.QueryAsMap
 import nl.knaw.huc.annorepo.api.ResourcePaths.ANNOTATIONS_BATCH
@@ -424,43 +423,6 @@ class ContainerServiceResource(
     }
 
     @OptIn(ExperimentalStdlibApi::class)
-    @Operation(description = "Add an index on a single field")
-    @Timed
-    @PUT
-    @Path("{containerName}/$INDEXES/{fieldName}/{indexType}")
-    fun addSingleFieldContainerIndex(
-        @PathParam("containerName") containerName: String,
-        @PathParam("fieldName") fieldNameParam: String,
-        @PathParam("indexType") indexTypeParam: String,
-        @Context context: SecurityContext,
-    ): Response {
-        context.checkUserHasAdminRightsInThisContainer(containerName)
-
-        val indexType =
-            IndexType.fromString(indexTypeParam) ?: throw BadRequestException(
-                "Unknown indexType $indexTypeParam; expected indexTypes: ${
-                    IndexType.entries.joinToString(", ") { it.name.lowercase() }
-                }"
-            )
-        val indexParts =
-            listOf(
-                IndexManager.IndexPart(
-                    fieldName = fieldNameParam,
-                    indexType = indexType,
-                    indexTypeName = indexTypeParam
-                )
-            )
-        val indexChore =
-            indexManager.startIndexCreation(containerName, indexParts)
-//        indexManager.getIndexChore(containerName, indexParts)
-        val location = uriFactory.singleFieldIndexURL(containerName, fieldNameParam, indexTypeParam)
-        return Response.created(location)
-            .link(uriFactory.indexStatusURL(containerName, fieldNameParam, indexTypeParam), "status")
-            .entity(indexChore.status.summary())
-            .build()
-    }
-
-    @OptIn(ExperimentalStdlibApi::class)
     @Operation(description = "Add a multi-field index")
     @Timed
     @POST
@@ -484,54 +446,27 @@ class ContainerServiceResource(
             indexManager.startIndexCreation(containerName, indexParts)
 //        val indexName = multiFieldIndexSettings.indexName()
         val indexName = indexChore.id
-        val location = uriFactory.multiFieldIndexURL(containerName, indexName)
+        val location = uriFactory.containerIndexURL(containerName, indexName)
         return Response.created(location)
-            .link(uriFactory.indexStatusURL(containerName, indexName), "status")
+            .link(uriFactory.containerIndexStatusURL(containerName, indexName), "status")
             .entity(indexChore.status.summary())
             .build()
     }
 
-    @Operation(description = "Get a single field index definition")
+    @Operation(description = "Get an index definition")
     @Timed
     @GET
-    @Path("{containerName}/$INDEXES/{fieldName}/{indexType}")
-    fun getSingleFieldContainerIndexDefinition(
+    @Path("{containerName}/$INDEXES/{indexId}")
+    fun getContainerIndexDefinition(
         @PathParam("containerName") containerName: String,
-        @PathParam("fieldName") fieldName: String,
-        @PathParam("indexType") indexType: String,
+        @PathParam("indexId") indexId: String,
         @Context context: SecurityContext,
     ): Response {
         context.checkUserHasAdminRightsInThisContainer(containerName)
 
-        val container = containerDAO.getCollection(containerName)
-        val indexConfig =
-            getIndexConfig(container, containerName, fieldName, indexType)
+        val indexConfig = containerDAO.getContainerIndexDefinition(containerName, indexId)
         return Response.ok(indexConfig).build()
     }
-
-//    @Operation(description = "Get a single field index status")
-//    @Timed
-//    @GET
-//    @Path("{containerName}/$INDEXES/{fieldName}/{indexType}/status")
-//    fun getSingleFieldContainerIndexStatus(
-//        @PathParam("containerName") containerName: String,
-//        @PathParam("fieldName") fieldName: String,
-//        @PathParam("indexType") indexType: String,
-//        @Context context: SecurityContext,
-//    ): Response {
-//        context.checkUserHasAdminRightsInThisContainer(containerName)
-//        val indexParts = listOf(
-//            IndexManager.IndexPart(
-//                fieldName = fieldName,
-//                indexTypeName = indexType,
-//                indexType = IndexType.valueOf(indexType)
-//            )
-//        )
-//        val indexChore = indexManager.getIndexChore(
-//            indexParts.toIndexName()
-//        ) ?: throw NotFoundException()
-//        return Response.ok(indexChore.status.summary()).build()
-//    }
 
     @Operation(description = "Get an index status")
     @Timed
@@ -563,27 +498,6 @@ class ContainerServiceResource(
         return Response.noContent().build()
     }
 
-    @Operation(description = "Delete a container index")
-    @Timed
-    @DELETE
-    @Path("{containerName}/$INDEXES/{fieldName}/{indexType}")
-    fun deleteSingleFieldContainerIndex(
-        @PathParam("containerName") containerName: String,
-        @PathParam("fieldName") fieldName: String,
-        @PathParam("indexType") indexType: String,
-        @Context context: SecurityContext,
-    ): Response {
-        context.checkUserHasAdminRightsInThisContainer(containerName)
-
-        val container = containerDAO.getCollection(containerName)
-        val indexConfig =
-            getIndexConfig(container, containerName, fieldName, indexType)
-        val indexName =
-            "$ANNOTATION_FIELD.${indexConfig.indexParts.first().field}_${indexConfig.indexParts.first().type.mongoSuffix}"
-        container.dropIndex(indexName)
-        return Response.noContent().build()
-    }
-
     @Operation(description = "Upload annotations in batch to a given container")
     @Timed
     @POST
@@ -600,48 +514,28 @@ class ContainerServiceResource(
         return Response.ok(annotationIdentifiers).build()
     }
 
-    private fun getIndexConfig(
-        container: MongoCollection<Document>,
-        containerName: String,
-        fieldName: String,
-        indexType: String,
-    ): IndexConfig =
-        // TODO: use indexId
-        indexData(container, containerName)
-            .firstOrNull {
-                it.indexParts.first().field == fieldName && it.indexParts.first().type == IndexType.fromString(
-                    indexType
-                )
-            }
-            ?: throw NotFoundException()
-
     private fun indexData(container: MongoCollection<Document>, containerName: String): List<IndexConfig> =
         container.listIndexes()
+            .filter { it.toMap()["name"].toString().startsWith("$ANNOTATION_FIELD.") }
             .mapNotNull { it.toMap().asIndexConfig(containerName) }
+            .map { indexConfig ->
+                indexConfig.copy(indexFields = indexConfig.indexFields.map { indexFields ->
+                    indexFields.copy(
+                        field = indexFields.field.replace(
+                            "$ANNOTATION_FIELD.",
+                            ""
+                        )
+                    )
+                })
+            }
             .toList()
 
     private fun Map<String, Any>.asIndexConfig(containerName: String): IndexConfig? {
         val name = this["name"].toString()
-        val splitPosition = name.lastIndexOf("_")
-        val field = name.subSequence(0, splitPosition).toString()
-        val typeCode = name.subSequence(startIndex = splitPosition + 1, endIndex = name.lastIndex + 1).toString()
-        val prefix = "$ANNOTATION_FIELD."
-        return when {
-            name.startsWith(prefix) -> {
-                val type = when (typeCode) {
-                    IndexType.HASHED.mongoSuffix -> IndexType.HASHED
-                    IndexType.ASCENDING.mongoSuffix -> IndexType.ASCENDING
-                    IndexType.DESCENDING.mongoSuffix -> IndexType.DESCENDING
-                    IndexType.TEXT.mongoSuffix -> IndexType.TEXT
-                    else -> throw Exception("unexpected index type: $typeCode in $name")
-                }
-                val fieldName = field.replace(prefix, "")
-                val indexParts = listOf(IndexPart(fieldName, type))
-                IndexConfig(indexParts, uriFactory.singleFieldIndexURL(containerName, fieldName, type.name))
-            }
-
-            else -> null
-        }
+        val indexId =
+            containerDAO.getContainerMetadata(containerName)?.indexMap?.filter { it.value == name }?.map { it.key }
+                ?.first() ?: throw RuntimeException("No indexId found for index $name in $containerName")
+        return containerDAO.indexConfig(containerName, name, indexId)
     }
 
     private fun getQueryCacheItem(searchId: String): QueryCacheItem =
@@ -733,11 +627,6 @@ class ContainerServiceResource(
             .aggregate(aggregateStages)
             .cursor()
     }
-
-    private fun Map<String, String>.indexName(): String =
-        entries.joinToString("-") { (fieldName, indexType) ->
-            "${fieldName}_${indexType.lowercase()}"
-        }
 
 }
 

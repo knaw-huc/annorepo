@@ -106,15 +106,16 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         logger.info { "connected! version = $mongoVersion" }
 
         val appVersion = javaClass.getPackage().implementationVersion
+        val uriFactory = UriFactory(configuration)
+
         val userDAO = ARUserDAO(configuration, mongoClient)
-        val containerDAO = ARContainerDAO(configuration, mongoClient)
+        val containerDAO = ARContainerDAO(configuration, mongoClient, uriFactory)
         val containerUserDAO = ARContainerUserDAO(configuration, mongoClient)
         val customQueryDAO = ARCustomQueryDAO(configuration, mongoClient)
 
         val containerAccessChecker = ContainerAccessChecker(containerUserDAO)
         val searchManager = SearchManager(containerDAO = containerDAO, configuration = configuration)
         val indexManager = IndexManager(containerDAO)
-        val uriFactory = UriFactory(configuration)
 
         configuration.grpc
             .builder(environment)

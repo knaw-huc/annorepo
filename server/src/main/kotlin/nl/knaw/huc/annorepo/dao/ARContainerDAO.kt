@@ -11,6 +11,7 @@ import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
 import com.mongodb.client.model.Filters
 import com.mongodb.client.result.UpdateResult
+import org.apache.logging.log4j.kotlin.logger
 import org.bson.BsonValue
 import org.bson.Document
 import org.litote.kmongo.findOne
@@ -18,13 +19,19 @@ import org.litote.kmongo.getCollection
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
 import nl.knaw.huc.annorepo.api.ContainerMetadata
+import nl.knaw.huc.annorepo.api.IndexConfig
+import nl.knaw.huc.annorepo.api.IndexFields
+import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.resources.tools.makeAnnotationETag
 import nl.knaw.huc.annorepo.resources.tools.toPrimitive
 import nl.knaw.huc.annorepo.service.JsonLdUtils
+import nl.knaw.huc.annorepo.service.UriFactory
 
-class ARContainerDAO(configuration: AnnoRepoConfiguration, client: MongoClient) : ContainerDAO {
+class ARContainerDAO(
+    configuration: AnnoRepoConfiguration, client: MongoClient, val uriFactory: UriFactory
+) : ContainerDAO {
 
     private val mdb: MongoDatabase = client.getDatabase(configuration.databaseName)
 
@@ -114,6 +121,41 @@ class ARContainerDAO(configuration: AnnoRepoConfiguration, client: MongoClient) 
             .sorted()
         updateFieldCount(containerName, fields, emptySet())
         return annotationIdentifiers
+    }
+
+    override fun getContainerIndexDefinition(containerName: String, indexId: String): Any {
+        val containerMetadata = getContainerMetadata(containerName)
+            ?: throw RuntimeException("No metadata found for container $containerName")
+        val mongoIndexName = containerMetadata.indexMap[indexId]
+            ?: throw RuntimeException("indexId $indexId not found in container metadata for container $containerName")
+        return indexConfig(containerName, mongoIndexName, indexId)
+
+    }
+
+    override fun indexConfig(
+        containerName: String,
+        mongoIndexName: String,
+        indexId: String
+    ): IndexConfig {
+        logger.info { "mongoIndexName=$mongoIndexName" }
+        val nameParts = mongoIndexName
+            .split("_")
+            .chunked(2)
+            .map {
+                val fieldName = it[0]
+                val indexType = when (it[1]) {
+                    IndexType.HASHED.mongoSuffix -> IndexType.HASHED
+                    IndexType.ASCENDING.mongoSuffix -> IndexType.ASCENDING
+                    IndexType.DESCENDING.mongoSuffix -> IndexType.DESCENDING
+                    IndexType.TEXT.mongoSuffix -> IndexType.TEXT
+                    else -> throw Exception("unexpected index type: ${it[1]} in ${it[0]}")
+                }
+                Pair(fieldName, indexType)
+            }
+        return IndexConfig(
+            id = indexId,
+            url = uriFactory.containerIndexURL(containerName, indexId),
+            indexFields = nameParts.map { IndexFields(field = it.first, type = it.second) })
     }
 
     override fun dropContainerIndex(containerName: String, indexId: String) {

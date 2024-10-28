@@ -13,6 +13,7 @@ import org.bson.Document
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
+import nl.knaw.huc.annorepo.api.IndexConfig
 import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.api.UserAccessEntry
 import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
@@ -126,6 +127,14 @@ class MyResourceTest {
         }
 
         override fun dropContainerIndex(containerName: String, indexId: String) {
+            TODO("Not yet implemented")
+        }
+
+        override fun getContainerIndexDefinition(containerName: String, indexId: String): Any {
+            TODO("Not yet implemented")
+        }
+
+        override fun indexConfig(containerName: String, mongoIndexName: String, indexId: String): IndexConfig {
             TODO("Not yet implemented")
         }
 

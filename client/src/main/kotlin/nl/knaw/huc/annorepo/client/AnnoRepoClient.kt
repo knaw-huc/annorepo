@@ -694,6 +694,33 @@ class AnnoRepoClient @JvmOverloads constructor(
         }
     }
 
+//    /**
+//     * Get index
+//     *
+//     * @param containerName
+//     * @param fieldName
+//     * @param indexType
+//     * @return
+//     */
+//    @Deprecated(message = "Use getIndex()")
+//    fun getIndexOld(
+//        containerName: String,
+//        fieldName: String,
+//        indexType: IndexType
+//    ): Either<RequestError, GetIndexResult> =
+//        doGet(
+//            request = webTarget.path(CONTAINER_SERVICES).path(containerName).path(INDEXES).path(fieldName)
+//                .path(indexType.name)
+//                .request(),
+//            responseHandlers = mapOf(Response.Status.OK to { response ->
+//                val json = response.readEntityAsJsonString()
+//                val indexConfig: IndexConfig = oMapper.readValue(json)
+//                Either.Right(
+//                    GetIndexResult(response, indexConfig)
+//                )
+//            })
+//        )
+
     /**
      * Get index
      *
@@ -702,10 +729,9 @@ class AnnoRepoClient @JvmOverloads constructor(
      * @param indexType
      * @return
      */
-    fun getIndex(containerName: String, fieldName: String, indexType: IndexType): Either<RequestError, GetIndexResult> =
+    fun getIndex(containerName: String, indexId: String): Either<RequestError, GetIndexResult> =
         doGet(
-            request = webTarget.path(CONTAINER_SERVICES).path(containerName).path(INDEXES).path(fieldName)
-                .path(indexType.name)
+            request = webTarget.path(CONTAINER_SERVICES).path(containerName).path(INDEXES).path(indexId)
                 .request(),
             responseHandlers = mapOf(Response.Status.OK to { response ->
                 val json = response.readEntityAsJsonString()

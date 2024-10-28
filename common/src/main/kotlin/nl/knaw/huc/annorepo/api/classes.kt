@@ -36,11 +36,12 @@ data class AnnotationIdentifier(
 )
 
 data class IndexConfig(
-    val indexParts: List<IndexPart>,
-    val url: URI
+    val id: String,
+    val url: URI,
+    val indexFields: List<IndexFields>
 )
 
-data class IndexPart(
+data class IndexFields(
     val field: String,
     val type: IndexType
 )

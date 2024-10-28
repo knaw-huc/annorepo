@@ -242,7 +242,7 @@ class ContainerServiceResourceTest {
                     authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
                 ) {
                     val response =
-                        resource.addSingleFieldContainerIndex(CONTAINER_NAME, "fieldName", "indexType", securityContext)
+                        resource.addContainerIndex(CONTAINER_NAME, mapOf("fieldName" to "indexType"), securityContext)
                     assertNotNull(response)
                 }
             }
@@ -256,10 +256,9 @@ class ContainerServiceResourceTest {
                     authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
                 ) {
                     val response =
-                        resource.getSingleFieldContainerIndexDefinition(
+                        resource.getContainerIndexDefinition(
                             CONTAINER_NAME,
-                            "fieldName",
-                            "indexType",
+                            "indexId",
                             securityContext
                         )
                     assertNotNull(response)
@@ -275,10 +274,9 @@ class ContainerServiceResourceTest {
                     authorizedRoles = setOf(Role.ROOT, Role.ADMIN)
                 ) {
                     val response =
-                        resource.deleteSingleFieldContainerIndex(
+                        resource.deleteContainerIndex(
                             CONTAINER_NAME,
-                            "fieldName",
-                            "indexType",
+                            "indexId",
                             securityContext
                         )
                     assertNotNull(response)
