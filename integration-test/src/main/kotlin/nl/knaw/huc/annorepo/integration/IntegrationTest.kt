@@ -137,7 +137,7 @@ class IntegrationTest {
                 t.println(getContainerMetadataResult)
 
                 t.printStep("add index")
-                val addIndexResult = this.addIndex(containerName, "body", IndexType.HASHED)
+                val addIndexResult = this.addIndex(containerName, mapOf("body" to IndexType.HASHED))
                 t.println(addIndexResult)
                 val indexId = addIndexResult.getOrNull()?.indexId!!
 

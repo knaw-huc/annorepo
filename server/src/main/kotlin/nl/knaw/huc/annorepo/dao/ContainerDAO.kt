@@ -18,7 +18,11 @@ interface ContainerDAO {
 
     fun getContainerMetadataCollection(): MongoCollection<ContainerMetadata>
     fun getContainerMetadata(containerName: String): ContainerMetadata?
-    fun updateContainerMetadata(containerName: String, containerMetadata: ContainerMetadata): UpdateResult
+    fun updateContainerMetadata(
+        containerName: String,
+        containerMetadata: ContainerMetadata,
+        upsert: Boolean
+    ): UpdateResult
 
     fun getDistinctValues(containerName: String, field: String): List<Any>
     fun getCollection(containerName: String): MongoCollection<Document>

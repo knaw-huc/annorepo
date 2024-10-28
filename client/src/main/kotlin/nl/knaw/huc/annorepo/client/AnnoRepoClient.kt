@@ -582,6 +582,7 @@ class AnnoRepoClient @JvmOverloads constructor(
             while (result.isLeft()) {
                 Thread.sleep(1000)
                 result = tryGetGlobalSearchResultPage(queryId, page)
+                logger.info { result }
             }
             result
         } else {
@@ -625,27 +626,6 @@ class AnnoRepoClient @JvmOverloads constructor(
                 Either.Right(
                     ARResult.GetGlobalSearchStatusResult(response, searchStatus)
                 )
-            })
-        )
-
-    /**
-     * Add index
-     *
-     * @param containerName
-     * @param fieldName
-     * @param indexType
-     * @return
-     */
-    fun addIndex(containerName: String, fieldName: String, indexType: IndexType): Either<RequestError, AddIndexResult> =
-        doPut(
-            request = webTarget.path(CONTAINER_SERVICES).path(containerName).path(INDEXES).path(fieldName)
-                .path(indexType.name)
-                .request(),
-            entity = Entity.json(emptyMap<String, Any>()),
-            responseHandlers = mapOf(Response.Status.CREATED to { response ->
-                val json = response.readEntityAsJsonString()
-                val statusSummary: ChoreStatusSummary = oMapper.readValue(json)
-                Either.Right(AddIndexResult(response = response, status = statusSummary, indexId = response.indexId()))
             })
         )
 
@@ -1150,10 +1130,10 @@ class AnnoRepoClient @JvmOverloads constructor(
         suspend fun asyncAddIndex(indexDefinition: Map<String, IndexType>): Either<RequestError, String> =
             client.asyncAddIndex(containerName, indexDefinition)
 
-        fun addIndex(fieldName: String, indexType: IndexType): Either<RequestError, AddIndexResult> =
-            client.addIndex(containerName, fieldName = fieldName, indexType = indexType)
+        fun getIndex(indexId: String): Either<RequestError, GetIndexResult> =
+            client.getIndex(containerName, indexId)
 
-        fun getIndexes(): Either<RequestError, ListIndexesResult> =
+        fun listIndexes(): Either<RequestError, ListIndexesResult> =
             client.listIndexes(containerName)
 
         fun getIndexCreationStatus(

@@ -10,12 +10,16 @@ import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
 import com.mongodb.client.model.Filters
+import com.mongodb.client.model.Filters.eq
+import com.mongodb.client.model.ReplaceOptions
 import com.mongodb.client.result.UpdateResult
 import org.bson.BsonValue
 import org.bson.Document
 import org.litote.kmongo.findOne
 import org.litote.kmongo.getCollection
+import org.litote.kmongo.replaceOneWithFilter
 import nl.knaw.huc.annorepo.api.ARConst
+import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_NAME_FIELD
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.IndexConfig
@@ -64,9 +68,15 @@ class ARContainerDAO(
 
     override fun updateContainerMetadata(
         containerName: String,
-        containerMetadata: ContainerMetadata
+        containerMetadata: ContainerMetadata,
+        upsert: Boolean
     ): UpdateResult =
-        getContainerMetadataCollection().replaceOne(Filters.eq("name", containerName), containerMetadata)
+        getContainerMetadataCollection()
+            .replaceOneWithFilter(
+                filter = eq(CONTAINER_NAME_FIELD, containerName),
+                replacement = containerMetadata,
+                replaceOptions = ReplaceOptions().upsert(true)
+            )
 
     override fun getDistinctValues(containerName: String, field: String): List<Any> {
         val size = getCollectionStats(containerName)["size"]

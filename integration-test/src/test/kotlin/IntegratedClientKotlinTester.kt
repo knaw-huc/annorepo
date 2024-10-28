@@ -383,21 +383,24 @@ class IntegratedClientKotlinTester {
             val indexType = IndexType.HASHED
 
             either {
+                val surianoContainer = client.containerAdapter(containerName)
                 // create
-                val (_, statusSummary1, indexId) = client.addIndex(containerName, mapOf(fieldName to indexType)).bind()
-                doSomethingWith(statusSummary1)
+                val (_, statusSummary1, indexId) = surianoContainer.addIndex(mapOf(fieldName to indexType)).bind()
+                doSomethingWith(statusSummary1, indexId)
+
+//                val indexes = surianoContainer.listIndexes().bind()
+//                doSomethingWith(indexes)
 
                 // read status
-                val (_, statusSummary2) =
-                    client.getIndexCreationStatus(containerName, indexId).bind()
-                doSomethingWith(statusSummary2)
+                val (_, statusSummary2) = surianoContainer.getIndexCreationStatus(indexId).bind()
+                doSomethingWith(statusSummary2, indexId)
 
                 // read
-                val (_, indexConfig) = client.getIndex(containerName, indexId).bind()
-                doSomethingWith(indexConfig)
+                val (_, indexConfig) = surianoContainer.getIndex(indexId).bind()
+                doSomethingWith(indexConfig, indexId)
 
                 // delete
-                client.deleteIndex(containerName, indexId).bind()
+                surianoContainer.deleteIndex(indexId).bind()
             }.mapLeft { error: RequestError ->
                 handleError(error)
             }
@@ -433,7 +436,7 @@ class IntegratedClientKotlinTester {
                     logger.info { statusResult }
                     done = statusResult.status.state != "RUNNING"
                 }
-                val indexesResult = surianoContainer.getIndexes().bind()
+                val indexesResult = surianoContainer.listIndexes().bind()
                 indexesResult.indexes.forEach { logger.info { it } }
             }.mapLeft<Void> { requestError ->
                 logError(requestError)
@@ -452,11 +455,11 @@ class IntegratedClientKotlinTester {
                     val indexId = deferredIndexId.await().bind()
                     logger.info { indexId }
 
-                    val indexesResult1 = surianoContainer.getIndexes().bind()
+                    val indexesResult1 = surianoContainer.listIndexes().bind()
                     indexesResult1.indexes.forEach { logger.info { it } }
 
                     surianoContainer.deleteIndex(indexId)
-                    val indexesResult2 = surianoContainer.getIndexes().bind()
+                    val indexesResult2 = surianoContainer.listIndexes().bind()
                     assertThat(indexesResult1.indexes.size).isEqualTo(indexesResult2.indexes.size + 1)
                 }
             }.mapLeft<Void> { requestError ->

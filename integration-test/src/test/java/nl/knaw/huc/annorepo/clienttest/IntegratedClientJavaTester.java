@@ -464,7 +464,8 @@ public class IntegratedClientJavaTester {
             String containerName = "volume-1728";
             String fieldName = "body.type";
             IndexType indexType = IndexType.HASHED;
-            Boolean success = client.addIndex(containerName, fieldName, indexType).fold(
+            Map<String, IndexType> indexDefinition = Map.of(fieldName, indexType);
+            Boolean success = client.addIndex(containerName, indexDefinition).fold(
                     (RequestError error) -> {
                         handleError(error);
                         return false;

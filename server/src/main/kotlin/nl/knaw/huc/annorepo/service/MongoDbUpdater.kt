@@ -69,27 +69,28 @@ class MongoDbUpdater(
                 )
             }
 
-            val containerMetadata = containerDAO.getContainerMetadata(containerName)
+            var containerMetadata = containerDAO.getContainerMetadata(containerName)
             if (containerMetadata == null) {
                 // add default container metadata when missing
                 logger.info { "adding default container metadata" }
                 val defaultContainerMetadata = ContainerMetadata(name = containerName, label = "")
-                containerDAO.updateContainerMetadata(containerName, defaultContainerMetadata)
-
-            } else {
-                // fill indexMap when empty
-                if (containerMetadata.indexMap.isEmpty()) {
-                    logger.info { "filling indexMap" }
-                    containerDAO.getCollection(containerName)
-                        .listIndexes()
-                        .forEach {
-                            val mongoName = it.getString("name")
-                            val annoName = UUID.randomUUID().toString()
-                            containerMetadata.indexMap[annoName] = mongoName
-                        }
-                    containerDAO.updateContainerMetadata(containerName, containerMetadata)
-                }
+                containerDAO.updateContainerMetadata(containerName, defaultContainerMetadata, true)
+                containerMetadata = containerDAO.getContainerMetadata(containerName)
             }
+
+            // fill indexMap when empty
+            if (containerMetadata!!.indexMap.isEmpty()) {
+                logger.info { "filling indexMap" }
+                containerDAO.getCollection(containerName)
+                    .listIndexes()
+                    .forEach {
+                        val mongoName = it.getString("name")
+                        val annoName = UUID.randomUUID().toString()
+                        containerMetadata.indexMap[annoName] = mongoName
+                    }
+                containerDAO.updateContainerMetadata(containerName, containerMetadata, false)
+            }
+
         }
     }
 

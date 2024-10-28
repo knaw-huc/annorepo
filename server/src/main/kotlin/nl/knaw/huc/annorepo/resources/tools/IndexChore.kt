@@ -59,7 +59,7 @@ class IndexChore(
             val metadata = containerDAO.getContainerMetadata(containerName)
                 ?: throw RuntimeException("no metatadata found for $containerName")
             metadata.indexMap[id] = indexName
-            containerDAO.updateContainerMetadata(containerName, metadata)
+            containerDAO.updateContainerMetadata(containerName, metadata, false)
             status.state = State.DONE
         } catch (t: Throwable) {
             t.printStackTrace()

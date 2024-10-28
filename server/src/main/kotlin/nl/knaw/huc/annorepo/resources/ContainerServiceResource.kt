@@ -126,7 +126,7 @@ class ContainerServiceResource(
         val containerMetadata: ContainerMetadata =
             containerDAO.getContainerMetadata(containerName)!!
         val newContainerMetadata = containerMetadata.copy(isReadOnlyForAnonymous = setting)
-        containerDAO.updateContainerMetadata(containerName, newContainerMetadata)
+        containerDAO.updateContainerMetadata(containerName, newContainerMetadata, false)
         return Response.ok().build()
     }
 
