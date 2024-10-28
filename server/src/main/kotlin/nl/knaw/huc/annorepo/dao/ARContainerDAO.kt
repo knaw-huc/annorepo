@@ -11,7 +11,6 @@ import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
 import com.mongodb.client.model.Filters
 import com.mongodb.client.result.UpdateResult
-import org.apache.logging.log4j.kotlin.logger
 import org.bson.BsonValue
 import org.bson.Document
 import org.litote.kmongo.findOne
@@ -124,12 +123,8 @@ class ARContainerDAO(
     }
 
     override fun getContainerIndexDefinition(containerName: String, indexId: String): Any {
-        val containerMetadata = getContainerMetadata(containerName)
-            ?: throw RuntimeException("No metadata found for container $containerName")
-        val mongoIndexName = containerMetadata.indexMap[indexId]
-            ?: throw RuntimeException("indexId $indexId not found in container metadata for container $containerName")
+        val mongoIndexName = mongoIndexName(containerName, indexId)
         return indexConfig(containerName, mongoIndexName, indexId)
-
     }
 
     override fun indexConfig(
@@ -137,7 +132,6 @@ class ARContainerDAO(
         mongoIndexName: String,
         indexId: String
     ): IndexConfig {
-        logger.info { "mongoIndexName=$mongoIndexName" }
         val nameParts = mongoIndexName
             .split("_")
             .chunked(2)
@@ -159,10 +153,7 @@ class ARContainerDAO(
     }
 
     override fun dropContainerIndex(containerName: String, indexId: String) {
-        val containerMetadata = getContainerMetadata(containerName)
-            ?: throw RuntimeException("No metadata found for container $containerName")
-        val mongoIndexName = containerMetadata.indexMap[indexId]
-            ?: throw RuntimeException("indexId $indexId not found in container metadata for container $containerName")
+        val mongoIndexName = mongoIndexName(containerName, indexId)
         getCollection(containerName).dropIndex(mongoIndexName)
     }
 
@@ -170,8 +161,8 @@ class ARContainerDAO(
 
     private fun updateFieldCount(containerName: String, fieldsAdded: List<String>, fieldsDeleted: Set<String>) {
         val containerMetadataCollection = getContainerMetadataCollection()
-        val containerMetadata: ContainerMetadata =
-            getContainerMetadata(containerName)!!
+        val containerMetadata: ContainerMetadata = getContainerMetadata(containerName)
+            ?: throw RuntimeException("No container metadata found for container $containerName")
         val fieldCounts = containerMetadata.fieldCounts.toMutableMap()
         for (field in fieldsAdded.filter { f -> !f.contains("@") }) {
             fieldCounts[field] = fieldCounts.getOrDefault(field, 0) + 1
@@ -184,6 +175,14 @@ class ARContainerDAO(
         }
         val newContainerMetadata = containerMetadata.copy(fieldCounts = fieldCounts)
         containerMetadataCollection.replaceOne(Filters.eq("name", containerName), newContainerMetadata)
+    }
+
+    private fun mongoIndexName(containerName: String, indexId: String): String {
+        val containerMetadata = getContainerMetadata(containerName)
+            ?: throw RuntimeException("No metadata found for container $containerName")
+        val mongoIndexName = containerMetadata.indexMap[indexId]
+            ?: throw RuntimeException("indexId $indexId not found in container metadata for container $containerName")
+        return mongoIndexName
     }
 
     companion object {

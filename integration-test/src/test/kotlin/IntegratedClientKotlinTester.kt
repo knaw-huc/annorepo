@@ -263,13 +263,16 @@ class IntegratedClientKotlinTester {
             val annotation2 = WebAnnotation.Builder().withBody("http://example.org/annotation2")
                 .withTarget("http://example.org/target2").build()
             val annotations = listOf(annotation1, annotation2)
-            val success = client.batchUpload(containerName, annotations).fold({ error: RequestError ->
-                handleError(error)
-                false
-            }, { (_, annotationIdentifiers): BatchUploadResult ->
-                doSomethingWith(annotationIdentifiers)
-                true
-            })
+            val success = client.batchUpload(containerName, annotations)
+                .fold(
+                    { error: RequestError ->
+                        handleError(error)
+                        false
+                    },
+                    { (_, annotationIdentifiers): BatchUploadResult ->
+                        doSomethingWith(annotationIdentifiers)
+                        true
+                    })
             assertThat(success).isTrue
         }
 
@@ -279,7 +282,7 @@ class IntegratedClientKotlinTester {
     inner class SearchTests {
         @Test
         fun testFilterContainerAnnotations() {
-            val containerName = "republic"
+            val containerName = "republic-2024.05.17"
             val query = mapOf("body.type" to "Page")
             client.filterContainerAnnotations(containerName, query).fold(
                 { error: RequestError -> handleError(error) },
@@ -296,7 +299,7 @@ class IntegratedClientKotlinTester {
 
         @Test
         fun testFilterContainerAnnotations2() {
-            val containerName = "republic"
+            val containerName = "republic-2024.05.17"
             val query = mapOf("body.type" to "Page")
 
             val e: Either<RequestError, List<String>> =
@@ -448,8 +451,10 @@ class IntegratedClientKotlinTester {
                     val deferredIndexId = GlobalScope.async { surianoContainer.asyncAddIndex(indexDefinition) }
                     val indexId = deferredIndexId.await().bind()
                     logger.info { indexId }
+
                     val indexesResult1 = surianoContainer.getIndexes().bind()
                     indexesResult1.indexes.forEach { logger.info { it } }
+
                     surianoContainer.deleteIndex(indexId)
                     val indexesResult2 = surianoContainer.getIndexes().bind()
                     assertThat(indexesResult1.indexes.size).isEqualTo(indexesResult2.indexes.size + 1)
@@ -466,7 +471,7 @@ class IntegratedClientKotlinTester {
     inner class FieldTests {
         @Test
         fun testFieldInfo() {
-            val containerName = "republic"
+            val containerName = "republic-2024.05.17"
             client.getFieldInfo(containerName).fold(
                 { error: RequestError -> handleError(error) },
                 { (_, fieldInfo): AnnotationFieldInfoResult -> doSomethingWith(fieldInfo) }
@@ -475,7 +480,7 @@ class IntegratedClientKotlinTester {
 
         @Test
         fun testDistinctFieldValues() {
-            val containerName = "republic"
+            val containerName = "republic-2024.05.17"
             client.getDistinctFieldValues(containerName, "body.type")
                 .fold(
                     { error: RequestError -> handleError(error) },
@@ -528,7 +533,7 @@ class IntegratedClientKotlinTester {
     inner class ContainerUsersTests {
         @Test
         fun testAddingContainerUsers() {
-            val containerName = "republic"
+            val containerName = "republic-2024.05.17"
             val newUserName = "user1"
             client.getContainerUsers(containerName).fold({ error: RequestError ->
                 handleError(error)
