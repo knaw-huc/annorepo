@@ -86,7 +86,8 @@ class MyResourceTest {
 
         override fun updateContainerMetadata(
             containerName: String,
-            containerMetadata: ContainerMetadata
+            containerMetadata: ContainerMetadata,
+            upsert: Boolean
         ): UpdateResult {
             TODO("Not yet implemented")
         }
