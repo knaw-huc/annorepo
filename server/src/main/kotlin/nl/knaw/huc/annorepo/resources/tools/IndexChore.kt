@@ -3,8 +3,6 @@ package nl.knaw.huc.annorepo.resources.tools
 import java.util.Date
 import java.util.concurrent.TimeUnit
 import com.mongodb.client.MongoCollection
-import com.mongodb.client.model.Filters
-import com.mongodb.client.model.IndexOptions
 import org.apache.logging.log4j.kotlin.logger
 import org.bson.Document
 import org.bson.conversions.Bson
@@ -52,8 +50,8 @@ class IndexChore(
         status.state = State.RUNNING
         status.startTime = Instant.now()
         try {
-            val partialFilter = Filters.and(fieldNames.map { Filters.exists(it) })
-            val indexName = container.createIndex(index, IndexOptions().partialFilterExpression(partialFilter))
+            val indexName = container.createIndex(index)
+//            val partialFilter = Filters.and(fieldNames.map { Filters.exists(it) })
 //            val indexName = container.createIndex(index, IndexOptions().partialFilterExpression(partialFilter))
             logger.info { "created index: $indexName" }
             val metadata = containerDAO.getContainerMetadata(containerName)
@@ -71,4 +69,3 @@ class IndexChore(
     }
 
 }
-
