@@ -103,8 +103,8 @@ class ContainerServiceResource(
     private val mongoCursorRemovalListener =
         RemovalListener<String, MongoCursor<Document>> { removal ->
             val cursor = removal.value
-            logger.info { "removing ${removal.key} from cache" }
-            logger.info { "closing cursor ${removal.key}" }
+            logger.debug { "removing ${removal.key} from cache" }
+            logger.debug { "closing cursor ${removal.key}" }
             cursor?.close()
         }
     private val mongoCursorCache: LoadingCache<String, MongoCursor<Document>> = CacheBuilder.newBuilder()
@@ -154,7 +154,6 @@ class ContainerServiceResource(
         @Context context: SecurityContext,
         containerUsers: List<ContainerUserEntry>,
     ): Response {
-//        logger.info{"containerUsers={}", containerUsers)
         context.checkUserHasAdminRightsInThisContainer(containerName)
 
         for (user in containerUsers) {
@@ -213,6 +212,49 @@ class ContainerServiceResource(
     @Timed
     @GET
     @Path("{containerName}/$SEARCH/{searchId}")
+    fun getCursoredSearchResultPage(
+        @PathParam("containerName") containerName: String,
+        @PathParam("searchId") searchId: String,
+        @QueryParam("page") page: Int = 0,
+        @Context context: SecurityContext,
+    ): Response {
+        context.checkUserHasReadRightsInThisContainer(containerName)
+
+        val queryCacheItem = getQueryCacheItem(searchId)
+        val cacheKey = "$searchId:${page}"
+        val cursor = mongoCursorCache.getIfPresent(cacheKey)?.also {
+            logger.debug { "using cached cursor $cacheKey" }
+        } ?: createContainerSearchCursor(containerName, queryCacheItem, page)
+
+        val annotations = mutableListOf<WebAnnotationAsMap>()
+        while (annotations.size < configuration.pageSize && cursor.isOpenAndHasNext()) {
+            annotations.add(cursor.next().toAnnotationMap(containerName))
+        }
+
+        val hasNext = cursor.isOpenAndHasNext()
+        if (hasNext) {
+            val nextCacheKey = "$searchId:${page + 1}"
+            logger.debug { "storing cursor $nextCacheKey" }
+            mongoCursorCache.put(nextCacheKey, cursor)
+        } else {
+            cursor.close()
+        }
+        mongoCursorCache.invalidate(cacheKey)
+
+        val annotationPage =
+            buildAnnotationPage(
+                uriFactory.searchURL(containerName, searchId),
+                annotations,
+                page,
+                hasNext = annotations.size == configuration.pageSize
+            )
+        return Response.ok(annotationPage).build()
+    }
+
+    @Operation(description = "Get the given search result page")
+    @Timed
+    @GET
+    @Path("{containerName}/o$SEARCH/{searchId}")
     fun getSearchResultPage(
         @PathParam("containerName") containerName: String,
         @PathParam("searchId") searchId: String,
@@ -285,8 +327,8 @@ class ContainerServiceResource(
         context.checkUserHasReadRightsInThisContainer(containerName)
         val cacheKey = "$containerName:$queryCall:${page}"
         val cursor = mongoCursorCache.getIfPresent(cacheKey)?.also {
-            logger.info { "using cached cursor $cacheKey" }
-        } ?: createCursor(context, containerName, queryCall, page)
+            logger.debug { "using cached cursor $cacheKey" }
+        } ?: createCustomSearchCursor(context, containerName, queryCall, page)
 
         val annotations = mutableListOf<WebAnnotationAsMap>()
         while (annotations.size < configuration.pageSize && cursor.isOpenAndHasNext()) {
@@ -296,7 +338,7 @@ class ContainerServiceResource(
         val hasNext = cursor.isOpenAndHasNext()
         if (hasNext) {
             val nextCacheKey = "$containerName:$queryCall:${page + 1}"
-            logger.info { "storing cursor $nextCacheKey" }
+            logger.debug { "storing cursor $nextCacheKey" }
             mongoCursorCache.put(nextCacheKey, cursor)
         } else {
             cursor.close()
@@ -596,13 +638,13 @@ class ContainerServiceResource(
         """.trimIndent()
     }
 
-    private fun createCursor(
+    private fun createCustomSearchCursor(
         context: SecurityContext,
         containerName: String,
         queryCall: String,
         page: Int
     ): MongoCursor<Document> {
-        logger.info { "creating new cursor" }
+        logger.debug { "creating new cursor" }
         val (queryName, queryParameters) = CustomQueryTools.decode(queryCall)
             .getOrElse { throw BadRequestException(it.message) }
         val customQuery = customQueryDAO.getByName(queryName)
@@ -611,7 +653,7 @@ class ContainerServiceResource(
             throw ForbiddenException("Custom query '$queryCall' is not for public use")
         }
 
-        logger.info { customQuery.queryTemplate }
+        logger.debug { customQuery.queryTemplate }
         val queryJson = customQuery.queryTemplate.interpolate(queryParameters)
         val queryMap: QueryAsMap = Json.createReader(StringReader(queryJson)).readObject().toMap().simplify()
         val aggregateStages = queryMap
@@ -622,6 +664,23 @@ class ContainerServiceResource(
                 add(Aggregates.skip(page * configuration.pageSize))
             }
 
+        return containerDAO
+            .getCollection(containerName)
+            .aggregate(aggregateStages)
+            .cursor()
+    }
+
+    private fun createContainerSearchCursor(
+        containerName: String,
+        queryCacheItem: QueryCacheItem,
+        page: Int
+    ): MongoCursor<Document> {
+        logger.debug { "creating new cursor" }
+        val aggregateStages = queryCacheItem.aggregateStages
+            .toMutableList()
+            .apply {
+                add(Aggregates.skip(page * configuration.pageSize))
+            }
         return containerDAO
             .getCollection(containerName)
             .aggregate(aggregateStages)
