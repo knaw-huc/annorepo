@@ -56,7 +56,7 @@ docker-run: k8s/local/docker-compose.yml
 docker-stop: k8s/local/docker-compose.yml
 	cd k8s/local && docker compose down
 
-.make/.docker: .make k8s/annorepo-server/Dockerfile-multistage
+.make/.docker: .make/.version k8s/annorepo-server/Dockerfile-multistage
 	docker build -t $(TAG):$(call version_fn) -f k8s/annorepo-server/Dockerfile-multistage .
 	@touch $@
 

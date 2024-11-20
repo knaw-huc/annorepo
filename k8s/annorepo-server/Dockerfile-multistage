@@ -1,4 +1,4 @@
-FROM maven:3.8.5 as builder
+FROM maven:3.8.5 AS builder
 
 WORKDIR /build/
 COPY ./server /build/server
