@@ -11,6 +11,7 @@ import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.ForbiddenException
 import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.NotFoundException
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.PUT
@@ -47,6 +48,7 @@ import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.IndexConfig
 import nl.knaw.huc.annorepo.api.IndexType
+import nl.knaw.huc.annorepo.api.OldAnnotationPage
 import nl.knaw.huc.annorepo.api.QueryAsMap
 import nl.knaw.huc.annorepo.api.ResourcePaths.ANNOTATIONS_BATCH
 import nl.knaw.huc.annorepo.api.ResourcePaths.COLLECTION
@@ -212,10 +214,11 @@ class ContainerServiceResource(
     @Timed
     @GET
     @Path("{containerName}/$SEARCH/{searchId}")
-    fun getCursoredSearchResultPage(
+    fun getSearchResultPage(
         @PathParam("containerName") containerName: String,
         @PathParam("searchId") searchId: String,
         @QueryParam("page") page: Int = 0,
+        @HeaderParam("User-Agent") userAgent: String,
         @Context context: SecurityContext,
     ): Response {
         context.checkUserHasReadRightsInThisContainer(containerName)
@@ -241,57 +244,68 @@ class ContainerServiceResource(
         }
         mongoCursorCache.invalidate(cacheKey)
 
-        val annotationPage =
-            buildAnnotationPage(
+        val useOld = userAgent.contains("0.6")
+        if (useOld) {
+            val annotationPage = buildOldAnnotationPage(
                 uriFactory.searchURL(containerName, searchId),
                 annotations,
                 page,
                 hasNext = annotations.size == configuration.pageSize
             )
-        return Response.ok(annotationPage).build()
-    }
-
-    @Operation(description = "Get the given search result page")
-    @Timed
-    @GET
-    @Path("{containerName}/o$SEARCH/{searchId}")
-    fun getSearchResultPage(
-        @PathParam("containerName") containerName: String,
-        @PathParam("searchId") searchId: String,
-        @QueryParam("page") page: Int = 0,
-        @Context context: SecurityContext,
-    ): Response {
-        context.checkUserHasReadRightsInThisContainer(containerName)
-
-        var queryCacheItem = getQueryCacheItem(searchId)
-        if (queryCacheItem.count < 1) {
-//            val count = containerDAO.getCollection(containerName)
-//                .aggregate(queryCacheItem.aggregateStages)
-//                .count()
-            val newQueryCacheItem = QueryCacheItem(queryCacheItem.queryMap, queryCacheItem.aggregateStages, 1)
-            queryCacheItem = newQueryCacheItem
-            queryCache.put(searchId, newQueryCacheItem)
-        }
-        val aggregateStages = queryCacheItem.aggregateStages.toMutableList().apply {
-            add(Aggregates.skip(page * configuration.pageSize))
-            add(paginationStage)
-        }
-//        log.debug("aggregateStages=\n  {}", Joiner.on("\n  ").join(aggregateStages))
-
-        val annotations =
-            containerDAO.getCollection(containerName)
-                .aggregate(aggregateStages)
-                .map { a -> a.toAnnotationMap(containerName) }
-                .toList()
-        val annotationPage =
-            buildAnnotationPage(
+            return Response.ok(annotationPage).build()
+        } else {
+            val annotationPage = buildAnnotationPage(
                 uriFactory.searchURL(containerName, searchId),
                 annotations,
                 page,
                 hasNext = annotations.size == configuration.pageSize
             )
-        return Response.ok(annotationPage).build()
+            return Response.ok(annotationPage).build()
+        }
+
     }
+
+//    @Operation(description = "Get the given search result page")
+//    @Timed
+//    @GET
+//    @Path("{containerName}/o$SEARCH/{searchId}")
+//    fun getSearchResultPage(
+//        @PathParam("containerName") containerName: String,
+//        @PathParam("searchId") searchId: String,
+//        @QueryParam("page") page: Int = 0,
+//        @Context context: SecurityContext,
+//    ): Response {
+//        context.checkUserHasReadRightsInThisContainer(containerName)
+//
+//        var queryCacheItem = getQueryCacheItem(searchId)
+//        if (queryCacheItem.count < 1) {
+////            val count = containerDAO.getCollection(containerName)
+////                .aggregate(queryCacheItem.aggregateStages)
+////                .count()
+//            val newQueryCacheItem = QueryCacheItem(queryCacheItem.queryMap, queryCacheItem.aggregateStages, 1)
+//            queryCacheItem = newQueryCacheItem
+//            queryCache.put(searchId, newQueryCacheItem)
+//        }
+//        val aggregateStages = queryCacheItem.aggregateStages.toMutableList().apply {
+//            add(Aggregates.skip(page * configuration.pageSize))
+//            add(paginationStage)
+//        }
+////        log.debug("aggregateStages=\n  {}", Joiner.on("\n  ").join(aggregateStages))
+//
+//        val annotations =
+//            containerDAO.getCollection(containerName)
+//                .aggregate(aggregateStages)
+//                .map { a -> a.toAnnotationMap(containerName) }
+//                .toList()
+//        val annotationPage =
+//            buildAnnotationPage(
+//                uriFactory.searchURL(containerName, searchId),
+//                annotations,
+//                page,
+//                hasNext = annotations.size == configuration.pageSize
+//            )
+//        return Response.ok(annotationPage).build()
+//    }
 
     @Operation(description = "Get information about the given search")
     @Timed
@@ -572,7 +586,7 @@ class ContainerServiceResource(
             }
             .toList()
 
-    private fun Map<String, Any>.asIndexConfig(containerName: String): IndexConfig? {
+    private fun Map<String, Any>.asIndexConfig(containerName: String): IndexConfig {
         val name = this["name"].toString()
         val indexId =
             containerDAO.getContainerMetadata(containerName)?.indexMap?.filter { it.value == name }?.map { it.key }
@@ -604,11 +618,40 @@ class ContainerServiceResource(
             null
         }
         val collectionId = collectionUrl?.toString() ?: searchUri.toString()
-
         return AnnotationPage(
             context = listOf(ANNO_JSONLD_URL),
             id = searchPageUri(searchUri, page),
             partOf = annotationCollectionLink(id = collectionId, collectionLabel = collectionLabel),
+            startIndex = startIndex,
+            items = annotations,
+            prev = if (prevPage != null) searchPageUri(searchUri, prevPage) else null,
+            next = if (nextPage != null) searchPageUri(searchUri, nextPage) else null
+        )
+    }
+
+    private fun buildOldAnnotationPage(
+        searchUri: URI,
+        annotations: AnnotationList,
+        page: Int,
+        hasNext: Boolean = true,
+        collectionUrl: URI? = null
+    ): OldAnnotationPage {
+        val prevPage = if (page > 0) {
+            page - 1
+        } else {
+            null
+        }
+        val startIndex = configuration.pageSize * page
+        val nextPage = if (hasNext) {
+            page + 1
+        } else {
+            null
+        }
+        val collectionId = collectionUrl?.toString() ?: searchUri.toString()
+        return OldAnnotationPage(
+            context = listOf(ANNO_JSONLD_URL),
+            id = searchPageUri(searchUri, page),
+            partOf = collectionId,
             startIndex = startIndex,
             items = annotations,
             prev = if (prevPage != null) searchPageUri(searchUri, prevPage) else null,

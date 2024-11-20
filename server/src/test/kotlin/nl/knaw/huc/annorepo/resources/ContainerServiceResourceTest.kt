@@ -128,7 +128,12 @@ class ContainerServiceResourceTest {
                 val searchId = location.path.split('/').last()
                 logger.info { "searchId=$searchId" }
 
-                val searchResponse = resource.getSearchResultPage(CONTAINER_NAME, searchId, context = securityContext)
+                val searchResponse = resource.getSearchResultPage(
+                    CONTAINER_NAME,
+                    searchId,
+                    userAgent = "AnnoRepoClient 0.7",
+                    context = securityContext
+                )
                 logger.info { "searchResponse=$searchResponse" }
                 logger.info { "searchResponse.entity=${searchResponse.entity}" }
             }
@@ -141,7 +146,14 @@ class ContainerServiceResourceTest {
                 assertRoleAuthorizationForBlock(
                     authorizedRoles = setOf(Role.ROOT, Role.ADMIN, Role.EDITOR, Role.GUEST)
                 ) {
-                    val response = resource.getSearchResultPage(CONTAINER_NAME, "some-search-id", 0, securityContext)
+                    val response = resource.getSearchResultPage(
+                        CONTAINER_NAME,
+                        "some-search-id",
+                        0,
+                        userAgent = "AnnoRepoClient 0.6",
+                        securityContext
+                    )
+                    logger.info { "searchResponse.entity=${response.entity}" }
                     assertNotNull(response)
                 }
             }

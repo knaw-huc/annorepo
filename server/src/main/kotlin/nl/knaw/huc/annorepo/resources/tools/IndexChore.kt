@@ -53,7 +53,7 @@ class IndexChore(
             val indexName = container.createIndex(index)
 //            val partialFilter = Filters.and(fieldNames.map { Filters.exists(it) })
 //            val indexName = container.createIndex(index, IndexOptions().partialFilterExpression(partialFilter))
-            logger.info { "created index: $indexName" }
+            logger.debug { "created index: $indexName" }
             val metadata = containerDAO.getContainerMetadata(containerName)
                 ?: throw RuntimeException("no metatadata found for $containerName")
             metadata.indexMap[id] = indexName
