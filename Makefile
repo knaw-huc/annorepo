@@ -133,6 +133,14 @@ tests:
 start-mongodb:
 	docker start mongodb6 || docker run --name mongodb6 -d -p 27017:27017 -v ~/local/mongo:/data/db mongo:6.0.7
 
+.PHONY: set-log-level-debug
+set-log-level-debug:
+	curl -X POST -d "logger=ROOT&level=DEBUG" http:/localhost:8081/tasks/log-level
+
+.PHONY: set-log-level-info
+set-log-level-info:
+	curl -X POST -d "logger=ROOT&level=INFO" http:/localhost:8081/tasks/log-level
+
 .make/compiled-protocol-buffers: .make common/src/main/proto/*.proto
 	mkdir -p common/target/python
 	python -m grpc_tools.protoc \
@@ -180,6 +188,8 @@ help:
 	@echo "  run-server-with-auth      - to start the server app with authorization on"
 	@echo "  run-server-without-auth   - to start the server app with authorization off"
 	@echo "  run-env                   - to run the annorepo env command"
+	@echo "  set-log-level-debug       - to set the log level of the server app to DEBUG"
+	@echo "  set-log-level-info        - to set the log level of the server app to INFO"
 	@echo
 	@echo "  docker-run                - to start the server app in docker"
 	@echo "  docker-stop               - to stop the server app in docker"
