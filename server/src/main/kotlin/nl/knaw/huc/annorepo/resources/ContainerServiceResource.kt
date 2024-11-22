@@ -244,7 +244,7 @@ class ContainerServiceResource(
         }
         mongoCursorCache.invalidate(cacheKey)
 
-        val useOld = userAgent.contains("0.6")
+        val useOld = userAgent.contains("AnnoRepoClient/0.6")
         if (useOld) {
             val annotationPage = buildOldAnnotationPage(
                 uriFactory.searchURL(containerName, searchId),
