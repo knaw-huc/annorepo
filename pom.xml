@@ -26,7 +26,7 @@
         <!-- Timestamp settings for use in properties file -->
         <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ss'Z'</maven.build.timestamp.format>
 
-        <kotlin.version>1.9.25</kotlin.version>
+        <kotlin.version>2.1.0</kotlin.version>
         <kotlin.code.style>official</kotlin.code.style>
         <java.version>17</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
@@ -59,7 +59,7 @@
         <log4j-api-kotlin.version>1.5.0</log4j-api-kotlin.version>
         <log4j-core.version>2.23.1</log4j-core.version>
         <mongodb.version>4.11.4</mongodb.version>
-        <mordant.version>3.0.0</mordant.version>
+        <mordant.version>3.0.1</mordant.version>
         <problem.version>0.27.1</problem.version>
         <protobuf.version>4.28.3</protobuf.version>
         <slf4j.version>2.0.13</slf4j.version>
