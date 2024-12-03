@@ -77,6 +77,7 @@ import nl.knaw.huc.annorepo.resources.tools.CustomQueryTools.interpolate
 import nl.knaw.huc.annorepo.resources.tools.IndexManager
 import nl.knaw.huc.annorepo.resources.tools.QueryCacheItem
 import nl.knaw.huc.annorepo.resources.tools.annotationCollectionLink
+import nl.knaw.huc.annorepo.resources.tools.isClosed
 import nl.knaw.huc.annorepo.resources.tools.isOpenAndHasNext
 import nl.knaw.huc.annorepo.resources.tools.simplify
 import nl.knaw.huc.annorepo.service.UriFactory
@@ -225,7 +226,7 @@ class ContainerServiceResource(
 
         val queryCacheItem = getQueryCacheItem(searchId)
         val cacheKey = "$searchId:${page}"
-        val cursor = mongoCursorCache.getIfPresent(cacheKey)?.also {
+        var cursor = mongoCursorCache.getIfPresent(cacheKey)?.also {
             logger.debug { "using cached cursor $cacheKey" }
         } ?: createContainerSearchCursor(containerName, queryCacheItem, page)
 
@@ -233,6 +234,16 @@ class ContainerServiceResource(
         while (annotations.size < configuration.pageSize && cursor.isOpenAndHasNext()) {
             annotations.add(cursor.next().toAnnotationMap(containerName))
         }
+        // begin hack to work around unexpected cursor close
+        if (cursor.isClosed()) {
+            logger.debug { "cursor is closed, trying a new cursor" }
+            cursor = createContainerSearchCursor(containerName, queryCacheItem, page)
+            annotations.clear()
+            while (annotations.size < configuration.pageSize && cursor.isOpenAndHasNext()) {
+                annotations.add(cursor.next().toAnnotationMap(containerName))
+            }
+        }
+        // end hack
 
         val hasNext = cursor.isOpenAndHasNext()
         if (hasNext) {
@@ -240,6 +251,7 @@ class ContainerServiceResource(
             logger.debug { "storing cursor $nextCacheKey" }
             mongoCursorCache.put(nextCacheKey, cursor)
         } else {
+            logger.debug { "closing cursor" }
             cursor.close()
         }
         mongoCursorCache.invalidate(cacheKey)
@@ -718,7 +730,7 @@ class ContainerServiceResource(
         queryCacheItem: QueryCacheItem,
         page: Int
     ): MongoCursor<Document> {
-        logger.debug { "creating new cursor" }
+        logger.info { "creating new cursor" }
         val aggregateStages = queryCacheItem.aggregateStages
             .toMutableList()
             .apply {
