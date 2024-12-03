@@ -25,7 +25,7 @@ rootApiKey: ${AR_ROOT_API_KEY:-thisdefaultapikeyisunsafesochangeitplease}
 logging:
   level: INFO
   loggers:
-    nl.knaw.huc: INFO
+    nl.knaw.huc: DEBUG
     org: WARN
     org.glassfish: ERROR
 
