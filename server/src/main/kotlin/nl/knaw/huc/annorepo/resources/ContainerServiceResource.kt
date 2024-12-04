@@ -326,7 +326,7 @@ class ContainerServiceResource(
     fun getSearchInfo(
         @PathParam("containerName") containerName: String,
         @PathParam("searchId") searchId: String,
-        @Context context: SecurityContext,
+        @Context context: SecurityContext
     ): Response {
         context.checkUserHasReadRightsInThisContainer(containerName)
 
@@ -338,6 +338,21 @@ class ContainerServiceResource(
             hits = queryCacheItem.count
         )
         return Response.ok(searchInfo).build()
+    }
+
+    @Operation(description = "Show the mongo explain command for the given query")
+    @Timed
+    @GET
+    @Path("{containerName}/$SEARCH/{searchId}/mongo-explain-command")
+    fun getMongoExplainForSearch(
+        @PathParam("containerName") containerName: String,
+        @PathParam("searchId") searchId: String,
+        @Context context: SecurityContext
+    ): Response {
+        context.checkUserHasReadRightsInThisContainer(containerName)
+        val queryCacheItem = getQueryCacheItem(searchId)
+        val mongoCommand = asMongoExplain(containerName, queryCacheItem.aggregateStages)
+        return Response.ok(mongoCommand).build()
     }
 
     @Operation(description = "Get the results of the given custom query")
@@ -730,7 +745,7 @@ class ContainerServiceResource(
         queryCacheItem: QueryCacheItem,
         page: Int
     ): MongoCursor<Document> {
-        logger.info { "creating new cursor" }
+        logger.debug { "creating new cursor" }
         val aggregateStages = queryCacheItem.aggregateStages
             .toMutableList()
             .apply {

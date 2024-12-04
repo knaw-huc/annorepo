@@ -15,7 +15,7 @@ fun <TResult> MongoCursor<TResult>.isOpenAndHasNext(): Boolean {
     try {
         return this.hasNext()
     } catch (e: IllegalStateException) {
-        logger.warn { "cursor threw an error: ${e.message}" }
+        logger.warn { "cursor threw an IllegalStateException: ${e.message}" }
         return false
     }
 }
