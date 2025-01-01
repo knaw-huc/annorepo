@@ -43,7 +43,7 @@
         <dropwizard-swagger.version>4.0.5-1</dropwizard-swagger.version>
         <dropwizard.version>4.0.11</dropwizard.version>
         <grpc.kotlin.version>1.4.1</grpc.kotlin.version>
-        <grpc.version>1.68.2</grpc.version>
+        <grpc.version>1.69.0</grpc.version>
         <jackson-annotations.version>2.18.2</jackson-annotations.version>
         <jackson-databind.version>2.17.2</jackson-databind.version>
         <jackson-module-kotlin.version>2.17.2</jackson-module-kotlin.version>
@@ -61,7 +61,7 @@
         <mongodb.version>4.11.5</mongodb.version>
         <mordant.version>3.0.1</mordant.version>
         <problem.version>0.27.1</problem.version>
-        <protobuf.version>4.29.0</protobuf.version>
+        <protobuf.version>4.29.1</protobuf.version>
         <slf4j.version>2.0.13</slf4j.version>
         <swagger-annotations.version>1.6.6</swagger-annotations.version>
         <titanium-json-ld.version>1.4.1</titanium-json-ld.version>
