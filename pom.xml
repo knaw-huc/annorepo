@@ -46,7 +46,7 @@
         <grpc.version>1.69.0</grpc.version>
         <jackson-annotations.version>2.18.2</jackson-annotations.version>
         <jackson-databind.version>2.17.2</jackson-databind.version>
-        <jackson-module-kotlin.version>2.17.2</jackson-module-kotlin.version>
+        <jackson-module-kotlin.version>2.18.2</jackson-module-kotlin.version>
         <jakarta.json.version>2.0.1</jakarta.json.version>
         <jakarta.ws.rs-api.version>4.0.0</jakarta.ws.rs-api.version>
         <jaxb-api.version>2.3.1</jaxb-api.version>
@@ -61,7 +61,7 @@
         <mongodb.version>4.11.5</mongodb.version>
         <mordant.version>3.0.1</mordant.version>
         <problem.version>0.27.1</problem.version>
-        <protobuf.version>4.29.1</protobuf.version>
+        <protobuf.version>4.29.2</protobuf.version>
         <slf4j.version>2.0.13</slf4j.version>
         <swagger-annotations.version>1.6.6</swagger-annotations.version>
         <titanium-json-ld.version>1.4.1</titanium-json-ld.version>
