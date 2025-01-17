@@ -15,7 +15,8 @@ object ARConst {
         AR_PRETTY_PRINT,
         AR_RANGE_SELECTOR_TYPE,
         AR_GRPC_HOSTNAME,
-        AR_GRPC_PORT
+        AR_GRPC_PORT,
+        AR_APPLICATION_TOKEN
     }
 
     const val ANNOTATION_MEDIA_TYPE = """application/ld+json;profile="$ANNO_JSONLD_URL""""

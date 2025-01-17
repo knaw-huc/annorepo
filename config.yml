@@ -36,3 +36,7 @@ admin:
 grpc:
   hostname: ${AR_GRPC_HOSTNAME:-localhost}
   port: ${AR_GRPC_PORT:-8000}
+
+sram:
+  introspectUrl: https://sram.surf.nl/api/tokens/introspect
+  applicationToken: ${AR_APPLICATION_TOKEN}

@@ -45,6 +45,10 @@ open class AnnoRepoConfiguration : JobConfiguration() {
     var withAuthentication: Boolean = false
 
     @Valid
+    @JsonProperty
+    var sram: SramConfiguration? = null
+
+    @Valid
     @NotNull
     @JsonProperty
     var rootApiKey: String = "YouIntSeenMeRoit"

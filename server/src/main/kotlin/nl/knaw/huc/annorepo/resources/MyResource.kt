@@ -3,6 +3,7 @@ package nl.knaw.huc.annorepo.resources
 import java.util.TreeMap
 import jakarta.annotation.security.PermitAll
 import jakarta.ws.rs.GET
+import jakarta.ws.rs.NotAuthorizedException
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.core.Context
@@ -16,6 +17,7 @@ import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.ResourcePaths.MY
 import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.auth.RootUser
+import nl.knaw.huc.annorepo.auth.SramUser
 import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
 
@@ -65,5 +67,28 @@ class MyResource(
             Response.ok(accessibleContainerNamesGroupedByRole).build()
         }
 
+    @Operation(description = "Show profile data about the authenticated user")
+    @Timed
+    @GET
+    @Path("profile")
+    fun getUserProfile(@Context context: SecurityContext): Response {
+        val userPrincipal = context.userPrincipal
+        return if (userPrincipal is RootUser) {
+            val profile = mapOf(
+                "user" to "root"
+            )
+            Response.ok(profile).build()
+        } else if (userPrincipal != null) {
+            val profile: MutableMap<String, Any> = mutableMapOf(
+                "user" to userPrincipal.name
+            )
+            if (userPrincipal is SramUser) {
+                profile["sram_record"] = userPrincipal.record
+            }
+            Response.ok(profile).build()
+        } else {
+            throw NotAuthorizedException("No user found for this api key")
+        }
+    }
 }
 
