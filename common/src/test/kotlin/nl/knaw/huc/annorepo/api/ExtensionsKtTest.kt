@@ -28,4 +28,25 @@ class ExtensionsTest {
         }
     }
 
+    @Test
+    fun `getNestedValue returns the correct nested value if it exists`() {
+        val map = mapOf("a" to mapOf("b" to "c"))
+        val abValue = map.getNestedValue<String>("a.b")
+        assertThat(abValue).isEqualTo("c")
+    }
+
+    @Test
+    fun `getNestedValue returns null if any of the fields does not exist`() {
+        val map = mapOf("a" to mapOf("b" to "c"))
+        val abValue = map.getNestedValue<String>("b.a")
+        assertThat(abValue).isNull()
+    }
+
+//    @Test
+//    fun `getNestedValue returns null if the value exist, but can't be cast to the desired class`() {
+//        val map = mapOf("a" to mapOf("b" to "c"))
+//        val abValue = map.getNestedValue<Long>("a.b")
+//        assertThat(abValue).isNull()
+//    }
+
 }
