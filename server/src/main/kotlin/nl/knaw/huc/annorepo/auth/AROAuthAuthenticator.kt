@@ -10,10 +10,11 @@ class AROAuthAuthenticator(private val userDAO: UserDAO, private val sramClient:
 
     override fun authenticate(apiKey: String?): Optional<User> {
         logger.debug { "Received api-key $apiKey" }
-        var userForApiKey = userDAO.userForApiKey(apiKey)
-        if (userForApiKey == null) {
-            userForApiKey = sramClient?.userForToken(apiKey)
-        }
+        val userForApiKey = userDAO.userForApiKey(apiKey)
+            ?: sramClient?.userForToken(apiKey)?.fold(
+                { error: SRAMClient.SramTokenError -> logger.info { error.message }; null },
+                { user: SramUser -> user }
+            )
         logger.debug { "api-key matches user $userForApiKey" }
         return Optional.ofNullable(userForApiKey)
     }

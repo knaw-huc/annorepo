@@ -11,6 +11,7 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Indexes
 import io.dropwizard.auth.AuthDynamicFeature
+import io.dropwizard.auth.CachingAuthenticator
 import io.dropwizard.auth.chained.ChainedAuthFilter
 import io.dropwizard.auth.oauth.OAuthCredentialAuthFilter
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor
@@ -162,8 +163,13 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
                 } else {
                     null
                 }
+                val cachingAuthenticator = CachingAuthenticator(
+                    environment.metrics(),
+                    AROAuthAuthenticator(userDAO, sramClient),
+                    configuration.authenticationCachePolicy
+                )
                 val oauthFilter = OAuthCredentialAuthFilter.Builder<User>()
-                    .setAuthenticator(AROAuthAuthenticator(userDAO, sramClient))
+                    .setAuthenticator(cachingAuthenticator)
                     .setPrefix("Bearer")
                     .buildAuthFilter()
                 val anonymousFilter = UnauthenticatedAuthFilter<User>()

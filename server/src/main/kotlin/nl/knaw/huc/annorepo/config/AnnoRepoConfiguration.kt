@@ -2,6 +2,7 @@ package nl.knaw.huc.annorepo.config
 
 import jakarta.validation.Valid
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.github.benmanes.caffeine.cache.CaffeineSpec
 import io.dropwizard.jobs.JobConfiguration
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
 import org.jetbrains.annotations.NotNull
@@ -71,4 +72,8 @@ open class AnnoRepoConfiguration : JobConfiguration() {
     @JsonProperty
     var grpc: GrpcFactory = GrpcFactory()
 
+    @Valid
+    @NotNull
+    @JsonProperty
+    var authenticationCachePolicy: CaffeineSpec? = null
 }
