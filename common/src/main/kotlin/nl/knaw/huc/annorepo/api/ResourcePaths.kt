@@ -24,6 +24,7 @@ object ResourcePaths {
     const val INDEXES = "indexes"
     const val INFO = "info"
     const val METADATA = "metadata"
+    const val PROFILE = "profile"
     const val READ_ONLY_FOR_ANONYMOUS = "isReadOnlyForAnonymous"
     const val SEARCH = "search"
     const val SETTINGS = "settings"

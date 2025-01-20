@@ -90,6 +90,11 @@ class ARUserDAO(
             .toList()
     }
 
+    override fun allGroupNames(): List<String> {
+        TODO("Not yet implemented")
+    }
+
+
     override fun deleteUsersByName(userNames: Collection<String>): Boolean =
         userCollection
             .deleteMany(Filters.`in`(FIELD_USER_NAME, userNames))
