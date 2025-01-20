@@ -47,7 +47,17 @@ class MyResource(
                 mapOf(Role.GUEST.name to containersReadOnlyForAnonymous)
             } else {
                 val userName = context.userPrincipal.name
-                val userRoles = containerUserDAO.getUserRoles(userName)
+                val userRoles = when (val user = context.userPrincipal) {
+                    is SramUser -> {
+                        user.sramGroups
+                            .toMutableList()
+                            .apply { add(userName) }
+                            .flatMap { containerUserDAO.getUserRoles(it) }
+                            .toSet()
+                    }
+
+                    else -> containerUserDAO.getUserRoles(userName)
+                }
                 val containerUsersGroupedByRole = userRoles.groupBy { it.role }
                 val containerNamesGroupedByRole: TreeMap<String, MutableList<String>> = TreeMap()
                 for (role in containerUsersGroupedByRole.keys.sorted()) {
