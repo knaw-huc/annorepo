@@ -12,3 +12,4 @@ pom.xml.versionsBackup
 release.properties
 target/
 /common/common/src/generated/java/nl/knaw/huc/annorepo/model/SearchRequestOuterClass.java
+.mvn/.develocity/
