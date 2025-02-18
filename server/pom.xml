@@ -133,14 +133,14 @@
             <type>pom</type>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>org.mongodb</groupId>-->
-<!--            <artifactId>mongodb-driver-reactivestreams</artifactId>-->
-<!--            <version>${mongodb.version}</version>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.mongodb</groupId>-->
+        <!--            <artifactId>mongodb-driver-reactivestreams</artifactId>-->
+        <!--            <version>${mongodb.version}</version>-->
+        <!--        </dependency>-->
         <dependency>
             <groupId>org.mongodb</groupId>
-            <artifactId>mongodb-driver-kotlin-coroutine</artifactId>
+            <artifactId>mongodb-driver-kotlin-sync</artifactId>
             <version>${mongodb.version}</version>
         </dependency>
         <dependency>
@@ -148,11 +148,11 @@
             <artifactId>bson-kotlinx</artifactId>
             <version>${mongodb.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.litote.kmongo</groupId>
-            <artifactId>kmongo-native</artifactId>
-            <version>${kmongo.version}</version>
-        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>org.litote.kmongo</groupId>-->
+        <!--            <artifactId>kmongo-native</artifactId>-->
+        <!--            <version>${kmongo.version}</version>-->
+        <!--        </dependency>-->
 
         <dependency>
             <groupId>joda-time</groupId>
@@ -274,6 +274,12 @@
             <artifactId>jsonassert</artifactId>
             <version>${jsonassert.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>kotlinx-coroutines-core-jvm</artifactId>
+            <version>${kotlinx-coroutines-core.version}</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 

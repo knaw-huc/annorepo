@@ -9,14 +9,13 @@ import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.Context
 import jakarta.ws.rs.core.SecurityContext
 import com.codahale.metrics.annotation.Timed
-import com.mongodb.client.MongoClient
+import com.mongodb.client.model.Aggregates.match
 import com.mongodb.client.model.Filters.exists
+import com.mongodb.kotlin.client.MongoClient
 import io.swagger.v3.oas.annotations.Hidden
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.bson.Document
-import org.litote.kmongo.aggregate
-import org.litote.kmongo.match
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
@@ -43,6 +42,7 @@ class ListResource(
     @Path("containers")
     fun getContainerURLs(@Context context: SecurityContext): List<String> =
         mdb.listCollectionNames()
+            .toList()
             .filter { it != CONTAINER_METADATA_COLLECTION }
             .map { uriFactory.containerURL(it).toString() }
             .sorted()
@@ -57,9 +57,8 @@ class ListResource(
         @QueryParam("start") offset: Int = 0,
         @Context context: SecurityContext,
     ): List<String> =
-        mdb.getCollection(containerName).aggregate<Document>(
-            match(exists(ANNOTATION_NAME_FIELD)),
-        )
+        mdb.getCollection<Document>(containerName)
+            .aggregate(listOf(match(exists(ANNOTATION_NAME_FIELD))))
             .map { d -> uriFactory.annotationURL(containerName, d.getString(ANNOTATION_NAME_FIELD)).toString() }
             .toList()
             .sorted()

@@ -8,10 +8,10 @@ import com.google.common.collect.TreeMultiset
 import com.mongodb.client.model.Filters.eq
 import com.mongodb.client.model.Filters.exists
 import io.dropwizard.servlets.tasks.Task
-import org.litote.kmongo.findOne
-import org.litote.kmongo.json
+import org.bson.conversions.Bson
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.dao.ContainerDAO
+import nl.knaw.huc.annorepo.resources.tools.BsonExtensions.json
 import nl.knaw.huc.annorepo.service.JsonLdUtils
 
 class RecalculateFieldCountTask(
@@ -43,7 +43,8 @@ class RecalculateFieldCountTask(
         output.flush()
         val container = containerDAO.getCollection(containerName)
         val fields = container.find(exists("annotation"))
-            .flatMap { d -> JsonLdUtils.extractFields(d["annotation"]!!.json) }
+            .toList()
+            .flatMap { d -> JsonLdUtils.extractFields((d["annotation"]!! as Bson).json()) }
             .filter { f -> !f.contains("@") }
             .toList()
         val bag: SortedMultiset<String> = TreeMultiset.create()
@@ -56,10 +57,11 @@ class RecalculateFieldCountTask(
         }
 
         val containerMetadataCollection = containerDAO.getContainerMetadataCollection()
+        val withContainerName = eq("name", containerName)
         val containerMetadata: ContainerMetadata =
-            containerMetadataCollection.findOne(eq("name", containerName)) ?: return
+            containerMetadataCollection.find(withContainerName).firstOrNull() ?: return
         val newContainerMetadata = containerMetadata.copy(fieldCounts = fieldCounts)
-        containerMetadataCollection.replaceOne(eq("name", containerName), newContainerMetadata)
+        containerMetadataCollection.replaceOne(withContainerName, newContainerMetadata)
     }
 
     private fun checkContainerExists(containerName: String) {

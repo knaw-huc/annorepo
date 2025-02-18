@@ -1,5 +1,5 @@
-import com.mongodb.client.MongoCollection
-import com.mongodb.client.MongoDatabase
+import com.mongodb.kotlin.client.MongoCollection
+import com.mongodb.kotlin.client.MongoDatabase
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport
 import io.dropwizard.testing.junit5.ResourceExtension
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_MEDIA_TYPE

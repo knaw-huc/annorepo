@@ -4,8 +4,8 @@ import java.util.SortedMap
 import java.util.TreeMap
 import jakarta.ws.rs.core.SecurityContext
 import org.junit.jupiter.api.Test
-import com.mongodb.client.MongoCollection
 import com.mongodb.client.result.UpdateResult
+import com.mongodb.kotlin.client.MongoCollection
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat

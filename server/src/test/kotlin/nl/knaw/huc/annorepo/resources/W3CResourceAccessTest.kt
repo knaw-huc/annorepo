@@ -10,11 +10,11 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import com.mongodb.client.MongoClient
-import com.mongodb.client.MongoCollection
-import com.mongodb.client.MongoCursor
-import com.mongodb.client.MongoDatabase
-import com.mongodb.client.MongoIterable
+import com.mongodb.kotlin.client.ListCollectionNamesIterable
+import com.mongodb.kotlin.client.MongoClient
+import com.mongodb.kotlin.client.MongoCollection
+import com.mongodb.kotlin.client.MongoCursor
+import com.mongodb.kotlin.client.MongoDatabase
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
@@ -162,7 +162,7 @@ class W3CResourceAccessTest {
         lateinit var containerMetadataCollection: MongoCollection<ContainerMetadata>
 
         @MockK
-        lateinit var collectionNames: MongoIterable<String>
+        lateinit var collectionNames: ListCollectionNamesIterable
 
         @RelaxedMockK
         lateinit var mongoCursor: MongoCursor<String>
@@ -188,7 +188,7 @@ class W3CResourceAccessTest {
             every { config.rangeSelectorType } returns "something"
             every { config.withAuthentication } returns true
             every { client.getDatabase(DATABASE_NAME) } returns mongoDatabase
-            every { mongoDatabase.getCollection(CONTAINER_NAME) } returns mongoCollection
+            every { mongoDatabase.getCollection<Document>(CONTAINER_NAME) } returns mongoCollection
             every {
                 mongoDatabase.getCollection(
                     "_containerMetadata",
@@ -197,7 +197,7 @@ class W3CResourceAccessTest {
             } returns containerMetadataCollection
             every { mongoDatabase.listCollectionNames() } returns collectionNames
             every { mongoDatabase.createCollection("slug") } returns Unit
-            every { collectionNames.iterator() } returns mongoCursor
+            every { collectionNames.cursor() } returns mongoCursor
             every { mongoCursor.hasNext() } returns true
             every { mongoCursor.next() } returns CONTAINER_NAME
             every { containerDAO.containerExists(CONTAINER_NAME) } returns true

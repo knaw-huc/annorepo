@@ -39,6 +39,7 @@ class PropertySetTest {
         )
         assertThat(propertySet.optional<String>("a", "b", "d")).isEqualTo(null)
     }
+
     @Test
     fun `test missing optional with multiple keys, different hierarchy`() {
         val propertySet: PropertySet = mapOf(

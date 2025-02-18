@@ -29,10 +29,10 @@ import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
 import com.google.common.cache.RemovalListener
-import com.mongodb.client.MongoCollection
-import com.mongodb.client.MongoCursor
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Aggregates.limit
+import com.mongodb.kotlin.client.MongoCollection
+import com.mongodb.kotlin.client.MongoCursor
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.apache.logging.log4j.kotlin.logger
@@ -598,9 +598,9 @@ class ContainerServiceResource(
     }
 
     private fun indexData(container: MongoCollection<Document>, containerName: String): List<IndexConfig> =
-        container.listIndexes()
+        container.listIndexes().toList()
             .filter { it.toMap()["name"].toString().startsWith("$ANNOTATION_FIELD.") }
-            .mapNotNull { it.toMap().asIndexConfig(containerName) }
+            .map { it.toMap().asIndexConfig(containerName) }
             .map { indexConfig ->
                 indexConfig.copy(indexFields = indexConfig.indexFields.map { indexFields ->
                     indexFields.copy(

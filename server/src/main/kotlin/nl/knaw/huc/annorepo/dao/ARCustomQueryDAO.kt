@@ -1,9 +1,7 @@
 package nl.knaw.huc.annorepo.dao
 
-import com.mongodb.client.MongoClient
-import com.mongodb.client.model.Filters
-import org.litote.kmongo.findOne
-import org.litote.kmongo.getCollection
+import com.mongodb.client.model.Filters.eq
+import com.mongodb.kotlin.client.MongoClient
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 
@@ -15,13 +13,13 @@ class ARCustomQueryDAO(
     private val customQueryCollection = mdb.getCollection<CustomQuery>(ARConst.CUSTOM_QUERY_COLLECTION)
 
     override fun getAllCustomQueries(): List<CustomQuery> =
-        customQueryCollection.find().sortedBy { cq -> cq.name.lowercase() }
+        customQueryCollection.find().toList().sortedBy { cq -> cq.name.lowercase() }
 
-    override fun nameIsTaken(name: String): Boolean = getByName(name) != null
+    override fun nameIsTaken(name: String): Boolean =
+        getByName(name) != null
 
-    override fun getByName(name: String): CustomQuery? {
-        return customQueryCollection.findOne(Filters.eq("name", name))
-    }
+    override fun getByName(name: String): CustomQuery? =
+        customQueryCollection.find(eq("name", name)).firstOrNull()
 
     override fun store(query: CustomQuery) {
         if (nameIsTaken(query.name)) {
@@ -30,7 +28,6 @@ class ARCustomQueryDAO(
         customQueryCollection.insertOne(query)
     }
 
-    override fun deleteByName(customQueryName: String): Boolean {
-        return customQueryCollection.deleteOne(Filters.eq("name", customQueryName)).wasAcknowledged()
-    }
+    override fun deleteByName(customQueryName: String): Boolean =
+        customQueryCollection.deleteOne(eq("name", customQueryName)).wasAcknowledged()
 }

@@ -11,7 +11,6 @@ import com.fasterxml.jackson.databind.SerializerProvider
 /**
  * Converts LocalDateTime result to json datetime format
  *
- *
  * Datetime pattern is configured in config.yml
  */
 class LocalDateTimeSerializer(private val dateFormat: String) :

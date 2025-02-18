@@ -167,7 +167,7 @@ class GlobalServiceResource(
             queryTemplate = queryTemplate,
             parameters = parameters,
             createdBy = userName,
-            public = settings.public ?: true
+            public = settings.public != false
         )
         customQueryDAO.store(customQuery)
         return Response.created(uriFactory.customQueryURL(settings.name)).build()

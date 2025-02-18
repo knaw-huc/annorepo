@@ -11,8 +11,8 @@ import net.javacrumbs.jsonunit.assertj.assertThatJson
 import org.apache.logging.log4j.kotlin.logger
 import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
 import org.assertj.core.api.AssertionsForInterfaceTypes.assertThatExceptionOfType
-import org.litote.kmongo.json
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.resources.tools.BsonExtensions.json
 
 @ExtendWith(MockKExtension::class)
 class AggregateStageGeneratorTest {
@@ -88,8 +88,8 @@ class AggregateStageGeneratorTest {
                     }
                 }
             }""".trimIndent().replace('@', '$')
-        assertThatJson(stage.json).isEqualTo(expected)
-        logger.info { stage.json }
+        assertThatJson(stage.json()).isEqualTo(expected)
+        logger.info { stage.json() }
     }
 
     @Test
@@ -103,8 +103,8 @@ class AggregateStageGeneratorTest {
             { "@match": { "annotation.$key": "$value" } }
             """.trimIndent()
             .replace('@', '$')
-        assertThatJson(stage.json).isEqualTo(expected)
-        logger.info { stage.json }
+        assertThatJson(stage.json()).isEqualTo(expected)
+        logger.info { stage.json() }
     }
 
     @Test
@@ -118,8 +118,8 @@ class AggregateStageGeneratorTest {
             { "@match": { "annotation.$key": $value } }
             """.trimIndent()
             .replace('@', '$')
-        assertThatJson(stage.json).isEqualTo(expected)
-        logger.info { stage.json }
+        assertThatJson(stage.json()).isEqualTo(expected)
+        logger.info { stage.json() }
     }
 
     @Test
@@ -129,12 +129,12 @@ class AggregateStageGeneratorTest {
         val value = mapOf(IS_NOT_IN to arrayOf(2020, 2021, 2022, 2023))
         val stage = asg.generateStage(key, value)
         logger.info { stage }
-        logger.info { stage.json }
+        logger.info { stage.json() }
         val expected = """
             { "@match": { "annotation.$key": { "@nin": [2020,2021,2022,2023] } } }
             """.trimIndent()
             .replace('@', '$')
-        assertThatJson(stage.json).isEqualTo(expected)
+        assertThatJson(stage.json()).isEqualTo(expected)
     }
 
     @Test
@@ -158,12 +158,12 @@ class AggregateStageGeneratorTest {
         val value = mapOf(IS_IN to arrayOf(2020, 2021, 2022, 2023))
         val stage = asg.generateStage(key, value)
         logger.info { stage }
-        logger.info { stage.json }
+        logger.info { stage.json() }
         val expected = """
             { "@match": { "annotation.$key": { "@in": [2020,2021,2022,2023] } } }
             """.trimIndent()
             .replace('@', '$')
-        assertThatJson(stage.json).isEqualTo(expected)
+        assertThatJson(stage.json()).isEqualTo(expected)
     }
 
     @Test
@@ -187,12 +187,12 @@ class AggregateStageGeneratorTest {
         val value = mapOf(IS_GREATER to 2000)
         val stage = asg.generateStage(key, value)
         logger.info { stage }
-        logger.info { stage.json }
+        logger.info { stage.json() }
         val expected = """
             { "@match": { "annotation.$key": { "@gt": 2000 } } }
             """.trimIndent()
             .replace('@', '$')
-        assertThatJson(stage.json).isEqualTo(expected)
+        assertThatJson(stage.json()).isEqualTo(expected)
     }
 
     @Test
@@ -202,12 +202,12 @@ class AggregateStageGeneratorTest {
         val value = mapOf(IS_GREATER_OR_EQUAL to 2000)
         val stage = asg.generateStage(key, value)
         logger.info { stage }
-        logger.info { stage.json }
+        logger.info { stage.json() }
         val expected = """
             { "@match": { "annotation.$key": { "@gte": 2000 } } }
             """.trimIndent()
             .replace('@', '$')
-        assertThatJson(stage.json).isEqualTo(expected)
+        assertThatJson(stage.json()).isEqualTo(expected)
     }
 
     @Test
@@ -217,12 +217,12 @@ class AggregateStageGeneratorTest {
         val value = mapOf(IS_LESS to 2000)
         val stage = asg.generateStage(key, value)
         logger.info { stage }
-        logger.info { stage.json }
+        logger.info { stage.json() }
         val expected = """
             { "@match": { "annotation.$key": { "@lt": 2000 } } }
             """.trimIndent()
             .replace('@', '$')
-        assertThatJson(stage.json).isEqualTo(expected)
+        assertThatJson(stage.json()).isEqualTo(expected)
     }
 
     @Test
@@ -232,12 +232,12 @@ class AggregateStageGeneratorTest {
         val value = mapOf(IS_LESS_OR_EQUAL to 2000)
         val stage = asg.generateStage(key, value)
         logger.info { stage }
-        logger.info { stage.json }
+        logger.info { stage.json() }
         val expected = """
             { "@match": { "annotation.$key": { "@lte": 2000 } } }
             """.trimIndent()
             .replace('@', '$')
-        assertThatJson(stage.json).isEqualTo(expected)
+        assertThatJson(stage.json()).isEqualTo(expected)
     }
 
     @Test
@@ -247,12 +247,12 @@ class AggregateStageGeneratorTest {
         val value = mapOf(IS_EQUAL_TO to 2000)
         val stage = asg.generateStage(key, value)
         logger.info { stage }
-        logger.info { stage.json }
+        logger.info { stage.json() }
         val expected = """
             { "@match": { "annotation.$key": 2000 } }
             """.trimIndent()
             .replace('@', '$')
-        assertThatJson(stage.json).isEqualTo(expected)
+        assertThatJson(stage.json()).isEqualTo(expected)
     }
 
     @Test
@@ -262,12 +262,12 @@ class AggregateStageGeneratorTest {
         val value = mapOf(IS_NOT to 2000)
         val stage = asg.generateStage(key, value)
         logger.info { stage }
-        logger.info { stage.json }
+        logger.info { stage.json() }
         val expected = """
             { "@match": { "annotation.$key": { "@ne": 2000 } } }
             """.trimIndent()
             .replace('@', '$')
-        assertThatJson(stage.json).isEqualTo(expected)
+        assertThatJson(stage.json()).isEqualTo(expected)
     }
 
     @Test
@@ -304,8 +304,8 @@ class AggregateStageGeneratorTest {
                     }
                 }
             }""".trimIndent().replace('@', '$')
-        assertThatJson(stage.json).isEqualTo(expected)
-        logger.info { stage.json }
+        assertThatJson(stage.json()).isEqualTo(expected)
+        logger.info { stage.json() }
     }
 
     @Test
@@ -315,7 +315,7 @@ class AggregateStageGeneratorTest {
         val value = arrayOf(mapOf("body.type" to "Page"), mapOf("body.type" to "Line"))
         val stage = asg.generateStage(key, value)
         logger.info(stage)
-        logger.info(stage.json)
+        logger.info(stage.json())
         val expected = """
             {
                 "@match": {
@@ -327,6 +327,8 @@ class AggregateStageGeneratorTest {
             }
             """.trimIndent()
             .replace('@', '$')
-        assertThatJson(stage.json).isEqualTo(expected)
+        assertThatJson(stage.json()).isEqualTo(expected)
     }
 }
+
+

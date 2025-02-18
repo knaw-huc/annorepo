@@ -152,7 +152,8 @@ Content-Length: 548
 
 Use a `slug` header to choose your own container name. If a container with the same name already exists, AnnoRepo will
 generate a new one.
-Setting `readOnlyForAnonymousUsers` to `true` will give anonymous users (those without an api-key) read-only access to the public endpoints. Default is `false`
+Setting `readOnlyForAnonymousUsers` to `true` will give anonymous users (those without an api-key) read-only access to
+the public endpoints. Default is `false`
 
 #### Request
 
@@ -264,7 +265,8 @@ Content-Length: 452
 
 ### Deleting an annotation container (🔒)
 
-If the container contains annotations, the delete will return a 400 Bad Request with a warning to delete the annotations first.
+If the container contains annotations, the delete will return a 400 Bad Request with a warning to delete the annotations
+first.
 
 You can override this by adding `?force=true` to the request.
 
@@ -797,7 +799,6 @@ example:
 }
 ```
 
-
 #### Response
 
 ```
@@ -887,8 +888,8 @@ The body returned is a representation of the status of the search, with the fiel
 - `query`: the query used
 - `startedAt`: the time the search was started
 - `finishedAt`: the time the search was finished, or null if the search hasn't finished yet.
-- `expiresAfter`: the time after which the search results may not be available anymore, or null if the search hasn't finished
-  yet.
+- `expiresAfter`: the time after which the search results may not be available anymore, or null if the search hasn't
+  finished yet.
 - `state`: the state of the search; this can be:
     - `CREATED`: the search was created, but not started yet
     - `RUNNING`: the search is applying the query to all relevant containers
@@ -974,7 +975,8 @@ The Location header contains the link to the first search result page.
 
 ## Custom Queries
 
-The way the queries you can do via the `Querying a container` endpoint work means that you can't have a permanent URL that points to the query results. The custom query endpoints will give you this permanent URL.
+The way the queries you can do via the `Querying a container` endpoint work means that you can't have a permanent URL
+that points to the query results. The custom query endpoints will give you this permanent URL.
 
 ### Create a custom query (🔒)
 
@@ -983,11 +985,14 @@ The way the queries you can do via the `Querying a container` endpoint work mean
 The json sent to the endpoint is the CustomQuerySpecs, with the fields:
 
 - `name`: the name of the custom query, use only letters, digits, underscores `_` and dashes `-`
-- `query`: the query; see the request body in [Create a query](#create-a-query--experimental) for details on the query format.
+- `query`: the query; see the request body in [Create a query](#create-a-query--experimental) for details on the query
+  format.
   Additionally, for custom queries you can replace values in the query with named parameters, by using `<paramname>`
-- `label`: (optional, default="") a short description of the query, will be shown in the query result page. The label can also contain parameters.
+- `label`: (optional, default="") a short description of the query, will be shown in the query result page. The label
+  can also contain parameters.
 - `description`: (optional, default="") a longer description of the query, will not be shown in the query result page.
-- `public`: (optional, default=true) a boolean indicating whether the query can be used in any container (true), or just in the containers the creator of the custom query has access to (false).
+- `public`: (optional, default=true) a boolean indicating whether the query can be used in any container (true), or just
+  in the containers the creator of the custom query has access to (false).
 
 ```
 POST http://localhost:8080/global/custom-query HTTP/1.1
@@ -1030,6 +1035,7 @@ GET http://localhost:8080/global/custom-query/{customQueryName} HTTP/1.1
 #### Response
 
 The information from the CustomQuerySpecs is returned, with additionally the fields:
+
 - `created`: the time the query was created
 - `createdBy`: the username of the user that created the query
 - `paramters`: the parameters found in the `query` field of the CustomQuerySpecs
@@ -1079,16 +1085,17 @@ This endpoint can be used by anonymous users if the custom query was made public
 
 The customQueryCall is a combination of the custom query name and the parameter values, Base64 encoded.
 
-For example, calling the `with-motivation` custom query with the value `identifying` for the `motivation` parameter requires the following customQueryCall:
+For example, calling the `with-motivation` custom query with the value `identifying` for the `motivation` parameter
+requires the following customQueryCall:
 
 `with-motivation:motivation=aWRlbnRpZnlpbmc=`
 
 where `aWRlbnRpZnlpbmc=` is the Base64-encoded form of `identifying`
 
-parameter assignments in the customQueryCall are separated with `,` so adding a second parameter `par` with value `par` would give this customQueryCall:
+parameter assignments in the customQueryCall are separated with `,` so adding a second parameter `par` with value `par`
+would give this customQueryCall:
 
 `with-motivation:motivation=aWRlbnRpZnlpbmc=,par=cGFy`
-
 
 ```
 GET http://localhost:8080/global/custom-query/{customQueryCall}/expand HTTP/1.1
@@ -1258,7 +1265,9 @@ Content-Type: application/json
 
 ```
 
-As creating an index for a container that already has a lot of annotations might take a while, this endpoint starts the index creation in the background, and returns the current status of the index creation in the body, and the url where to see an up-to-date status in a Link header.
+As creating an index for a container that already has a lot of annotations might take a while, this endpoint starts the
+index creation in the background, and returns the current status of the index creation in the body, and the url where to
+see an up-to-date status in a Link header.
 
 ---
 

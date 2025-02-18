@@ -2,12 +2,12 @@ package nl.knaw.huc.annorepo.health
 
 import com.codahale.metrics.health.HealthCheck
 import com.mongodb.ReadPreference
-import com.mongodb.client.MongoClient
+import com.mongodb.kotlin.client.MongoClient
 
 class MongoDbHealthCheck(private val mongoClient: MongoClient) : HealthCheck() {
 
-    public override fun check(): Result? {
-        return try {
+    public override fun check(): Result? =
+        try {
             mongoClient.listDatabaseNames().toList()
             val hasReadableServer = mongoClient.clusterDescription.hasReadableServer(ReadPreference.nearest())
             val hasWritableServer = mongoClient.clusterDescription.hasWritableServer()
@@ -20,6 +20,5 @@ class MongoDbHealthCheck(private val mongoClient: MongoClient) : HealthCheck() {
         } catch (e: Exception) {
             Result.unhealthy(e.message)
         }
-    }
 
 }

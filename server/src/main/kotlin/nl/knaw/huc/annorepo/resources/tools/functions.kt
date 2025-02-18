@@ -4,7 +4,7 @@ import jakarta.ws.rs.core.EntityTag
 import kotlin.math.abs
 import kotlin.math.log2
 import kotlin.math.pow
-import com.mongodb.client.MongoCollection
+import com.mongodb.kotlin.client.MongoCollection
 import org.bson.BsonType
 import org.bson.BsonValue
 import org.bson.Document
@@ -40,7 +40,7 @@ val ANNOTATION_NAME_INDEX_NAME = "${ANNOTATION_NAME_FIELD}_${IndexType.HASHED.na
 
 fun MongoCollection<Document>.hasAnnotationNameIndex(): Boolean =
     listIndexes()
-        .filterNotNull()
+        .toList()
         .map { it["name"] }
         .contains(ANNOTATION_NAME_INDEX_NAME)
 

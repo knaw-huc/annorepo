@@ -5,9 +5,7 @@ import io.dropwizard.util.Duration
 import io.grpc.Server
 import org.apache.logging.log4j.kotlin.logger
 
-/**
- * Dropwizard lifecycle management for a gRPC server.
- */
+/** Dropwizard lifecycle management for a gRPC server. */
 class ManagedGrpcServer(
     private val server: Server,
     private val shutdownTimeout: Duration = Duration.seconds(5)

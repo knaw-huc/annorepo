@@ -6,18 +6,14 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
-import com.mongodb.client.MongoClient
-import com.mongodb.client.MongoCollection
-import com.mongodb.client.MongoDatabase
-import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Filters.eq
 import com.mongodb.client.model.ReplaceOptions
 import com.mongodb.client.result.UpdateResult
+import com.mongodb.kotlin.client.MongoClient
+import com.mongodb.kotlin.client.MongoCollection
+import com.mongodb.kotlin.client.MongoDatabase
 import org.bson.BsonValue
 import org.bson.Document
-import org.litote.kmongo.findOne
-import org.litote.kmongo.getCollection
-import org.litote.kmongo.replaceOneWithFilter
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_NAME_FIELD
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
@@ -64,7 +60,8 @@ class ARContainerDAO(
 
     override fun getContainerMetadata(containerName: String): ContainerMetadata? =
         getContainerMetadataCollection()
-            .findOne(Filters.eq(ARConst.CONTAINER_NAME_FIELD, containerName))
+            .find(eq(CONTAINER_NAME_FIELD, containerName))
+            .firstOrNull()
 
     override fun updateContainerMetadata(
         containerName: String,
@@ -72,10 +69,10 @@ class ARContainerDAO(
         upsert: Boolean
     ): UpdateResult =
         getContainerMetadataCollection()
-            .replaceOneWithFilter(
-                filter = eq(CONTAINER_NAME_FIELD, containerName),
-                replacement = containerMetadata,
-                replaceOptions = ReplaceOptions().upsert(true)
+            .replaceOne(
+                eq(CONTAINER_NAME_FIELD, containerName),
+                containerMetadata,
+                ReplaceOptions().upsert(true)
             )
 
     override fun getDistinctValues(containerName: String, field: String): List<Any> {
@@ -83,7 +80,7 @@ class ARContainerDAO(
         val cacheKey = "$containerName:$size:$field"
         return distinctValuesCache.get(cacheKey) {
             getCollection(containerName)
-                .distinct("${ARConst.ANNOTATION_FIELD}.$field", BsonValue::class.java)
+                .distinct<BsonValue>("${ARConst.ANNOTATION_FIELD}.$field")
                 .map { it.toPrimitive()!! }
                 .toList()
         }
@@ -167,7 +164,8 @@ class ARContainerDAO(
         getCollection(containerName).dropIndex(mongoIndexName)
     }
 
-    override fun containerExists(containerName: String): Boolean = mdb.listCollectionNames().contains(containerName)
+    override fun containerExists(containerName: String): Boolean =
+        mdb.listCollectionNames().toList().contains(containerName)
 
     private fun updateFieldCount(containerName: String, fieldsAdded: List<String>, fieldsDeleted: Set<String>) {
         val containerMetadataCollection = getContainerMetadataCollection()
@@ -184,7 +182,7 @@ class ARContainerDAO(
             }
         }
         val newContainerMetadata = containerMetadata.copy(fieldCounts = fieldCounts)
-        containerMetadataCollection.replaceOne(Filters.eq("name", containerName), newContainerMetadata)
+        containerMetadataCollection.replaceOne(eq("name", containerName), newContainerMetadata)
     }
 
     private fun mongoIndexName(containerName: String, indexId: String): String {

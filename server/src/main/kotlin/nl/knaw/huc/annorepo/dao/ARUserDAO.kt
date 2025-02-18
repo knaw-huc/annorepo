@@ -1,12 +1,11 @@
 package nl.knaw.huc.annorepo.dao
 
-import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Indexes
 import com.mongodb.client.model.Projections
+import com.mongodb.client.model.Projections.excludeId
+import com.mongodb.kotlin.client.MongoClient
 import org.bson.Document
-import org.litote.kmongo.excludeId
-import org.litote.kmongo.findOne
 import nl.knaw.huc.annorepo.api.ARConst.USER_COLLECTION
 import nl.knaw.huc.annorepo.api.RejectedUserEntry
 import nl.knaw.huc.annorepo.api.UserAddResults
@@ -25,12 +24,12 @@ class ARUserDAO(
 ) : UserDAO {
 
     private val mdb = mongoClient.getDatabase(configuration.databaseName)
-    private val userCollection = mdb.getCollection(USER_COLLECTION)
+    private val userCollection = mdb.getCollection<Document>(USER_COLLECTION)
     private val rootApiKey = configuration.rootApiKey
 
     init {
         val apiKeyIndex = Indexes.hashed(FIELD_API_KEY)
-        if (!userCollection.listIndexes().toSet().contains(apiKeyIndex)) {
+        if (!userCollection.listIndexes().toList().toSet().contains(apiKeyIndex)) {
             userCollection.createIndex(apiKeyIndex)
         }
     }
@@ -40,7 +39,7 @@ class ARUserDAO(
             null -> null
             configuration.rootApiKey -> RootUser()
             else -> {
-                val doc = userCollection.find(Document(FIELD_API_KEY, apiKey)).first()
+                val doc = userCollection.find(Document(FIELD_API_KEY, apiKey)).firstOrNull()
                 if (doc == null) {
                     null
                 } else {
@@ -96,10 +95,10 @@ class ARUserDAO(
             .deletedCount == userNames.size.toLong()
 
     private fun userNameExistsInCollection(ue: UserEntry) =
-        userCollection.findOne(Document(FIELD_USER_NAME, ue.userName)) != null
+        userCollection.find(Document(FIELD_USER_NAME, ue.userName)).firstOrNull() != null
 
     private fun apiKeyExistsInCollection(ue: UserEntry) =
-        userCollection.findOne(Document(FIELD_API_KEY, ue.apiKey)) != null
+        userCollection.find(Document(FIELD_API_KEY, ue.apiKey)).firstOrNull() != null
 
     companion object {
         private fun asMap(userEntry: UserEntry) =

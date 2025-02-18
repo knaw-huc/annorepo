@@ -1,6 +1,6 @@
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.mongodb.client.MongoClients
-import com.mongodb.client.MongoCollection
+import com.mongodb.kotlin.client.MongoClients
+import com.mongodb.kotlin.client.MongoCollection
 import com.mongodb.client.model.Aggregates.limit
 import com.mongodb.client.model.Aggregates.match
 import com.mongodb.client.model.Aggregates.skip

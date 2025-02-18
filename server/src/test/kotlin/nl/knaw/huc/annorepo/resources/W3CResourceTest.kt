@@ -4,11 +4,11 @@ import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.SecurityContext
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import com.mongodb.client.MongoClient
-import com.mongodb.client.MongoCollection
-import com.mongodb.client.MongoCursor
-import com.mongodb.client.MongoDatabase
-import com.mongodb.client.MongoIterable
+import com.mongodb.kotlin.client.ListCollectionNamesIterable
+import com.mongodb.kotlin.client.MongoClient
+import com.mongodb.kotlin.client.MongoCollection
+import com.mongodb.kotlin.client.MongoCursor
+import com.mongodb.kotlin.client.MongoDatabase
 import org.assertj.core.api.Assertions.assertThat
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.kotlin.doReturn
@@ -25,8 +25,8 @@ import nl.knaw.huc.annorepo.service.UriFactory
 class W3CResourceTest {
 
     private val mongoCursor: MongoCursor<String> = mock()
-    private val mongoIterable: MongoIterable<String> = mock {
-        on { iterator() }.doReturn(mongoCursor)
+    private val mongoIterable: ListCollectionNamesIterable = mock {
+        on { cursor() }.doReturn(mongoCursor)
     }
     private val collection: MongoCollection<ContainerMetadata> = mock()
     private val mdb: MongoDatabase = mock {

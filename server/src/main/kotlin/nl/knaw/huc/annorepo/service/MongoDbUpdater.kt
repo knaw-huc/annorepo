@@ -1,7 +1,7 @@
 package nl.knaw.huc.annorepo.service
 
 import java.util.UUID
-import com.mongodb.client.MongoClient
+import com.mongodb.kotlin.client.MongoClient
 import org.apache.logging.log4j.kotlin.logger
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.api.ARConst.ANNOTATION_NAME_FIELD
@@ -46,6 +46,7 @@ class MongoDbUpdater(
     }
 
     private fun allAnnotationContainers(): List<String> = mdb.listCollectionNames()
+        .toList()
         .filter { it != ARConst.CONTAINER_METADATA_COLLECTION }
         .filter { !it.startsWith('_') }
         .sorted<String>()

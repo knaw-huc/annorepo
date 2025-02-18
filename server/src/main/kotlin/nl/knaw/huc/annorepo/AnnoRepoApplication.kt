@@ -8,8 +8,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 import com.codahale.metrics.health.HealthCheck
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Indexes
+import com.mongodb.kotlin.client.MongoClient
 import io.dropwizard.auth.AuthDynamicFeature
 import io.dropwizard.auth.chained.ChainedAuthFilter
 import io.dropwizard.auth.oauth.OAuthCredentialAuthFilter
@@ -25,8 +25,6 @@ import io.federecio.dropwizard.swagger.SwaggerBundle
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
 import org.apache.commons.lang3.StringUtils
 import org.apache.logging.log4j.kotlin.logger
-import org.litote.kmongo.KMongo
-import org.litote.kmongo.getCollection
 import nl.knaw.huc.annorepo.api.ARConst.APP_NAME
 import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.api.ARConst.EnvironmentVariable
@@ -48,7 +46,14 @@ import nl.knaw.huc.annorepo.grpc.SayHelloService
 import nl.knaw.huc.annorepo.health.MongoDbHealthCheck
 import nl.knaw.huc.annorepo.health.ServerHealthCheck
 import nl.knaw.huc.annorepo.jobs.ExpiredChoresCleanerJob
-import nl.knaw.huc.annorepo.resources.*
+import nl.knaw.huc.annorepo.resources.AboutResource
+import nl.knaw.huc.annorepo.resources.AdminResource
+import nl.knaw.huc.annorepo.resources.BatchResource
+import nl.knaw.huc.annorepo.resources.ContainerServiceResource
+import nl.knaw.huc.annorepo.resources.GlobalServiceResource
+import nl.knaw.huc.annorepo.resources.HomePageResource
+import nl.knaw.huc.annorepo.resources.MyResource
+import nl.knaw.huc.annorepo.resources.W3CResource
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.IndexManager
 import nl.knaw.huc.annorepo.resources.tools.SearchManager
@@ -206,9 +211,9 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
     }
 
     private fun createMongoClient(configuration: AnnoRepoConfiguration): MongoClient {
-        val mongoClient = KMongo.createClient(configuration.mongodbURL)
+        val mongoClient = MongoClient.create(configuration.mongodbURL)
         val mdb = mongoClient.getDatabase(configuration.databaseName)
-        val metadataCollectionExists = mdb.listCollectionNames()
+        val metadataCollectionExists = mdb.listCollectionNames().toList()
             .firstOrNull { it == CONTAINER_METADATA_COLLECTION } == CONTAINER_METADATA_COLLECTION
         if (!metadataCollectionExists) {
             logger.debug { "creating container metadata collection + index" }

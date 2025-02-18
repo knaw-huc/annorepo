@@ -1,7 +1,7 @@
 package nl.knaw.huc.annorepo.resources.tools
 
-import com.mongodb.client.MongoClient
-import com.mongodb.client.MongoCursor
+import com.mongodb.kotlin.client.MongoClient
+import com.mongodb.kotlin.client.MongoCursor
 import org.apache.logging.log4j.kotlin.logger
 import org.bson.Document
 

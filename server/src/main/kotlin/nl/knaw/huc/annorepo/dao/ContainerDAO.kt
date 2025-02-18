@@ -1,8 +1,8 @@
 package nl.knaw.huc.annorepo.dao
 
 import java.util.SortedMap
-import com.mongodb.client.MongoCollection
 import com.mongodb.client.result.UpdateResult
+import com.mongodb.kotlin.client.MongoCollection
 import org.bson.Document
 import nl.knaw.huc.annorepo.api.AnnotationIdentifier
 import nl.knaw.huc.annorepo.api.ContainerMetadata

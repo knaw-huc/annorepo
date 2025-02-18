@@ -2,7 +2,7 @@ package nl.knaw.huc.annorepo.resources.tools
 
 import java.util.Date
 import java.util.concurrent.TimeUnit
-import com.mongodb.client.MongoCollection
+import com.mongodb.kotlin.client.MongoCollection
 import org.apache.logging.log4j.kotlin.logger
 import org.bson.Document
 import org.bson.conversions.Bson
