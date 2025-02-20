@@ -1,9 +1,11 @@
 package nl.knaw.huc.annorepo.resources.tools
 
 import com.mongodb.kotlin.client.MongoClient
+import com.mongodb.kotlin.client.MongoCollection
 import com.mongodb.kotlin.client.MongoCursor
 import org.apache.logging.log4j.kotlin.logger
 import org.bson.Document
+import org.bson.conversions.Bson
 
 fun MongoClient.getMongoVersion(): String =
     getDatabase("admin")
@@ -28,3 +30,7 @@ fun <TResult> MongoCursor<TResult>.isClosed(): Boolean {
         return true
     }
 }
+
+fun <T : Any> MongoCollection<T>.findOne(bson: Bson): T? = this.find(bson).firstOrNull()
+
+fun Bson.json(): String = this.toBsonDocument().toJson()

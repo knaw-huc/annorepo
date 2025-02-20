@@ -57,9 +57,10 @@ import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
 import nl.knaw.huc.annorepo.exceptions.PreconditionFailedException
-import nl.knaw.huc.annorepo.resources.tools.BsonExtensions.json
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.IndexManager
+import nl.knaw.huc.annorepo.resources.tools.findOne
+import nl.knaw.huc.annorepo.resources.tools.json
 import nl.knaw.huc.annorepo.resources.tools.makeAnnotationETag
 import nl.knaw.huc.annorepo.resources.tools.simplify
 import nl.knaw.huc.annorepo.service.JsonLdUtils
@@ -310,7 +311,7 @@ class W3CResource(
         val newFields = JsonLdUtils.extractFields(annotationJson)
 
         val container = containerDAO.getCollection(containerName)
-        val oldAnnotation = container.find(Document(ANNOTATION_NAME_FIELD, annotationName)).firstOrNull()
+        val oldAnnotation = container.findOne(Document(ANNOTATION_NAME_FIELD, annotationName))
             ?: return Response.status(Response.Status.NOT_FOUND).build()
         val doc = Document(ANNOTATION_NAME_FIELD, annotationName).append(ANNOTATION_FIELD, annotationDocument)
         val updateResult = container.replaceOne(eq(ANNOTATION_NAME_FIELD, annotationName), doc)
@@ -355,7 +356,7 @@ class W3CResource(
 
         val container = containerDAO.getCollection(containerName)
 
-        val oldAnnotation = container.find(Document(ANNOTATION_NAME_FIELD, annotationName)).firstOrNull()
+        val oldAnnotation = container.findOne(Document(ANNOTATION_NAME_FIELD, annotationName))
             ?: return Response.status(Response.Status.NOT_FOUND).build()
         val oldFields = JsonLdUtils.extractFields((oldAnnotation[ANNOTATION_FIELD]!! as Bson).json())
         updateFieldCount(containerName, emptySet(), oldFields)
@@ -404,7 +405,7 @@ class W3CResource(
     private fun getContainerPage(containerName: String, page: Int, pageSize: Int): ContainerPage? {
         val containerMetadataCollection = containerDAO.getContainerMetadataCollection()
         val metadata =
-            containerMetadataCollection.find(Document(CONTAINER_NAME_FIELD, containerName)).firstOrNull() ?: return null
+            containerMetadataCollection.findOne(Document(CONTAINER_NAME_FIELD, containerName)) ?: return null
         val collection = containerDAO.getCollection(containerName)
         val uri = uriFactory.containerURL(containerName)
         val count = collection.estimatedDocumentCount()
@@ -457,7 +458,7 @@ class W3CResource(
     private fun updateFieldCount(containerName: String, fieldsAdded: Set<String>, fieldsDeleted: Set<String>) {
         val containerMetadataCollection = containerDAO.getContainerMetadataCollection()
         val containerMetadata: ContainerMetadata =
-            containerMetadataCollection.find(eq(CONTAINER_NAME_FIELD, containerName)).firstOrNull() ?: return
+            containerMetadataCollection.findOne(eq(CONTAINER_NAME_FIELD, containerName)) ?: return
         val fieldCounts = containerMetadata.fieldCounts.toMutableMap()
         for (field in fieldsAdded.filter { f -> !f.contains("@") }) {
             fieldCounts[field] = fieldCounts.getOrDefault(field, 0) + 1

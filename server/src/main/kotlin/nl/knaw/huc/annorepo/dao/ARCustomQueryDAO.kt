@@ -4,6 +4,7 @@ import com.mongodb.client.model.Filters.eq
 import com.mongodb.kotlin.client.MongoClient
 import nl.knaw.huc.annorepo.api.ARConst
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.resources.tools.findOne
 
 class ARCustomQueryDAO(
     configuration: AnnoRepoConfiguration,
@@ -19,7 +20,7 @@ class ARCustomQueryDAO(
         getByName(name) != null
 
     override fun getByName(name: String): CustomQuery? =
-        customQueryCollection.find(eq("name", name)).firstOrNull()
+        customQueryCollection.findOne(eq("name", name))
 
     override fun store(query: CustomQuery) {
         if (nameIsTaken(query.name)) {

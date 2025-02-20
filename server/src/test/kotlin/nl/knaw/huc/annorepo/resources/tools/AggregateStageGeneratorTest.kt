@@ -12,7 +12,6 @@ import org.apache.logging.log4j.kotlin.logger
 import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
 import org.assertj.core.api.AssertionsForInterfaceTypes.assertThatExceptionOfType
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
-import nl.knaw.huc.annorepo.resources.tools.BsonExtensions.json
 
 @ExtendWith(MockKExtension::class)
 class AggregateStageGeneratorTest {

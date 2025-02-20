@@ -7,6 +7,7 @@ import nl.knaw.huc.annorepo.api.ContainerUserEntry
 import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.api.UserAccessEntry
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.resources.tools.findOne
 
 const val FIELD_CONTAINER_NAME = "containerName"
 const val FIELD_ROLE = "role"
@@ -24,10 +25,10 @@ class ARContainerUserDAO(configuration: AnnoRepoConfiguration, mongoClient: Mong
     }
 
     override fun getUserRole(containerName: String, userName: String): Role? {
-        val doc: Document? = containerUserCollection.find(
+        val doc: Document? = containerUserCollection.findOne(
             Document(FIELD_CONTAINER_NAME, containerName)
                 .append(FIELD_USER_NAME, userName)
-        ).firstOrNull()
+        )
         return if (doc == null) {
             null
         } else {

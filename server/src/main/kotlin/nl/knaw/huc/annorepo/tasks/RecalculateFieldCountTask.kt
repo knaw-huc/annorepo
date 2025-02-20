@@ -11,7 +11,8 @@ import io.dropwizard.servlets.tasks.Task
 import org.bson.conversions.Bson
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.dao.ContainerDAO
-import nl.knaw.huc.annorepo.resources.tools.BsonExtensions.json
+import nl.knaw.huc.annorepo.resources.tools.findOne
+import nl.knaw.huc.annorepo.resources.tools.json
 import nl.knaw.huc.annorepo.service.JsonLdUtils
 
 class RecalculateFieldCountTask(
@@ -59,7 +60,7 @@ class RecalculateFieldCountTask(
         val containerMetadataCollection = containerDAO.getContainerMetadataCollection()
         val withContainerName = eq("name", containerName)
         val containerMetadata: ContainerMetadata =
-            containerMetadataCollection.find(withContainerName).firstOrNull() ?: return
+            containerMetadataCollection.findOne(withContainerName) ?: return
         val newContainerMetadata = containerMetadata.copy(fieldCounts = fieldCounts)
         containerMetadataCollection.replaceOne(withContainerName, newContainerMetadata)
     }

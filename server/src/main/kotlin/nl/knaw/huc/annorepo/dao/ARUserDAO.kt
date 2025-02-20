@@ -14,6 +14,7 @@ import nl.knaw.huc.annorepo.auth.BasicUser
 import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.auth.User
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.resources.tools.findOne
 
 const val FIELD_API_KEY = "apiKey"
 const val FIELD_USER_NAME = "userName"
@@ -39,7 +40,7 @@ class ARUserDAO(
             null -> null
             configuration.rootApiKey -> RootUser()
             else -> {
-                val doc = userCollection.find(Document(FIELD_API_KEY, apiKey)).firstOrNull()
+                val doc = userCollection.findOne(Document(FIELD_API_KEY, apiKey))
                 if (doc == null) {
                     null
                 } else {
@@ -95,10 +96,10 @@ class ARUserDAO(
             .deletedCount == userNames.size.toLong()
 
     private fun userNameExistsInCollection(ue: UserEntry) =
-        userCollection.find(Document(FIELD_USER_NAME, ue.userName)).firstOrNull() != null
+        userCollection.findOne(Document(FIELD_USER_NAME, ue.userName)) != null
 
     private fun apiKeyExistsInCollection(ue: UserEntry) =
-        userCollection.find(Document(FIELD_API_KEY, ue.apiKey)).firstOrNull() != null
+        userCollection.findOne(Document(FIELD_API_KEY, ue.apiKey)) != null
 
     companion object {
         private fun asMap(userEntry: UserEntry) =

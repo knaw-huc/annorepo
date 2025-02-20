@@ -23,6 +23,7 @@ import nl.knaw.huc.annorepo.api.IndexFields
 import nl.knaw.huc.annorepo.api.IndexType
 import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.resources.tools.findOne
 import nl.knaw.huc.annorepo.resources.tools.makeAnnotationETag
 import nl.knaw.huc.annorepo.resources.tools.toPrimitive
 import nl.knaw.huc.annorepo.service.JsonLdUtils
@@ -60,8 +61,7 @@ class ARContainerDAO(
 
     override fun getContainerMetadata(containerName: String): ContainerMetadata? =
         getContainerMetadataCollection()
-            .find(eq(CONTAINER_NAME_FIELD, containerName))
-            .firstOrNull()
+            .findOne(eq(CONTAINER_NAME_FIELD, containerName))
 
     override fun updateContainerMetadata(
         containerName: String,
