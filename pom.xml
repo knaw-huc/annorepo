@@ -64,7 +64,7 @@
         <protobuf.version>4.29.3</protobuf.version>
         <slf4j.version>2.0.13</slf4j.version>
         <swagger-annotations.version>1.6.6</swagger-annotations.version>
-        <titanium-json-ld.version>1.4.1</titanium-json-ld.version>
+        <titanium-json-ld.version>1.5.0</titanium-json-ld.version>
 
         <!-- test dependencies -->
         <assertj-core.version>3.26.3</assertj-core.version>
@@ -81,7 +81,7 @@
         <another-protobuf-maven-plugin.version>2.1.0</another-protobuf-maven-plugin.version>
         <dokka.version>1.9.20</dokka.version>
         <grpc-bridge.version>1.0.0.Alpha2</grpc-bridge.version>
-        <joda-time.version>2.13.0</joda-time.version>
+        <joda-time.version>2.13.1</joda-time.version>
         <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
         <maven-gpg-plugin.version>3.0.1</maven-gpg-plugin.version>
         <maven-jar-plugin.version>3.2.2</maven-jar-plugin.version>
