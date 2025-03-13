@@ -59,7 +59,7 @@
         <log4j-api-kotlin.version>1.5.0</log4j-api-kotlin.version>
         <log4j-core.version>2.23.1</log4j-core.version>
         <mongodb.version>4.11.5</mongodb.version>
-        <mordant.version>3.0.1</mordant.version>
+        <mordant.version>3.0.2</mordant.version>
         <problem.version>0.27.1</problem.version>
         <protobuf.version>4.29.3</protobuf.version>
         <slf4j.version>2.0.13</slf4j.version>
