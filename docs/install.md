@@ -12,7 +12,7 @@ For running AnnoRepo, you will need to have access to a [mongodb server](https:/
 
 - Build and run the server:
 
-  `make run-server`
+  `make run-server-without-auth`
 
 - In the console, you should see something like this:
 
