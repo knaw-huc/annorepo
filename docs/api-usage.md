@@ -518,7 +518,7 @@ HTTP/1.1 204 No Content
 #### Request
 
 ```
-POST http://localhost:8080/batch/{containerName}/annotations HTTP/1.1
+POST http://localhost:8080/services/{containerName}/annotations-batch HTTP/1.1
 Content-Type: application/json
 
 [
