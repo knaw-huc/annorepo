@@ -81,7 +81,7 @@
         <another-protobuf-maven-plugin.version>2.1.0</another-protobuf-maven-plugin.version>
         <dokka.version>1.9.20</dokka.version>
         <grpc-bridge.version>1.0.0.Alpha2</grpc-bridge.version>
-        <joda-time.version>2.13.1</joda-time.version>
+        <joda-time.version>2.14.0</joda-time.version>
         <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
         <maven-gpg-plugin.version>3.0.1</maven-gpg-plugin.version>
         <maven-jar-plugin.version>3.2.2</maven-jar-plugin.version>
