@@ -48,9 +48,9 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
             else -> Filters.eq("$ANNOTATION_FIELD_PREFIX$key", value)
         }
 
-    private fun specialFieldMatchStage(field: String, value: Map<String, Any>): Bson =
-        Filters.and(value.map { (k, v) ->
-            return when (k) {
+    private fun specialFieldMatchStage(field: String, value: Map<String, Any>): Bson {
+        val filters = value.map { (k, v) ->
+            when (k) {
                 IS_NOT_IN ->
                     try {
                         val valueAsList = (v as Array<*>).toList()
@@ -87,7 +87,13 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
 
                 else -> throw BadRequestException("unknown selector '$k'")
             }
-        })
+        }
+        return if (filters.size == 1) {
+            filters.first()
+        } else {
+            Filters.and(filters)
+        }
+    }
 
     private fun overlappingWithRangeStage(rawParameters: Any): Bson =
         when (rawParameters) {
