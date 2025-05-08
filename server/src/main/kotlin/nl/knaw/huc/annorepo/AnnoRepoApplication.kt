@@ -48,7 +48,14 @@ import nl.knaw.huc.annorepo.grpc.SayHelloService
 import nl.knaw.huc.annorepo.health.MongoDbHealthCheck
 import nl.knaw.huc.annorepo.health.ServerHealthCheck
 import nl.knaw.huc.annorepo.jobs.ExpiredChoresCleanerJob
-import nl.knaw.huc.annorepo.resources.*
+import nl.knaw.huc.annorepo.resources.AboutResource
+import nl.knaw.huc.annorepo.resources.AdminResource
+import nl.knaw.huc.annorepo.resources.BatchResource
+import nl.knaw.huc.annorepo.resources.ContainerServiceResource
+import nl.knaw.huc.annorepo.resources.GlobalServiceResource
+import nl.knaw.huc.annorepo.resources.HomePageResource
+import nl.knaw.huc.annorepo.resources.MyResource
+import nl.knaw.huc.annorepo.resources.W3CResource
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.IndexManager
 import nl.knaw.huc.annorepo.resources.tools.SearchManager
@@ -124,9 +131,10 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             .intercept(GrpcServerInterceptor(userDAO, containerUserDAO))
             .build()
 
+        val mongoVersionProducer = { mongoClient.getMongoVersion() }
         environment.jersey().apply {
             register(CorsFilter())
-            register(AboutResource(configuration, name, appVersion, mongoVersion))
+            register(AboutResource(configuration, name, appVersion, mongoVersionProducer))
             register(HomePageResource())
             register(W3CResource(configuration, containerDAO, containerUserDAO, uriFactory, indexManager))
             register(
@@ -252,7 +260,6 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
     }
 
     companion object {
-        @Throws(Exception::class)
         @JvmStatic
         fun main(args: Array<String>) {
             AnnoRepoApplication().run(*args)

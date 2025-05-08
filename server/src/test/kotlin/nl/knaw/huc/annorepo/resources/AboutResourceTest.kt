@@ -19,7 +19,7 @@ open class AboutResourceTest {
     private val config: AnnoRepoConfiguration = AnnoRepoConfiguration().apply { externalBaseUrl = BASE_URI }
     private val resource = ResourceExtension
         .builder()
-        .addResource(AboutResource(config, APP_NAME, VERSION, MONGO_VERSION))
+        .addResource(AboutResource(config, APP_NAME, VERSION, { MONGO_VERSION }))
         .build()
 
     @Test

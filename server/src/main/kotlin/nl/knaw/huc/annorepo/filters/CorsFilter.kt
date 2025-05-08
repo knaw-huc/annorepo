@@ -13,6 +13,7 @@ class CorsFilter : ContainerResponseFilter {
         requestContext: ContainerRequestContext,
         responseContext: ContainerResponseContext
     ) {
+//        val origins = requestContext.headers["Origin"] ?: listOf()
         responseContext.headers.add(
             "Access-Control-Allow-Origin", "*"
         )
