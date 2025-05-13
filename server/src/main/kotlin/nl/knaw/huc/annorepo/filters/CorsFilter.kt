@@ -14,6 +14,9 @@ class CorsFilter : ContainerResponseFilter {
         responseContext: ContainerResponseContext
     ) {
 //        val origins = requestContext.headers["Origin"] ?: listOf()
+        val exposeHeadersValue = responseContext.headers.keys.map { it.lowercase() }.toList()
+            .sorted()
+            .joinToString(", ")
         responseContext.headers.add(
             "Access-Control-Allow-Origin", "*"
         )
@@ -25,7 +28,7 @@ class CorsFilter : ContainerResponseFilter {
             "GET, POST, PUT, DELETE, OPTIONS, HEAD"
         )
         val allowedHeadersValue =
-            (DEFAULT_ALLOWED_HEADERS + responseContext.headers.keys.map { it.lowercase() })
+            DEFAULT_ALLOWED_HEADERS
                 .toList()
                 .sorted()
                 .joinToString(", ")
@@ -33,10 +36,14 @@ class CorsFilter : ContainerResponseFilter {
             "Access-Control-Allow-Headers",
             allowedHeadersValue
         )
+        responseContext.headers.add(
+            "Access-Control-Expose-Headers",
+            exposeHeadersValue
+        )
     }
 
     companion object {
         val DEFAULT_ALLOWED_HEADERS =
-            setOf("origin", "content-type", "accept", "authorization", "location", "link")
+            setOf("origin", "content-type", "accept", "authorization")
     }
 }

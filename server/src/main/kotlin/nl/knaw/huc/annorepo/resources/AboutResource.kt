@@ -36,6 +36,14 @@ class AboutResource(
         )
     }
 
+//    @GET
+//    @Path("x")
+//    fun getExtra(): Response =
+//        Response.ok()
+//            .header("location", "somewhere")
+//            .header("link", "something")
+//            .build()
+
     companion object {
         val startedAt = now().toString()
     }
