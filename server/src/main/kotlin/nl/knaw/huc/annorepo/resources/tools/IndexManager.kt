@@ -33,7 +33,7 @@ class IndexManager(val containerDAO: ContainerDAO) {
                 ASCENDING -> Indexes.ascending(fullFieldName)
                 DESCENDING -> Indexes.descending(fullFieldName)
                 TEXT -> Indexes.text(fullFieldName)
-                else -> throw RuntimeException("Cannot make an index with type $it.indexType on field $fullFieldName")
+//                else -> throw RuntimeException("Cannot make an index with type $it.indexType on field $fullFieldName")
             }
         }
         val index = Indexes.compoundIndex(indexes)

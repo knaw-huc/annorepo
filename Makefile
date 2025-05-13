@@ -131,7 +131,7 @@ tests:
 
 .PHONY: start-mongodb
 start-mongodb:
-	docker start mongodb6 || docker run --name mongodb6 -d -p 27017:27017 -v ~/local/mongo:/data/db mongo:6.0.7
+	docker start mongodb6 || docker run --name mongodb6 -d -p 27017:27017 -v ~/local/mongo:/data/db mongo:6.0.23
 
 .PHONY: set-log-level-debug
 set-log-level-debug:
