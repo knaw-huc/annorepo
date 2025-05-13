@@ -21,12 +21,22 @@ class CorsFilter : ContainerResponseFilter {
             "Access-Control-Allow-Credentials", "true"
         )
         responseContext.headers.add(
-            "Access-Control-Allow-Headers",
-            "origin, content-type, accept, authorization"
-        )
-        responseContext.headers.add(
             "Access-Control-Allow-Methods",
             "GET, POST, PUT, DELETE, OPTIONS, HEAD"
         )
+        val allowedHeadersValue =
+            (DEFAULT_ALLOWED_HEADERS + responseContext.headers.keys.map { it.lowercase() })
+                .toList()
+                .sorted()
+                .joinToString(", ")
+        responseContext.headers.add(
+            "Access-Control-Allow-Headers",
+            allowedHeadersValue
+        )
+    }
+
+    companion object {
+        val DEFAULT_ALLOWED_HEADERS =
+            setOf("origin", "content-type", "accept", "authorization", "location", "link")
     }
 }
