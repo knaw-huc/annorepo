@@ -234,6 +234,7 @@ class ContainerServiceResource(
         while (annotations.size < configuration.pageSize && cursor.isOpenAndHasNext()) {
             annotations.add(cursor.next().toAnnotationMap(containerName))
         }
+
         // begin hack to work around unexpected cursor close
         if (cursor.isClosed()) {
             logger.debug { "cursor is closed, trying a new cursor" }
