@@ -44,6 +44,6 @@ class CorsFilter : ContainerResponseFilter {
 
     companion object {
         val DEFAULT_ALLOWED_HEADERS =
-            setOf("origin", "content-type", "accept", "authorization")
+            setOf("origin", "content-type", "accept", "authorization", "slug", "user-agent")
     }
 }
