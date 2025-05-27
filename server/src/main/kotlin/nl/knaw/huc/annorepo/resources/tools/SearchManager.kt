@@ -1,6 +1,7 @@
 package nl.knaw.huc.annorepo.resources.tools
 
 import org.bson.conversions.Bson
+import nl.knaw.huc.annorepo.api.QueryAsMap
 import nl.knaw.huc.annorepo.api.SearchChoreIndex
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ContainerDAO
@@ -19,7 +20,7 @@ class SearchManager(
 
     fun startGlobalSearch(
         containerNames: List<String>,
-        queryMap: HashMap<*, *>,
+        queryMap: QueryAsMap,
         aggregateStages: List<Bson>
     ): SearchChore =
         startSearchChore(

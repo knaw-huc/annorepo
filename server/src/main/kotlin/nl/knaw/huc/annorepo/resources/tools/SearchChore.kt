@@ -6,11 +6,12 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import org.apache.logging.log4j.kotlin.logger
 import org.joda.time.Instant
+import nl.knaw.huc.annorepo.api.QueryAsMap
 import nl.knaw.huc.annorepo.api.SearchStatusSummary
 
-abstract class SearchChore(queryMap: HashMap<*, *>) : Runnable {
+abstract class SearchChore(queryMap: QueryAsMap) : Runnable {
 
-    class Status(private val queryMap: HashMap<*, *>) {
+    class Status(private val queryMap: QueryAsMap) {
 
         var state = State.CREATED
         val annotationIds: MutableList<MongoDocumentId> = mutableListOf()

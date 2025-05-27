@@ -2,10 +2,11 @@ package nl.knaw.huc.annorepo.resources.tools
 
 import org.apache.logging.log4j.kotlin.logger
 import org.bson.conversions.Bson
+import nl.knaw.huc.annorepo.api.QueryAsMap
 
 class ContainerSearchChore(
     private val containerName: String,
-    private val queryMap: HashMap<*, *>,
+    private val queryMap: QueryAsMap,
     private val aggregateStages: List<Bson>
 ) :
     SearchChore(queryMap) {
