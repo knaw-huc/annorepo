@@ -72,11 +72,11 @@ The config file `config.yml` has some values that can be overridden by setting `
 
 ## Using docker image
 
-Docker images are available from registry.ghcr.io:
+Docker images are available from ghcr.io:
 
 - Run the docker image, with the required [`AR_` environment variables](#Configuring):
 
-  `docker run -p 8080:8080 registry.ghcr.io/knaw-huc/annorepo-server:v0.6.3`
+  `docker run -p 8080:8080 ghcr.io/knaw-huc/annorepo-server:v0.6.3`
 
 - Alternatively, check the [docker-compose.yml example](../k8s/local/docker-compose.yml) to run mongodb + annorepo using
   docker-compose.
