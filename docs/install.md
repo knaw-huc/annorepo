@@ -74,7 +74,7 @@ The config file `config.yml` has some values that can be overridden by setting `
 
 Docker images are available from ghcr.io:
 
-- Run the docker image, with the required [`AR_` environment variables](#Configuring) and using [the latest release](https://github.com/knaw-huc/annorepo/releases/):
+- Run the docker image, with the required [`AR_` environment variables](#Configuring) and using [the latest release](https://github.com/knaw-huc/annorepo/pkgs/container/annorepo-server):
 
   `docker run -p 8080:8080 ghcr.io/knaw-huc/annorepo-server:v0.7.5`
 
