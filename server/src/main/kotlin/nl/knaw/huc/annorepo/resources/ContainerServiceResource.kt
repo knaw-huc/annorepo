@@ -453,7 +453,7 @@ class ContainerServiceResource(
         return Response.ok(sortedMap).build()
     }
 
-    @Operation(description = "Get a list of the fields used in the annotations in a container")
+    @Operation(description = "Get a list of all the unique values for the given field in the annotations in a container")
     @Timed
     @GET
     @Path("{containerName}/$DISTINCT_FIELD_VALUES/{field}")

@@ -165,7 +165,8 @@ current_branch=$(shell git branch --show-current)
 git-pull:
 	git checkout main && git pull
 	@echo
-	git checkout develop && git rebase main && git pull && git push
+	git checkout develop && git merge main && git pull && git push
+	#git checkout develop && git rebase main && git pull && git push
 	@echo
 	git checkout $(current_branch)
 
