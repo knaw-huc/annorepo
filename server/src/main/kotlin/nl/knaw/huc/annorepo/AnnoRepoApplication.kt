@@ -158,12 +158,12 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
                 )
             )
             register(BatchResource(configuration, containerDAO, containerAccessChecker))
+            register(MyResource(containerDAO, containerUserDAO))
             if (configuration.prettyPrint) {
                 register(JSONPrettyPrintFilter())
             }
             if (configuration.withAuthentication) {
                 register(AdminResource(userDAO))
-                register(MyResource(containerDAO, containerUserDAO))
                 val oauthFilter = OAuthCredentialAuthFilter.Builder<User>()
                     .setAuthenticator(AROAuthAuthenticator(userDAO))
                     .setPrefix("Bearer")

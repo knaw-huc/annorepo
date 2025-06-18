@@ -65,6 +65,24 @@ class CustomQueryToolsTest {
     }
 
     @Test
+    fun `test parameter interpolation in template query - non-string parameters`() {
+        val template = """{"body.metadata.year":"<<year>>"}"""
+        val expected = """{"body.metadata.year":2025}"""
+        val parameters = mapOf("year" to "2025")
+        val expanded = template.interpolate(parameters)
+        assertEquals(expected, expanded)
+    }
+
+    @Test
+    fun `test parameter interpolation in template query - json object parameter`() {
+        val template = """{":isWithinTextAnchorRange":"<<json>>"}"""
+        val expected = """{":isWithinTextAnchorRange":{"source":"http://example.org/","start":0,"end":10}}"""
+        val parameters = mapOf("json" to """{"source":"http://example.org/","start":0,"end":10}""")
+        val expanded = template.interpolate(parameters)
+        assertEquals(expected, expanded)
+    }
+
+    @Test
     fun `test parameterName extraction from template with parameters`() {
         val template = """{
             |"body.type": "<type>",

@@ -75,7 +75,9 @@ object CustomQueryTools {
 
     fun String.interpolate(queryParameters: Map<String, String>): String =
         queryParameters.entries.fold(this) { expanded, (k, v) ->
-            expanded.replace("<$k>", StringEscapeUtils.escapeJson(v))
+            expanded
+                .replace("\"<<$k>>\"", v)
+                .replace("<$k>", StringEscapeUtils.escapeJson(v))
         }
 
 }
