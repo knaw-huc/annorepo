@@ -62,6 +62,11 @@ class ARContainerDAO(
     override fun listCollectionNames(): List<String> =
         mdb.listCollectionNames().toList()
 
+    override fun listCollectionNamesAccessibleForAnonymous(): List<String> =
+        listCollectionNames()
+            .filter { getContainerMetadata(it)?.isReadOnlyForAnonymous ?: false }
+            .sorted()
+
     override fun getContainerMetadata(containerName: String): ContainerMetadata? =
         getContainerMetadataCollection()
             .findOne(Filters.eq(ARConst.CONTAINER_NAME_FIELD, containerName))

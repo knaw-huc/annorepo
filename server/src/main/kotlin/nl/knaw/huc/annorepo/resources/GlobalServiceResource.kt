@@ -96,7 +96,7 @@ class GlobalServiceResource(
                 queryMap.toMap()
                     .map { (k, v) -> aggregateStageGenerator.generateStage(k, v) }
                     .toList()
-            val containerNames = accessibleContainers(context.userPrincipal.name)
+            val containerNames = containersAccessibleFor(context.userPrincipal?.name)
             val chore: SearchChore =
                 searchManager.startGlobalSearch(
                     containerNames = containerNames,
@@ -316,8 +316,12 @@ class GlobalServiceResource(
                 )
             }
 
-    private fun accessibleContainers(name: String): List<String> =
-        containerUserDAO.getUserRoles(name).map { it.containerName }.toList()
+    private fun containersAccessibleFor(name: String?): List<String> =
+        if (name != null) {
+            containerUserDAO.getUserRoles(name).map { it.containerName }.toList()
+        } else {
+            containerDAO.listCollectionNamesAccessibleForAnonymous()
+        }
 
     private fun buildAnnotationPage(
         searchUri: URI, annotations: AnnotationList, page: Int, total: Int,
