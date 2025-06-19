@@ -158,7 +158,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
                 )
             )
             register(BatchResource(configuration, containerDAO, containerAccessChecker))
-            register(MyResource(containerDAO, containerUserDAO))
+            register(MyResource(containerDAO, containerUserDAO, uriFactory))
             if (configuration.prettyPrint) {
                 register(JSONPrettyPrintFilter())
             }

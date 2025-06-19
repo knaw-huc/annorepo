@@ -2,6 +2,7 @@ package nl.knaw.huc.annorepo.resources
 
 import java.util.TreeMap
 import jakarta.annotation.security.PermitAll
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
@@ -18,6 +19,7 @@ import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
+import nl.knaw.huc.annorepo.service.UriFactory
 
 @Path(MY)
 @Produces(MediaType.APPLICATION_JSON)
@@ -25,24 +27,32 @@ import nl.knaw.huc.annorepo.dao.ContainerUserDAO
 @SecurityRequirement(name = SECURITY_SCHEME_NAME)
 class MyResource(
     private val containerDAO: ContainerDAO,
-    private val containerUserDAO: ContainerUserDAO
+    private val containerUserDAO: ContainerUserDAO,
+    val uriFactory: UriFactory
 ) {
     @Operation(description = "List all containers the authenticated user has access to, grouped by role")
     @Timed
     @GET
     @Path("containers")
-    fun getAccessibleContainers(@Context context: SecurityContext): Response =
-        if (context.userPrincipal is RootUser) {
+    fun getAccessibleContainers(
+        @Context context: SecurityContext,
+        @Context request: HttpServletRequest
+    ): Response {
+        val asLinks = request.parameterMap.contains("asLinks")
+        val containerNameMapper: (String) -> String =
+            { containerName: String ->
+                if (asLinks) uriFactory.containerURL(containerName).toString() else containerName
+            }
+
+        return if (context.userPrincipal is RootUser) {
             val allContainerNames = containerUserDAO.getAll().map { it.containerName }.toSortedSet()
-            val containerNames = mapOf(Role.ROOT.name to allContainerNames)
+            val containerNames = mapOf(Role.ROOT.name to allContainerNames.map(containerNameMapper))
             Response.ok(containerNames).build()
         } else {
-            val containersReadOnlyForAnonymous = containerDAO.listCollectionNames()
-                .filter { containerDAO.getContainerMetadata(it)?.isReadOnlyForAnonymous ?: false }
-                .sorted()
+            val containersReadOnlyForAnonymous = containerDAO.listCollectionNamesAccessibleForAnonymous()
                 .toMutableList()
             val accessibleContainerNamesGroupedByRole = if (context.userPrincipal == null) {
-                mapOf(Role.GUEST.name to containersReadOnlyForAnonymous)
+                mapOf(Role.GUEST.name to containersReadOnlyForAnonymous.map(containerNameMapper))
             } else {
                 val userName = context.userPrincipal.name
                 val userRoles = containerUserDAO.getUserRoles(userName)
@@ -51,19 +61,25 @@ class MyResource(
                 for (role in containerUsersGroupedByRole.keys.sorted()) {
                     val containerNames = containerUsersGroupedByRole[role]?.map { it.containerName } ?: listOf()
                     containersReadOnlyForAnonymous.removeAll(containerNames.toSet())
-                    containerNamesGroupedByRole[role.name] = containerNames.toMutableList()
+                    containerNamesGroupedByRole[role.name] = containerNames.map(containerNameMapper).toMutableList()
                 }
                 if (containersReadOnlyForAnonymous.isNotEmpty()) {
                     if (containerNamesGroupedByRole[Role.GUEST.name] != null) {
-                        containerNamesGroupedByRole[Role.GUEST.name]?.addAll(containersReadOnlyForAnonymous)
+                        containerNamesGroupedByRole[Role.GUEST.name]?.addAll(
+                            containersReadOnlyForAnonymous.map(
+                                containerNameMapper
+                            )
+                        )
                     } else {
-                        containerNamesGroupedByRole[Role.GUEST.name] = containersReadOnlyForAnonymous
+                        containerNamesGroupedByRole[Role.GUEST.name] =
+                            containersReadOnlyForAnonymous.map(containerNameMapper).toMutableList()
                     }
                 }
                 containerNamesGroupedByRole
             }
             Response.ok(accessibleContainerNamesGroupedByRole).build()
         }
+    }
 
 }
 
