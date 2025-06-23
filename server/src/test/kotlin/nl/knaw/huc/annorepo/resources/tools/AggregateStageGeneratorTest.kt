@@ -329,4 +329,26 @@ class AggregateStageGeneratorTest {
             .replace('@', '$')
         assertThatJson(stage.json).isEqualTo(expected)
     }
+
+    @Test
+    fun `handle all parts of the value map`() {
+        val asg = AggregateStageGenerator(config)
+        val key = "body.metadata.sessionYear"
+        val value = mapOf(IS_GREATER_OR_EQUAL to 1625, IS_LESS_OR_EQUAL to 1647)
+        val stage = asg.generateStage(key, value)
+        logger.info(stage)
+        logger.info(stage.json)
+        val expected = """
+            {
+                "@match":{
+                    "@and":[
+                        { "annotation.body.metadata.sessionYear": { "@gte": 1625 } },
+                        { "annotation.body.metadata.sessionYear": { "@lte": 1647 } }
+                    ]
+                }
+            }
+            """.trimIndent()
+            .replace('@', '$')
+        assertThatJson(stage.json).isEqualTo(expected)
+    }
 }

@@ -1,6 +1,6 @@
 package nl.knaw.huc.annorepo.resources
 
-import java.time.Instant
+import java.time.Instant.now
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
@@ -13,22 +13,39 @@ import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 
 @Path(ResourcePaths.ABOUT)
 @Produces(MediaType.APPLICATION_JSON)
-class AboutResource(configuration: AnnoRepoConfiguration, appName: String, version: String, mongoVersion: String) {
-
-    private val about = AboutInfo(
-        appName = appName,
-        version = version,
-        startedAt = Instant.now().toString(),
-        baseURI = configuration.externalBaseUrl,
-        withAuthentication = configuration.withAuthentication,
-        mongoVersion = mongoVersion,
-        grpcHostName = configuration.grpc.hostName,
-        grpcPort = configuration.grpc.port
-    )
+class AboutResource(
+    val configuration: AnnoRepoConfiguration,
+    val appName: String,
+    val version: String,
+    val mongoVersionProducer: () -> String
+) {
 
     @Operation(description = "Get some info about the server")
     @Timed
     @GET
-    fun getAboutInfo(): AboutInfo = about
+    fun getAboutInfo(): AboutInfo {
+        return AboutInfo(
+            appName = appName,
+            version = version,
+            startedAt = startedAt,
+            baseURI = configuration.externalBaseUrl,
+            withAuthentication = configuration.withAuthentication,
+            mongoVersion = mongoVersionProducer.invoke(),
+            grpcHostName = configuration.grpc.hostName,
+            grpcPort = configuration.grpc.port
+        )
+    }
+
+//    @GET
+//    @Path("x")
+//    fun getExtra(): Response =
+//        Response.ok()
+//            .header("location", "somewhere")
+//            .header("link", "something")
+//            .build()
+
+    companion object {
+        val startedAt = now().toString()
+    }
 
 }

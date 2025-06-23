@@ -7,11 +7,11 @@
     <parent>
         <groupId>io.github.knaw-huc</groupId>
         <artifactId>annorepo</artifactId>
-        <version>0.7.0beta-5</version>
+        <version>0.7.8</version>
     </parent>
 
     <artifactId>annorepo-common</artifactId>
-    <version>0.7.0beta-5</version>
+    <version>0.7.8</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Shared libraries/classes/methods for AnnoRepo</description>
@@ -60,6 +60,11 @@
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-protobuf</artifactId>
+            <version>${grpc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-stub</artifactId>
             <version>${grpc.version}</version>
         </dependency>
         <dependency>

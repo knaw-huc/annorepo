@@ -23,7 +23,6 @@ import jakarta.ws.rs.core.MediaType.APPLICATION_JSON
 import jakarta.ws.rs.core.Request
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.SecurityContext
-import kotlin.collections.set
 import kotlin.math.abs
 import com.codahale.metrics.annotation.Timed
 import com.mongodb.client.model.Aggregates
@@ -284,9 +283,14 @@ class W3CResource(
             )
             val entity = annotationData.contentWithAssignedId(containerName, annotationName)
             val eTag = makeAnnotationETag(containerName, annotationName)
-            Response.ok(entity).header("Vary", "Accept").allow("POST", "PUT", "GET", "DELETE", "OPTIONS", "HEAD")
-                .link(RESOURCE_LINK, "type").link(ANNOTATION_LINK, "type").lastModified(annotationData.modified)
-                .tag(eTag).build()
+            Response.ok(entity)
+                .header("Vary", "Accept")
+                .allow("POST", "PUT", "GET", "DELETE", "OPTIONS", "HEAD")
+                .link(RESOURCE_LINK, "type")
+                .link(ANNOTATION_LINK, "type")
+                .lastModified(annotationData.modified)
+                .tag(eTag)
+                .build()
         } else Response.status(Response.Status.NOT_FOUND).build()
     }
 

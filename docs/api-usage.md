@@ -518,7 +518,7 @@ HTTP/1.1 204 No Content
 #### Request
 
 ```
-POST http://localhost:8080/batch/{containerName}/annotations HTTP/1.1
+POST http://localhost:8080/services/{containerName}/annotations-batch HTTP/1.1
 Content-Type: application/json
 
 [
@@ -983,8 +983,14 @@ The way the queries you can do via the `Querying a container` endpoint work mean
 The json sent to the endpoint is the CustomQuerySpecs, with the fields:
 
 - `name`: the name of the custom query, use only letters, digits, underscores `_` and dashes `-`
-- `query`: the query; see the request body in [Create a query](#create-a-query--experimental) for details on the query format.
-  Additionally, for custom queries you can replace values in the query with named parameters, by using `<paramname>`
+- `query`: the query template; see the request body in [Create a query](#create-a-query--experimental) for details on the query format.
+  Additionally, for custom queries you can replace values in the query template with named parameters, by using `<paramname>` or `<<paramname>>` 
+
+  For example: the query template `{ "body.motivation": "<motivation>" }`, when called with a base64 encoded `"identifying"` value for the `motivation` parameter, would expand to the query `{ "body.motivation": "identifying" }`
+
+  In cases where the parameter should be inserted as a value other than a string, the parameter should be added to the query template in this form: `"<<parameter>>"`
+
+  So, for the query template `{ "body.metadata.width": "<<width>>" }`, when called with a base64 encoded `100` value for the `width` parameter, the expanded query would be `{ "body.metadata.width": 100 }`
 - `label`: (optional, default="") a short description of the query, will be shown in the query result page. The label can also contain parameters.
 - `description`: (optional, default="") a longer description of the query, will not be shown in the query result page.
 - `public`: (optional, default=true) a boolean indicating whether the query can be used in any container (true), or just in the containers the creator of the custom query has access to (false).
@@ -1531,9 +1537,9 @@ DELETE http://localhost:8080/services/{containerName}/users/{userName} HTTP/1.1
 HTTP/1.1 200 OK
 ```
 
-### Show containers for user (🔒)
+### Show containers for user
 
-Calling this endpoint returns the containers that the authenticated user has access to, grouped by role.
+Calling this endpoint returns the containers that the (authenticated or anonymous) user has access to, grouped by role.
 
 #### Request
 

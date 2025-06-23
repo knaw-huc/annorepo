@@ -8,6 +8,13 @@ server:
       - GET
       - PUT
       - POST
+  requestLog:
+    appenders:
+      - type: console
+        filterFactories:
+          - type: uri
+            uris:
+              - "/healthcheck"
 
 externalBaseUrl: ${AR_EXTERNAL_BASE_URL:-http://localhost:8080}
 

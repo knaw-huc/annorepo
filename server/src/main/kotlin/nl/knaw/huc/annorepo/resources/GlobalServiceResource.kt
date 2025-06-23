@@ -1,7 +1,9 @@
 package nl.knaw.huc.annorepo.resources
 
+import java.io.StringReader
 import java.net.URI
 import jakarta.annotation.security.PermitAll
+import jakarta.json.Json
 import jakarta.ws.rs.BadRequestException
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
@@ -21,7 +23,6 @@ import jakarta.ws.rs.core.UriBuilder
 import kotlin.math.min
 import com.codahale.metrics.annotation.Timed
 import com.fasterxml.jackson.core.JsonParseException
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.mongodb.client.model.Filters.`in`
@@ -35,6 +36,7 @@ import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.AnnotationPage
 import nl.knaw.huc.annorepo.api.CustomQuerySpecs
 import nl.knaw.huc.annorepo.api.PropertySet
+import nl.knaw.huc.annorepo.api.QueryAsMap
 import nl.knaw.huc.annorepo.api.ResourcePaths.CUSTOM_QUERY
 import nl.knaw.huc.annorepo.api.ResourcePaths.EXPAND
 import nl.knaw.huc.annorepo.api.ResourcePaths.GLOBAL_SERVICES
@@ -59,6 +61,7 @@ import nl.knaw.huc.annorepo.resources.tools.CustomQueryTools.isValidQueryName
 import nl.knaw.huc.annorepo.resources.tools.SearchChore
 import nl.knaw.huc.annorepo.resources.tools.SearchManager
 import nl.knaw.huc.annorepo.resources.tools.annotationCollectionLink
+import nl.knaw.huc.annorepo.resources.tools.simplify
 import nl.knaw.huc.annorepo.service.UriFactory
 
 @Path(GLOBAL_SERVICES)
@@ -87,13 +90,13 @@ class GlobalServiceResource(
         @Context context: SecurityContext,
     ): Response {
         try {
-            val queryMap = ObjectMapper().readValue(queryJson, HashMap::class.java)
+            val queryMap: QueryAsMap = Json.createReader(StringReader(queryJson)).readObject().toMap().simplify()
 
             val aggregateStages =
                 queryMap.toMap()
                     .map { (k, v) -> aggregateStageGenerator.generateStage(k, v) }
                     .toList()
-            val containerNames = accessibleContainers(context.userPrincipal.name)
+            val containerNames = containersAccessibleFor(context.userPrincipal?.name)
             val chore: SearchChore =
                 searchManager.startGlobalSearch(
                     containerNames = containerNames,
@@ -313,8 +316,12 @@ class GlobalServiceResource(
                 )
             }
 
-    private fun accessibleContainers(name: String): List<String> =
-        containerUserDAO.getUserRoles(name).map { it.containerName }.toList()
+    private fun containersAccessibleFor(name: String?): List<String> =
+        if (name != null) {
+            containerUserDAO.getUserRoles(name).map { it.containerName }.toList()
+        } else {
+            containerDAO.listCollectionNamesAccessibleForAnonymous()
+        }
 
     private fun buildAnnotationPage(
         searchUri: URI, annotations: AnnotationList, page: Int, total: Int,

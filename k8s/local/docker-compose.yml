@@ -14,7 +14,7 @@ services:
     ports:
       - "2021:8080"
       - "9999:8081"
-    image: registry.diginfra.net/tt/annorepo:0.6.0-SNAPSHOT
+    image: ghcr.io/knaw-huc/annorepo-server:v0.7.5
     networks:
       - annorepo_network
     restart: unless-stopped
@@ -26,7 +26,7 @@ services:
     container_name: annorepo_mongodb
     expose:
       - 27017
-    image: mongo:6.0.7
+    image: mongo:6.0.23
     networks:
       - annorepo_network
     restart: unless-stopped

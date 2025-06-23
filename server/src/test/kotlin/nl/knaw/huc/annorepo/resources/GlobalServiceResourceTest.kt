@@ -14,21 +14,41 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.just
 import io.mockk.runs
+import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.skyscreamer.jsonassert.JSONAssert
 import org.skyscreamer.jsonassert.JSONCompareMode
 import nl.knaw.huc.annorepo.api.CustomQuerySpecs
+import nl.knaw.huc.annorepo.api.Role
+import nl.knaw.huc.annorepo.api.SearchStatusSummary
+import nl.knaw.huc.annorepo.api.UserAccessEntry
 import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
 import nl.knaw.huc.annorepo.dao.CustomQuery
 import nl.knaw.huc.annorepo.dao.CustomQueryDAO
+import nl.knaw.huc.annorepo.resources.tools.SearchChore
 import nl.knaw.huc.annorepo.resources.tools.SearchManager
 import nl.knaw.huc.annorepo.service.UriFactory
 
 @ExtendWith(MockKExtension::class)
 class GlobalServiceResourceTest {
+
+    @Test
+    fun `test creating a global search with an or function`() {
+        val queryString = """
+            {
+              ":or": [
+                { "body.motivation": "classifying" },
+                { "type": "Annotation" }
+              ]
+            }
+        """.trimIndent()
+        val response = resource.createSearch(queryString, securityContext)
+        println(response)
+        assertThat(response.status).isEqualTo(201)
+    }
 
     @Test
     fun `test createCustomQuery with valid json`() {
@@ -142,6 +162,15 @@ class GlobalServiceResourceTest {
         @MockK
         lateinit var securityContext: SecurityContext
 
+        @MockK
+        lateinit var chore: SearchChore
+
+        @MockK
+        lateinit var status: SearchChore.Status
+
+        @MockK
+        lateinit var summary: SearchStatusSummary
+
         private lateinit var uriFactory: UriFactory
         lateinit var resource: GlobalServiceResource
         const val CUSTOM_QUERY_NAME = "all-resolutions"
@@ -166,6 +195,21 @@ class GlobalServiceResourceTest {
             every { customQueryDAO.getAllCustomQueries() } returns listOf(
                 allResolutionsCustomQuery
             )
+
+            every { containerUserDAO.getUserRoles(any()) } returns listOf(
+                UserAccessEntry(
+                    "username",
+                    "containername",
+                    Role.ROOT
+                )
+            )
+
+            every { searchManager.startGlobalSearch(any(), any(), any()) } returns chore
+
+            every { chore.id } returns "chore-id"
+            every { chore.status } returns status
+
+            every { status.summary() } returns summary
 
             uriFactory = UriFactory(configuration)
             resource = GlobalServiceResource(

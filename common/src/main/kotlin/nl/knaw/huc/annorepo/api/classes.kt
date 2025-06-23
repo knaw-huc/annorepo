@@ -69,7 +69,7 @@ data class ContainerUserEntry(
 
 class MissingTargetException : Exception("WebAnnotation must have 1 or more targets")
 data class SearchStatusSummary(
-    val query: HashMap<*, *>,
+    val query: QueryAsMap,
     val startedAt: Date,
     val finishedAt: Date?,
     val lastAccessedAt: Date?,

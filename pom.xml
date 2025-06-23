@@ -8,7 +8,7 @@
 
     <groupId>io.github.knaw-huc</groupId>
     <artifactId>annorepo</artifactId>
-    <version>0.7.0beta-5</version>
+    <version>0.7.8</version>
     <packaging>pom</packaging>
 
     <name>AnnoRepo</name>
@@ -26,7 +26,7 @@
         <!-- Timestamp settings for use in properties file -->
         <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ss'Z'</maven.build.timestamp.format>
 
-        <kotlin.version>2.1.0</kotlin.version>
+        <kotlin.version>2.1.21</kotlin.version>
         <kotlin.code.style>official</kotlin.code.style>
         <java.version>17</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
@@ -41,12 +41,12 @@
         <dropwizard-jobs.version>6.0.1</dropwizard-jobs.version>
         <dropwizard-swagger-ui.version>4.6.2</dropwizard-swagger-ui.version>
         <dropwizard-swagger.version>4.0.5-1</dropwizard-swagger.version>
-        <dropwizard.version>4.0.11</dropwizard.version>
-        <grpc.kotlin.version>1.4.1</grpc.kotlin.version>
-        <grpc.version>1.69.0</grpc.version>
-        <jackson-annotations.version>2.18.2</jackson-annotations.version>
+        <dropwizard.version>4.0.12</dropwizard.version>
+        <grpc.kotlin.version>1.4.3</grpc.kotlin.version>
+        <grpc.version>1.73.0</grpc.version>
+        <jackson-annotations.version>2.19.0</jackson-annotations.version>
         <jackson-databind.version>2.17.2</jackson-databind.version>
-        <jackson-module-kotlin.version>2.17.2</jackson-module-kotlin.version>
+        <jackson-module-kotlin.version>2.19.0</jackson-module-kotlin.version>
         <jakarta.json.version>2.0.1</jakarta.json.version>
         <jakarta.ws.rs-api.version>4.0.0</jakarta.ws.rs-api.version>
         <jaxb-api.version>2.3.1</jaxb-api.version>
@@ -54,17 +54,17 @@
         <json.version>20231013</json.version>
         <kmongo.version>4.11.0</kmongo.version>
         <kotlinx-cli-jvm.version>0.3.6</kotlinx-cli-jvm.version>
-        <kotlinx-coroutines-core.version>1.9.0</kotlinx-coroutines-core.version>
+        <kotlinx-coroutines-core.version>1.10.2</kotlinx-coroutines-core.version>
         <log4j.version>1.2.17</log4j.version>
         <log4j-api-kotlin.version>1.5.0</log4j-api-kotlin.version>
         <log4j-core.version>2.23.1</log4j-core.version>
         <mongodb.version>4.11.5</mongodb.version>
-        <mordant.version>3.0.1</mordant.version>
+        <mordant.version>3.0.2</mordant.version>
         <problem.version>0.27.1</problem.version>
-        <protobuf.version>4.29.1</protobuf.version>
+        <protobuf.version>4.31.1</protobuf.version>
         <slf4j.version>2.0.13</slf4j.version>
         <swagger-annotations.version>1.6.6</swagger-annotations.version>
-        <titanium-json-ld.version>1.4.1</titanium-json-ld.version>
+        <titanium-json-ld.version>1.6.0</titanium-json-ld.version>
 
         <!-- test dependencies -->
         <assertj-core.version>3.26.3</assertj-core.version>
@@ -81,7 +81,7 @@
         <another-protobuf-maven-plugin.version>2.1.0</another-protobuf-maven-plugin.version>
         <dokka.version>1.9.20</dokka.version>
         <grpc-bridge.version>1.0.0.Alpha2</grpc-bridge.version>
-        <joda-time.version>2.13.0</joda-time.version>
+        <joda-time.version>2.14.0</joda-time.version>
         <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
         <maven-gpg-plugin.version>3.0.1</maven-gpg-plugin.version>
         <maven-jar-plugin.version>3.2.2</maven-jar-plugin.version>
@@ -166,6 +166,15 @@
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven-surefire-plugin.version}</version>
+                <configuration>
+                    <properties>
+                        <!-- JUnit 5 specific configuration -->
+                        <configurationParameters>
+                            junit.jupiter.execution.parallel.enabled = true
+                            junit.jupiter.execution.parallel.mode.default = concurrent
+                        </configurationParameters>
+                    </properties>
+                </configuration>
             </plugin>
 
             <plugin>

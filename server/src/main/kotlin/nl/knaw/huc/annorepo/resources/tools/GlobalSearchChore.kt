@@ -2,10 +2,11 @@ package nl.knaw.huc.annorepo.resources.tools
 
 import org.bson.Document
 import org.bson.conversions.Bson
+import nl.knaw.huc.annorepo.api.QueryAsMap
 
 class GlobalSearchChore(
     private val containerNames: List<String>,
-    queryMap: HashMap<*, *>,
+    queryMap: QueryAsMap,
     private val aggregateStages: List<Bson>,
     private val context: SearchManager.Context
 ) : SearchChore(queryMap) {

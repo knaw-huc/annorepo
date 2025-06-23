@@ -12,7 +12,7 @@ For running AnnoRepo, you will need to have access to a [mongodb server](https:/
 
 - Build and run the server:
 
-  `make run-server`
+  `make run-server-without-auth`
 
 - In the console, you should see something like this:
 
@@ -72,11 +72,11 @@ The config file `config.yml` has some values that can be overridden by setting `
 
 ## Using docker image
 
-Docker images are available from registry.ghcr.io:
+Docker images are available from ghcr.io:
 
-- Run the docker image, with the required [`AR_` environment variables](#Configuring):
+- Run the docker image, with the required [`AR_` environment variables](#Configuring) and using [the latest release](https://github.com/knaw-huc/annorepo/pkgs/container/annorepo-server):
 
-  `docker run -p 8080:8080 registry.ghcr.io/knaw-huc/annorepo-server:v0.6.3`
+  `docker run -p 8080:8080 ghcr.io/knaw-huc/annorepo-server:v0.7.5`
 
 - Alternatively, check the [docker-compose.yml example](../k8s/local/docker-compose.yml) to run mongodb + annorepo using
   docker-compose.
