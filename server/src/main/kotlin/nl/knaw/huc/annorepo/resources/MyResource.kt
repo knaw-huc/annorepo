@@ -2,16 +2,17 @@ package nl.knaw.huc.annorepo.resources
 
 import java.util.TreeMap
 import jakarta.annotation.security.PermitAll
-import jakarta.servlet.http.HttpServletRequest
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.Context
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.SecurityContext
 import com.codahale.metrics.annotation.Timed
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.ResourcePaths.MY
@@ -19,6 +20,7 @@ import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
+import nl.knaw.huc.annorepo.resources.tools.Flag
 import nl.knaw.huc.annorepo.service.UriFactory
 
 @Path(MY)
@@ -36,12 +38,14 @@ class MyResource(
     @Path("containers")
     fun getAccessibleContainers(
         @Context context: SecurityContext,
-        @Context request: HttpServletRequest
+        @Parameter(
+            name = "asLinks",
+            example = "{\"asLinks\":true}"
+        ) @QueryParam("asLinks") asLinks: Flag
     ): Response {
-        val asLinks = request.parameterMap.contains("asLinks")
         val containerNameMapper: (String) -> String =
             { containerName: String ->
-                if (asLinks) uriFactory.containerURL(containerName).toString() else containerName
+                if (asLinks.isPresent) uriFactory.containerURL(containerName).toString() else containerName
             }
 
         return if (context.userPrincipal is RootUser) {

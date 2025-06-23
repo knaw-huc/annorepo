@@ -2,7 +2,6 @@ package nl.knaw.huc.annorepo.resources
 
 import java.util.SortedMap
 import java.util.TreeMap
-import jakarta.servlet.http.HttpServletRequest
 import jakarta.ws.rs.core.SecurityContext
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -26,6 +25,7 @@ import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
+import nl.knaw.huc.annorepo.resources.tools.Flag
 import nl.knaw.huc.annorepo.service.UriFactory
 
 @ExtendWith(MockKExtension::class)
@@ -34,7 +34,7 @@ class MyResourceTest {
     @Test
     fun `root user has root access to all containers`() {
         every { context.userPrincipal.name } returns "root"
-        val result = resource.getAccessibleContainers(context, request)
+        val result = resource.getAccessibleContainers(context, Flag(null))
         val expected = TreeMap<String, List<String>>().apply {
             put("ROOT", allContainerNames)
         }
@@ -44,7 +44,7 @@ class MyResourceTest {
     @Test
     fun `anonymous user has guest access to public container`() {
         every { context.userPrincipal } returns null
-        val result = resource.getAccessibleContainers(context, request)
+        val result = resource.getAccessibleContainers(context, Flag(null))
         val expected = TreeMap<String, List<String>>().apply {
             put("GUEST", listOf(PUBLIC_CONTAINER_NAME))
         }
@@ -54,7 +54,7 @@ class MyResourceTest {
     @Test
     fun `non-root user has admin access to by-invitation-only container, guest access to public container`() {
         every { context.userPrincipal.name } returns "user"
-        val result = resource.getAccessibleContainers(context, request)
+        val result = resource.getAccessibleContainers(context, Flag(null))
         val expected = TreeMap<String, List<String>>().apply {
             put("ADMIN", listOf(BY_INVITATION_CONTAINER_NAME))
             put("GUEST", listOf(PUBLIC_CONTAINER_NAME))
@@ -72,7 +72,6 @@ class MyResourceTest {
 
         lateinit var resource: MyResource
         lateinit var context: SecurityContext
-        lateinit var request: HttpServletRequest
 
         @MockK
         lateinit var config: AnnoRepoConfiguration
@@ -83,7 +82,6 @@ class MyResourceTest {
             MockKAnnotations.init(this)
             every { config.externalBaseUrl } returns BASE_URL
             context = mockk<SecurityContext>()
-            request = mockk<HttpServletRequest>()
             resource =
                 MyResource(TestContainerDAO(), TestContainerUserDAO(), uriFactory = UriFactory(config))
 
@@ -100,7 +98,6 @@ class MyResourceTest {
             every { secretMetadata.isReadOnlyForAnonymous } returns false
             every { publicMetadata.isReadOnlyForAnonymous } returns true
             every { byInvitationMetadata.isReadOnlyForAnonymous } returns false
-            every { request.parameterMap } returns mapOf()
         }
 
         override fun listCollectionNames(): List<String> = allContainerNames

@@ -57,6 +57,7 @@ import nl.knaw.huc.annorepo.resources.HomePageResource
 import nl.knaw.huc.annorepo.resources.MyResource
 import nl.knaw.huc.annorepo.resources.W3CResource
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
+import nl.knaw.huc.annorepo.resources.tools.FlagParamConverterProvider
 import nl.knaw.huc.annorepo.resources.tools.IndexManager
 import nl.knaw.huc.annorepo.resources.tools.SearchManager
 import nl.knaw.huc.annorepo.resources.tools.formatAsSize
@@ -159,6 +160,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             )
             register(BatchResource(configuration, containerDAO, containerAccessChecker))
             register(MyResource(containerDAO, containerUserDAO, uriFactory))
+            register(FlagParamConverterProvider())
             if (configuration.prettyPrint) {
                 register(JSONPrettyPrintFilter())
             }
