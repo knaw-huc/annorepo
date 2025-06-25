@@ -3,11 +3,13 @@ package nl.knaw.huc.annorepo.resources
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.core.HttpHeaders
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import com.codahale.metrics.annotation.Timed
 import io.swagger.v3.oas.annotations.Hidden
 import io.swagger.v3.oas.annotations.Operation
+import nl.knaw.huc.annorepo.resources.tools.ResourceLoader
 
 @Hidden
 @Path("/")
@@ -22,21 +24,22 @@ class HomePageResource {
     @Produces(MediaType.TEXT_HTML)
     @Timed
     fun getHomePage(): Response {
-        val resourceAsStream = Thread.currentThread().contextClassLoader.getResourceAsStream("index.html")
+        val resourceAsStream = ResourceLoader.asStream("index.html")
         return Response.ok(resourceAsStream)
             .header("Pragma", "public")
-            .header("Cache-Control", "public")
+            .header(HttpHeaders.CACHE_CONTROL, "public")
             .build()
     }
 
     @GET
     @Path("favicon.ico")
-    @Operation(description = "Placeholder for favicon.ico")
-    fun getFavIcon(): Response = Response.noContent().build()
+    fun getFavIcon(): Response = Response.ok(ResourceLoader.asStream("favicon.ico"))
+        .header(HttpHeaders.CACHE_CONTROL, "public")
+        .build()
 
     @GET
     @Path("robots.txt")
     @Produces(MediaType.TEXT_PLAIN)
     @Operation(description = "Placeholder for robots.txt")
-    fun noRobots(): String = "User-agent: *\nDisallow: /\n"
+    fun noRobots(): String = "${HttpHeaders.USER_AGENT}: *\nDisallow: /\n"
 }
