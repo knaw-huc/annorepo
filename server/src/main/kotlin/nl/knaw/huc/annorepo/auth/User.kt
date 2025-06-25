@@ -9,7 +9,6 @@ abstract class User : Principal {
 }
 
 data class BasicUser(override var name: String) : User()
-data class SramUser(override var name: String, val record: Map<String, Any>) : User()
 
 data class SramUser(override var name: String, val record: Map<String, Any>) : User() {
     val sramGroups: List<String> = groups(record)
