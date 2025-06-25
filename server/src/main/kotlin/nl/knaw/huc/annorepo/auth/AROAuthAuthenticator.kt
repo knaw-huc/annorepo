@@ -13,13 +13,13 @@ class AROAuthAuthenticator(
 
     override fun authenticate(apiKey: String?): Optional<User> {
         logger.debug { "Received api-key $apiKey" }
-        val userForApiKey = userDAO.userForApiKey(apiKey)
-            ?: sramClient?.userForToken(apiKey)?.fold(
-                { error: SRAMClient.SramTokenError -> logger.info { error.message }; null },
+        val userForApiKey = userDAO.userForApiKey(apiKey) // check the internal db first for the api-key
+            ?: sramClient?.userForToken(apiKey)?.fold( // if we have an SRAMClient, check the apiKey there
+                { error: SRAMClient.SramTokenError -> logger.warn { error.message }; null },
                 { user: SramUser -> user }
             )
-            ?: openIDClient?.userForToken(apiKey)?.fold(
-                { error: OpenIDClient.OpenIDTokenError -> logger.info { error.message }; null },
+            ?: openIDClient?.userForToken(apiKey)?.fold(// if we have an OpenIdClient, check the apiKey there
+                { error: OpenIDClient.OpenIDTokenError -> logger.warn { error.message }; null },
                 { user: OpenIDUser -> user })
         logger.debug { "api-key matches user $userForApiKey" }
         return Optional.ofNullable(userForApiKey)
