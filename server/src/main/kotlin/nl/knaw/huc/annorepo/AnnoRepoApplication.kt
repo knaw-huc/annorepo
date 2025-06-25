@@ -33,6 +33,7 @@ import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.api.ARConst.EnvironmentVariable
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.auth.AROAuthAuthenticator
+import nl.knaw.huc.annorepo.auth.OpenIDClient
 import nl.knaw.huc.annorepo.auth.SRAMClient
 import nl.knaw.huc.annorepo.auth.UnauthenticatedAuthFilter
 import nl.knaw.huc.annorepo.auth.User
@@ -168,14 +169,20 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             }
             if (configuration.withAuthentication) {
                 register(AdminResource(userDAO))
-                val sramClient = if (configuration.sram != null) {
-                    SRAMClient(configuration.sram!!.applicationToken, configuration.sram!!.introspectUrl)
+                val sramClient =
+                    if (configuration.useSram()) {
+                        SRAMClient(configuration.sram!!.applicationToken, configuration.sram!!.introspectUrl)
+                    } else {
+                        null
+                    }
+                val openIDClient = if (configuration.useOpenID()) {
+                    OpenIDClient(configuration.openIDConfigurationUrl!!)
                 } else {
                     null
                 }
                 val cachingAuthenticator = CachingAuthenticator(
                     environment.metrics(),
-                    AROAuthAuthenticator(userDAO, sramClient),
+                    AROAuthAuthenticator(userDAO, sramClient, openIDClient),
                     configuration.authenticationCachePolicy
                 )
 

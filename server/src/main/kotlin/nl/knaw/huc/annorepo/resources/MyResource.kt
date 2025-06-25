@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.ResourcePaths.MY
 import nl.knaw.huc.annorepo.api.Role
+import nl.knaw.huc.annorepo.auth.OpenIDUser
 import nl.knaw.huc.annorepo.auth.RootUser
 import nl.knaw.huc.annorepo.auth.SramUser
 import nl.knaw.huc.annorepo.dao.ContainerDAO
@@ -114,6 +115,9 @@ class MyResource(
             )
             if (userPrincipal is SramUser) {
                 profile["sram_record"] = userPrincipal.record
+            }
+            if (userPrincipal is OpenIDUser) {
+                profile["oidc_user_info"] = userPrincipal.userInfo
             }
             Response.ok(profile).build()
         } else {

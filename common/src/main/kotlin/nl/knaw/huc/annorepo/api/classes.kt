@@ -23,6 +23,8 @@ data class AboutInfo(
     val startedAt: String,
     val baseURI: String,
     val withAuthentication: Boolean,
+    val withAuthenticationViaSRAM: Boolean,
+    val withAuthenticationViaOpenID: Boolean,
     val sourceCode: String = "https://github.com/knaw-huc/annorepo",
     val mongoVersion: String,
     val grpcHostName: String,

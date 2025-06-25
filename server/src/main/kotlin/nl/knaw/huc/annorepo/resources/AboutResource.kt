@@ -30,6 +30,8 @@ class AboutResource(
             startedAt = startedAt,
             baseURI = configuration.externalBaseUrl,
             withAuthentication = configuration.withAuthentication,
+            withAuthenticationViaSRAM = configuration.useSram(),
+            withAuthenticationViaOpenID = configuration.useOpenID(),
             mongoVersion = mongoVersionProducer.invoke(),
             grpcHostName = configuration.grpc.hostName,
             grpcPort = configuration.grpc.port

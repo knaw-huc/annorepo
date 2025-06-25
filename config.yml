@@ -46,6 +46,8 @@ grpc:
 
 sram:
   introspectUrl: https://sram.surf.nl/api/tokens/introspect
-  applicationToken: ${AR_APPLICATION_TOKEN}
+  applicationToken: ${AR_APPLICATION_TOKEN:-default-value}
+
+openIDConfigurationUrl: ${AR_OPENID_CONFIGURATION_URL:-default-value}
 
 authenticationCachePolicy: maximumSize=10000, expireAfterAccess=10m

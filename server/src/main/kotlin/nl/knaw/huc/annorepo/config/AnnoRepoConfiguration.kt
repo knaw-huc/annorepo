@@ -76,4 +76,15 @@ open class AnnoRepoConfiguration : JobConfiguration() {
     @NotNull
     @JsonProperty
     var authenticationCachePolicy: CaffeineSpec? = null
+
+    @Valid
+    @JsonProperty
+    var openIDConfigurationUrl: String? = null
+
+    fun useSram() = sram?.applicationToken != null
+            && sram?.applicationToken != "default-value"
+
+    fun useOpenID() = openIDConfigurationUrl != null
+            && openIDConfigurationUrl != "default-value"
+
 }
