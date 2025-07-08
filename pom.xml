@@ -8,7 +8,7 @@
 
     <groupId>io.github.knaw-huc</groupId>
     <artifactId>annorepo</artifactId>
-    <version>0.7.8-SNAPSHOT</version>
+    <version>0.7.10</version>
     <packaging>pom</packaging>
 
     <name>AnnoRepo</name>
@@ -43,7 +43,7 @@
         <dropwizard-swagger.version>4.0.5-1</dropwizard-swagger.version>
         <dropwizard.version>4.0.12</dropwizard.version>
         <grpc.kotlin.version>1.4.3</grpc.kotlin.version>
-        <grpc.version>1.72.0</grpc.version>
+        <grpc.version>1.73.0</grpc.version>
         <jackson-annotations.version>2.19.0</jackson-annotations.version>
         <jackson-databind.version>2.17.2</jackson-databind.version>
         <jackson-module-kotlin.version>2.19.0</jackson-module-kotlin.version>
@@ -61,7 +61,7 @@
         <mongodb.version>4.11.5</mongodb.version>
         <mordant.version>3.0.2</mordant.version>
         <problem.version>0.27.1</problem.version>
-        <protobuf.version>4.31.0</protobuf.version>
+        <protobuf.version>4.31.1</protobuf.version>
         <slf4j.version>2.0.13</slf4j.version>
         <swagger-annotations.version>1.6.6</swagger-annotations.version>
         <titanium-json-ld.version>1.6.0</titanium-json-ld.version>
