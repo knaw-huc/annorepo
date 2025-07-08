@@ -29,7 +29,7 @@ class CorsFilter : ContainerResponseFilter {
             "GET, POST, PUT, DELETE, OPTIONS, HEAD"
         )
         val additionalAllowedHeaders =
-            if (requestContext.uriInfo.requestUri.path.contains(ResourcePaths.W3C)) setOf("etag") else setOf()
+            if (requestContext.uriInfo.requestUri.path.contains(ResourcePaths.W3C)) setOf("if-match") else setOf()
         val allowedHeadersValue =
             (DEFAULT_ALLOWED_HEADERS + additionalAllowedHeaders)
                 .toList()
