@@ -14,7 +14,7 @@ Add the following to your `pom.xml`
 <dependency>
     <groupId>io.github.knaw-huc</groupId>
     <artifactId>annorepo-client</artifactId>
-    <version>0.7.9</version>
+    <version>0.7.10-SNAPSHOT</version>
 </dependency>
 ```
 
