@@ -133,11 +133,11 @@
             <type>pom</type>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>org.mongodb</groupId>-->
-<!--            <artifactId>mongodb-driver-reactivestreams</artifactId>-->
-<!--            <version>${mongodb.version}</version>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.mongodb</groupId>-->
+        <!--            <artifactId>mongodb-driver-reactivestreams</artifactId>-->
+        <!--            <version>${mongodb.version}</version>-->
+        <!--        </dependency>-->
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongodb-driver-kotlin-coroutine</artifactId>
@@ -273,6 +273,18 @@
             <groupId>org.skyscreamer</groupId>
             <artifactId>jsonassert</artifactId>
             <version>${jsonassert.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.github.nefilim.kjwt</groupId>
+            <artifactId>kjwt-core</artifactId>
+            <version>1.0.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.github.nefilim.kjwt</groupId>
+            <artifactId>kjwt-jwks</artifactId>
+            <version>1.0.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
