@@ -26,26 +26,29 @@
         </dependency>
 
         <dependency>
-            <groupId>com.github.ajalt.mordant</groupId>
-            <artifactId>mordant-jvm</artifactId>
-            <version>${mordant.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-cli-jvm</artifactId>
             <version>${kotlinx-cli-jvm.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.github.ajalt.mordant</groupId>
+            <artifactId>mordant-jvm</artifactId>
+            <version>${mordant.version}</version>
+        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>org.apache.logging.log4j</groupId>-->
+        <!--            <artifactId>log4j-core</artifactId>-->
+        <!--            <version>${log4j-core.version}</version>-->
+        <!--        </dependency>-->
+
+        <!--  test dependencies -->
+
+        <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api-kotlin</artifactId>
             <version>${log4j-api-kotlin.version}</version>
+            <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>${log4j-core.version}</version>
-        </dependency>
-
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -161,6 +164,17 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>${maven-dependency-plugin.version}</version>
+                <configuration>
+                    <usedDependencies>
+                        <dependency>org.junit.jupiter:junit-jupiter</dependency>
+                        <dependency>com.github.ajalt.mordant:mordant-jvm</dependency>
+                    </usedDependencies>
+                </configuration>
             </plugin>
 
         </plugins>
