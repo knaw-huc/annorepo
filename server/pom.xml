@@ -100,16 +100,16 @@
             <version>${titanium-json-ld.version}</version>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>org.mongodb</groupId>-->
-<!--            <artifactId>mongodb-driver-kotlin-coroutine</artifactId>-->
-<!--            <version>${mongodb.version}</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.mongodb</groupId>-->
-<!--            <artifactId>bson-kotlinx</artifactId>-->
-<!--            <version>${mongodb.version}</version>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.mongodb</groupId>-->
+        <!--            <artifactId>mongodb-driver-kotlin-coroutine</artifactId>-->
+        <!--            <version>${mongodb.version}</version>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.mongodb</groupId>-->
+        <!--            <artifactId>bson-kotlinx</artifactId>-->
+        <!--            <version>${mongodb.version}</version>-->
+        <!--        </dependency>-->
         <dependency>
             <groupId>org.litote.kmongo</groupId>
             <artifactId>kmongo-native</artifactId>
@@ -135,6 +135,18 @@
         </dependency>
 
         <!-- gRPC dependencies -->
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-netty</artifactId>
+            <version>${grpc.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-netty-shaded</artifactId>
+            <version>${grpc.version}</version>
+            <scope>runtime</scope>
+        </dependency>
         <!--        <dependency>-->
         <!--            <groupId>io.grpc</groupId>-->
         <!--            <artifactId>grpc-protobuf</artifactId>-->
@@ -144,18 +156,6 @@
         <!--            <groupId>io.grpc</groupId>-->
         <!--            <artifactId>grpc-kotlin-stub</artifactId>-->
         <!--            <version>${grpc.kotlin.version}</version>-->
-        <!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>io.grpc</groupId>-->
-<!--            <artifactId>grpc-netty</artifactId>-->
-<!--            <version>${grpc.version}</version>-->
-<!--            <scope>runtime</scope>-->
-<!--        </dependency>-->
-        <!--        <dependency>-->
-        <!--            <groupId>io.grpc</groupId>-->
-        <!--            <artifactId>grpc-netty-shaded</artifactId>-->
-        <!--            <version>${grpc.version}</version>-->
-        <!--            <scope>runtime</scope>-->
         <!--        </dependency>-->
 
         <!--        <dependency>-->
@@ -417,6 +417,8 @@
                         <dependency>org.apache.jena:apache-jena</dependency>
                         <dependency>org.junit.jupiter:junit-jupiter</dependency>
                         <dependency>org.litote.kmongo:kmongo-native</dependency>
+                        <dependency>io.grpc:grpc-netty</dependency>
+                        <dependency>io.grpc:grpc-netty-shaded</dependency>
                     </usedDependencies>
                 </configuration>
             </plugin>
