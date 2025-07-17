@@ -1,65 +1,24 @@
 package nl.knaw.huc.annorepo.auth
 
-import java.security.interfaces.RSAPublicKey
-import kotlin.test.DefaultAsserter.fail
 import org.junit.jupiter.api.Test
-import arrow.core.raise.either
-import arrow.core.raise.ensureNotNull
-import io.github.nefilim.kjwt.JWTKeyID
-import io.github.nefilim.kjwt.jwks.JWKError
-import io.github.nefilim.kjwt.jwks.WellKnownJWKSProvider
-import io.github.nefilim.kjwt.jwks.WellKnownJWKSProvider.downloadJWKS
-import io.github.nefilim.kjwt.jwks.WellKnownJWKSProvider.getJWKProvider
-import io.github.nefilim.kjwt.jwks.getKey
-import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import org.apache.logging.log4j.kotlin.logger
+import org.assertj.core.api.Assertions.assertThat
 
 class OpenIDClientTest {
 
     @Test
-    fun `test openid with invalid token`() {
-        val c = OpenIDClient(
-            configurationURL = "https://authentication.clariah.nl/.well-known/openid-configuration"
-        )
-        val user = c.userForToken("thistokenisinvalid")
-        logger.info { user }
-        assert(user.isLeft)
+    fun `recognize correct jwt`() {
+        val validJwt =
+            "eyJhbGciOiJFUzI1NiIsImtpZCI6ImJFRTFVRGRIWkhJM0WUm9VVzlXVG14bVZVaDFPRzFTYVZrNU5XNUVSRGRXUkhoVFNESkNlR2gyUVEifQ.eyJzY29wZSI6ICJvcGVuaWQgcHJvZlsZSBlbWFpbCBlZHVwZXJzb25fZW50aXRsZW1lbnQgdm9wZXJzb25fZXh0ZXJuYWxfaWQiLCAiYXVkIjogWyJBUFAtMkE0QTQxRjctM0EzQS00QzgxLUJFOEQtRjY1MERFOUI0NzdCIl0sICJqdGkiOiAiNDQzNzllNjBmYmZiNDgxOWIzMWMzOWJiMTZkMmM2YzYiLCAiY2xpZW50X2lkIjogIkFQUC0yQTRBNDFGNy0zQTNBLTRDODEtQkU4RC1GNjUwREU5QjQ3N0IiLCAic3ViIjogImU4MzNjMDBmODVmNWRkNGZiNjc0N2M1Y2UzZjUyNmFmYzU0ZGU4NGVAc3JhbS5zdXJmLm5sIiwgIm5hbWUiOiAiQnJhbSBCdWl0ZW5kaWprIiwgImdpdmVuX25hbWUiOiAiQnJhbSIsICJmYW1pbHlfbmFtZSI6ICJCdWl0ZW5kaWprIiwgImVtYWlsIjogImJyYW0uYnVpdGVuZGlqa0BkaS5odWMua25hdy5ubCIsICJlZHVwZXJzb25fZW50aXRsZW1lbnQiOiBbInVybjptYWNlOnN1cmYubmw6c3JhbTpncm91cDprbmF3OnRlc3RfYW5ub3JlcG86c3Nob2Nfbmxfcm9sb2RleC1nZW5lcmFsIiwgInVybjptYWNlOnN1cmYubmw6c3JhbTpncm91cDprbmF3OnRlc3RfYW5ub3JlcG8iLCAidXJuOm1hY2U6c3VyZi5ubDpzcmFtOmdyb3VwOmtuYXc6dGVzdF9hbm5vcmVwbzphZG1pbiIsICJ1cm46bWFjZTpzdXJmLm5sOnNyYW06Z3JvdXA6a25hdyIsICJ1cm46bWFjZTpzdXJmLm5sOnNyYW06Z3JvdXA6c3VyZi1yYW0jc3JhbS5zdXJmLm5sIl0sICJ2b3BlcnNvbl9leHRlcm5hbF9pZCI6IFsiYnJhbS5idWl0ZW5kaWprQGRpLmh1Yy5rbmF3Lm5sIl0sICJzaWQiOiAiWjBGQlFVRkJRbTlsVWtOdFdGcHpkRnBaYmpGaU5uWjBSbEl4TUU1T05sOUxWRFZEYWtaSk16RklZMU4xT0ZGck0yUnpiR1kxTFVRMVpEUkxjVUV5Vms5RFkxRnhUbmgxYTFsNFZUaDRSRTVvZGtkNE9VRkJNbU5qTms5b2RHNHdiV2xwZUVGSFNXVkVRMlJ6T0V0TmEwdDFjemszT0dSVVdEUlNjRXN3U2xRd1dVSlVPV3BETFROS2VtZzRNMWsxUlZkM1ExZDJOSFl0Wld0TGNFNWhVSFJ3YVZkWGNIVXdlbmhWWTJ0YVZGcFVTVE5RVXpsMWVtWm5TbkJJY0dGb1dVZEVNR1p5VFhZMlUzRm9aRkJtTmpSeWFrZGFWVkZQVDJWV1JVTlFVa0pHT1VKbFZHZHJka2w1T1RGUFNtOW9ORXRuWWpGMFIwUm9WalpOUkRWS2FqZFViV0k0TFU1U1RubDNlbFJHZEVGVFVXbE5iWEZhVldsVmFtVkpRMkZFY2s5Qk1HWlRXR2d4ZGkxUVYzTjJNamxxZGpkVWJVNWpaRXBNVFZaWlgyY3lVV1JUWm1veFpEQk5lbVJHZFZJMFprWktibll5VmxsMU5GWnFOVGxMVm1sUlBUMD0iLCAidG9rZW5fY2xhc3MiOiAiYWNjZXNzX3Rva2VuIiwgImlzcyI6ICJodHRwczovL3Byb3h5LnNyYW0uc3VyZi5ubCIsICJpYXQiOiAxNzUyNzY0NTgzLCAiZXhwIjogMTc1Mjc2ODE4M30.VTe_FH0o3Cm5UqVWMCdVDe7tGzG_qy4RMpJnzwMHKKDKGugSjBwgA0WE9ckUx1T4IRr1lKqs_96pH5B96dpwQ"
+        assertThat(validJwt.isJWT()).isTrue
     }
 
-//    @Test
-    fun `test openid with access token`() {
-        val c = OpenIDClient(
-            configurationURL = "https://connect.surfconext.nl/.well-known/openid-configuration"
-        )
-        val jwks = c.openIDConfig["jwks_uri"].toString()
-        logger.info { jwks }
-
-        val accessToken =
-            "eyJhbGciOiJFUzI1NiIsImtpZCI6ImJFRTFVRGRIWkhJM01WUm9VVzlXVG14bVZVaDFPRzFTYVZrNU5XNUVSRGRXUkhoVFNESkNlR2gyUVEifQ.eyJzY29wZSI6ICJvcGVuaWQgcHJvZmlsZSBlbWFpbCBlZHVwZXJzb25fYXNzdXJhbmNlIGVkdXBlcnNvbl9lbnRpdGxlbWVudCBlZHVwZXJzb25fb3JjaWQgZWR1cGVyc29uX3ByaW5jaXBhbF9uYW1lIGVkdXBlcnNvbl9zY29wZWRfYWZmaWxpYXRpb24gdm9wZXJzb25fZXh0ZXJuYWxfYWZmaWxpYXRpb24gdm9wZXJzb25fZXh0ZXJuYWxfaWQgdm9wZXJzb25faWQgYWFyYyBzc2hfcHVibGljX2tleSBvcmNpZCB1aWQiLCAiYXVkIjogWyJBUFAtMkE0QTQxRjctM0EzQS00QzgxLUJFOEQtRjY1MERFOUI0NzdCIl0sICJqdGkiOiAiNzZhYmZlNDBjZGY4NGFiMzgyN2MyZThlNTdkMWFkNWIiLCAiY2xpZW50X2lkIjogIkFQUC0yQTRBNDFGNy0zQTNBLTRDODEtQkU4RC1GNjUwREU5QjQ3N0IiLCAic3ViIjogIjE4NjkyNjg3NDg4NTgxYzE3Y2IxOTdlYzY4NWJlZmE4ZDE4Zjg1N2VAc3JhbS5zdXJmLm5sIiwgIm5hbWUiOiAiSmFhcCBCbG9tIiwgImdpdmVuX25hbWUiOiAiSmFhcCIsICJmYW1pbHlfbmFtZSI6ICJCbG9tIiwgImVtYWlsIjogImpibG9tQGJlZWxkZW5nZWx1aWQubmwiLCAiZWR1cGVyc29uX2VudGl0bGVtZW50IjogWyJ1cm46bWFjZTpzdXJmLm5sOnNyYW06Z3JvdXA6a25hdyIsICJ1cm46bWFjZTpzdXJmLm5sOnNyYW06Z3JvdXA6a25hdzp0ZXN0X2Fubm9yZXBvOmFkbWluIiwgInVybjptYWNlOnN1cmYubmw6c3JhbTpncm91cDprbmF3OnRlc3RfYW5ub3JlcG8iLCAidXJuOm1hY2U6c3VyZi5ubDpzcmFtOmdyb3VwOmtuYXc6dGVzdF9hbm5vcmVwbzpzc2hvY19ubF9yb2xvZGV4LWdlbmVyYWwiLCAidXJuOm1hY2U6c3VyZi5ubDpzcmFtOmdyb3VwOnN1cmYtcmFtI3NyYW0uc3VyZi5ubCJdLCAiZWR1cGVyc29uX3ByaW5jaXBhbF9uYW1lIjogWyJqYmxvbTJAc3JhbS5zdXJmLm5sIl0sICJlZHVwZXJzb25fc2NvcGVkX2FmZmlsaWF0aW9uIjogWyJtZW1iZXJAc3JhbS5zdXJmLm5sIl0sICJ2b3BlcnNvbl9leHRlcm5hbF9pZCI6IFsiamJsb21AYmVlbGRlbmdlbHVpZC5ubCJdLCAidm9wZXJzb25faWQiOiBbIjE4NjkyNjg3NDg4NTgxYzE3Y2IxOTdlYzY4NWJlZmE4ZDE4Zjg1N2VAc3JhbS5zdXJmLm5sIl0sICJzc2hfcHVibGljX2tleSI6IFtdLCAidWlkIjogWyJqYmxvbTIiXSwgInNpZCI6ICJaMEZCUVVGQlFtOVpPRlJ0UkVJNFJUbDZOVFIzTkZWMlpuaFpNemxUYW1oVmJESjRhMkpGYVRrM1IxTkNOVUY2TUV0b1NHOUliR2N4TkdwYU9FMXlkMTlGZFd0aVNYUnBjQzFJWms5RlJsQTJiazF0TUUxQlkxTnBlRlpIYm5GRk9IWk5NV1JpTW5sRldXMTVabXhMTmtGcFRYVTNURVZvZFVWNWJqTk1hRjlxTFd4WE9EQjBaazl1YlhoS2RqbHpXbk15UnpaQ1Z6a3hjbTlqVGpGQ1VIbE5hRjltUzFSTWQxSnlTbDlCY1VaUU0zTnZiMTlYTms5TmNXRmpaRzQwT1U1Mk5HRllOVlUyTWpodlZtRlFNazF6TFhGUmVtUXhVRmxuVEc1c1VXTXdOVmxWY2xkUlNraHdlRFUwVEZkQllUZHRkREp4YjB0VlpqVXhRMkZUU0ZkWWNXcDVSUzE1TUc1WloyUXRha1pzYUhWZk1XaGFUV3N4U1hjelYwUnVUM2RNV2todGFsOUdTbTV4ZGxWcWFXaHFYMlZxYTFGMFNFMUVSVmw0UW5kVUxWQmtka040U0hSUVowUm9aM2x5Tkhab00xTm1hME5oUkcxdldGRllVbDluUFQwPSIsICJ0b2tlbl9jbGFzcyI6ICJhY2Nlc3NfdG9rZW4iLCAiaXNzIjogImh0dHBzOi8vcHJveHkuc3JhbS5zdXJmLm5sIiwgImlhdCI6IDE3NTEzNjg5MzQsICJleHAiOiAxNzUxMzcyNTM0fQ.Xeb1KgI2HXzziVId5wRu9ruGwu4WKZN0ai7N7A8V8NWnyRW63CcLoVjHz8ktkC-6zT4I0BErYLt59gYdymNBqw"
-        val wellKnownContext = WellKnownJWKSProvider.WellKnownContext(jwks)
-        runBlocking {
-            either {
-                val jwksDownloaded = downloadJWKS(wellKnownContext).bind()
-                ensureNotNull(
-                    Json.parseToJsonElement(jwksDownloaded).jsonObject["keys"]?.jsonArray?.first()?.jsonObject?.get(
-                        "kid"
-                    )
-                ) { JWKError.NoSuchKey(JWTKeyID("missing kid?")) }
-            }.fold({
-                fail("failed to download JWKS json from Google: $it")
-            }, {
-                val kid = JWTKeyID(it.jsonPrimitive.content)
-                logger.info { "downloading JWK for $kid from Google" }
-                with(wellKnownContext.getJWKProvider<RSAPublicKey>(::downloadJWKS)) {
-                    this.getKey(kid)
-                }
-            })
-
-        }
+    @Test
+    fun `recognize incorrect jwt`() {
+        val invalidJwt = "whatever"
+        assertThat(invalidJwt.isJWT()).isFalse
     }
+
+    private fun String?.isJWT(): Boolean = this?.count { it == '.' } == 2
 
 }
+

@@ -51,20 +51,23 @@
         <jakarta.ws.rs-api.version>4.0.0</jakarta.ws.rs-api.version>
         <jaxb-api.version>2.3.1</jaxb-api.version>
         <jena.version>4.10.0</jena.version>
+        <jjwt.version>0.12.6</jjwt.version>
         <json.version>20231013</json.version>
         <kmongo.version>4.11.0</kmongo.version>
         <kotlinx-cli-jvm.version>0.3.6</kotlinx-cli-jvm.version>
         <kotlinx-coroutines-core.version>1.10.2</kotlinx-coroutines-core.version>
-        <log4j.version>1.2.17</log4j.version>
         <log4j-api-kotlin.version>1.5.0</log4j-api-kotlin.version>
         <log4j-core.version>2.23.1</log4j-core.version>
+        <log4j.version>1.2.17</log4j.version>
         <mongodb.version>4.11.5</mongodb.version>
         <mordant.version>3.0.2</mordant.version>
+        <nimbus-jose-jwt.version>10.3</nimbus-jose-jwt.version>
         <problem.version>0.27.1</problem.version>
         <protobuf.version>4.31.1</protobuf.version>
         <slf4j.version>2.0.13</slf4j.version>
         <swagger-annotations.version>1.6.6</swagger-annotations.version>
         <titanium-json-ld.version>1.6.0</titanium-json-ld.version>
+
 
         <!-- test dependencies -->
         <assertj-core.version>3.26.3</assertj-core.version>
