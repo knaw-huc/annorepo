@@ -57,7 +57,7 @@
         <kotlinx-coroutines-core.version>1.10.2</kotlinx-coroutines-core.version>
         <log4j.version>1.2.17</log4j.version>
         <log4j-api-kotlin.version>1.5.0</log4j-api-kotlin.version>
-        <log4j-core.version>2.23.1</log4j-core.version>
+        <log4j-core.version>2.25.0</log4j-core.version>
         <mongodb.version>4.11.5</mongodb.version>
         <mordant.version>3.0.2</mordant.version>
         <problem.version>0.27.1</problem.version>
