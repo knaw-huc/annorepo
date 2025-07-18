@@ -41,11 +41,6 @@ open class AnnoRepoConfiguration : JobConfiguration() {
     var rangeSelectorType = "urn:republic:TextAnchorSelector"
 
     @Valid
-    @JsonProperty
-    var withAuthentication: Boolean = false
-
-
-    @Valid
     @NotNull
     @JsonProperty("swagger")
     val swaggerBundleConfiguration = SwaggerBundleConfiguration().apply {
@@ -66,5 +61,7 @@ open class AnnoRepoConfiguration : JobConfiguration() {
     @Valid
     @JsonProperty
     var authentication: AuthenticationConfiguration? = null
+
+    val withAuthentication = authentication != null
 
 }

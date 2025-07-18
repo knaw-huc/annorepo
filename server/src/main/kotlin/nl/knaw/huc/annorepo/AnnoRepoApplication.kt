@@ -167,26 +167,26 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             if (configuration.prettyPrint) {
                 register(JSONPrettyPrintFilter())
             }
-            if (configuration.withAuthentication) {
+            configuration.authentication?.let { authConf ->
                 register(AdminResource(userDAO))
                 val sramClient =
-                    configuration.authentication?.sram?.let { sram ->
+                    authConf.sram?.let { sram ->
                         SRAMClient(
                             sram.applicationToken,
                             sram.introspectUrl
                         )
                     }
-                val openIDClients = configuration.authentication?.oidc?.map { oidc ->
+                val openIDClients = authConf.oidc.map { oidc ->
                     OpenIDClient(
                         oidc.serverUrl,
                         requiredIssuer = oidc.requiredIssuer,
                         requiredAudience = oidc.requiredAudience
                     )
-                } ?: listOf()
+                }
                 val cachingAuthenticator = CachingAuthenticator(
                     environment.metrics(),
                     AROAuthAuthenticator(userDAO, sramClient, openIDClients),
-                    configuration.authentication?.cachePolicy
+                    authConf.cachePolicy
                 )
 
                 val oauthFilter = OAuthCredentialAuthFilter.Builder<User>()
