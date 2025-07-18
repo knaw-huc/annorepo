@@ -37,12 +37,12 @@ install-client: .make/install-client
 .PHONY: run-server-with-auth
 run-server-with-auth: build-server
 	@make start-mongodb
-	AR_WITH_AUTHENTICATION=true AR_ROOT_API_KEY=root java -jar server/target/annorepo-server-$(call version_fn).jar server config.yml
+	AR_ROOT_API_KEY=root java -jar server/target/annorepo-server-$(call version_fn).jar server config.yml
 
 .PHONY: run-server-without-auth
 run-server-without-auth: build-server
 	@make start-mongodb
-	AR_WITH_AUTHENTICATION=false java -jar server/target/annorepo-server-$(call version_fn).jar server config.yml
+	java -jar server/target/annorepo-server-$(call version_fn).jar server config-no-auth.yml
 
 .PHONY: run-env
 run-env: build-server

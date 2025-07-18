@@ -11,13 +11,11 @@ object ARConst {
         AR_DB_NAME,
         AR_PAGE_SIZE,
         AR_ROOT_API_KEY,
-        AR_WITH_AUTHENTICATION,
         AR_PRETTY_PRINT,
         AR_RANGE_SELECTOR_TYPE,
         AR_GRPC_HOSTNAME,
         AR_GRPC_PORT,
-        AR_APPLICATION_TOKEN,
-        AR_OPENID_CONFIGURATION_URL
+        AR_APPLICATION_TOKEN
     }
 
     const val ANNOTATION_MEDIA_TYPE = """application/ld+json;profile="$ANNO_JSONLD_URL""""

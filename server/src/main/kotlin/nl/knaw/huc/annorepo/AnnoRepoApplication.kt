@@ -178,7 +178,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
                     }
                 val openIDClients = authConf.oidc.map { oidc ->
                     OpenIDClient(
-                        oidc.serverUrl,
+                        oidc.serverUrl + "/.well-known/openid-configuration",
                         requiredIssuer = oidc.requiredIssuer,
                         requiredAudience = oidc.requiredAudience
                     )

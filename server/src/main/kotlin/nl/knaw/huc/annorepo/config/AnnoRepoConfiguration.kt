@@ -62,6 +62,7 @@ open class AnnoRepoConfiguration : JobConfiguration() {
     @JsonProperty
     var authentication: AuthenticationConfiguration? = null
 
-    val withAuthentication = authentication != null
+    val withAuthentication: Boolean
+        get() = authentication != null
 
 }
