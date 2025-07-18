@@ -2,7 +2,6 @@ package nl.knaw.huc.annorepo.config
 
 import jakarta.validation.Valid
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.github.benmanes.caffeine.cache.CaffeineSpec
 import io.dropwizard.jobs.JobConfiguration
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration
 import org.jetbrains.annotations.NotNull
@@ -45,14 +44,6 @@ open class AnnoRepoConfiguration : JobConfiguration() {
     @JsonProperty
     var withAuthentication: Boolean = false
 
-    @Valid
-    @JsonProperty
-    var sram: SramConfiguration? = null
-
-    @Valid
-    @NotNull
-    @JsonProperty
-    var rootApiKey: String = "YouIntSeenMeRoit"
 
     @Valid
     @NotNull
@@ -73,18 +64,7 @@ open class AnnoRepoConfiguration : JobConfiguration() {
     var grpc: GrpcFactory = GrpcFactory()
 
     @Valid
-    @NotNull
     @JsonProperty
-    var authenticationCachePolicy: CaffeineSpec? = null
-
-    @Valid
-    @JsonProperty
-    var openIDConfigurationUrl: String? = null
-
-    fun useSram() = sram?.applicationToken != null
-            && sram?.applicationToken != "default-value"
-
-    fun useOpenID() = openIDConfigurationUrl != null
-            && openIDConfigurationUrl != "default-value"
+    var authentication: AuthenticationConfiguration? = null
 
 }

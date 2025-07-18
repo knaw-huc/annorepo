@@ -8,7 +8,7 @@ import nl.knaw.huc.annorepo.dao.UserDAO
 class AROAuthAuthenticator(
     private val userDAO: UserDAO,
     private val sramClient: SRAMClient? = null,
-    private val openIDClient: OpenIDClient? = null
+    private val openIDClients: List<OpenIDClient> = listOf()
 ) : Authenticator<String, User> {
 
     override fun authenticate(apiKey: String?): Optional<User> {
@@ -18,9 +18,14 @@ class AROAuthAuthenticator(
                 { error: SRAMClient.SramTokenError -> logger.warn { error.message }; null },
                 { user: SramUser -> user }
             )
-            ?: openIDClient?.userForToken(apiKey)?.fold(// if we have an OpenIdClient, check the apiKey there
-                { error: OpenIDClient.OpenIDTokenError -> logger.warn { error.message }; null },
-                { user: OpenIDUser -> user })
+            ?: openIDClients // if we have OpenIdClients, check the apiKey there
+                .asSequence()
+                .map { it.userForToken(apiKey) }
+                .firstOrNull { it.isRight() }
+                ?.fold(
+                    { error: OpenIDClient.OpenIDTokenError -> logger.warn { error.message }; null },
+                    { user: OpenIDUser -> user }
+                )
         logger.debug { "api-key matches user $userForApiKey" }
         return Optional.ofNullable(userForApiKey)
     }

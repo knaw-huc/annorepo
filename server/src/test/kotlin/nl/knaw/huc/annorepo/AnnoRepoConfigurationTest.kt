@@ -16,6 +16,7 @@ class AnnoRepoConfigurationTest {
         val c = AnnoRepoConfiguration()
         logger.info { c.externalBaseUrl }
         assertThat(c).isNotNull
+        logger.info { c }
     }
 
     @OptIn(ExperimentalStdlibApi::class)

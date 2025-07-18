@@ -170,20 +170,23 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             if (configuration.withAuthentication) {
                 register(AdminResource(userDAO))
                 val sramClient =
-                    if (configuration.useSram()) {
-                        SRAMClient(configuration.sram!!.applicationToken, configuration.sram!!.introspectUrl)
-                    } else {
-                        null
+                    configuration.authentication?.sram?.let { sram ->
+                        SRAMClient(
+                            sram.applicationToken,
+                            sram.introspectUrl
+                        )
                     }
-                val openIDClient = if (configuration.useOpenID()) {
-                    OpenIDClient(configuration.openIDConfigurationUrl!!)
-                } else {
-                    null
-                }
+                val openIDClients = configuration.authentication?.oidc?.map { oidc ->
+                    OpenIDClient(
+                        oidc.serverUrl,
+                        requiredIssuer = oidc.requiredIssuer,
+                        requiredAudience = oidc.requiredAudience
+                    )
+                } ?: listOf()
                 val cachingAuthenticator = CachingAuthenticator(
                     environment.metrics(),
-                    AROAuthAuthenticator(userDAO, sramClient, openIDClient),
-                    configuration.authenticationCachePolicy
+                    AROAuthAuthenticator(userDAO, sramClient, openIDClients),
+                    configuration.authentication?.cachePolicy
                 )
 
                 val oauthFilter = OAuthCredentialAuthFilter.Builder<User>()

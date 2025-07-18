@@ -26,9 +26,6 @@ databaseName: ${AR_DB_NAME:-annorepo}
 
 rangeSelectorType: ${AR_RANGE_SELECTOR_TYPE:-urn:republic:TextAnchorSelector}
 
-withAuthentication: ${AR_WITH_AUTHENTICATION:-false}
-rootApiKey: ${AR_ROOT_API_KEY:-thisdefaultapikeyisunsafesochangeitplease}
-
 logging:
   level: INFO
   loggers:
@@ -44,10 +41,14 @@ grpc:
   hostname: ${AR_GRPC_HOSTNAME:-localhost}
   port: ${AR_GRPC_PORT:-8000}
 
-sram:
-  introspectUrl: https://sram.surf.nl/api/tokens/introspect
-  applicationToken: ${AR_APPLICATION_TOKEN:-default-value}
-
-openIDConfigurationUrl: ${AR_OPENID_CONFIGURATION_URL:-default-value}
-
-authenticationCachePolicy: maximumSize=10000, expireAfterAccess=10m
+authentication:
+  rootApiKey: ${AR_ROOT_API_KEY:-thisdefaultapikeyisunsafesochangeitplease}
+  oidc:
+    - serverUrl: https://authentication.clariah.nl
+    - serverUrl: https://proxy.sram.surf.nl
+      requiredIssuer: https://proxy.sram.surf.nl
+      requiredAudience: APP-2A4A41F7-3A3A-4C81-BE8D-F650DE9B477B
+  sram:
+    introspectUrl: https://sram.surf.nl/api/tokens/introspect
+    applicationToken: ${AR_APPLICATION_TOKEN:-default-value}
+  cachePolicy: maximumSize=10000, expireAfterAccess=10m

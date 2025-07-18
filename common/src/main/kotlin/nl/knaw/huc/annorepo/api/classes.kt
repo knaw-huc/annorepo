@@ -23,12 +23,11 @@ data class AboutInfo(
     val startedAt: String,
     val baseURI: String,
     val withAuthentication: Boolean,
-    val withAuthenticationViaSRAM: Boolean,
-    val withAuthenticationViaOpenID: Boolean,
     val sourceCode: String = "https://github.com/knaw-huc/annorepo",
     val mongoVersion: String,
     val grpcHostName: String,
-    val grpcPort: Int
+    val grpcPort: Int,
+    val authentication: Map<String, Any>
 )
 
 data class AnnotationIdentifier(
