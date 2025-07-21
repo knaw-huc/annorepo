@@ -9,7 +9,7 @@ class AuthenticationConfiguration {
     var cachePolicy: CaffeineSpec? = null
 
     fun toMap(): Map<String, Any> {
-        val map = mutableMapOf<String, Any>()
+        val map = mutableMapOf<String, Any>("internal" to "api-keys")
         if (oidc.isNotEmpty()) {
             map.put("oidc", oidc.map { it.toMap() })
         }
@@ -44,7 +44,7 @@ class SramConfiguration {
             map.put("introspectUrl", introspectUrl)
         }
         if (applicationToken.isNotEmpty()) {
-            map.put("applicationToken", applicationToken)
+            map.put("applicationToken", "✅")
         }
         return map.toMap()
     }
