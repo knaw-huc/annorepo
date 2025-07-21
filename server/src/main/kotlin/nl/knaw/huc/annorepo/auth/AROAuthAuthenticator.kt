@@ -15,7 +15,7 @@ class AROAuthAuthenticator(
         logger.debug { "Received api-key $apiKey" }
         val userForApiKey = userDAO.userForApiKey(apiKey) // check the internal db first for the api-key
             ?: sramClient?.userForToken(apiKey)?.fold( // if we have an SRAMClient, check the apiKey there
-                { error: SRAMClient.SramTokenError -> logger.warn { error.message }; null },
+                { error: SRAMClient.SramTokenError -> /*logger.warn { error.message };*/ null },
                 { user: SramUser -> user }
             )
             ?: openIDClients // if we have OpenIdClients, check the apiKey there
@@ -23,7 +23,7 @@ class AROAuthAuthenticator(
                 .map { it.userForToken(apiKey) }
                 .firstOrNull { it.isRight() }
                 ?.fold(
-                    { error: OpenIDClient.OpenIDTokenError -> logger.warn { error.message }; null },
+                    { error: OpenIDClient.OpenIDTokenError -> /*logger.warn { error.message };*/ null },
                     { user: OpenIDUser -> user }
                 )
         logger.debug { "api-key matches user $userForApiKey" }

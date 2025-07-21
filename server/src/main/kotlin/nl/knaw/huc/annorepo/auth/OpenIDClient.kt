@@ -82,11 +82,10 @@ class OpenIDClient(configurationURL: String, val requiredIssuer: String? = null,
         private fun String?.isJWT(): Boolean = this?.count { it == '.' } == 2
 
         class MyKeyLocator(val jwksUrl: URL) : LocatorAdapter<Key>() {
-            public override fun locate(jwsHeader: JwsHeader): Key? {
-                val publicKeys = JWKSet.load(jwksUrl)
-                val jwk = publicKeys.getKeyByKeyId(jwsHeader.keyId)
-                return (jwk as AsymmetricJWK).toPublicKey()
-            }
+            public override fun locate(jwsHeader: JwsHeader): Key? =
+                JWKSet.load(jwksUrl)
+                    .getKeyByKeyId(jwsHeader.keyId)
+                    ?.let { (it as AsymmetricJWK).toPublicKey() }
         }
 
         fun getOpenIDConfiguration(openIdConfigurationURL: String): Map<String, Any> {

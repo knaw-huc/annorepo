@@ -167,6 +167,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             if (configuration.prettyPrint) {
                 register(JSONPrettyPrintFilter())
             }
+
             configuration.authentication?.let { authConf ->
                 register(AdminResource(userDAO))
                 val sramClient =
