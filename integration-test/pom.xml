@@ -7,12 +7,12 @@
     <parent>
         <groupId>io.github.knaw-huc</groupId>
         <artifactId>annorepo</artifactId>
-        <version>0.7.11-SNAPSHOT</version>
+        <version>0.8.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>annorepo-integration-test</artifactId>
     <name>${project.groupId}:${project.artifactId}</name>
-    <version>0.7.11-SNAPSHOT</version>
+    <version>0.8.1-SNAPSHOT</version>
 
     <properties>
         <mainClass>nl.knaw.huc.annorepo.integration.IntegrationTest</mainClass>
@@ -34,6 +34,16 @@
             <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-cli-jvm</artifactId>
             <version>${kotlinx-cli-jvm.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api-kotlin</artifactId>
+            <version>${log4j-api-kotlin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>${log4j-core.version}</version>
         </dependency>
 
         <dependency>

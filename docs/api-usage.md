@@ -797,6 +797,21 @@ example:
 }
 ```
 
+##### `and` query
+
+Using the `:and` query construction, you can match annotations with all of the given list of _field query_ s
+
+example:
+
+```
+{
+  ":and": [
+    { "motivation": "classifying" },
+    { "body.type": "Entity" }
+  ]
+}
+```
+
 
 #### Response
 

@@ -17,7 +17,7 @@
     <parent>
         <groupId>io.github.knaw-huc</groupId>
         <artifactId>annorepo</artifactId>
-        <version>0.7.11-SNAPSHOT</version>
+        <version>0.8.1-SNAPSHOT</version>
     </parent>
 
     <dependencyManagement>
@@ -123,7 +123,20 @@
             <version>${json-unit-assertj.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api-kotlin</artifactId>
+            <version>${log4j-api-kotlin.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>${log4j-core.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
+
     <build>
         <plugins>
             <plugin>

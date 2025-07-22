@@ -8,7 +8,7 @@
 
     <groupId>io.github.knaw-huc</groupId>
     <artifactId>annorepo</artifactId>
-    <version>0.7.11-SNAPSHOT</version>
+    <version>0.8.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>AnnoRepo</name>
@@ -26,7 +26,7 @@
         <!-- Timestamp settings for use in properties file -->
         <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ss'Z'</maven.build.timestamp.format>
 
-        <kotlin.version>2.1.21</kotlin.version>
+        <kotlin.version>2.2.0</kotlin.version>
         <kotlin.code.style>official</kotlin.code.style>
         <java.version>17</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
@@ -44,9 +44,9 @@
         <dropwizard.version>4.0.12</dropwizard.version>
         <grpc.kotlin.version>1.4.3</grpc.kotlin.version>
         <grpc.version>1.73.0</grpc.version>
-        <jackson-annotations.version>2.19.0</jackson-annotations.version>
+        <jackson-annotations.version>2.19.1</jackson-annotations.version>
         <jackson-databind.version>2.17.2</jackson-databind.version>
-        <jackson-module-kotlin.version>2.19.0</jackson-module-kotlin.version>
+        <jackson-module-kotlin.version>2.19.1</jackson-module-kotlin.version>
         <jakarta.json.version>2.0.1</jakarta.json.version>
         <jakarta.ws.rs-api.version>4.0.0</jakarta.ws.rs-api.version>
         <jaxb-api.version>2.3.1</jaxb-api.version>
@@ -94,6 +94,7 @@
         <os-maven-plugin.version>1.7.0</os-maven-plugin.version>
         <protobuf-maven-plugin.version>0.6.1</protobuf-maven-plugin.version>
         <wagon-ssh.version>3.4.3</wagon-ssh.version>
+        <sonatype-plugin.version>0.8.0</sonatype-plugin.version>
     </properties>
 
     <dependencies>
@@ -253,17 +254,14 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>${nexus-staging-maven-plugin.version}</version>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>${sonatype-plugin.version}</version>
                         <extensions>true</extensions>
                         <configuration>
-                            <serverId>ossrh</serverId>
-                            <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
-                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                            <publishingServerId>central</publishingServerId>
                         </configuration>
                     </plugin>
-
                     <plugin>
                         <artifactId>maven-source-plugin</artifactId>
                         <version>${maven-source-plugin.version}</version>
