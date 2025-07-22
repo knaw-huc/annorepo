@@ -17,7 +17,11 @@ import org.glassfish.jersey.client.filter.EncodingFilter
 import org.glassfish.jersey.message.GZipEncoder
 import nl.knaw.huc.annorepo.api.optional
 
-class OpenIDClient(configurationURL: String, val requiredIssuer: String? = null, val requiredAudience: String? = null) {
+class OpenIDClient(
+    configurationURL: String,
+    val requiredIssuer: String? = null,
+    val requiredAudiences: List<String>? = null
+) {
     val openIDConfig = getOpenIDConfiguration(configurationURL)
 
     fun userForToken(token: String?): Either<OpenIDTokenError, OpenIDUser> =
@@ -54,10 +58,17 @@ class OpenIDClient(configurationURL: String, val requiredIssuer: String? = null,
         val jwks = openIDConfig["jwks_uri"].toString()
         val keyLocator = MyKeyLocator(URL(jwks))
         try {
-            val claims = Jwts.parser()
+            val initialBuilder = Jwts.parser()
                 .keyLocator(keyLocator)
                 .requireIssuer(requiredIssuer)
-                .requireAudience(requiredAudience)
+
+            val claimsBuilder = if (requiredAudiences != null) {
+                requiredAudiences.fold(initialBuilder) { builder, audience -> builder.requireAudience(audience) }
+            } else {
+                initialBuilder
+            }
+
+            val claims = claimsBuilder
                 .build()
                 .parseSignedClaims(jwt)
                 .payload

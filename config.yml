@@ -44,11 +44,14 @@ grpc:
 authentication:
   rootApiKey: ${AR_ROOT_API_KEY:-thisdefaultapikeyisunsafesochangeitplease}
   cachePolicy: maximumSize=10000, expireAfterAccess=10m
-#  oidc:
-#    - serverUrl: https://authentication.clariah.nl
-#    - serverUrl: https://proxy.sram.surf.nl
-#      requiredIssuer: https://proxy.sram.surf.nl
-#      requiredAudience: APP-2A4A41F7-3A3A-4C81-BE8D-F650DE9B477B
-#  sram:
-#    introspectUrl: https://sram.surf.nl/api/tokens/introspect
-#    applicationToken: ${AR_APPLICATION_TOKEN:-default-value}
+  oidc:
+    - name: clariah
+      serverUrl: https://authentication.clariah.nl
+    - name: sram
+      serverUrl: https://proxy.sram.surf.nl
+      requiredIssuer: https://proxy.sram.surf.nl
+      requiredAudiences:
+        - APP-2A4A41F7-3A3A-4C81-BE8D-F650DE9B477B
+  sram:
+    introspectUrl: https://sram.surf.nl/api/tokens/introspect
+    applicationToken: ${AR_APPLICATION_TOKEN:-default-value}

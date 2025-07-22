@@ -181,7 +181,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
                     OpenIDClient(
                         oidc.serverUrl + "/.well-known/openid-configuration",
                         requiredIssuer = oidc.requiredIssuer,
-                        requiredAudience = oidc.requiredAudience
+                        requiredAudiences = oidc.requiredAudiences
                     )
                 }
                 val cachingAuthenticator = CachingAuthenticator(
