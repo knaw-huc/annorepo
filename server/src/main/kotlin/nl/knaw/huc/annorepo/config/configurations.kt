@@ -29,7 +29,7 @@ class OIDCConfiguration {
             map.put("serverUrl", serverUrl)
         }
         requiredIssuer?.let { map.put("requiredIssuer", it) }
-        requiredAudience?.let { map.put("requiredAudience", it) }
+        requiredAudience?.let { map.put("requiredAudience", "✅") }
         return map.toMap()
     }
 }
