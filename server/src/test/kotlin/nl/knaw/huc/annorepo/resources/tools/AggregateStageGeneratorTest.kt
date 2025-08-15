@@ -331,6 +331,58 @@ class AggregateStageGeneratorTest {
     }
 
     @Test
+    fun `special field matching - and`() {
+        val asg = AggregateStageGenerator(config)
+        val key = AND
+        val value = arrayOf(mapOf("body.type" to "Page"), mapOf("body.subtype" to "Line"))
+        val stage = asg.generateStage(key, value)
+        logger.info(stage)
+        logger.info(stage.json)
+        val expected = """
+            {
+                "@match": {
+                    "@and": [
+                        { "annotation.body.type": "Page"}, 
+                        { "annotation.body.subtype": "Line"} 
+                    ]
+                }
+            }
+            """.trimIndent()
+            .replace('@', '$')
+        assertThatJson(stage.json).isEqualTo(expected)
+    }
+
+    @Test
+    fun `special field matching - nested and, or`() {
+        val asg = AggregateStageGenerator(config)
+        val key = AND
+        val or1 = mapOf(OR to arrayOf(mapOf("body.type" to "Page"), mapOf("body.type" to "Line")))
+        val or2 = mapOf(OR to arrayOf(mapOf("body.size" to 42), mapOf("body.size" to 24)))
+        val value = arrayOf(or1, or2)
+        val stage = asg.generateStage(key, value)
+        logger.info(stage)
+        logger.info(stage.json)
+        val expected = """
+            {
+                "@match": {
+                    "@and": [
+                        { "@or": [
+                            { "annotation.body.type": "Page"}, 
+                            { "annotation.body.type": "Line"}
+                        ]},
+                        { "@or": [
+                            { "annotation.body.size": 42}, 
+                            { "annotation.body.size": 24}
+                        ]}
+                    ]
+                }
+            }
+            """.trimIndent()
+            .replace('@', '$')
+        assertThatJson(stage.json).isEqualTo(expected)
+    }
+
+    @Test
     fun `handle all parts of the value map`() {
         val asg = AggregateStageGenerator(config)
         val key = "body.metadata.sessionYear"

@@ -3,7 +3,7 @@ package nl.knaw.huc.annorepo.resources.tools
 import jakarta.json.JsonNumber
 import jakarta.json.JsonString
 import jakarta.ws.rs.BadRequestException
-import com.mongodb.client.model.Aggregates
+import com.mongodb.client.model.Aggregates.match
 import com.mongodb.client.model.Filters
 import org.apache.logging.log4j.kotlin.logger
 import org.bson.conversions.Bson
@@ -14,7 +14,8 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
     fun generateStage(key: Any, value: Any): Bson =
         when (key) {
             !is String -> throw BadRequestException("Unexpected field: '$key' ; query root fields should be strings")
-            OR -> either(value)
+            OR -> match(either(value))
+            AND -> match(all(value))
             WITHIN_RANGE -> withinRangeStage(value)
             OVERLAPPING_WITH_RANGE -> overlappingWithRangeStage(value)
             else -> {
@@ -22,7 +23,7 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
                     throw BadRequestException("Unknown query function: '$key'")
                 } else {
                     logger.debug { "key=$key, value=$value (${value.javaClass})" }
-                    Aggregates.match(fieldMatchStage(key, value))
+                    match(fieldMatchStage(key, value))
                 }
             }
         }
@@ -30,14 +31,31 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
     private fun either(value: Any): Bson =
         try {
             val valueAsList = (value as Array<*>).toList()
-            Aggregates.match(Filters.or(valueAsList.flatMap { it.asAggregate() }))
+            Filters.or(valueAsList.flatMap { it.asAggregate() })
         } catch (e: ClassCastException) {
             throw BadRequestException("The value for $OR must be a list")
         }
 
+    private fun all(value: Any): Bson =
+        try {
+            val valueAsList = (value as Array<*>).toList()
+            Filters.and(valueAsList.flatMap { it.asAggregate() })
+        } catch (e: ClassCastException) {
+            throw BadRequestException("The value for $AND must be a list")
+        }
+
     private fun Any?.asAggregate(): List<Bson> =
         when (this) {
-            is Map<*, *> -> map { (k, v) -> fieldMatchStage(k!! as String, v!!) }
+            is Map<*, *> -> map { (key, value) ->
+                when (key) {
+                    OR -> either(value!!)
+                    AND -> all(value!!)
+                    WITHIN_RANGE -> withinRangeStage(value!!)
+                    OVERLAPPING_WITH_RANGE -> overlappingWithRangeStage(value!!)
+                    else -> fieldMatchStage(key!! as String, value!!)
+                }
+            }
+
             else -> throw BadRequestException("Unexpected value: expected $this to be a field: value subquery")
         }
 
@@ -99,7 +117,7 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
         when (rawParameters) {
             is Map<*, *> -> {
                 val rangeParameters = rangeParameters(rawParameters)
-                Aggregates.match(
+                match(
                     Filters.elemMatch(
                         "${ANNOTATION_FIELD_PREFIX}target",
                         Filters.and(
@@ -120,7 +138,7 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
         when (rawParameters) {
             is Map<*, *> -> {
                 val rangeParameters = rangeParameters(rawParameters)
-                Aggregates.match(
+                match(
                     Filters.elemMatch(
                         "${ANNOTATION_FIELD_PREFIX}target",
                         Filters.and(

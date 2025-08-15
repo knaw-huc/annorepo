@@ -195,11 +195,12 @@ help:
 	@echo "  docker-run                - to start the server app in docker"
 	@echo "  docker-stop               - to stop the server app in docker"
 	@echo
-	@echo "  docker-image              - to build the docker image of the app"
-	@echo "  push                      - to push the linux/amd64 docker image to registry.diginfra.net"
+	@echo "  docker-image              - to build the docker image of the app (¹)"
+	@echo "  push                      - to push the linux/amd64 docker image to registry.diginfra.net (¹)"
 	@echo
 	@echo "  version-update            - to update the project version"
 	@echo "  dokka                     - to generate dokka html"
 	@echo "  deploy                    - to deploy annorepo-client and annorepo-common"
 	@echo "  release                   - to create a new release on github + deploy the new client"
 	@echo
+	@echo "¹) for test purposes only, the public docker image is built by github actions upon a release"
