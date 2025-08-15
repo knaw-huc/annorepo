@@ -68,7 +68,6 @@
         <swagger-annotations.version>1.6.6</swagger-annotations.version>
         <titanium-json-ld.version>1.6.0</titanium-json-ld.version>
 
-
         <!-- test dependencies -->
         <assertj-core.version>3.26.3</assertj-core.version>
         <h2.version>2.2.224</h2.version>
@@ -96,8 +95,8 @@
         <nexus-staging-maven-plugin.version>1.6.13</nexus-staging-maven-plugin.version>
         <os-maven-plugin.version>1.7.0</os-maven-plugin.version>
         <protobuf-maven-plugin.version>0.6.1</protobuf-maven-plugin.version>
-        <wagon-ssh.version>3.4.3</wagon-ssh.version>
         <sonatype-plugin.version>0.8.0</sonatype-plugin.version>
+        <wagon-ssh.version>3.4.3</wagon-ssh.version>
     </properties>
 
     <dependencies>
