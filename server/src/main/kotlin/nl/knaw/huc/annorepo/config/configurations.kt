@@ -18,7 +18,7 @@ class AuthenticationConfiguration {
     fun toMap(): Map<String, Any> {
         val map = mutableMapOf<String, Any>("internal" to "api-keys")
         if (oidc.isNotEmpty()) {
-            map.put("oidc", oidc.map { it.toMap() })
+            map["oidc"] = oidc.map { it.toMap() }
         }
         sram?.let { map.put("sram", it.toMap()) }
         return map.toMap()
