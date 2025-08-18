@@ -11,3 +11,14 @@ fun String.isValidAnnotationName(): Boolean {
 }
 
 fun String.isValidContainerName(): Boolean = isValidAnnotationName()
+
+@Suppress("UNCHECKED_CAST")
+fun <T> Map<String, Any>.getNestedValue(key: String): T? {
+    val keyParts = key.split(".")
+    var value: Any? = this[keyParts.first()]
+
+    for (k in keyParts.drop(1)) {
+        value = (value as? Map<*, *>)?.get(k) ?: return null
+    }
+    return value as? T
+}

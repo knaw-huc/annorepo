@@ -26,7 +26,7 @@ class ARUserDAO(
 
     private val mdb = mongoClient.getDatabase(configuration.databaseName)
     private val userCollection = mdb.getCollection(USER_COLLECTION)
-    private val rootApiKey = configuration.rootApiKey
+    private val rootApiKey = configuration.authentication?.rootApiKey
 
     init {
         val apiKeyIndex = Indexes.hashed(FIELD_API_KEY)
@@ -38,7 +38,7 @@ class ARUserDAO(
     override fun userForApiKey(apiKey: String?): User? =
         when (apiKey) {
             null -> null
-            configuration.rootApiKey -> RootUser()
+            configuration.authentication?.rootApiKey -> RootUser()
             else -> {
                 val doc = userCollection.find(Document(FIELD_API_KEY, apiKey)).first()
                 if (doc == null) {
@@ -89,6 +89,11 @@ class ARUserDAO(
             .map { d -> UserEntry(userName = d.getString(FIELD_USER_NAME), apiKey = d.getString(FIELD_API_KEY)) }
             .toList()
     }
+
+    override fun allGroupNames(): List<String> {
+        TODO("Not yet implemented")
+    }
+
 
     override fun deleteUsersByName(userNames: Collection<String>): Boolean =
         userCollection

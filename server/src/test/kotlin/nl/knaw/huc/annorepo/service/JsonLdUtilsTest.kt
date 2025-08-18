@@ -174,7 +174,7 @@ class JsonLdUtilsTest {
         model.write(System.out, "TTL")
         println()
         val g: DatasetGraph = DatasetFactory.wrap(model).asDatasetGraph()
-        val ctx = JsonLDWriteContext()
+        val ctx = JsonLDWriteContext() // deprecated, but no replacement in 4.10.0
         ctx.setFrame("""{"@type":"http://www.w3.org/ns/oa#Annotation"}""")
         RDFWriter.create()
             .format(RDFFormat.JSONLD_PRETTY)

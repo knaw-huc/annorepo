@@ -40,20 +40,3 @@ admin:
 grpc:
   hostname: ${AR_GRPC_HOSTNAME:-localhost}
   port: ${AR_GRPC_PORT:-8000}
-
-authentication:
-  rootApiKey: ${AR_ROOT_API_KEY:-thisdefaultapikeyisunsafesochangeitplease}
-  cachePolicy: maximumSize=10000, expireAfterAccess=10m
-  oidc:
-    - name: clariah
-      serverUrl: https://authentication.clariah.nl
-    - name: sram
-      serverUrl: https://proxy.sram.surf.nl
-      requiredIssuer: https://proxy.sram.surf.nl
-      requiredAudiences:
-        - APP-F7D636B9-43EA-40AC-969A-30DB3835AB0D
-        - APP-CC6F5005-1C14-4F5F-B419-03B37F41FBE4
-        - APP-185925EB-3820-4342-8A9F-ACE81305D1DF
-  sram:
-    introspectUrl: https://sram.surf.nl/api/tokens/introspect
-    applicationToken: ${AR_APPLICATION_TOKEN:-default-value}

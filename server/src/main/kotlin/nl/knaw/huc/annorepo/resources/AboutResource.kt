@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation
 import nl.knaw.huc.annorepo.api.AboutInfo
 import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
+import nl.knaw.huc.annorepo.config.AuthenticationConfiguration
 
 @Path(ResourcePaths.ABOUT)
 @Produces(MediaType.APPLICATION_JSON)
@@ -32,9 +33,13 @@ class AboutResource(
             withAuthentication = configuration.withAuthentication,
             mongoVersion = mongoVersionProducer.invoke(),
             grpcHostName = configuration.grpc.hostName,
-            grpcPort = configuration.grpc.port
+            grpcPort = configuration.grpc.port,
+            authentication = authenticationMap(configuration.authentication)
         )
     }
+
+    private fun authenticationMap(authentication: AuthenticationConfiguration?): Map<String, Any> =
+        authentication?.toMap() ?: mapOf()
 
 //    @GET
 //    @Path("x")

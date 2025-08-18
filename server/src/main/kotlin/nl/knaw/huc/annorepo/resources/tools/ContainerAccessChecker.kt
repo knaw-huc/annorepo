@@ -4,6 +4,7 @@ import java.security.Principal
 import jakarta.ws.rs.NotAuthorizedException
 import nl.knaw.huc.annorepo.api.Role
 import nl.knaw.huc.annorepo.auth.RootUser
+import nl.knaw.huc.annorepo.auth.SramUser
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
 
 class ContainerAccessChecker(private val containerUserDAO: ContainerUserDAO) {
@@ -41,6 +42,15 @@ class ContainerAccessChecker(private val containerUserDAO: ContainerUserDAO) {
             val role = containerUserDAO.getUserRole(containerName, userName)
             if (role in rolesWithAccessRights) {
                 return
+            }
+
+            if (userPrincipal is SramUser) {
+                userPrincipal.sramGroups.forEach {
+                    val groupRole = containerUserDAO.getUserRole(containerName, it)
+                    if (groupRole in rolesWithAccessRights) {
+                        return
+                    }
+                }
             }
             throw NotAuthorizedException("User $userName does not have access rights to this endpoint")
         }

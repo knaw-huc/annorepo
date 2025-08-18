@@ -3,6 +3,7 @@ package nl.knaw.huc.annorepo.resources
 import java.util.TreeMap
 import jakarta.annotation.security.PermitAll
 import jakarta.ws.rs.GET
+import jakarta.ws.rs.NotAuthorizedException
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
@@ -17,7 +18,9 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.ResourcePaths.MY
 import nl.knaw.huc.annorepo.api.Role
+import nl.knaw.huc.annorepo.auth.OpenIDUser
 import nl.knaw.huc.annorepo.auth.RootUser
+import nl.knaw.huc.annorepo.auth.SramUser
 import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.dao.ContainerUserDAO
 import nl.knaw.huc.annorepo.resources.tools.Flag
@@ -59,7 +62,17 @@ class MyResource(
                 mapOf(Role.GUEST.name to containersReadOnlyForAnonymous.map(containerNameMapper))
             } else {
                 val userName = context.userPrincipal.name
-                val userRoles = containerUserDAO.getUserRoles(userName)
+                val userRoles = when (val user = context.userPrincipal) {
+                    is SramUser -> {
+                        user.sramGroups
+                            .toMutableList()
+                            .apply { add(userName) }
+                            .flatMap { containerUserDAO.getUserRoles(it) }
+                            .toSet()
+                    }
+
+                    else -> containerUserDAO.getUserRoles(userName)
+                }
                 val containerUsersGroupedByRole = userRoles.groupBy { it.role }
                 val containerNamesGroupedByRole: TreeMap<String, MutableList<String>> = TreeMap()
                 for (role in containerUsersGroupedByRole.keys.sorted()) {
@@ -85,5 +98,31 @@ class MyResource(
         }
     }
 
+    @Operation(description = "Show profile data about the authenticated user")
+    @Timed
+    @GET
+    @Path("profile")
+    fun getUserProfile(@Context context: SecurityContext): Response {
+        val userPrincipal = context.userPrincipal
+        return if (userPrincipal is RootUser) {
+            val profile = mapOf(
+                "user" to "root"
+            )
+            Response.ok(profile).build()
+        } else if (userPrincipal != null) {
+            val profile: MutableMap<String, Any> = mutableMapOf(
+                "user" to userPrincipal.name
+            )
+            if (userPrincipal is SramUser) {
+                profile["sram_record"] = userPrincipal.record
+            }
+            if (userPrincipal is OpenIDUser) {
+                profile["oidc_user_info"] = userPrincipal.userInfo
+            }
+            Response.ok(profile).build()
+        } else {
+            throw NotAuthorizedException("No user found for this api key")
+        }
+    }
 }
 

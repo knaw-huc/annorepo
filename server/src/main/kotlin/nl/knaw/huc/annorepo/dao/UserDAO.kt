@@ -9,5 +9,6 @@ interface UserDAO {
     fun addUserEntries(userEntries: List<UserEntry>): UserAddResults
     fun allUserEntries(): List<UserEntry>
     fun deleteUsersByName(userNames: Collection<String>): Boolean
+    fun allGroupNames(): List<String>
 }
 

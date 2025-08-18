@@ -43,6 +43,16 @@ class AdminResource(
         return Response.ok(users).build()
     }
 
+    @Operation(description = "Get the names of the groups with the ability to create containers")
+    @Timed
+    @GET
+    @Path("groups")
+    fun getGroups(@Context context: SecurityContext): Response {
+        assertUserIsRoot(context)
+        val groups = userDAO.allGroupNames()
+        return Response.ok(groups).build()
+    }
+
     @Operation(description = "Add a user")
     @Timed
     @POST

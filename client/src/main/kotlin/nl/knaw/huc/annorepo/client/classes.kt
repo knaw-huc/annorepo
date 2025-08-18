@@ -153,6 +153,11 @@ sealed class ARResult {
         val containers: Map<String, List<String>>
     ) : ARResult()
 
+    data class MyProfileResult(
+        override val response: Response,
+        val profile: Map<String, Any>
+    ) : ARResult()
+
     data class FilterContainerAnnotationsResult(
         override val response: Response,
         val queryId: String,

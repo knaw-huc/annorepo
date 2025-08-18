@@ -11,6 +11,7 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Indexes
 import io.dropwizard.auth.AuthDynamicFeature
+import io.dropwizard.auth.CachingAuthenticator
 import io.dropwizard.auth.chained.ChainedAuthFilter
 import io.dropwizard.auth.oauth.OAuthCredentialAuthFilter
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor
@@ -32,6 +33,8 @@ import nl.knaw.huc.annorepo.api.ARConst.CONTAINER_METADATA_COLLECTION
 import nl.knaw.huc.annorepo.api.ARConst.EnvironmentVariable
 import nl.knaw.huc.annorepo.api.ContainerMetadata
 import nl.knaw.huc.annorepo.auth.AROAuthAuthenticator
+import nl.knaw.huc.annorepo.auth.OpenIDClient
+import nl.knaw.huc.annorepo.auth.SRAMClient
 import nl.knaw.huc.annorepo.auth.UnauthenticatedAuthFilter
 import nl.knaw.huc.annorepo.auth.User
 import nl.knaw.huc.annorepo.cli.EnvCommand
@@ -164,10 +167,31 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
             if (configuration.prettyPrint) {
                 register(JSONPrettyPrintFilter())
             }
-            if (configuration.withAuthentication) {
+
+            configuration.authentication?.let { authConf ->
                 register(AdminResource(userDAO))
+                val sramClient =
+                    authConf.sram?.let { sram ->
+                        SRAMClient(
+                            sram.applicationToken,
+                            sram.introspectUrl
+                        )
+                    }
+                val openIDClients = authConf.oidc.map { oidc ->
+                    OpenIDClient(
+                        oidc.serverUrl + "/.well-known/openid-configuration",
+                        requiredIssuer = oidc.requiredIssuer,
+                        requiredAudiences = oidc.requiredAudiences
+                    )
+                }
+                val cachingAuthenticator = CachingAuthenticator(
+                    environment.metrics(),
+                    AROAuthAuthenticator(userDAO, sramClient, openIDClients),
+                    authConf.cachePolicy
+                )
+
                 val oauthFilter = OAuthCredentialAuthFilter.Builder<User>()
-                    .setAuthenticator(AROAuthAuthenticator(userDAO))
+                    .setAuthenticator(cachingAuthenticator)
                     .setPrefix("Bearer")
                     .buildAuthFilter()
                 val anonymousFilter = UnauthenticatedAuthFilter<User>()

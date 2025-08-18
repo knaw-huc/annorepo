@@ -47,6 +47,7 @@ import nl.knaw.huc.annorepo.api.ResourcePaths.INDEXES
 import nl.knaw.huc.annorepo.api.ResourcePaths.INFO
 import nl.knaw.huc.annorepo.api.ResourcePaths.METADATA
 import nl.knaw.huc.annorepo.api.ResourcePaths.MY
+import nl.knaw.huc.annorepo.api.ResourcePaths.PROFILE
 import nl.knaw.huc.annorepo.api.ResourcePaths.READ_ONLY_FOR_ANONYMOUS
 import nl.knaw.huc.annorepo.api.ResourcePaths.SEARCH
 import nl.knaw.huc.annorepo.api.ResourcePaths.SETTINGS
@@ -80,6 +81,7 @@ import nl.knaw.huc.annorepo.client.ARResult.GetSearchInfoResult
 import nl.knaw.huc.annorepo.client.ARResult.GetSearchResultPageResult
 import nl.knaw.huc.annorepo.client.ARResult.ListIndexesResult
 import nl.knaw.huc.annorepo.client.ARResult.MyContainersResult
+import nl.knaw.huc.annorepo.client.ARResult.MyProfileResult
 import nl.knaw.huc.annorepo.client.ARResult.SetAnonymousUserReadAccessResult
 import nl.knaw.huc.annorepo.client.ARResult.UsersResult
 import nl.knaw.huc.annorepo.client.RequestError.ConnectionError
@@ -947,6 +949,25 @@ class AnnoRepoClient @JvmOverloads constructor(
                     MyContainersResult(
                         response = response,
                         containers = accessibleContainers
+                    )
+                )
+            })
+    )
+
+    /**
+     * Get the user profile
+     *
+     * @return Either<RequestError, MyProfileResult>
+     */
+    fun getMyProfile(): Either<RequestError, MyProfileResult> = doGet(
+        request = webTarget.path(MY).path(PROFILE).request(),
+        responseHandlers = mapOf(
+            Response.Status.OK to { response ->
+                val json = response.readEntityAsJsonString()
+                Either.Right(
+                    MyProfileResult(
+                        response = response,
+                        profile = oMapper.readValue(json, object : TypeReference<Map<String, Any>>() {})
                     )
                 )
             })
