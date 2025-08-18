@@ -9,6 +9,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.ibm.asyncutil.util.Either
 import org.glassfish.jersey.client.filter.EncodingFilter
 import org.glassfish.jersey.message.GZipEncoder
+import nl.knaw.huc.annorepo.api.getNestedValue
 
 class SRAMClient(private val applicationToken: String, private val sramIntrospectUrl: String) {
 
@@ -27,7 +28,9 @@ class SRAMClient(private val applicationToken: String, private val sramIntrospec
                 val responseEntity: Map<String, Any> = oMapper.readValue(entityAsJson)
                 when (val status = responseEntity["status"]?.toString()) {
                     "token-valid" -> {
-                        val userName = responseEntity["username"]?.toString() ?: ":no-username:"
+                        val userName = responseEntity.getNestedValue<String>("user.email")
+                            ?: responseEntity["username"]?.toString()
+                            ?: ":no-username:"
                         return Either.right(SramUser(name = userName, record = responseEntity))
                     }
 
