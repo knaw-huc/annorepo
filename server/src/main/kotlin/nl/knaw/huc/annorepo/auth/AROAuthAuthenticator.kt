@@ -15,18 +15,23 @@ class AROAuthAuthenticator(
         logger.debug { "Received api-key $apiKey" }
         val userForApiKey = userDAO.userForApiKey(apiKey) // check the internal db first for the api-key
             ?: sramClient?.userForToken(apiKey)?.fold( // if we have an SRAMClient, check the apiKey there
-                { error: SRAMClient.SramTokenError -> /*logger.warn { error.message };*/ null },
-                { user: SramUser -> user }
+                { error: SRAMClient.SramTokenError -> logger.debug { "Checking the api-key with the SRAM client failed with: " + error.message }; null },
+                { user: SramUser -> logger.debug { "Checking the api-key with the SRAM client succeeded" }; user }
             )
             ?: openIDClients // if we have OpenIdClients, check the apiKey there
                 .asSequence()
-                .map { it.userForToken(apiKey) }
+                .map {
+                    val userForToken = it.userForToken(apiKey)
+                    val msgPrefix = "Checking the api-key with OIDC client '${it.name}'"
+                    userForToken.fold(
+                        { e -> logger.debug { "$msgPrefix failed with: ${e.message}" } },
+                        { u -> logger.debug { "$msgPrefix succeeded" } }
+                    )
+                    userForToken
+                }
                 .firstOrNull { it.isRight() }
-                ?.fold(
-                    { error: OpenIDClient.OpenIDTokenError -> /*logger.warn { error.message };*/ null },
-                    { user: OpenIDUser -> user }
-                )
-        logger.debug { "api-key matches user $userForApiKey" }
+                ?.getOrNull()
+        logger.debug { "api-key matches user ${userForApiKey ?: "anonymous"}" }
         return Optional.ofNullable(userForApiKey)
     }
 
