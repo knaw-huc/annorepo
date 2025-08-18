@@ -51,9 +51,8 @@ authentication:
       serverUrl: https://proxy.sram.surf.nl
       requiredIssuer: https://proxy.sram.surf.nl
       requiredAudiences:
-        - APP-F7D636B9-43EA-40AC-969A-30DB3835AB0D
-        - APP-CC6F5005-1C14-4F5F-B419-03B37F41FBE4
-        - APP-185925EB-3820-4342-8A9F-ACE81305D1DF
+        - APP-2A4A41F7-3A3A-4C81-BE8D-F650DE9B477B # rolodex API SRAM app
+        - APP-FBEF5A19-DA73-43BE-B007-4602A9845DAA # rolodex browser extensie SRAM app
   sram:
-    introspectUrl: https://sram.surf.nl/api/tokens/introspect
-    applicationToken: ${AR_APPLICATION_TOKEN:-default-value}
+      introspectUrl: https://sram.surf.nl/api/tokens/introspect
+      applicationToken: ${AR_APPLICATION_TOKEN:-default-value}
