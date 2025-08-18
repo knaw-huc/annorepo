@@ -77,6 +77,7 @@ docker-image: .make/.docker
 
 .PHONY: push
 push:   clean build-server .make/.push-server .make/.push-updater
+	@make browse-registry
 
 .PHONY: clean
 clean:
@@ -170,6 +171,10 @@ git-pull:
 	@echo
 	git checkout $(current_branch)
 
+.PHONY: browse-registry
+browse-registry:
+	@open "https://registry.diginfra.net/browser/repo/tt/annorepo?sort_tags_by=version&sort_tags_order=desc"
+
 .PHONY: help
 help:
 	@echo "make-tools for $(TAG)"
@@ -197,10 +202,11 @@ help:
 	@echo
 	@echo "  docker-image              - to build the docker image of the app (¹)"
 	@echo "  push                      - to push the linux/amd64 docker image to registry.diginfra.net (¹)"
+	@echo "  browse-registry           - to open the registry.diginfra.net registry browser"
 	@echo
 	@echo "  version-update            - to update the project version"
 	@echo "  dokka                     - to generate dokka html"
 	@echo "  deploy                    - to deploy annorepo-client and annorepo-common"
-	@echo "  release                   - to create a new release on github + deploy the new client"
+	@#echo "  release                   - to create a new release on github + deploy the new client"
 	@echo
 	@echo "¹) for test purposes only, the public docker image is built by github actions upon a release"
