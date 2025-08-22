@@ -68,7 +68,7 @@ Docker images are available from ghcr.io:
 
 ## Configuring
 
-From version `0.8.0`, enabling authentication/authorization will be done by using either `config-with-auth.yml` or `config-without-auth.yml` 
+From version `0.8.0`, enabling authentication/authorization is done by using either `config-with-auth.yml` or `config-without-auth.yml` 
 These config files have some values that can be overridden by setting `AR_` environment variables:
 
 | environment variable   | default value                             | purpose                                                                                            |
@@ -97,15 +97,15 @@ From version `0.8.0`, there are 3 ways for a api-users to identify themselves:
 
 In the `authentication:` setting in the config, this requires the `rootApiKey:` to be set, since it's the root user that will initially have to add users and their api-keys 
 
-### using tokens from OIDC servers
+### using OpenId ID tokens from registered OIDC servers
 
 In the `authentication:` setting in the config, add the `oidc:` setting, with a list of the oidc servers you want to use for authentication.
 Each oidc-server has the following config settings:
 
 - `name` (optional) - the name of this oidc config. For display purposes only
 - `serverUrl` (required) - the URL of the OIDC server to use. This server should have [a `/.well-known/openid-configuration` endpoint](https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfig)
-- `requiredIssuer` (optional) - the `requiredIsssuer` value that should be encoded in the OIDC token.
-- `requiredAudiences` (optional) - a list of `requiredAudience` values, at least one of which should be encoded in the OIDC token.
+- `requiredIssuer` (optional) - the `iss` value that should be encoded in [the ID token](https://openid.net/specs/openid-connect-core-1_0.html#IDToken).
+- `requiredAudiences` (optional) - a list of `aud` values, at least one of which should be encoded in [the ID token](https://openid.net/specs/openid-connect-core-1_0.html#IDToken).
 
 
 ### using access tokens from [SURF Research Access Management (SRAM)](https://servicedesk.surf.nl/wiki/spaces/IAM/pages/74226073/SURF+Research+Access+Management)
