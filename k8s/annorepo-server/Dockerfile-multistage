@@ -6,7 +6,7 @@ COPY ./client /build/client
 COPY ./common /build/common
 COPY ./integration-test /build/integration-test
 COPY ./pom.xml /build/
-COPY ./config.yml config.yml
+COPY ./k8s/annorepo-server/config.yml config.yml
 RUN mvn --projects server --no-transfer-progress --batch-mode --update-snapshots --also-make package
 
 FROM openjdk:24-ea-18-jdk-oraclelinux8
@@ -14,6 +14,6 @@ FROM openjdk:24-ea-18-jdk-oraclelinux8
 WORKDIR /apps/annorepo
 COPY --from=builder /build/server/target/annorepo-server-*.jar /apps/annorepo/annorepo-server.jar
 COPY ./k8s/annorepo-server/entrypoint.sh entrypoint.sh
-COPY ./config.yml config.yml
+COPY ./k8s/annorepo-server/config.yml config.yml
 EXPOSE 8080
 ENTRYPOINT ["./entrypoint.sh"]

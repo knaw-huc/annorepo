@@ -67,8 +67,14 @@ that in a way similar to that used by [elucidate](https://github.com/dlcs/elucid
 
 - Authentication is done by adding an `Authorization` header to the request:
   ``` 
-  Authorization: Bearer {apiKey}
+  Authorization: Bearer {token}
   ```
+  
+    where `token` is either:
+  
+    - an `api-key` assigned to a registered annorepo user (See [Add users](#add-users-))
+    - an OpenID ID Token (JWT) from one of the OIDC servers configured in the `authentication/oidc` settings
+    - an SRAM application token 
 
 - Endpoints marked with 🔒🔒 are only available when the server was started with authentication enabled, and require root
   authentication.

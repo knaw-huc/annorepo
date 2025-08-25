@@ -1,0 +1,47 @@
+server:
+  applicationConnectors:
+    - type: http
+      port: ${AR_SERVER_PORT:-8080}
+  gzip:
+    enabled: true
+    includedMethods:
+      - GET
+      - PUT
+      - POST
+  requestLog:
+    appenders:
+      - type: console
+        filterFactories:
+          - type: uri
+            uris:
+              - "/healthcheck"
+
+externalBaseUrl: ${AR_EXTERNAL_BASE_URL:-http://localhost:8080}
+
+pageSize: ${AR_PAGE_SIZE:-100}
+prettyPrint: ${AR_PRETTY_PRINT:-true}
+
+mongodbURL: ${AR_MONGODB_URL:-mongodb://localhost/}
+databaseName: ${AR_DB_NAME:-annorepo}
+
+rangeSelectorType: ${AR_RANGE_SELECTOR_TYPE:-urn:republic:TextAnchorSelector}
+
+logging:
+  level: INFO
+  loggers:
+    nl.knaw.huc: DEBUG
+    org: WARN
+    org.glassfish: ERROR
+
+admin:
+  tasks:
+    printStackTraceOnError: true
+
+grpc:
+  hostname: ${AR_GRPC_HOSTNAME:-localhost}
+  port: ${AR_GRPC_PORT:-8000}
+
+authentication:
+  rootApiKey: ${AR_ROOT_API_KEY:-thisdefaultapikeyisunsafesochangeitplease}
+  cachePolicy: maximumSize=10000, expireAfterAccess=10m
+
