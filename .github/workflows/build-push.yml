@@ -1,13 +1,13 @@
 name: build-image
 
-on: push
-#  push:
-#    tags:
-#      - '*'
-#      - '**'
-#  release:
-#    types: [ published ]
-#  workflow_dispatch:
+on:
+  push:
+    tags:
+      - '*'
+      - '**'
+  release:
+    types: [ published ]
+  workflow_dispatch:
 
 env:
   REGISTRY_FQDN: ghcr.io
@@ -47,7 +47,7 @@ jobs:
         with:
           file: ${{ env.SERVER_IMAGE_FILE }}
           labels: ${{ steps.meta.outputs.labels }}
-          tags: 0.8.0
+          tags: ${{ steps.meta.outputs.tags }}
           push: true
 
       - name: Extract metadata (tags, labels) for Docker (updater)
@@ -61,5 +61,5 @@ jobs:
         with:
           file: ${{ env.UPDATER_IMAGE_FILE }}
           labels: ${{ steps.meta-updater.outputs.labels }}
-          tags: 0.8.0
+          tags: ${{ steps.meta-updater.outputs.tags }}
           push: true
