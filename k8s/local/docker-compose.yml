@@ -8,13 +8,14 @@ services:
       - AR_MONGODB_URL=mongodb://annorepo_mongodb/
       - AR_DB_NAME=annorepo
       - AR_PAGE_SIZE=100
+      - AR_ROOT_API_KEY=root
     expose:
       - 2021
       - 9999
     ports:
       - "2021:8080"
       - "9999:8081"
-    image: ghcr.io/knaw-huc/annorepo-server:v0.7.5
+    image: annorepo:0.8.0
     networks:
       - annorepo_network
     restart: unless-stopped
@@ -33,18 +34,6 @@ services:
     tty: true
     volumes:
       - annorepo_mongodb_data:/data/db:rw
-
-#  annorepo_updater:
-#    container_name: annorepo_updater
-#    depends_on:
-#      - annorepo_server
-#    environment:
-#      - AR_ADMIN_BACKEND=http://annorepo_server:8081
-#    image: annorepo-updater
-#    networks:
-#      - annorepo_network
-#    restart: "no"
-#    tty: true
 
 networks:
   annorepo_network:
