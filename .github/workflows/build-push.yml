@@ -1,13 +1,13 @@
 name: build-image
 
-on:
-  push:
-    tags:
-      - '*'
-      - '**'
+on: push
+#  push:
+#    tags:
+#      - '*'
+#      - '**'
 #  release:
 #    types: [ published ]
-  workflow_dispatch:
+#  workflow_dispatch:
 
 env:
   REGISTRY_FQDN: ghcr.io
