@@ -1,5 +1,5 @@
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
-[![Stability: Experimental](https://masterminds.github.io/stability/experimental.svg)](https://masterminds.github.io/stability/experimental.html)
+[![Stability: Active](https://masterminds.github.io/stability/active.svg)](https://masterminds.github.io/stability/active.html)
 [![Build Status](https://github.com/HuygensING/hyper-collate/workflows/tests/badge.svg)](https://github.com/knaw-huc/annorepo/actions)
 ![GitHub language count](https://img.shields.io/github/languages/count/knaw-huc/annorepo)
 ![GitHub](https://img.shields.io/github/license/knaw-huc/annorepo)
