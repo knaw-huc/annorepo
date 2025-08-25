@@ -1,6 +1,6 @@
 name: build-image
 
-on: push
+on:
 #  push:
 #    tags:
 #      - '*'
@@ -47,7 +47,7 @@ jobs:
         with:
           file: ${{ env.SERVER_IMAGE_FILE }}
           labels: ${{ steps.meta.outputs.labels }}
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: 0.8.0
           push: true
 
       - name: Extract metadata (tags, labels) for Docker (updater)
@@ -61,5 +61,5 @@ jobs:
         with:
           file: ${{ env.UPDATER_IMAGE_FILE }}
           labels: ${{ steps.meta-updater.outputs.labels }}
-          tags: ${{ steps.meta-updater.outputs.tags }}
+          tags: 0.8.0
           push: true
