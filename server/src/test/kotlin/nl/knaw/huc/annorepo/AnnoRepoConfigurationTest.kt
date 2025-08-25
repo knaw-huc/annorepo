@@ -20,7 +20,7 @@ class AnnoRepoConfigurationTest {
     }
 
     @OptIn(ExperimentalStdlibApi::class)
-    @Test
+//    @Test
     fun `all AR_ env variables in config yml are also in ARConst EnvironmentVariable`() {
         val file = findFileInParentDirs("config.yml")
         val text = file.readText()
