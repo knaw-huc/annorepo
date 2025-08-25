@@ -1,6 +1,6 @@
 name: build-image
 
-on:
+on: push
 #  push:
 #    tags:
 #      - '*'
