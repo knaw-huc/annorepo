@@ -22,7 +22,7 @@ class AnnoRepoConfigurationTest {
     @OptIn(ExperimentalStdlibApi::class)
     @Test
     fun `all AR_ env variables in config yml are also in ARConst EnvironmentVariable`() {
-        val file = findFileInParentDirs("config-with-auth.yml")
+        val file = findFileInParentDirs("config.yml")
         val text = file.readText()
         val re = Regex("AR_[A-Z0-9_]+")
         val definedEnvs = ARConst.EnvironmentVariable.entries.map { it.name }.toSet()
