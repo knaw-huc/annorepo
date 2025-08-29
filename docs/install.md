@@ -95,7 +95,8 @@ From version `0.8.0`, there are 3 ways for a api-users to identify themselves:
 
 ### using annorepo-internal user/api-key combinations
 
-In the `authentication:` setting in the config, this requires the `rootApiKey:` to be set, since it's the root user that will initially have to add users and their api-keys 
+In the `authentication:` setting in the config, this requires the `rootApiKey:` to be set, since it's the root user that will initially have to add users and their api-keys
+This is also the default setting for the docker image.
 
 ### using OpenId ID tokens from registered OIDC servers
 
@@ -115,5 +116,6 @@ with the following config settings:
 
 - `introspectUrl` - the `introspect` endpoint URL for the SRAM server, typically https://sram.surf.nl/api/tokens/introspect
 - `applicationToken` - the [User introspection token](https://servicedesk.surf.nl/wiki/spaces/IAM/pages/74226123/Connect+a+token-based+application) assigned to this annorepo server instance.
+
 
 ## [API Usage](api-usage.md)
