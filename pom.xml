@@ -63,7 +63,7 @@
         <mordant.version>3.0.2</mordant.version>
         <nimbus-jose-jwt.version>10.4.1</nimbus-jose-jwt.version>
         <problem.version>0.27.1</problem.version>
-        <protobuf.version>4.31.1</protobuf.version>
+        <protobuf.version>4.32.0</protobuf.version>
         <slf4j.version>2.0.13</slf4j.version>
         <swagger-annotations.version>1.6.6</swagger-annotations.version>
         <titanium-json-ld.version>1.6.0</titanium-json-ld.version>
