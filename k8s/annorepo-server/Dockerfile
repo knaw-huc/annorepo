@@ -1,4 +1,4 @@
-FROM openjdk:25-ea-33-jdk-oraclelinux8
+FROM openjdk:25-rc-jdk-slim-trixie
 
 RUN microdnf update && \
     microdnf install -y curl && \
