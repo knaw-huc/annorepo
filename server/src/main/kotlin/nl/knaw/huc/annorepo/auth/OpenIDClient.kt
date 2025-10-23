@@ -29,37 +29,43 @@ class OpenIDClient(
 ) {
     val openIDConfig = getOpenIDConfiguration(configurationURL)
 
-    fun userForToken(token: String?): Either<OpenIDTokenError, OpenIDUser> =
+    fun userForToken(token: String?): Either<OpenIDError, OpenIDUser> =
         if (token.isJWT()) userForJWT(token) else userForAccessToken(token)
 
-    private fun userForAccessToken(token: String?): Either<OpenIDTokenError, OpenIDUser> {
+    private fun userForAccessToken(token: String?): Either<OpenIDError, OpenIDUser> {
         val webTarget: WebTarget = ClientBuilder.newClient().apply {
             register(GZipEncoder::class.java)
             register(EncodingFilter::class.java)
         }.target(openIDConfig["userinfo_endpoint"].toString())
-        val response = webTarget.request().header("Authorization", "Bearer $token").get()
-        val entityAsJson = response.readEntity(String::class.java)
-        val responseEntity: Map<String, Any> = oMapper.readValue(entityAsJson)
-        when (response.status) {
-            200 -> {
-                val userName =
-                    responseEntity["email"]?.toString()
-                        ?: responseEntity["eppn"]?.toString()
-                        ?: responseEntity["edupersontargetedid"]?.toString()
-                        ?: responseEntity["sub"]?.toString()
-                        ?: ":no-username:"
-                return Either.Right(OpenIDUser(name = userName, userInfo = responseEntity))
+        val result = runCatching { webTarget.request().header("Authorization", "Bearer $token").get() }
+        when {
+            result.isFailure -> return Either.Left(OpenIDError("Unexpected result from calling ${webTarget.uri} with token $token:\n ${result.exceptionOrNull()?.message}"))
+            result.isSuccess -> result.getOrNull()?.let { response ->
+                val entityAsJson = response.readEntity(String::class.java)
+                val responseEntity: Map<String, Any> = oMapper.readValue(entityAsJson)
+                when (response.status) {
+                    200 -> {
+                        val userName =
+                            responseEntity["email"]?.toString()
+                                ?: responseEntity["eppn"]?.toString()
+                                ?: responseEntity["edupersontargetedid"]?.toString()
+                                ?: responseEntity["sub"]?.toString()
+                                ?: ":no-username:"
+                        return Either.Right(OpenIDUser(name = userName, userInfo = responseEntity))
+                    }
+
+                    401 -> return Either.Left(OpenIDError("The token was not recognized: responseBody=$responseEntity"))
+
+                    403 -> return Either.Left(OpenIDError("The token was not valid: responseBody=$responseEntity"))
+
+                    else -> return Either.Left(OpenIDError("Unexpected response status: ${response.status}, responseBody=$responseEntity"))
+                }
             }
-
-            401 -> return Either.Left(OpenIDTokenError("The token was not recognized: responseBody=$responseEntity"))
-
-            403 -> return Either.Left(OpenIDTokenError("The token was not valid: responseBody=$responseEntity"))
-
-            else -> return Either.Left(OpenIDTokenError("Unexpected response status: ${response.status}, responseBody=$responseEntity"))
         }
+        return Either.Left(OpenIDError("Unexpected result: $result"))
     }
 
-    private fun userForJWT(jwt: String?): Either<OpenIDTokenError, OpenIDUser> {
+    private fun userForJWT(jwt: String?): Either<OpenIDError, OpenIDUser> {
         val jwks = openIDConfig["jwks_uri"].toString()
         val keyLocator = MyKeyLocator(URL(jwks))
 
@@ -72,7 +78,7 @@ class OpenIDClient(
             .map { it.build().functionalParseSignedClaims(jwt) }
         val rightClaimsEither = claimsEithers.firstOrNull { it.isRight() }
         return if (rightClaimsEither == null) {
-            Either.Left(OpenIDTokenError(claimsEithers.first().leftOrNull()?.message ?: ""))
+            Either.Left(OpenIDError(claimsEithers.first().leftOrNull()?.message ?: ""))
         } else {
             val claims = rightClaimsEither.getOrNull()?.payload!!
             val name = claims.optional<String>("email")
@@ -89,7 +95,7 @@ class OpenIDClient(
         .keyLocator(keyLocator)
         .requireIssuer(requiredIssuer)
 
-    data class OpenIDTokenError(val message: String)
+    data class OpenIDError(val message: String)
 
     companion object {
         val oMapper = jacksonObjectMapper()
@@ -114,11 +120,11 @@ class OpenIDClient(
             return oMapper.readValue(entityAsJson)
         }
 
-        private fun JwtParser.functionalParseSignedClaims(jwt: String?): Either<OpenIDTokenError, Jws<Claims>> =
+        private fun JwtParser.functionalParseSignedClaims(jwt: String?): Either<OpenIDError, Jws<Claims>> =
             try {
                 Either.Right(parseSignedClaims(jwt))
             } catch (e: JwtException) {
-                Either.Left(OpenIDTokenError(e.message ?: e.javaClass.toString()))
+                Either.Left(OpenIDError(e.message ?: e.javaClass.toString()))
             }
     }
 }
