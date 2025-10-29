@@ -142,7 +142,7 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
                     Filters.elemMatch(
                         "${ANNOTATION_FIELD_PREFIX}target",
                         Filters.and(
-                            Filters.eq("type", "Text"),
+                            Filters.eq("type", configuration.rangeTargetType),
                             Filters.eq("source", rangeParameters.source),
                             Filters.eq("selector.type", configuration.rangeSelectorType),//TextPositionSelector
                             Filters.gte("selector.start", rangeParameters.start),

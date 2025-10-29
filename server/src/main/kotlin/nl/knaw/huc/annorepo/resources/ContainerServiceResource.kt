@@ -752,7 +752,6 @@ class ContainerServiceResource(
             .apply {
                 add(Aggregates.skip(page * configuration.pageSize))
             }
-        logger.info { aggregateStages }
         return containerDAO
             .getCollection(containerName)
             .aggregate(aggregateStages)
