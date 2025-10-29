@@ -365,6 +365,7 @@ class ContainerServiceResourceTest {
             every { config.databaseName } returns DATABASE_NAME
             every { config.pageSize } returns 10
             every { config.rangeSelectorType } returns "something"
+            every { config.rangeTargetType } returns "Text"
             every { config.withAuthentication } returns true
             every { client.getDatabase(DATABASE_NAME) } returns mongoDatabase
             every { mongoDatabase.getCollection(CONTAINER_NAME) } returns mongoCollection

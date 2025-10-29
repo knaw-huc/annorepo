@@ -38,7 +38,12 @@ open class AnnoRepoConfiguration : JobConfiguration() {
     @Valid
     @NotNull
     @JsonProperty
-    var rangeSelectorType = "urn:republic:TextAnchorSelector"
+    var rangeSelectorType = "TextPositionSelector" //"urn:republic:TextAnchorSelector"
+
+    @Valid
+    @NotNull
+    @JsonProperty
+    var rangeTargetType = "NormalText" // "Text"
 
     @Valid
     @NotNull
