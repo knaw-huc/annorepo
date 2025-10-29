@@ -38,6 +38,15 @@ class UriFactory(private val configuration: AnnoRepoConfiguration) {
             .path(ResourcePaths.INFO)
             .build()
 
+    fun searchMongoExplainURL(containerName: String, id: String): URI =
+        UriBuilder.fromUri(configuration.externalBaseUrl)
+            .path(ResourcePaths.CONTAINER_SERVICES)
+            .path(containerName)
+            .path(ResourcePaths.SEARCH)
+            .path(id)
+            .path(ResourcePaths.MONGO_EXPLAIN_COMMAND)
+            .build()
+
     fun globalSearchURL(id: String): URI =
         UriBuilder.fromUri(configuration.externalBaseUrl)
             .path(ResourcePaths.GLOBAL_SERVICES)

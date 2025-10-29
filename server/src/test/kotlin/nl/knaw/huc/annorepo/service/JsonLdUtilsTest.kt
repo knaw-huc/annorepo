@@ -2,6 +2,9 @@ package nl.knaw.huc.annorepo.service
 
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import org.apache.jena.query.DatasetFactory
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.riot.JsonLDWriteContext
@@ -182,6 +185,19 @@ class JsonLdUtilsTest {
             .context(ctx)
             .build()
             .output(System.out)
+    }
+
+    @Test
+    fun `test aggregates formatting`() {
+        val unformattedJson = $$"""[
+    {"$match": {"annotation.target": {"$elemMatch": {"$and": [{"type": "NormalText"}, {"source": "http://LAP1550.local:8083/correspondentie-vidi/1073484.txt"}, {"selector.type": "TextPositionSelector"}, {"selector.start": {"$lte": 56200.0}}, {"selector.end": {"$gte": 0.0}}]}}}},
+    {"$match": {"annotation.body.type": {"$in": ["Word"]}}}
+  ]""".trimIndent()
+        val mapper = jacksonObjectMapper()
+        mapper.enable(SerializationFeature.INDENT_OUTPUT)
+        val obj = mapper.readValue<List<Any>>(unformattedJson)
+        val formattedJson = mapper.writeValueAsString(obj)
+        println(formattedJson)
     }
 
     class MyErrorHandler : ErrorHandler {
