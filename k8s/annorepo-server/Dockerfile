@@ -1,11 +1,9 @@
 FROM openjdk:25-rc-jdk-slim-trixie
 
-RUN groupadd -r annorepo && \
+RUN apt update && \
+    apt install -y curl && \
+    groupadd -r annorepo && \
     useradd --no-log-init -r -g annorepo annorepo
-#RUN microdnf update && \
-#    microdnf install -y curl && \
-#    groupadd -r annorepo && \
-#    useradd --no-log-init -r -g annorepo annorepo
 USER annorepo
 WORKDIR /apps/annorepo
 COPY ./server/target/annorepo-server-*.jar /apps/annorepo/annorepo-server.jar
