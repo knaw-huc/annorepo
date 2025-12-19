@@ -50,14 +50,14 @@
         <jakarta.json.version>2.0.1</jakarta.json.version>
         <jakarta.ws.rs-api.version>4.0.0</jakarta.ws.rs-api.version>
         <jaxb-api.version>2.3.1</jaxb-api.version>
-        <jena.version>4.10.0</jena.version>
+        <jena.version>5.0.0</jena.version>
         <jjwt.version>0.13.0</jjwt.version>
         <json.version>20231013</json.version>
         <kmongo.version>4.11.0</kmongo.version>
         <kotlinx-cli-jvm.version>0.3.6</kotlinx-cli-jvm.version>
         <kotlinx-coroutines-core.version>1.10.2</kotlinx-coroutines-core.version>
         <log4j-api-kotlin.version>1.5.0</log4j-api-kotlin.version>
-        <log4j-core.version>2.23.1</log4j-core.version>
+        <log4j-core.version>2.25.3</log4j-core.version>
         <log4j.version>1.2.17</log4j.version>
         <mongodb.version>4.11.5</mongodb.version>
         <mordant.version>3.0.2</mordant.version>
