@@ -60,6 +60,8 @@ class AggregateStageGeneratorTest {
     fun `query functions - within_range`() {
         val selector = "rangeSelectorType"
         every { config.rangeSelectorType } returns selector
+        val targetType = "Text"
+        every { config.rangeTargetType } returns targetType
         val asg = AggregateStageGenerator(config)
 
         val source = "https://google.com"
@@ -274,6 +276,9 @@ class AggregateStageGeneratorTest {
     fun `query functions - overlapping_with_range`() {
         val selector = "rangeSelectorType"
         every { config.rangeSelectorType } returns selector
+        val targetType = "Text"
+        every { config.rangeTargetType } returns targetType
+
         val asg = AggregateStageGenerator(config)
         val source = "http://example.com/some-id"
         val start = 200

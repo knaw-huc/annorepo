@@ -24,7 +24,8 @@ prettyPrint: ${AR_PRETTY_PRINT:-true}
 mongodbURL: ${AR_MONGODB_URL:-mongodb://localhost/}
 databaseName: ${AR_DB_NAME:-annorepo}
 
-rangeSelectorType: ${AR_RANGE_SELECTOR_TYPE:-urn:republic:TextAnchorSelector}
+rangeSelectorType: ${AR_RANGE_SELECTOR_TYPE:-TextPositionSelector}
+rangeTargetType: ${AR_RANGE_TARGET_TYPE:-NormalText}
 
 logging:
   level: INFO

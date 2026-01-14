@@ -9,7 +9,7 @@ version_fn = $(shell cat .make/.version 2>/dev/null)
 .make:
 	mkdir -p .make
 
-.make/.version: .make pom.xml
+.make/.version: pom.xml | .make
 	mvn help:evaluate -Dexpression=project.version -q -DforceStdout > .make/.version
 
 server/target/annorepo-server-$(call version_fn).jar: .make/.version  $(shell find server/src common/src -type f) pom.xml server/pom.xml
@@ -27,7 +27,7 @@ build-server: .make/.version server/target/annorepo-server-$(call version_fn).ja
 .PHONY: build-client
 build-client: .make/.version client/target/annorepo-client-$(call version_fn).jar client/readme.md
 
-.make/install-client: .make client/pom.xml $(CLIENT_SRC) common/pom.xml $(COMMON_SRC)
+.make/install-client: client/pom.xml $(CLIENT_SRC) common/pom.xml $(COMMON_SRC) | .make
 	mvn --projects client --also-make install
 	@touch $@
 
@@ -132,7 +132,7 @@ tests:
 
 .PHONY: start-mongodb
 start-mongodb:
-	docker start mongodb6 || docker run --name mongodb6 -d -p 27017:27017 -v ~/local/mongo:/data/db mongo:6.0.23
+	docker start mongodb6 || docker run --name mongodb6 -d -p 27017:27017 -v ~/local/mongo:/data/db mongo:6.0.27
 
 .PHONY: set-log-level-debug
 set-log-level-debug:
@@ -142,7 +142,7 @@ set-log-level-debug:
 set-log-level-info:
 	curl -X POST -d "logger=ROOT&level=INFO" http:/localhost:8081/tasks/log-level
 
-.make/compiled-protocol-buffers: .make common/src/main/proto/*.proto
+.make/compiled-protocol-buffers: common/src/main/proto/*.proto | .make
 	mkdir -p common/target/python
 	python -m grpc_tools.protoc \
 	-I common/src/main/proto \

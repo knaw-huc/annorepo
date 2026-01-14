@@ -13,6 +13,7 @@ object ARConst {
         AR_ROOT_API_KEY,
         AR_PRETTY_PRINT,
         AR_RANGE_SELECTOR_TYPE,
+        AR_RANGE_TARGET_TYPE,
         AR_GRPC_HOSTNAME,
         AR_GRPC_PORT,
         AR_APPLICATION_TOKEN

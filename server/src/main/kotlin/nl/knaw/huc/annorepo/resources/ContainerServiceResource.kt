@@ -25,6 +25,9 @@ import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.SecurityContext
 import jakarta.ws.rs.core.UriBuilder
 import com.codahale.metrics.annotation.Timed
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
@@ -59,6 +62,7 @@ import nl.knaw.huc.annorepo.api.ResourcePaths.FIELDS
 import nl.knaw.huc.annorepo.api.ResourcePaths.INDEXES
 import nl.knaw.huc.annorepo.api.ResourcePaths.INFO
 import nl.knaw.huc.annorepo.api.ResourcePaths.METADATA
+import nl.knaw.huc.annorepo.api.ResourcePaths.MONGO_EXPLAIN_COMMAND
 import nl.knaw.huc.annorepo.api.ResourcePaths.READ_ONLY_FOR_ANONYMOUS
 import nl.knaw.huc.annorepo.api.ResourcePaths.SEARCH
 import nl.knaw.huc.annorepo.api.ResourcePaths.SETTINGS
@@ -114,7 +118,7 @@ class ContainerServiceResource(
         .maximumSize(1000)
         .expireAfterAccess(1, TimeUnit.HOURS)
         .removalListener(mongoCursorRemovalListener)
-        .build(CacheLoader.from { _: String -> null })
+        .build(CacheLoader.from { _: String -> null }) // no loader required
 
     @Operation(description = "Turn read-only access to this container for anonymous users on or off")
     @Timed
@@ -204,6 +208,7 @@ class ContainerServiceResource(
             val location = uriFactory.searchURL(containerName, id)
             return Response.created(location)
                 .link(uriFactory.searchInfoURL(containerName, id), "info")
+                .link(uriFactory.searchMongoExplainURL(containerName, id), "debug")
                 .build()
         } catch (e: RuntimeException) {
             e.printStackTrace()
@@ -344,7 +349,7 @@ class ContainerServiceResource(
     @Operation(description = "Show the mongo explain command for the given query")
     @Timed
     @GET
-    @Path("{containerName}/$SEARCH/{searchId}/mongo-explain-command")
+    @Path("{containerName}/$SEARCH/{searchId}/$MONGO_EXPLAIN_COMMAND")
     fun getMongoExplainForSearch(
         @PathParam("containerName") containerName: String,
         @PathParam("searchId") searchId: String,
@@ -700,13 +705,18 @@ class ContainerServiceResource(
             }
 
     private fun asMongoExplain(containerName: String, aggregateStages: List<Bson>): String {
-        val stages = aggregateStages.joinToString(", ") { it.toBsonDocument().toString() }
+        val stages = aggregateStages.joinToString(",\n    ") { it.toBsonDocument().toString() }
+        val mapper = jacksonObjectMapper()
+        mapper.enable(SerializationFeature.INDENT_OUTPUT)
+        val obj = mapper.readValue<List<Any>>("[$stages]")
+        val formattedJson = mapper.writeValueAsString(obj)
+
         return """
-            db["$containerName"].aggregate(
-                [$stages],
-                { explain: true }
-            )
-        """.trimIndent()
+            |db["$containerName"].aggregate(
+            |  ${formattedJson.replace("\n", "\n    ")},
+            |  { explain: true }
+            |)
+        """.trimMargin("|")
     }
 
     private fun createCustomSearchCursor(
