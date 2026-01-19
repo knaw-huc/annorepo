@@ -45,6 +45,7 @@ import nl.knaw.huc.annorepo.dao.ARCustomQueryDAO
 import nl.knaw.huc.annorepo.dao.ARUserDAO
 import nl.knaw.huc.annorepo.filters.CorsFilter
 import nl.knaw.huc.annorepo.filters.JSONPrettyPrintFilter
+import nl.knaw.huc.annorepo.filters.ServerHeaderFilter
 import nl.knaw.huc.annorepo.grpc.AnnotationUploadService
 import nl.knaw.huc.annorepo.grpc.GrpcServerInterceptor
 import nl.knaw.huc.annorepo.grpc.SayHelloService
@@ -138,6 +139,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
         val mongoVersionProducer = { mongoClient.getMongoVersion() }
         environment.jersey().apply {
             register(CorsFilter())
+            register(ServerHeaderFilter(name, appVersion))
             register(AboutResource(configuration, name, appVersion, mongoVersionProducer))
             register(HomePageResource())
             register(W3CResource(configuration, containerDAO, containerUserDAO, uriFactory, indexManager))
