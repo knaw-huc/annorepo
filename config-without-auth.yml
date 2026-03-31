@@ -26,6 +26,7 @@ databaseName: ${AR_DB_NAME:-annorepo}
 
 rangeSelectorType: ${AR_RANGE_SELECTOR_TYPE:-TextPositionSelector}
 rangeTargetType: ${AR_RANGE_TARGET_TYPE:-Text}
+endExclusive: ${AR_END_EXCLUSIVE:-true}
 
 logging:
   level: INFO

@@ -135,8 +135,8 @@ release:
 	gh release create v$(call version_fn) && \
 	make deploy
 
-.PHONY: tests
-tests:
+.PHONY: test
+test:
 	mvn test -Dmaven.plugin.validation=VERBOSE
 
 .PHONY: start-mongodb
@@ -190,7 +190,7 @@ help:
 	@echo
 	@echo -e "Please use \`$(YELLOW)make <target>$(RESET)', where $(YELLOW)<target>$(RESET) is one of:"
 	@echo -e "  $(BLUE)git-pull$(RESET)                  - to pull git changes from the main branch ( + update the develop branch)"
-	@echo -e "  $(BLUE)tests$(RESET)                     - to test the project"
+	@echo -e "  $(BLUE)test$(RESET)                     - to test the project"
 	@echo -e "  $(BLUE)clean$(RESET)                     - to remove generated files"
 	@echo -e "  $(BLUE)compile-protocol-buffers$(RESET)  - to compile all .proto files"
 	@echo -e "  $(BLUE)install-client$(RESET)            - to install the client code in the local maven repository"
