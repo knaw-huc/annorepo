@@ -273,11 +273,54 @@ class AggregateStageGeneratorTest {
     }
 
     @Test
-    fun `query functions - overlapping_with_range`() {
+    fun `query functions - overlapping_with_range - end exclusive`() {
         val selector = "rangeSelectorType"
         every { config.rangeSelectorType } returns selector
         val targetType = "Text"
         every { config.rangeTargetType } returns targetType
+        every { config.endExclusive } returns true
+
+        val asg = AggregateStageGenerator(config)
+        val source = "http://example.com/some-id"
+        val start = 200
+        val end = 300
+        val parameters = mapOf(
+            "source" to source,
+            "start" to start,
+            "end" to end
+        )
+        val stage = asg.generateStage(
+            OVERLAPPING_WITH_RANGE,
+            parameters
+        )
+        logger.info { stage }
+        val expected = """
+            { 
+                "@match": {
+                    "annotation.target" : {
+                        "@elemMatch": {
+                            "@and": [
+                                { "type": "Text"},
+                                { "source": "$source"},
+                                { "selector.type": "$selector"},
+                                { "selector.start": { "@lt": ${end.toFloat()} } },
+                                { "selector.end":   { "@gt": ${start.toFloat()} } }
+                            ]
+                        }
+                    }
+                }
+            }""".trimIndent().replace('@', '$')
+        assertThatJson(stage.json).isEqualTo(expected)
+        logger.info { stage.json }
+    }
+
+    @Test
+    fun `query functions - overlapping_with_range - end inclusive`() {
+        val selector = "rangeSelectorType"
+        every { config.rangeSelectorType } returns selector
+        val targetType = "Text"
+        every { config.rangeTargetType } returns targetType
+        every { config.endExclusive } returns false
 
         val asg = AggregateStageGenerator(config)
         val source = "http://example.com/some-id"

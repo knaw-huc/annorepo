@@ -47,6 +47,11 @@ open class AnnoRepoConfiguration : JobConfiguration() {
 
     @Valid
     @NotNull
+    @JsonProperty
+    var endExclusive = true
+
+    @Valid
+    @NotNull
     @JsonProperty("swagger")
     val swaggerBundleConfiguration = SwaggerBundleConfiguration().apply {
         resourcePackage = AboutResource::class.java.getPackage().name
