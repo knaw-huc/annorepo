@@ -117,6 +117,14 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
         when (rawParameters) {
             is Map<*, *> -> {
                 val rangeParameters = rangeParameters(rawParameters)
+                val fse = when (configuration.endExclusive) {
+                    true -> Filters.lt("selector.start", rangeParameters.end)
+                    false -> Filters.lte("selector.start", rangeParameters.end)
+                }
+                val fes = when (configuration.endExclusive) {
+                    true -> Filters.gt("selector.end", rangeParameters.start)
+                    false -> Filters.gte("selector.end", rangeParameters.start)
+                }
                 match(
                     Filters.elemMatch(
                         "${ANNOTATION_FIELD_PREFIX}target",
@@ -124,8 +132,8 @@ class AggregateStageGenerator(val configuration: AnnoRepoConfiguration) {
                             Filters.eq("type", configuration.rangeTargetType),
                             Filters.eq("source", rangeParameters.source),
                             Filters.eq("selector.type", configuration.rangeSelectorType),
-                            Filters.lte("selector.start", rangeParameters.end),
-                            Filters.gte("selector.end", rangeParameters.start),
+                            fse,
+                            fes,
                         )
                     )
                 )

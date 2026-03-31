@@ -6,6 +6,15 @@ CLIENT_SRC=$(shell find client/src/ -type f)
 COMMON_SRC=$(shell find common/src/ -type f)
 version_fn = $(shell cat .make/.version 2>/dev/null)
 
+.SECONDARY:
+.DELETE_ON_ERROR:
+
+RED=\033[1;31m
+GREEN=\033[1;32m
+YELLOW=\033[1;33m
+BLUE=\033[1;34m
+RESET=\033[0m
+
 .make:
 	mkdir -p .make
 
@@ -126,8 +135,8 @@ release:
 	gh release create v$(call version_fn) && \
 	make deploy
 
-.PHONY: tests
-tests:
+.PHONY: test
+test:
 	mvn test -Dmaven.plugin.validation=VERBOSE
 
 .PHONY: start-mongodb
@@ -177,36 +186,36 @@ browse-registry:
 
 .PHONY: help
 help:
-	@echo "make-tools for $(TAG)"
+	@echo -e "make-tools for $(GREEN)$(TAG)$(RESET)"
 	@echo
-	@echo "Please use \`make <target>', where <target> is one of:"
-	@echo "  git-pull                  - to pull git changes from the main branch ( + update the develop branch)"
-	@echo "  tests                     - to test the project"
-	@echo "  clean                     - to remove generated files"
-	@echo "  compile-protocol-buffers  - to compile all .proto files"
-	@echo "  install-client            - to install the client code in the local maven repository"
+	@echo -e "Please use \`$(YELLOW)make <target>$(RESET)', where $(YELLOW)<target>$(RESET) is one of:"
+	@echo -e "  $(BLUE)git-pull$(RESET)                  - to pull git changes from the main branch ( + update the develop branch)"
+	@echo -e "  $(BLUE)test$(RESET)                     - to test the project"
+	@echo -e "  $(BLUE)clean$(RESET)                     - to remove generated files"
+	@echo -e "  $(BLUE)compile-protocol-buffers$(RESET)  - to compile all .proto files"
+	@echo -e "  $(BLUE)install-client$(RESET)            - to install the client code in the local maven repository"
 	@echo
-	@echo "  build                     - to test and build the project"
-	@echo "  build-server              - to test and build just the server"
-	@echo "  build-client              - to test and build just the client"
+	@echo -e "  $(BLUE)build$(RESET)                     - to test and build the project"
+	@echo -e "  $(BLUE)build-server$(RESET)              - to test and build just the server"
+	@echo -e "  $(BLUE)build-client$(RESET)              - to test and build just the client"
 	@echo
-	@echo "  start-mongodb             - to start a local mongodb"
-	@echo "  run-server-with-auth      - to start the server app with authorization on"
-	@echo "  run-server-without-auth   - to start the server app with authorization off"
-	@echo "  run-env                   - to run the annorepo env command"
-	@echo "  set-log-level-debug       - to set the log level of the server app to DEBUG"
-	@echo "  set-log-level-info        - to set the log level of the server app to INFO"
+	@echo -e "  $(BLUE)start-mongodb$(RESET)             - to start a local mongodb"
+	@echo -e "  $(BLUE)run-server-with-auth$(RESET)      - to start the server app with authorization on"
+	@echo -e "  $(BLUE)run-server-without-auth$(RESET)   - to start the server app with authorization off"
+	@echo -e "  $(BLUE)run-env$(RESET)                   - to run the annorepo env command"
+	@echo -e "  $(BLUE)set-log-level-debug$(RESET)       - to set the log level of the server app to DEBUG"
+	@echo -e "  $(BLUE)set-log-level-info$(RESET)        - to set the log level of the server app to INFO"
 	@echo
-	@echo "  docker-run                - to start the server app in docker"
-	@echo "  docker-stop               - to stop the server app in docker"
+	@echo -e "  $(BLUE)docker-run$(RESET)                - to start the server app in docker"
+	@echo -e "  $(BLUE)docker-stop$(RESET)               - to stop the server app in docker"
 	@echo
-	@echo "  docker-image              - to build the docker image of the app (¹)"
-	@echo "  push                      - to push the linux/amd64 docker image to registry.diginfra.net (¹)"
-	@echo "  browse-registry           - to open the registry.diginfra.net registry browser"
+	@echo -e "  $(BLUE)docker-image$(RESET)              - to build the docker image of the app (¹)"
+	@echo -e "  $(BLUE)push$(RESET)                      - to push the linux/amd64 docker image to registry.diginfra.net (¹)"
+	@echo -e "  $(BLUE)browse-registry$(RESET)           - to open the registry.diginfra.net registry browser"
 	@echo
-	@echo "  version-update            - to update the project version"
-	@echo "  dokka                     - to generate dokka html"
-	@echo "  deploy                    - to deploy annorepo-client and annorepo-common"
-	@#echo "  release                   - to create a new release on github + deploy the new client"
+	@echo -e "  $(BLUE)version-update$(RESET)            - to update the project version"
+	@echo -e "  $(BLUE)dokka$(RESET)                     - to generate dokka html"
+	@echo -e "  $(BLUE)deploy$(RESET)                    - to deploy annorepo-client and annorepo-common"
+	@#echo -e "  $(BLUE)release$(RESET)                   - to create a new release on github + deploy the new client"
 	@echo
 	@echo "¹) for test purposes only, the public docker image is built by github actions upon a release"

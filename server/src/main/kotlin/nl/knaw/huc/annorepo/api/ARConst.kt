@@ -14,6 +14,7 @@ object ARConst {
         AR_PRETTY_PRINT,
         AR_RANGE_SELECTOR_TYPE,
         AR_RANGE_TARGET_TYPE,
+        AR_END_EXCLUSIVE,
         AR_GRPC_HOSTNAME,
         AR_GRPC_PORT,
         AR_APPLICATION_TOKEN
