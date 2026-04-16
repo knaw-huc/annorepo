@@ -25,7 +25,7 @@ Add the following to your `pom.xml`
 val client = AnnoRepoClient(
     serverURI = URI.create("http://localhost:8080"),
     apiKey = apiKey,
-    userAgent = "name to identity this client in the User-Agent header"
+    userAgent = "name to identify this client in the User-Agent header"
 )
 ```
 
