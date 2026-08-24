@@ -38,7 +38,7 @@
 
         <annotations-api.version>6.0.53</annotations-api.version>
         <arrow-core.version>1.2.4</arrow-core.version>
-        <dropwizard-jobs.version>6.0.1</dropwizard-jobs.version>
+        <dropwizard-jobs.version>7.0.0</dropwizard-jobs.version>
         <dropwizard-swagger-ui.version>4.19.1</dropwizard-swagger-ui.version>
         <dropwizard-swagger.version>4.0.5-1</dropwizard-swagger.version>
         <dropwizard.version>4.0.12</dropwizard.version>
