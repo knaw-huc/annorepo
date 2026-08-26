@@ -20,7 +20,20 @@ class ContainerPage(
     val context = listOf(
         ANNO_JSONLD_URL,
         LDP_JSONLD_URL
-    )
+    ) + annotations.uniqueCustomContextElements()
+
+    private fun List<WebAnnotationAsMap>.uniqueCustomContextElements(): Set<Any> =
+        mapNotNull { it["@context"] }
+            .flatMap { it.contextElements() }
+            .filterNot { it == ANNO_JSONLD_URL || it == LDP_JSONLD_URL }
+            .toSet()
+
+    private fun Any.contextElements(): List<Any> =
+        when (this) {
+            is List<*> -> this.filterNotNull()
+            else -> listOf(this)
+        }
+
     val type = listOf(
         "BasicContainer",
         "AnnotationCollection"
@@ -31,8 +44,12 @@ class ContainerPage(
         id = "$id?page=$page",
         partOf = annotationCollectionLink(id),
         startIndex = page,
-        items = annotations,
+        items = annotations.map { it.withoutContext() },
         prev = if (prevPage != null) "$id?page=$prevPage" else null,
         next = if (nextPage != null) "$id?page=$nextPage" else null
     )
+
+    private fun WebAnnotationAsMap.withoutContext(): Map<String, Any> =
+        toMutableMap()
+            .apply { remove("@context") }
 }

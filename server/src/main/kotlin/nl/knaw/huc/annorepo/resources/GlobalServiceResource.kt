@@ -317,25 +317,24 @@ class GlobalServiceResource(
             }
 
     private fun containersAccessibleFor(name: String?): List<String> =
-        if (name != null) {
-            containerUserDAO.getUserRoles(name).map { it.containerName }.toList()
-        } else {
-            containerDAO.listCollectionNamesAccessibleForAnonymous()
+        when (name) {
+            null -> containerDAO.listCollectionNamesAccessibleForAnonymous()
+            else -> containerUserDAO.getUserRoles(name)
+                .map { it.containerName }
+                .toList()
         }
 
     private fun buildAnnotationPage(
         searchUri: URI, annotations: AnnotationList, page: Int, total: Int,
     ): AnnotationPage {
-        val prevPage = if (page > 0) {
-            page - 1
-        } else {
-            null
+        val prevPage = when {
+            page > 0 -> page - 1
+            else -> null
         }
         val startIndex = configuration.pageSize * page
-        val nextPage = if (startIndex + annotations.size < total) {
-            page + 1
-        } else {
-            null
+        val nextPage = when {
+            startIndex + annotations.size < total -> page + 1
+            else -> null
         }
 
         return AnnotationPage(
