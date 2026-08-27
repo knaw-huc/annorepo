@@ -413,22 +413,20 @@ class W3CResource(
         val uri = uriFactory.containerURL(containerName)
         val count = collection.estimatedDocumentCount()
         val annotations = collection.aggregate<Document>(
-            Aggregates.match(
-                Filters.exists(ANNOTATION_FIELD)
-            ), Aggregates.skip(page * pageSize), // start at offset
+            Aggregates.match(Filters.exists(ANNOTATION_FIELD)),
+            Aggregates.skip(page * pageSize), // start at offset
             paginationStage // return $pageSize documents or less
-        ).map { document -> toAnnotationMap(document, containerName) }.toList()
+        ).map { document -> toAnnotationMap(document, containerName) }
+            .toList()
 
         val lastPage = lastPage(count, pageSize)
-        val prevPage = if (page > 0) {
-            page - 1
-        } else {
-            null
+        val prevPage = when {
+            page > 0 -> page - 1
+            else -> null
         }
-        val nextPage = if (lastPage > page) {
-            page + 1
-        } else {
-            null
+        val nextPage = when {
+            lastPage > page -> page + 1
+            else -> null
         }
 
         return ContainerPage(
@@ -443,16 +441,14 @@ class W3CResource(
     }
 
     private fun lastPage(count: Long, pageSize: Int) = (count - 1).div(pageSize).toInt()
-    private fun toAnnotationMap(a: Document, containerName: String): WebAnnotationAsMap {
-        return a.get(ANNOTATION_FIELD, Document::class.java)
+    private fun toAnnotationMap(a: Document, containerName: String): WebAnnotationAsMap =
+        a.get(ANNOTATION_FIELD, Document::class.java)
             .toMutableMap()
-            .apply<MutableMap<String, Any>> {
+            .apply {
                 put(
                     "id", uriFactory.annotationURL(containerName, a.getString(ANNOTATION_NAME_FIELD))
                 )
-                remove("@context")
             }
-    }
 
     private fun makeContainerETag(containerName: String): EntityTag =
         EntityTag(abs(containerName.hashCode()).toString(), true)

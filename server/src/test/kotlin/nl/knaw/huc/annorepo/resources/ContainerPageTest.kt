@@ -2,13 +2,89 @@ package nl.knaw.huc.annorepo.resources
 
 import org.junit.jupiter.api.Test
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.assertj.core.api.Assertions.assertThat
+import nl.knaw.huc.annorepo.api.ANNO_JSONLD_URL
 import nl.knaw.huc.annorepo.api.ContainerPage
+import nl.knaw.huc.annorepo.api.LDP_JSONLD_URL
+import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 
 internal class ContainerPageTest {
 
     private val objectMapper = jacksonObjectMapper()
+
+    @Test
+    fun `container page context for page without annotations has the default context`() {
+        val containerPage = ContainerPage(
+            id = "id",
+            label = "label",
+            annotations = listOf(),
+        )
+        val expectedContext = listOf(ANNO_JSONLD_URL, LDP_JSONLD_URL)
+        val context = containerPage.context
+        assert(context == expectedContext)
+    }
+
+    @Test
+    fun `container page context for page with annotations with custom context has the correct context aggregation`() {
+        val annotationJson1 = """{
+            |"@context":[
+            |   "$ANNO_JSONLD_URL",
+            |   "https://my-custom-contexts.nl/1.jsonld",
+            |   {
+            |       "ns": "https://example.com/namespace"
+            |   }
+            |],
+            |"ns:custom": "custom",
+            |"body":   "http://example.org/body1",
+            |"target": "http://example.org/target1"
+            |}""".trimMargin()
+        val annotationJson2 = """{
+            |"@context": [
+            |   "$ANNO_JSONLD_URL",
+            |   "https://my-custom-contexts.nl/2.jsonld",
+            |   { "ex": "https://example.com/#" }
+            |],
+            |"body": { 
+            |   "id": "http://example.org/body2",
+            |   "ex:custom": "customvalue"
+            |},
+            |"target": { "id": "http://example.org/target2" }
+            |}""".trimMargin()
+        val annotationJson3 = """{
+            |"@context": [
+            |   "$ANNO_JSONLD_URL",
+            |   "https://my-custom-contexts.nl/1.jsonld",
+            |   { "ex": "https://example.com/#" }
+            |],
+            |"body": { 
+            |   "id": "http://example.org/body3"
+            |},
+            |"target": { "id": "http://example.org/target3" }
+            |}""".trimMargin()
+        val containerPage = ContainerPage(
+            id = "id",
+            label = "label",
+            annotations = listOf(annotationJson1, annotationJson2, annotationJson3)
+                .map { objectMapper.readValue<WebAnnotationAsMap>(it) },
+        )
+        val expectedContext = listOf(
+            ANNO_JSONLD_URL,
+            LDP_JSONLD_URL,
+            "https://my-custom-contexts.nl/1.jsonld",
+            mapOf(
+                "ns" to "https://example.com/namespace"
+            ),
+            "https://my-custom-contexts.nl/2.jsonld",
+            mapOf(
+                "ex" to "https://example.com/#",
+            ),
+        )
+        val context = containerPage.context
+        assertThat(context).isEqualTo(expectedContext)
+//        println(objectMapper.writeValueAsString(containerPage))
+    }
 
     @Test
     fun `a ContainerPage without next serializes as expected`() {

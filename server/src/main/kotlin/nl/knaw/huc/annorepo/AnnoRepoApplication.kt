@@ -49,6 +49,7 @@ import nl.knaw.huc.annorepo.filters.ServerHeaderFilter
 import nl.knaw.huc.annorepo.grpc.AnnotationUploadService
 import nl.knaw.huc.annorepo.grpc.GrpcServerInterceptor
 import nl.knaw.huc.annorepo.grpc.SayHelloService
+import nl.knaw.huc.annorepo.health.HeapSpaceHealthCheck
 import nl.knaw.huc.annorepo.health.MongoDbHealthCheck
 import nl.knaw.huc.annorepo.health.ServerHealthCheck
 import nl.knaw.huc.annorepo.jobs.ExpiredChoresCleanerJob
@@ -209,6 +210,7 @@ class AnnoRepoApplication : Application<AnnoRepoConfiguration?>() {
 //            register(ListResource(configuration, mongoClient, uriFactory))
         }
         environment.healthChecks().apply {
+            register("heap-space", HeapSpaceHealthCheck())
             register("server", ServerHealthCheck())
             register("mongodb", MongoDbHealthCheck(mongoClient))
         }
