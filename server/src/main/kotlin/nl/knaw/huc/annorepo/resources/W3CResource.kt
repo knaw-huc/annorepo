@@ -62,11 +62,9 @@ import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
 import nl.knaw.huc.annorepo.resources.tools.IndexManager
 import nl.knaw.huc.annorepo.resources.tools.makeAnnotationETag
 import nl.knaw.huc.annorepo.resources.tools.simplify
+import nl.knaw.huc.annorepo.resources.tools.validate
 import nl.knaw.huc.annorepo.service.JsonLdUtils
 import nl.knaw.huc.annorepo.service.UriFactory
-
-private const val RESOURCE_LINK = "http://www.w3.org/ns/ldp#Resource"
-private const val ANNOTATION_LINK = "http://www.w3.org/ns/ldp#Annotation"
 
 @Path(ResourcePaths.W3C)
 @Produces(ANNOTATION_MEDIA_TYPE)
@@ -229,7 +227,7 @@ class W3CResource(
             name = UUID.randomUUID().toString()
         }
         try {
-            val annotationDocument = Document.parse(annotationJson)
+            val annotationDocument = Document.parse(annotationJson).apply { validate() }
             val fields = JsonLdUtils.extractFields(annotationJson)
             updateFieldCount(containerName, fields, emptySet())
             val doc = Document(ANNOTATION_NAME_FIELD, name)
@@ -311,7 +309,7 @@ class W3CResource(
 
         val eTag = makeAnnotationETag(containerName, annotationName)
         validateETag(req, eTag)
-        val annotationDocument = Document.parse(annotationJson)
+        val annotationDocument = Document.parse(annotationJson).apply { validate() }
         val newFields = JsonLdUtils.extractFields(annotationJson)
 
         val container = containerDAO.getCollection(containerName)
@@ -471,4 +469,8 @@ class W3CResource(
         containerMetadataCollection.replaceOne(eq(CONTAINER_NAME_FIELD, containerName), newContainerMetadata)
     }
 
+    companion object {
+        private const val RESOURCE_LINK = "http://www.w3.org/ns/ldp#Resource"
+        private const val ANNOTATION_LINK = "http://www.w3.org/ns/ldp#Annotation"
+    }
 }

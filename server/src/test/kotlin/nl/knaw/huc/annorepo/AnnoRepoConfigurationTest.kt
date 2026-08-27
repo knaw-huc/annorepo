@@ -19,7 +19,6 @@ class AnnoRepoConfigurationTest {
         logger.info { c }
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     @Test
     fun `all AR_ env variables in config yml are also in ARConst EnvironmentVariable`() {
         val file = findFileInParentDirs("k8s/annorepo-server/config.yml")

@@ -1,80 +1,61 @@
 package nl.knaw.huc.annorepo.resources
 
-import jakarta.ws.rs.core.Response
-import jakarta.ws.rs.core.SecurityContext
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import com.mongodb.client.MongoClient
-import com.mongodb.client.MongoCollection
-import com.mongodb.client.MongoCursor
-import com.mongodb.client.MongoDatabase
-import com.mongodb.client.MongoIterable
 import org.assertj.core.api.Assertions.assertThat
-import org.mockito.ArgumentMatchers.anyString
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.eq
-import org.mockito.kotlin.mock
-import nl.knaw.huc.annorepo.api.ContainerMetadata
-import nl.knaw.huc.annorepo.api.ContainerSpecs
-import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
-import nl.knaw.huc.annorepo.dao.ContainerDAO
-import nl.knaw.huc.annorepo.dao.ContainerUserDAO
-import nl.knaw.huc.annorepo.resources.tools.IndexManager
-import nl.knaw.huc.annorepo.service.UriFactory
 
 class W3CResourceTest {
 
-    private val mongoCursor: MongoCursor<String> = mock()
-    private val mongoIterable: MongoIterable<String> = mock {
-        on { iterator() }.doReturn(mongoCursor)
-    }
-    private val collection: MongoCollection<ContainerMetadata> = mock()
-    private val mdb: MongoDatabase = mock {
-        on { listCollectionNames() }.doReturn(mongoIterable)
-        on { getCollection(anyString(), eq(ContainerMetadata::class.java)) }.doReturn(collection)
-    }
-    private val client: MongoClient = mock {
-        on { getDatabase(anyString()) }.doReturn(mdb)
-    }
-    private val configuration: AnnoRepoConfiguration = mock {
-        on { databaseName }.doReturn("annorepo")
-    }
-    private val containerDAO: ContainerDAO = mock()
-    private val containerUserDAO: ContainerUserDAO = mock()
-    private val securityContext: SecurityContext = mock()
-    private val indexManager: IndexManager = mock()
+//    private val mongoCursor: MongoCursor<String> = mock()
+//    private val mongoIterable: MongoIterable<String> = mock {
+//        on { iterator() }.doReturn(mongoCursor)
+//    }
+//    private val collection: MongoCollection<ContainerMetadata> = mock()
+//    private val mdb: MongoDatabase = mock {
+//        on { listCollectionNames() }.doReturn(mongoIterable)
+//        on { getCollection(anyString(), eq(ContainerMetadata::class.java)) }.doReturn(collection)
+//    }
+//    private val client: MongoClient = mock {
+//        on { getDatabase(anyString()) }.doReturn(mdb)
+//    }
+//    private val configuration: AnnoRepoConfiguration = mock {
+//        on { databaseName }.doReturn("annorepo")
+//    }
+//    private val containerDAO: ContainerDAO = mock()
+//    private val containerUserDAO: ContainerUserDAO = mock()
+//    private val securityContext: SecurityContext = mock()
+//    private val indexManager: IndexManager = mock()
 
-    @Disabled
-    @Test
-    fun `create container works as expected`() {
-        configuration.databaseName = "annorepo"
-        println(configuration.databaseName)
-        println(client.getDatabase(configuration.databaseName))
-        val r =
-            W3CResource(
-                configuration = configuration,
-                containerDAO = containerDAO,
-                containerUserDAO = containerUserDAO,
-                uriFactory = UriFactory(configuration),
-                indexManager = indexManager
-            )
-        val response = r.createContainer(
-            containerSpecs = ContainerSpecs(
-                context = mutableListOf(),
-                type = listOf(),
-                label = "container label",
-                readOnlyForAnonymousUsers = true
-            ), slug = "container",
-            context = securityContext
-        )
-        println(response)
-        assertThat(response.status).isEqualTo(Response.Status.CREATED.statusCode)
-        assertThat(response.headers).containsAllEntriesOf(
-            mapOf(
-                "Accept-Post" to listOf("""application/ld+json; profile="http://www.w3.org/ns/anno.jsonld", text/turtle""")
-            )
-        )
-    }
+//    @Disabled
+//    @Test
+//    fun `create container works as expected`() {
+//        configuration.databaseName = "annorepo"
+//        println(configuration.databaseName)
+//        println(client.getDatabase(configuration.databaseName))
+//        val r =
+//            W3CResource(
+//                configuration = configuration,
+//                containerDAO = containerDAO,
+//                containerUserDAO = containerUserDAO,
+//                uriFactory = UriFactory(configuration),
+//                indexManager = indexManager
+//            )
+//        val response = r.createContainer(
+//            containerSpecs = ContainerSpecs(
+//                context = mutableListOf(),
+//                type = listOf(),
+//                label = "container label",
+//                readOnlyForAnonymousUsers = true
+//            ), slug = "container",
+//            context = securityContext
+//        )
+//        println(response)
+//        assertThat(response.status).isEqualTo(Response.Status.CREATED.statusCode)
+//        assertThat(response.headers).containsAllEntriesOf(
+//            mapOf(
+//                "Accept-Post" to listOf("""application/ld+json; profile="http://www.w3.org/ns/anno.jsonld", text/turtle""")
+//            )
+//        )
+//    }
 
     @Test
     fun `last page calculation is correct`() {
