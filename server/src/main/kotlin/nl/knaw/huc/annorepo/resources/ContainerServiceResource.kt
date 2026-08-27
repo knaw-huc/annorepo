@@ -84,6 +84,7 @@ import nl.knaw.huc.annorepo.resources.tools.annotationCollectionLink
 import nl.knaw.huc.annorepo.resources.tools.isClosed
 import nl.knaw.huc.annorepo.resources.tools.isOpenAndHasNext
 import nl.knaw.huc.annorepo.resources.tools.simplify
+import nl.knaw.huc.annorepo.resources.tools.validate
 import nl.knaw.huc.annorepo.service.UriFactory
 
 @Path(CONTAINER_SERVICES)
@@ -597,7 +598,7 @@ class ContainerServiceResource(
         @Context context: SecurityContext,
     ): Response {
         context.checkUserHasEditRightsInThisContainer(containerName)
-
+        annotations.forEach { annotation -> annotation.validate() }
         val annotationIdentifiers: List<AnnotationIdentifier> =
             containerDAO.addAnnotationsInBatch(containerName, annotations)
         return Response.ok(annotationIdentifiers).build()

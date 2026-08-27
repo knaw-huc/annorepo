@@ -18,6 +18,7 @@ import nl.knaw.huc.annorepo.api.WebAnnotationAsMap
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
 import nl.knaw.huc.annorepo.dao.ContainerDAO
 import nl.knaw.huc.annorepo.resources.tools.ContainerAccessChecker
+import nl.knaw.huc.annorepo.resources.tools.validate
 
 @Path(ResourcePaths.BATCH)
 @Produces(MediaType.APPLICATION_JSON)
@@ -40,6 +41,7 @@ class BatchResource(
         @Context context: SecurityContext,
     ): Response {
         context.checkUserHasEditRightsInThisContainer(containerName)
+        annotations.forEach { annotation -> annotation.validate() }
         val annotationIdentifiers = containerDAO.addAnnotationsInBatch(containerName, annotations)
         return Response.ok(annotationIdentifiers).build()
     }
