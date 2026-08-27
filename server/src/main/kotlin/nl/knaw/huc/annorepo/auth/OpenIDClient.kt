@@ -77,16 +77,17 @@ class OpenIDClient(
         val claimsEithers = claimsBuilders
             .map { it.build().functionalParseSignedClaims(jwt) }
         val rightClaimsEither = claimsEithers.firstOrNull { it.isRight() }
-        return if (rightClaimsEither == null) {
-            Either.Left(OpenIDError(claimsEithers.first().leftOrNull()?.message ?: ""))
-        } else {
-            val claims = rightClaimsEither.getOrNull()?.payload!!
-            val name = claims.optional<String>("email")
-                ?: claims.optional<List<String>>("voperson_external_id")?.first()
-                ?: claims.optional<String>("eppn")
-                ?: claims.optional<String>("sub")
-                ?: ":no-username:"
-            Either.Right(OpenIDUser(name = name, userInfo = claims))
+        return when (rightClaimsEither) {
+            null -> Either.Left(OpenIDError(claimsEithers.first().leftOrNull()?.message ?: ""))
+            else -> {
+                val claims = rightClaimsEither.getOrNull()?.payload!!
+                val name = claims.optional<String>("email")
+                    ?: claims.optional<List<String>>("voperson_external_id")?.first()
+                    ?: claims.optional<String>("eppn")
+                    ?: claims.optional<String>("sub")
+                    ?: ":no-username:"
+                Either.Right(OpenIDUser(name = name, userInfo = claims))
+            }
         }
 
     }

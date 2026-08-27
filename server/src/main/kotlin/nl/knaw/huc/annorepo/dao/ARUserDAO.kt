@@ -39,14 +39,15 @@ class ARUserDAO(
         when (apiKey) {
             null -> null
             configuration.authentication?.rootApiKey -> RootUser()
-            else -> {
-                val doc = userCollection.find(Document(FIELD_API_KEY, apiKey)).first()
-                if (doc == null) {
-                    null
-                } else {
-                    BasicUser(doc.getString(FIELD_USER_NAME))
-                }
-            }
+            else -> userCollection
+                .find(Document(FIELD_API_KEY, apiKey))
+                .first()
+                ?.let { BasicUser(it.getString(FIELD_USER_NAME)) }
+//                if (doc == null) {
+//                    null
+//                } else {
+//                    BasicUser(doc.getString(FIELD_USER_NAME))
+//                }
         }
 
     override fun addUserEntries(userEntries: List<UserEntry>): UserAddResults {
@@ -93,7 +94,6 @@ class ARUserDAO(
     override fun allGroupNames(): List<String> {
         TODO("Not yet implemented")
     }
-
 
     override fun deleteUsersByName(userNames: Collection<String>): Boolean =
         userCollection

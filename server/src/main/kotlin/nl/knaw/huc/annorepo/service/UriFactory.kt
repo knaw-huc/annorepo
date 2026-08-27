@@ -100,10 +100,9 @@ class UriFactory(private val configuration: AnnoRepoConfiguration) {
             .path(containerName)
             .path(ResourcePaths.CUSTOM_QUERY)
             .path(queryCall)
-        return if (page != null) {
-            path.queryParam("page", page).build()
-        } else {
-            path.build()
+        return when (page) {
+            null -> path.build()
+            else -> path.queryParam("page", page).build()
         }
     }
 

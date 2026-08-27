@@ -280,10 +280,9 @@ class AnnoRepoClient @JvmOverloads constructor(
         preferredAnnotationName: String? = null,
     ): Either<RequestError, CreateAnnotationResult> {
         val target = webTarget.path(W3C).path(containerName)
-        val request = if (preferredAnnotationName != null) {
-            target.request().header("slug", preferredAnnotationName)
-        } else {
-            target.request()
+        val request = when (preferredAnnotationName) {
+            null -> target.request()
+            else -> target.request().header("slug", preferredAnnotationName)
         }
         return doPost(
             request = request,
@@ -1312,10 +1311,9 @@ class AnnoRepoClient @JvmOverloads constructor(
 
     private fun Invocation.Builder.withHeaders(): Invocation.Builder {
         val libUA = "${AnnoRepoClient::class.java.name}/${classVersion}"
-        val ua = if (userAgent == null) {
-            libUA
-        } else {
-            "$userAgent ( using $libUA )"
+        val ua = when (userAgent) {
+            null -> libUA
+            else -> "$userAgent ( using $libUA )"
         }
         var builder =
             header("User-Agent", ua).header("Accept-Encoding", "gzip").header("Content-Encoding", "gzip")
@@ -1340,11 +1338,14 @@ class AnnoRepoClient @JvmOverloads constructor(
 
     @OptIn(ExperimentalEncodingApi::class)
     private fun queryCall(name: String, parameters: Map<String, String>? = null): String =
-        if (parameters == null) {
-            name
-        } else {
-            val encodedParameters = parameters.map { (k, v) -> "$k=${encode(v.encodeToByteArray())}" }.joinToString(",")
-            "$name:$encodedParameters"
+        when (parameters) {
+            null -> name
+            else -> {
+                val encodedParameters = parameters
+                    .map { (k, v) -> "$k=${encode(v.encodeToByteArray())}" }
+                    .joinToString(",")
+                "$name:$encodedParameters"
+            }
         }
 
     private fun Response.indexId(): String =

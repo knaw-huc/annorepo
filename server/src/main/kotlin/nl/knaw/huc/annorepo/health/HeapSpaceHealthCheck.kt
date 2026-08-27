@@ -23,16 +23,18 @@ class HeapSpaceHealthCheck(
 
         val usageRatio = used / max
 
-        return if (usageRatio >= threshold) {
-            Result.unhealthy(
-                "Heap usage too high: %.2f%% (used=%d, max=%d)"
-                    .format(usageRatio * 100, heapUsage.used, heapUsage.max)
-            )
-        } else {
-            Result.healthy(
-                "Heap usage OK: %.2f%% (used=%d, max=%d)"
-                    .format(usageRatio * 100, heapUsage.used, heapUsage.max)
-            )
+        return when {
+            usageRatio >= threshold ->
+                Result.unhealthy(
+                    "Heap usage too high: %.2f%% (used=%d, max=%d)"
+                        .format(usageRatio * 100, heapUsage.used, heapUsage.max)
+                )
+
+            else ->
+                Result.healthy(
+                    "Heap usage OK: %.2f%% (used=%d, max=%d)"
+                        .format(usageRatio * 100, heapUsage.used, heapUsage.max)
+                )
         }
     }
 }

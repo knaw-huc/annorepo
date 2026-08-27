@@ -12,10 +12,9 @@ fun Sequence<Either<RequestError, String>>.untangled(): Either<RequestError, Lis
             is Either.Right -> list.add(e.value)
         }
     }
-    return if (error == null) {
-        Either.Right(list.toList())
-    } else {
-        Either.Left(error!!)
+    return when (error) {
+        null -> Either.Right(list.toList())
+        else -> Either.Left(error)
     }
 }
 

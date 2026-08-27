@@ -39,10 +39,9 @@ abstract class SearchChore(queryMap: QueryAsMap) : Runnable {
         private val timeToLive = TimeUnit.HOURS.toMillis(1)
 
         fun expirationTime(): Date? =
-            if (lastAccessed != null) {
-                lastAccessed?.withDurationAdded(timeToLive, 1)?.toDate()
-            } else {
-                endTime?.withDurationAdded(timeToLive, 1)?.toDate()
+            when (lastAccessed) {
+                null -> endTime?.withDurationAdded(timeToLive, 1)?.toDate()
+                else -> lastAccessed?.withDurationAdded(timeToLive, 1)?.toDate()
             }
     }
 

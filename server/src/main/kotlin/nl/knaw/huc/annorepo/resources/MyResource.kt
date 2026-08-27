@@ -102,27 +102,31 @@ class MyResource(
     @Timed
     @GET
     @Path("profile")
-    fun getUserProfile(@Context context: SecurityContext): Response {
-        val userPrincipal = context.userPrincipal
-        return if (userPrincipal is RootUser) {
-            val profile = mapOf(
-                "user" to "root"
-            )
-            Response.ok(profile).build()
-        } else if (userPrincipal != null) {
-            val profile: MutableMap<String, Any> = mutableMapOf(
-                "user" to userPrincipal.name
-            )
-            if (userPrincipal is SramUser) {
-                profile["sram_record"] = userPrincipal.record
+    fun getUserProfile(@Context context: SecurityContext): Response =
+        context.userPrincipal.let { userPrincipal ->
+            when (userPrincipal) {
+                null -> throw NotAuthorizedException("No user found for this api key")
+
+                is RootUser -> {
+                    val profile = mapOf(
+                        "user" to "root"
+                    )
+                    Response.ok(profile).build()
+                }
+
+                else -> {
+                    val profile: MutableMap<String, Any> = mutableMapOf(
+                        "user" to userPrincipal.name
+                    )
+                    if (userPrincipal is SramUser) {
+                        profile["sram_record"] = userPrincipal.record
+                    }
+                    if (userPrincipal is OpenIDUser) {
+                        profile["oidc_user_info"] = userPrincipal.userInfo
+                    }
+                    Response.ok(profile).build()
+                }
             }
-            if (userPrincipal is OpenIDUser) {
-                profile["oidc_user_info"] = userPrincipal.userInfo
-            }
-            Response.ok(profile).build()
-        } else {
-            throw NotAuthorizedException("No user found for this api key")
         }
-    }
 }
 

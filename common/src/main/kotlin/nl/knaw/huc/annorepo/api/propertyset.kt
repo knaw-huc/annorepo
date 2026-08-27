@@ -20,10 +20,9 @@ inline fun <reified T : Any> PropertySet.required(keys: List<String>): T =
 
 inline fun <reified T : Any> PropertySet.optional(key: String): T? {
     val value: Any? = get(key)
-    return if (value == null) {
-        null
-    } else {
-        value as? T ?: error("Value for key <$key> is not a ${T::class}")
+    return when (value) {
+        null -> null
+        else -> value as? T ?: error("Value for key <$key> is not a ${T::class}")
     }
 }
 

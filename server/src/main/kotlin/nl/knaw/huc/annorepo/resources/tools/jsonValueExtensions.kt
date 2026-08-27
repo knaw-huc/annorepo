@@ -6,8 +6,8 @@ import jakarta.json.JsonValue
 import nl.knaw.huc.annorepo.api.PropertySet
 import nl.knaw.huc.annorepo.api.QueryAsMap
 
-fun JsonValue.toSimpleValue(): Any? {
-    return when (valueType) {
+fun JsonValue.toSimpleValue(): Any? =
+    when (valueType) {
         JsonValue.ValueType.NUMBER -> toSimpleNumber()
         JsonValue.ValueType.STRING -> toSimpleString()
         JsonValue.ValueType.TRUE -> true
@@ -17,7 +17,6 @@ fun JsonValue.toSimpleValue(): Any? {
         JsonValue.ValueType.OBJECT -> toSimpleMap()
         else -> throw IllegalArgumentException("Invalid JSON value type: $valueType")
     }
-}
 
 fun JsonValue.toSimpleMap(): PropertySet {
     val jsonObject = asJsonObject()
@@ -33,10 +32,9 @@ fun JsonValue.toSimpleArray(): Array<Any?> =
 
 fun JsonValue.toSimpleNumber(): Number {
     val jsonNumber = this as JsonNumber
-    return if (jsonNumber.isIntegral) {
-        jsonNumber.longValueExact()
-    } else {
-        jsonNumber.doubleValue()
+    return when {
+        jsonNumber.isIntegral -> jsonNumber.longValueExact()
+        else -> jsonNumber.doubleValue()
     }
 }
 

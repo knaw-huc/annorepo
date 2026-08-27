@@ -13,10 +13,9 @@ enum class IndexType(val mongoSuffix: String) {
 
         fun fromString(s: String): IndexType? {
             val name = s.uppercase()
-            return if (nameSet.contains(name)) {
-                IndexType.valueOf(name)
-            } else {
-                null
+            return when {
+                nameSet.contains(name) -> IndexType.valueOf(name)
+                else -> null
             }
         }
     }

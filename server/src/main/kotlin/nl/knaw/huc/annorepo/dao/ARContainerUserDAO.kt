@@ -28,11 +28,11 @@ class ARContainerUserDAO(configuration: AnnoRepoConfiguration, mongoClient: Mong
             Document(FIELD_CONTAINER_NAME, containerName)
                 .append(FIELD_USER_NAME, userName)
         ).first()
-        return if (doc == null) {
-            null
-        } else {
-            Role.valueOf(doc.getString(FIELD_ROLE))
-        }
+        return doc?.let { Role.valueOf(it.getString(FIELD_ROLE)) }
+//        when (doc) {
+//            null -> null
+//            else -> Role.valueOf(doc.getString(FIELD_ROLE))
+//        }
     }
 
     override fun getUsersForContainer(containerName: String): List<ContainerUserEntry> =

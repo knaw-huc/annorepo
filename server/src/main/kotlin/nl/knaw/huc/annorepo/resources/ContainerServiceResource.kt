@@ -640,10 +640,9 @@ class ContainerServiceResource(
         collectionLabel: String? = null,
         collectionUrl: URI? = null
     ): AnnotationPage {
-        val prevPage = if (page > 0) {
-            page - 1
-        } else {
-            null
+        val prevPage = when {
+            page > 0 -> page - 1
+            else -> null
         }
         val startIndex = configuration.pageSize * page
         val nextPage = if (hasNext) {

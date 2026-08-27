@@ -786,10 +786,9 @@ class IntegratedClientKotlinTester {
         val keyParts = key.split(".")
         var value = this.getOrDefault(keyParts[0], null)
         keyParts.stream().skip(1).forEach { k ->
-            value = if (value is Map<*, *>) {
-                (value as Map<*, *>).getOrDefault(k, null)
-            } else {
-                null
+            value = when (value) {
+                is Map<*, *> -> (value as Map<*, *>).getOrDefault(k, null)
+                else -> null
             }
         }
         return value
