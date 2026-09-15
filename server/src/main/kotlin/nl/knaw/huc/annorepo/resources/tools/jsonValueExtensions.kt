@@ -45,9 +45,8 @@ fun JsonValue.toSimpleString(): String {
 
 fun Map<String, JsonValue>.simplify(): QueryAsMap {
     val newMap = mutableMapOf<String, Any>()
-    for (e in entries) {
-        val v = e.value
-        newMap[e.key] = v.toSimpleValue()!!
+    for ((key, v) in entries) {
+        newMap[key] = v.toSimpleValue()!!
     }
     return newMap
 }
