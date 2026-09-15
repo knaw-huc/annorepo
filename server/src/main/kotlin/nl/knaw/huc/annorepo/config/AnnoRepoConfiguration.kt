@@ -57,8 +57,8 @@ open class AnnoRepoConfiguration : JobConfiguration() {
         resourcePackage = AboutResource::class.java.getPackage().name
         version = javaClass.getPackage().implementationVersion
         title = ARConst.APP_NAME
-        license = "Apache 2.0"
-        licenseUrl = "http://www.apache.org/licenses/"
+        license = "MIT"
+        licenseUrl = "https://github.com/knaw-huc/broccoli/blob/main/LICENSE"
         contactUrl = "https://github.com/knaw-huc/annorepo"
         contact = ARConst.APP_NAME
     }
