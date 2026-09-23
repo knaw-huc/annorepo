@@ -20,7 +20,7 @@ class HomePageResource {
      * @return HTML representation of the homepage
      */
     @GET
-    @Operation(description = "Show the server homepage")
+    @Operation(summary = "Show the server homepage")
     @Produces(MediaType.TEXT_HTML)
     @Timed
     fun getHomePage(): Response {
@@ -40,6 +40,6 @@ class HomePageResource {
     @GET
     @Path("robots.txt")
     @Produces(MediaType.TEXT_PLAIN)
-    @Operation(description = "Placeholder for robots.txt")
+    @Operation(summary = "Placeholder for robots.txt")
     fun noRobots(): String = "${HttpHeaders.USER_AGENT}: *\nDisallow: /\n"
 }

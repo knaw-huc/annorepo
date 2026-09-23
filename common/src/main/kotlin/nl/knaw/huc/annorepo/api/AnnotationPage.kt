@@ -11,7 +11,7 @@ data class AnnotationPage(
     val partOf: Map<String, String>,
     val startIndex: Int,
     val items: List<WebAnnotationAsMap>,
-    @JsonProperty("@context") val context: List<String>? = null,
+    @param:JsonProperty("@context") val context: List<String>? = null,
     val prev: String? = null,
     val next: String? = null
 ) {

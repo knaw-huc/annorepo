@@ -16,6 +16,10 @@ import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.SecurityContext
 import com.codahale.metrics.annotation.Timed
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.media.ArraySchema
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import nl.knaw.huc.annorepo.api.ARConst.SECURITY_SCHEME_NAME
 import nl.knaw.huc.annorepo.api.RejectedUserEntry
@@ -33,7 +37,14 @@ import nl.knaw.huc.annorepo.dao.UserDAO
 class AdminResource(
     private val userDAO: UserDAO,
 ) {
-    @Operation(description = "Get username, api-key for all registered users")
+    @Operation(summary = "Get username, api-key for all registered users")
+    @ApiResponse(
+        responseCode = "200",
+        description = "The users",
+        content = [Content(
+            array = ArraySchema(schema = Schema(implementation = UserEntry::class))
+        )]
+    )
     @Timed
     @GET
     @Path("users")
@@ -43,7 +54,14 @@ class AdminResource(
         return Response.ok(users).build()
     }
 
-    @Operation(description = "Get the names of the groups with the ability to create containers")
+    @Operation(summary = "Get the names of the groups with the ability to create containers")
+    @ApiResponse(
+        responseCode = "200",
+        description = "The group names",
+        content = [Content(
+            array = ArraySchema(schema = Schema(implementation = String::class))
+        )]
+    )
     @Timed
     @GET
     @Path("groups")
@@ -53,7 +71,7 @@ class AdminResource(
         return Response.ok(groups).build()
     }
 
-    @Operation(description = "Add a user")
+    @Operation(summary = "Add a user")
     @Timed
     @POST
     @Path("users")
@@ -84,7 +102,7 @@ class AdminResource(
         return Response.ok(entity).build()
     }
 
-    @Operation(description = "Delete the user with the given userName")
+    @Operation(summary = "Delete the user with the given userName")
     @Timed
     @DELETE
     @Path("users/{userName}")

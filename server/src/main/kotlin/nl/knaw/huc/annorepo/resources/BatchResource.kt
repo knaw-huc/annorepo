@@ -30,11 +30,15 @@ class BatchResource(
     containerAccessChecker: ContainerAccessChecker,
 ) : AbstractContainerResource(configuration, containerDAO, containerAccessChecker) {
 
-    @Operation(description = "Upload annotations in batch to a given container")
+    @Operation(
+        summary = "Upload annotations in batch to a given container",
+        deprecated = true,
+        description = "Deprecated, use /services/{containerName}/annotations-batch"
+    )
     @Timed
     @POST
     @Path("{containerName}/annotations")
-    @Deprecated("use postAnnotationsBatch in ContainerServiceResource")
+    @Deprecated("use ContainerServiceResource::postAnnotationsBatch")
     fun postAnnotationsBatch(
         @PathParam("containerName") containerName: String,
         annotations: List<WebAnnotationAsMap>,

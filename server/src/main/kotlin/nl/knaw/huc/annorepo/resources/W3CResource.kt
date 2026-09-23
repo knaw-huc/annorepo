@@ -80,7 +80,7 @@ class W3CResource(
 
     private val paginationStage = Aggregates.limit(configuration.pageSize)
 
-    @Operation(description = "Create an Annotation Container")
+    @Operation(summary = "Create an Annotation Container")
     @Timed
     @POST
     @Consumes(ANNOTATION_MEDIA_TYPE, APPLICATION_JSON)
@@ -127,7 +127,7 @@ class W3CResource(
             .entity(containerData).build()
     }
 
-    @Operation(description = "Get an Annotation Container")
+    @Operation(summary = "Get an Annotation Container")
     @Timed
     @GET
     @Path("{containerName}")
@@ -163,7 +163,7 @@ class W3CResource(
 
     }
 
-    @Operation(description = "Delete an empty Annotation Container")
+    @Operation(summary = "Delete an empty Annotation Container")
     @Timed
     @DELETE
     @Path("{containerName}")
@@ -203,7 +203,7 @@ class W3CResource(
         }
     }
 
-    @Operation(description = "Create an Annotation")
+    @Operation(summary = "Create an Annotation")
     @Timed
     @POST
     @Path("{containerName}")
@@ -259,7 +259,7 @@ class W3CResource(
         }
     }
 
-    @Operation(description = "Get an Annotation")
+    @Operation(summary = "Get an Annotation")
     @Timed
     @GET
     @Path("{containerName}/{annotationName}")
@@ -292,7 +292,7 @@ class W3CResource(
         } else Response.status(Response.Status.NOT_FOUND).build()
     }
 
-    @Operation(description = "Update an existing Annotation")
+    @Operation(summary = "Update an existing Annotation")
     @Timed
     @PUT
     @Path("{containerName}/{annotationName}")
@@ -340,7 +340,7 @@ class W3CResource(
             .build()
     }
 
-    @Operation(description = "Delete an Annotation")
+    @Operation(summary = "Delete an Annotation")
     @Timed
     @DELETE
     @Path("{containerName}/{annotationName}")

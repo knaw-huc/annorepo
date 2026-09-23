@@ -37,7 +37,7 @@ class ListResource(
 ) {
     private val mdb = client.getDatabase(configuration.databaseName)
 
-    @Operation(description = "Get a list of all the container URLs")
+    @Operation(summary = "Get a list of all the container URLs")
     @Timed
     @GET
     @Path("containers")
@@ -48,7 +48,7 @@ class ListResource(
             .sorted()
             .toList()
 
-    @Operation(description = "Get a list of all the annotation URLs")
+    @Operation(summary = "Get a list of all the annotation URLs")
     @Timed
     @GET
     @Path("{containerName}/annotations")

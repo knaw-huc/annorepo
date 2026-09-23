@@ -80,7 +80,7 @@ class GlobalServiceResource(
     private val aggregateStageGenerator = AggregateStageGenerator(configuration)
     private val objectMapper = jacksonObjectMapper()
 
-    @Operation(description = "Find annotations in accessible containers matching the given query")
+    @Operation(summary = "Find annotations in accessible containers matching the given query")
     @Timed
     @POST
     @Path("search")
@@ -114,7 +114,7 @@ class GlobalServiceResource(
         }
     }
 
-    @Operation(description = "Get the given global search result page")
+    @Operation(summary = "Get the given global search result page")
     @Timed
     @GET
     @Path("search/{searchId}")
@@ -131,7 +131,7 @@ class GlobalServiceResource(
         }
     }
 
-    @Operation(description = "Get information about the given global search")
+    @Operation(summary = "Get information about the given global search")
     @Timed
     @GET
     @Path("$SEARCH/{searchId}/$STATUS")
@@ -142,7 +142,7 @@ class GlobalServiceResource(
         return Response.ok(searchChore.status.summary()).build()
     }
 
-    @Operation(description = "Create a custom query")
+    @Operation(summary = "Create a custom query")
     @Timed
     @POST
     @Path(CUSTOM_QUERY)
@@ -176,7 +176,7 @@ class GlobalServiceResource(
         return Response.created(uriFactory.customQueryURL(settings.name)).build()
     }
 
-    @Operation(description = "Read a custom query")
+    @Operation(summary = "Read a custom query")
     @Timed
     @GET
     @Path("$CUSTOM_QUERY/{customQueryName}")
@@ -192,7 +192,7 @@ class GlobalServiceResource(
         return Response.ok(customQuery).build()
     }
 
-    @Operation(description = "Delete a custom query")
+    @Operation(summary = "Delete a custom query")
     @Timed
     @DELETE
     @Path("$CUSTOM_QUERY/{customQueryName}")
@@ -211,7 +211,7 @@ class GlobalServiceResource(
         throw NotAuthorizedException("This user is not authorized to delete this custom query")
     }
 
-    @Operation(description = "Show custom query with parameters filled in")
+    @Operation(summary = "Show custom query with parameters filled in")
     @Timed
     @GET
     @Path("$CUSTOM_QUERY/{customQueryCall}/$EXPAND")
@@ -234,7 +234,7 @@ class GlobalServiceResource(
         return Response.ok(expanded).build()
     }
 
-    @Operation(description = "List all custom queries")
+    @Operation(summary = "List all custom queries")
     @Timed
     @GET
     @Path(CUSTOM_QUERY)

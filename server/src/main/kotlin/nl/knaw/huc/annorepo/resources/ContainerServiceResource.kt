@@ -121,7 +121,7 @@ class ContainerServiceResource(
         .removalListener(mongoCursorRemovalListener)
         .build(CacheLoader.from { _: String -> null }) // no loader required
 
-    @Operation(description = "Turn read-only access to this container for anonymous users on or off")
+    @Operation(summary = "Turn read-only access to this container for anonymous users on or off")
     @Timed
     @PUT
     @Path("{containerName}/$SETTINGS/$READ_ONLY_FOR_ANONYMOUS")
@@ -138,7 +138,7 @@ class ContainerServiceResource(
         return Response.ok().build()
     }
 
-    @Operation(description = "Show the users with access to this container")
+    @Operation(summary = "Show the users with access to this container")
     @Timed
     @GET
     @Path("{containerName}/$USERS")
@@ -152,7 +152,7 @@ class ContainerServiceResource(
         return Response.ok(users).build()
     }
 
-    @Operation(description = "Add users with given role to this container")
+    @Operation(summary = "Add users with given role to this container")
     @Timed
     @POST
     @Path("{containerName}/$USERS")
@@ -172,7 +172,7 @@ class ContainerServiceResource(
         return Response.ok(users).build()
     }
 
-    @Operation(description = "Remove the user with the given userName from this container")
+    @Operation(summary = "Remove the user with the given userName from this container")
     @Timed
     @DELETE
     @Path("{containerName}/$USERS/{userName}")
@@ -186,7 +186,7 @@ class ContainerServiceResource(
         return Response.ok().build()
     }
 
-    @Operation(description = "Find annotations in the given container matching the given query")
+    @Operation(summary = "Find annotations in the given container matching the given query")
     @Timed
     @POST
     @Path("{containerName}/$SEARCH")
@@ -217,7 +217,7 @@ class ContainerServiceResource(
         }
     }
 
-    @Operation(description = "Get the given search result page")
+    @Operation(summary = "Get the given search result page")
     @Timed
     @GET
     @Path("{containerName}/$SEARCH/{searchId}")
@@ -284,7 +284,7 @@ class ContainerServiceResource(
 
     }
 
-//    @Operation(description = "Get the given search result page")
+//    @Operation(summary = "Get the given search result page")
 //    @Timed
 //    @GET
 //    @Path("{containerName}/o$SEARCH/{searchId}")
@@ -326,7 +326,7 @@ class ContainerServiceResource(
 //        return Response.ok(annotationPage).build()
 //    }
 
-    @Operation(description = "Get information about the given search")
+    @Operation(summary = "Get information about the given search")
     @Timed
     @GET
     @Path("{containerName}/$SEARCH/{searchId}/$INFO")
@@ -347,7 +347,7 @@ class ContainerServiceResource(
         return Response.ok(searchInfo).build()
     }
 
-    @Operation(description = "Show the mongo explain command for the given query")
+    @Operation(summary = "Show the mongo explain command for the given query")
     @Timed
     @GET
     @Path("{containerName}/$SEARCH/{searchId}/$MONGO_EXPLAIN_COMMAND")
@@ -362,7 +362,7 @@ class ContainerServiceResource(
         return Response.ok(mongoCommand).build()
     }
 
-    @Operation(description = "Get the results of the given custom query")
+    @Operation(summary = "Get the results of the given custom query")
     @Timed
     @GET
     @Path("{containerName}/${CUSTOM_QUERY}/{queryCall}")
@@ -413,7 +413,7 @@ class ContainerServiceResource(
             .build()
     }
 
-    @Operation(description = "Get the AnnotationCollection of the given custom query")
+    @Operation(summary = "Get the AnnotationCollection of the given custom query")
     @Timed
     @GET
     @Path("{containerName}/${CUSTOM_QUERY}/{queryCall}/$COLLECTION")
@@ -445,7 +445,7 @@ class ContainerServiceResource(
             .build()
     }
 
-    @Operation(description = "Get a list of the fields used in the annotations in a container")
+    @Operation(summary = "Get a list of the fields used in the annotations in a container")
     @Timed
     @GET
     @Path("{containerName}/$FIELDS")
@@ -459,7 +459,7 @@ class ContainerServiceResource(
         return Response.ok(sortedMap).build()
     }
 
-    @Operation(description = "Get a list of all the unique values for the given field in the annotations in a container")
+    @Operation(summary = "Get a list of all the unique values for the given field in the annotations in a container")
     @Timed
     @GET
     @Path("{containerName}/$DISTINCT_FIELD_VALUES/{field}")
@@ -473,7 +473,7 @@ class ContainerServiceResource(
         return Response.ok(distinctValues).build()
     }
 
-    @Operation(description = "Get some container metadata")
+    @Operation(summary = "Get some container metadata")
     @Timed
     @GET
     @Path("{containerName}/$METADATA")
@@ -497,7 +497,7 @@ class ContainerServiceResource(
         return Response.ok(metadata).build()
     }
 
-    @Operation(description = "List a container's indexes")
+    @Operation(summary = "List a container's indexes")
     @Timed
     @GET
     @Path("{containerName}/$INDEXES")
@@ -513,7 +513,7 @@ class ContainerServiceResource(
     }
 
     @OptIn(ExperimentalStdlibApi::class)
-    @Operation(description = "Add a multi-field index")
+    @Operation(summary = "Add a multi-field index")
     @Timed
     @POST
     @Path("{containerName}/$INDEXES")
@@ -543,7 +543,7 @@ class ContainerServiceResource(
             .build()
     }
 
-    @Operation(description = "Get an index definition")
+    @Operation(summary = "Get an index definition")
     @Timed
     @GET
     @Path("{containerName}/$INDEXES/{indexId}")
@@ -558,7 +558,7 @@ class ContainerServiceResource(
         return Response.ok(indexConfig).build()
     }
 
-    @Operation(description = "Get an index status")
+    @Operation(summary = "Get an index status")
     @Timed
     @GET
     @Path("{containerName}/$INDEXES/{indexId}/status")
@@ -573,7 +573,7 @@ class ContainerServiceResource(
         return Response.ok(indexChore.status.summary()).build()
     }
 
-    @Operation(description = "Delete a container index")
+    @Operation(summary = "Delete a container index")
     @Timed
     @DELETE
     @Path("{containerName}/$INDEXES/{indexId}")
@@ -588,7 +588,7 @@ class ContainerServiceResource(
         return Response.noContent().build()
     }
 
-    @Operation(description = "Upload annotations in batch to a given container")
+    @Operation(summary = "Upload annotations in batch to a given container")
     @Timed
     @POST
     @Path("{containerName}/${ANNOTATIONS_BATCH}")

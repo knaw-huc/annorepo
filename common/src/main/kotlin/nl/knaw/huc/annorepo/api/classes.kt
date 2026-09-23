@@ -2,7 +2,7 @@ package nl.knaw.huc.annorepo.api
 
 import java.net.URI
 import java.util.Date
-
+//import io.swagger.v3.oas.annotations.media.Schema
 typealias WebAnnotationAsMap = Map<String, Any>
 typealias QueryAsMap = Map<String, Any>
 typealias MetadataMap = Map<String, Any>
@@ -65,6 +65,7 @@ data class UserAccessEntry(
 
 data class ContainerUserEntry(
     val userName: String,
+//    @Schema(description = "The user role ")
     val role: Role,
 )
 

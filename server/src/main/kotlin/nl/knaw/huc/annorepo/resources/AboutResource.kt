@@ -7,6 +7,9 @@ import jakarta.ws.rs.Produces
 import jakarta.ws.rs.core.MediaType
 import com.codahale.metrics.annotation.Timed
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
 import nl.knaw.huc.annorepo.api.AboutInfo
 import nl.knaw.huc.annorepo.api.ResourcePaths
 import nl.knaw.huc.annorepo.config.AnnoRepoConfiguration
@@ -21,7 +24,12 @@ class AboutResource(
     val mongoVersionProducer: () -> String
 ) {
 
-    @Operation(description = "Get some info about the server")
+    @Operation(summary = "Get some info about the server")
+    @ApiResponse(
+        responseCode = "200",
+        description = "The server info about the app",
+        content = [Content(schema = Schema(implementation = AboutInfo::class))]
+    )
     @Timed
     @GET
     fun getAboutInfo(): AboutInfo {

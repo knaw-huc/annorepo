@@ -35,7 +35,7 @@ class MyResource(
     private val containerUserDAO: ContainerUserDAO,
     val uriFactory: UriFactory
 ) {
-    @Operation(description = "List all containers the authenticated user has access to, grouped by role")
+    @Operation(summary = "List all containers the authenticated user has access to, grouped by role")
     @Timed
     @GET
     @Path("containers")
@@ -98,7 +98,7 @@ class MyResource(
         }
     }
 
-    @Operation(description = "Show profile data about the authenticated user")
+    @Operation(summary = "Show profile data about the authenticated user")
     @Timed
     @GET
     @Path("profile")
