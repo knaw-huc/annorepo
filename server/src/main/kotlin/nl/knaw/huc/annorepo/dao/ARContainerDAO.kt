@@ -189,7 +189,7 @@ class ARContainerDAO(
             }
         }
         val newContainerMetadata = containerMetadata.copy(fieldCounts = fieldCounts)
-        containerMetadataCollection.replaceOne(Filters.eq("name", containerName), newContainerMetadata)
+        containerMetadataCollection.replaceOne(eq("name", containerName), newContainerMetadata)
     }
 
     private fun mongoIndexName(containerName: String, indexId: String): String {

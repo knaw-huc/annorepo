@@ -120,8 +120,8 @@ class W3CResource(
         return Response.created(uri)
             .contentLocation(uri)
             .header("Vary", "Accept")
-            .link("http://www.w3.org/ns/ldp#BasicContainer", "type")
-            .link("http://www.w3.org/TR/annotation-protocol", "http://www.w3.org/ns/ldp#constrainedBy")
+            .link(BASIC_CONTAINER_LINK, "type")
+            .link(ANNOTATION_PROTOCOL_LINK, CONSTRAINED_BY_LINK)
             .allow("POST", "GET", "DELETE", "OPTIONS", "HEAD")
             .tag(eTag)
             .entity(containerData).build()
@@ -149,8 +149,8 @@ class W3CResource(
                 Response.ok(entity)
                     .contentLocation(uri)
                     .header("Vary", "Accept")
-                    .link("http://www.w3.org/ns/ldp#BasicContainer", "type")
-                    .link("http://www.w3.org/TR/annotation-protocol/", "http://www.w3.org/ns/ldp#constrainedBy")
+                    .link(BASIC_CONTAINER_LINK, "type")
+                    .link(ANNOTATION_PROTOCOL_LINK, CONSTRAINED_BY_LINK)
                     .allow("POST", "GET", "DELETE", "OPTIONS", "HEAD")
                     .tag(eTag)
                     .build()
@@ -439,6 +439,7 @@ class W3CResource(
     }
 
     private fun lastPage(count: Long, pageSize: Int) = (count - 1).div(pageSize).toInt()
+
     private fun toAnnotationMap(a: Document, containerName: String): WebAnnotationAsMap =
         a.get(ANNOTATION_FIELD, Document::class.java)
             .toMutableMap()
@@ -472,5 +473,9 @@ class W3CResource(
     companion object {
         private const val RESOURCE_LINK = "http://www.w3.org/ns/ldp#Resource"
         private const val ANNOTATION_LINK = "http://www.w3.org/ns/ldp#Annotation"
+        private const val BASIC_CONTAINER_LINK = "http://www.w3.org/ns/ldp#BasicContainer"
+        private const val ANNOTATION_PROTOCOL_LINK = "http://www.w3.org/TR/annotation-protocol/"
+        private const val CONSTRAINED_BY_LINK = "http://www.w3.org/ns/ldp#constrainedBy"
+
     }
 }
