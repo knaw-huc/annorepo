@@ -1,4 +1,4 @@
-FROM maven:3.10-amazoncorretto-27 AS builder
+FROM maven:3.10-amazoncorretto-25-alpine AS builder
 
 WORKDIR /build/
 COPY ./server /build/server
@@ -9,7 +9,7 @@ COPY ./pom.xml /build/
 COPY ./k8s/annorepo-server/config.yml k8s/annorepo-server/config.yml
 RUN mvn --projects server --no-transfer-progress --batch-mode --update-snapshots --also-make package
 
-FROM openjdk:28-ea-jdk
+FROM amazoncorretto:25-alpine
 
 WORKDIR /apps/annorepo
 COPY --from=builder /build/server/target/annorepo-server-*.jar /apps/annorepo/annorepo-server.jar
