@@ -1,2 +1,2 @@
-#!/usr/bin/env bash
-exec java -XX:-UseBASE64Intrinsics -XX:UseAVX=2 -jar annorepo-server.jar server config.yml
+#!/bin/sh
+exec java -XX:UseAVX=2 -XX:-UseBASE64Intrinsics -XX:MaxRAMPercentage=75 -jar annorepo-server.jar server config.yml
