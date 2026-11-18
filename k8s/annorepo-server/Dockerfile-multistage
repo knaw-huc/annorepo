@@ -1,4 +1,4 @@
-FROM maven:3.8.5 AS builder
+FROM maven:3.10-amazoncorretto-27 AS builder
 
 WORKDIR /build/
 COPY ./server /build/server
