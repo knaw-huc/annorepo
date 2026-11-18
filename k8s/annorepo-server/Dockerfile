@@ -1,4 +1,4 @@
-FROM openjdk:25-rc-jdk-slim-trixie
+FROM openjdk:28-ea-jdk
 
 RUN apt update && \
     apt install -y curl && \
