@@ -1,3 +1,4 @@
+# used by github build workflow
 # Stage 1: Build the application
 FROM maven:3.10-amazoncorretto-25-alpine AS builder
 
