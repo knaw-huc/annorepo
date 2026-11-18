@@ -9,11 +9,11 @@ version_fn = $(shell cat .make/.version 2>/dev/null)
 .SECONDARY:
 .DELETE_ON_ERROR:
 
-RED=\033[1;31m
-GREEN=\033[1;32m
-YELLOW=\033[1;33m
-BLUE=\033[1;34m
-RESET=\033[0m
+RED    := \033[1;31m
+GREEN  := \033[1;32m
+YELLOW := \033[1;33m
+BLUE   := \033[1;34m
+RESET  := \033[0m
 
 .make:
 	mkdir -p .make
