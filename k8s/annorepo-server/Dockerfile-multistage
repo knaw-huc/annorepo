@@ -1,6 +1,7 @@
+# Stage 1: Build the application
 FROM maven:3.10-amazoncorretto-25-alpine AS builder
 
-WORKDIR /build/
+WORKDIR /build
 COPY ./server /build/server
 COPY ./client /build/client
 COPY ./common /build/common
@@ -9,11 +10,14 @@ COPY ./pom.xml /build/
 COPY ./k8s/annorepo-server/config.yml k8s/annorepo-server/config.yml
 RUN mvn --projects server --no-transfer-progress --batch-mode --update-snapshots --also-make package
 
-FROM amazoncorretto:25-alpine
+# Stage 2: Create a smaller runtime image
+FROM alpine:3.24
+RUN apk upgrade --no-cache && apk add curl jq openjdk25-jre-headless
 
 WORKDIR /app/annorepo
-COPY --from=builder /build/server/target/annorepo-server-*.jar /apps/annorepo/annorepo-server.jar
-COPY ./k8s/annorepo-server/entrypoint.sh entrypoint.sh
-COPY ./k8s/annorepo-server/config.yml config.yml
+COPY --from=builder --chown=annorepo:annorepo ./server/target/annorepo-server-*.jar annorepo-server.jar
+COPY --chown=annorepo:annorepo --chmod=755 ./k8s/annorepo-server/entrypoint.sh entrypoint.sh
+COPY --chown=annorepo:annorepo ./k8s/annorepo-server/config.yml config.yml
+
 EXPOSE 8080
 ENTRYPOINT ["./entrypoint.sh"]
