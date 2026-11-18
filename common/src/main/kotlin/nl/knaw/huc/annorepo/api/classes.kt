@@ -2,6 +2,7 @@ package nl.knaw.huc.annorepo.api
 
 import java.net.URI
 import java.util.Date
+
 //import io.swagger.v3.oas.annotations.media.Schema
 typealias WebAnnotationAsMap = Map<String, Any>
 typealias QueryAsMap = Map<String, Any>

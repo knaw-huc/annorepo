@@ -17,7 +17,8 @@ import io.grpc.ServerTransportFilter
 import nl.knaw.huc.annorepo.grpc.ManagedGrpcServer
 
 /**
- * [ServerBuilder] decorator which adds the resulting [Server] instance to the environment's lifecycle.
+ * [ServerBuilder] decorator which adds the resulting [Server] instance to
+ * the environment's lifecycle.
  */
 class DropwizardServerBuilder(
     private val environment: Environment,

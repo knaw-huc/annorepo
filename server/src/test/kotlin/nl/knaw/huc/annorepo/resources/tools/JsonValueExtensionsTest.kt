@@ -45,7 +45,7 @@ class JsonValueExtensionsTest {
         assertThat(arrayOfInts.isNumberArray()).isTrue
     }
 
-//    @Test
+    //    @Test
     fun `read chunk`() {
         val path = "/Users/bram/workspaces/annorepo/annorepo/chunk.json"
         val json = Path(path).readText()

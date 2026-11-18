@@ -125,11 +125,11 @@ Parameters:
 
 - `preferredName`: optional String, indicating the preferred name for the container. May be overridden by the server.
 - `label`: optional String, a human-readable label for the container.
-- `readOnlyForAnonymousUsers`: optional Boolean, set to `true` to make the container read-only for anonymous users (default: false).
+- `readOnlyForAnonymousUsers`: optional Boolean, set to `true` to make the container read-only for anonymous users
+  (default: false).
 
 If the annorepo instance has authorization enabled, the user creating a container will automatically get `Role.ADMIN`
-rights to that container.
-(see [Container User administration](#container-user-administration))
+rights to that container. (see [Container User administration](#container-user-administration))
 
 **Kotlin:**
 
@@ -226,7 +226,7 @@ client.deleteContainer(containerName, eTag).map(
 );
 ```
 
-### Changing the `read-only for anonynous users` setting for a container 
+### Changing the `read-only for anonynous users` setting for a container
 
 **Kotlin:**
 

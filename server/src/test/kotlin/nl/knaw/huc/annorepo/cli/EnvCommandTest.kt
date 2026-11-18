@@ -6,7 +6,7 @@ import org.mockito.Mockito.mock
 
 internal class EnvCommandTest {
 
-//    @Test
+    //    @Test
     fun `running the env command returns the defined AR_ environment variables`() {
         val ec = EnvCommand()
         val bootstrap = mock(
