@@ -69,8 +69,15 @@ docker-stop: k8s/local/docker-compose.yml
 	docker build -t $(TAG):$(call version_fn) -f k8s/annorepo-server/Dockerfile-multistage .
 	@touch $@
 
+.make/.docker-verbose: .make/.version k8s/annorepo-server/Dockerfile-multistage
+	docker build --no-cache --progress=plain -t $(TAG):$(call version_fn) -f k8s/annorepo-server/Dockerfile-multistage .
+	@touch $@
+
 .PHONY: docker-image
 docker-image: .make/.docker
+
+.PHONY: docker-image-verbose
+docker-image-verbose: .make/.docker-verbose
 
 .make/.push-server: build k8s/annorepo-server/Dockerfile
 	docker build -t $(TAG):$(call version_fn) --platform=linux/amd64 -f k8s/annorepo-server/Dockerfile .
