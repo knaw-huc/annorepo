@@ -15,7 +15,7 @@ services:
     ports:
       - "2021:8080"
       - "9999:8081"
-    image: annorepo:0.10.0
+    image: annorepo:0.10.1
     networks:
       - annorepo_network
     restart: unless-stopped
