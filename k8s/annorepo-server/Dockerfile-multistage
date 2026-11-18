@@ -16,11 +16,13 @@ RUN mvn --projects server --no-transfer-progress --batch-mode --update-snapshots
 # Stage 2: Create a smaller runtime image
 FROM alpine:3.24
 RUN apk upgrade --no-cache && apk add curl jq openjdk25-jre-headless
+RUN addgroup -S annorepo && adduser -S -G annorepo annorepo
 
 WORKDIR /app/annorepo
-COPY --from=builder --chown=annorepo:annorepo ./server/target/annorepo-server-*.jar annorepo-server.jar
+COPY --chown=annorepo:annorepo --from=builder /build/server/target/annorepo-server-*.jar annorepo-server.jar
 COPY --chown=annorepo:annorepo --chmod=755 ./k8s/annorepo-server/entrypoint.sh entrypoint.sh
 COPY --chown=annorepo:annorepo ./k8s/annorepo-server/config.yml config.yml
 
 EXPOSE 8080
+USER annorepo
 ENTRYPOINT ["./entrypoint.sh"]
