@@ -11,7 +11,7 @@ RUN mvn --projects server --no-transfer-progress --batch-mode --update-snapshots
 
 FROM amazoncorretto:25-alpine
 
-WORKDIR /apps/annorepo
+WORKDIR /app/annorepo
 COPY --from=builder /build/server/target/annorepo-server-*.jar /apps/annorepo/annorepo-server.jar
 COPY ./k8s/annorepo-server/entrypoint.sh entrypoint.sh
 COPY ./k8s/annorepo-server/config.yml config.yml
