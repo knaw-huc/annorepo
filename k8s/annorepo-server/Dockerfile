@@ -1,4 +1,4 @@
-FROM openjdk:28-ea-jdk
+FROM amazoncorretto:25-alpine
 
 RUN apt update && \
     apt install -y curl && \
